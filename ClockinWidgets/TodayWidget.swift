@@ -110,26 +110,53 @@ private struct TodayWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Kilit ekraninda tek bir olcu sigiyor, o yuzden etiket ile sayi her
+    /// zaman ayni seyi anlatmali.
+    ///
+    /// Once hep gunun toplamiydi. Gece yarisini asan bir oturumda o toplam
+    /// sifir kaliyor, ustelik simsek "calisiyor" diyordu: sayac islerken
+    /// widget sifir gosteriyordu. Boyle bir oturum varken oturumun kendisi
+    /// yaziliyor; gunun toplami zaten onu icermiyor.
     private var lockScreen: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            // Sayilar gunun toplami; etiket de oyle desin. "Working" yaziyordu,
-            // ama yanindaki Live Activity oturumu gosterdigi icin ikisi ayri
-            // sureler gibi gorunuyordu. Simsek, sayacin isledigini anlatir.
-            Label("Today", systemImage: isEarning ? "bolt.fill" : "clock")
+        let strandedRunning = running.flatMap { snapshot.runningCountsToday(at: entry.date) ? nil : $0 }
+        return VStack(alignment: .leading, spacing: 2) {
+            Label(strandedRunning == nil ? "Today" : "Session",
+                  systemImage: isEarning ? "bolt.fill" : "clock")
                 .font(.caption.weight(.semibold))
-            todayDuration
-                .font(.headline)
-                .monospacedDigit()
-            Text(snapshot.todayEarnings(at: entry.date).money(code: snapshot.currencyCode))
+            Group {
+                if let strandedRunning {
+                    liveDuration(strandedRunning.elapsed(at: entry.date), counts: isEarning)
+                } else {
+                    todayDuration
+                }
+            }
+            .font(.headline)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            Text(lockScreenEarnings(strandedRunning).money(code: snapshot.currencyCode))
                 .font(.caption)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func lockScreenEarnings(_ strandedRunning: RunningSession?) -> Double {
+        guard let strandedRunning else { return snapshot.todayEarnings(at: entry.date) }
+        return strandedRunning.elapsed(at: entry.date) / 3600 * snapshot.hourlyRate
     }
 
     private func sessionMetric(_ running: RunningSession, value: Font, money: Font,
                                alignment: HorizontalAlignment = .leading) -> some View {
         let elapsed = running.elapsed(at: entry.date)
-        return metric("SESSION", duration: liveDuration(elapsed, counts: isEarning),
+        // Gece yarisini asan oturum bugune sayilmaz, o yuzden TODAY yaninda
+        // donmus duruyor. Basligi hangi gune yazildigini soylesin, yoksa iki
+        // sayi birbiriyle celisiyor gorunuyor.
+        let title = snapshot.runningCountsToday(at: entry.date)
+            ? "SESSION"
+            : "SESSION · " + running.start.formatted(.dateTime.month(.abbreviated).day()).uppercased()
+        return metric(title, duration: liveDuration(elapsed, counts: isEarning),
                       earnings: elapsed / 3600 * snapshot.hourlyRate, value: value, money: money,
                       alignment: alignment)
     }
@@ -146,6 +173,8 @@ private struct TodayWidgetView: View {
             Text(title)
                 .font(.caption2.weight(.bold))
                 .tracking(1)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .foregroundStyle(.white.opacity(0.6))
             duration
                 .font(value)
@@ -182,7 +211,7 @@ private struct TodayWidgetView: View {
     @ViewBuilder private func liveDuration(_ total: TimeInterval, counts: Bool) -> some View {
         if counts {
             let start = entry.date.addingTimeInterval(-total)
-            Text(timerInterval: start...start.addingTimeInterval(7 * 86_400), countsDown: false)
+            Text(timerInterval: LiveTimerRange.interval(from: start, at: entry.date), countsDown: false)
         } else {
             Text(DurationText.compact(total))
         }

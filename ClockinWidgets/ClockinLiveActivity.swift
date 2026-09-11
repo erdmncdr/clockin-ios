@@ -41,14 +41,19 @@ struct ClockinLiveActivity: Widget {
             } compactLeading: {
                 // Sure solda, kisa olan tutar sagda: sag taraf genisledikce durum
                 // cubugundaki Wi-Fi ve pil simgelerine yer kalmiyordu.
+                // Yuz saati gecen bir oturumda "200:00" bu genislige sigmiyor
+                // ve "200:..." diye kesiliyordu. Kesmek yerine kuculsun:
+                // okunakli kalir ve ada genislemez.
                 islandTimerText(context.state)
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .frame(width: 50, alignment: .leading)
             } compactTrailing: {
                 Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode, maxFractionDigits: 0))
                     .monospacedDigit()
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.55)
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
                     .frame(width: 32, alignment: .trailing)
             } minimal: {

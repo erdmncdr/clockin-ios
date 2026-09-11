@@ -11,6 +11,12 @@ struct WorkSession: Codable, Identifiable, Hashable, Sendable {
     var matchedExternalSource: String? = nil
 
     var earnings: Double { duration / 3600 * hourlyRate }
+
+    var hasValidDuration: Bool {
+        SessionDuration.isValid(duration)
+            && SessionDuration.isValidDate(start) && SessionDuration.isValidDate(end)
+            && end >= start
+    }
 }
 
 struct RateRule: Codable, Identifiable, Hashable, Sendable {
@@ -52,7 +58,16 @@ struct RunningSession: Codable, Equatable, Sendable {
     var isPaused: Bool { resumedAt == nil }
 
     func elapsed(at date: Date = .now) -> TimeInterval {
-        accumulated + max(0, resumedAt.map { date.timeIntervalSince($0) } ?? 0)
+        let additional = resumedAt.map { SessionDuration.clamped(date.timeIntervalSince($0)) } ?? 0
+        return SessionDuration.clamped(SessionDuration.clamped(accumulated) + additional)
+    }
+
+    func hasValidDuration(at date: Date = .now) -> Bool {
+        guard SessionDuration.isValid(accumulated), SessionDuration.isValidDate(start),
+              SessionDuration.isValidDate(date) else { return false }
+        guard let resumedAt else { return true }
+        guard SessionDuration.isValidDate(resumedAt), resumedAt >= start else { return false }
+        return SessionDuration.isValid(accumulated + max(0, date.timeIntervalSince(resumedAt)))
     }
 }
 
@@ -65,18 +80,69 @@ struct ClockinData: Codable, Sendable {
     var rateRules: [RateRule]?
 }
 
+extension ClockinData {
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hourlyRate = try container.decode(Double.self, forKey: .hourlyRate)
+        currencyCode = try container.decode(String.self, forKey: .currencyCode)
+        running = try container.decodeIfPresent(RunningSession.self, forKey: .running)
+        sessions = try container.decode([WorkSession].self, forKey: .sessions)
+        pinVisible = try container.decode(Bool.self, forKey: .pinVisible)
+        rateRules = try container.decodeIfPresent([RateRule].self, forKey: .rateRules)
+        // Disk ve yedek ayni kurali kullanmali; bozuk sureler yayimlanan
+        // store verisine girdikten sonra duzeltilirse aynalar da etkilenir.
+        guard sessions.allSatisfy(\.hasValidDuration), running?.hasValidDuration() ?? true else {
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath, debugDescription: "Invalid session duration or dates."
+            ))
+        }
+    }
+}
+
 enum DurationText {
     static func clock(_ interval: TimeInterval) -> String {
-        let seconds = max(0, Int(interval))
+        let seconds = Int(SessionDuration.clamped(interval))
         return String(format: "%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
     }
 
     static func compact(_ interval: TimeInterval) -> String {
-        let minutes = max(0, Int(interval / 60))
+        let minutes = Int(SessionDuration.clamped(interval) / 60)
         if minutes < 60 { return "\(minutes)m" }
         let hours = minutes / 60
         let remainder = minutes % 60
         return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
+    }
+}
+
+enum SessionDuration {
+    /// 100 yillik sure siniri, 999 saat 59 dakika girisine ve gecmis toplamlarina
+    /// yer birakir; bozuk verinin tarih ve tamsayi hesaplarini tasirmasini onler.
+    static let maximum: TimeInterval = 100 * 365 * 86_400
+
+    static func isValid(_ interval: TimeInterval) -> Bool {
+        interval.isFinite && interval >= 0 && interval <= maximum
+    }
+
+    static func clamped(_ interval: TimeInterval) -> TimeInterval {
+        if interval.isNaN || interval <= 0 { return 0 }
+        return min(interval, maximum)
+    }
+
+    static func clockInElapsed(_ interval: TimeInterval) -> TimeInterval? {
+        guard interval.isFinite, abs(interval) <= maximum else { return nil }
+        return max(0, interval)
+    }
+
+    static func isValidDate(_ date: Date) -> Bool {
+        date.timeIntervalSinceReferenceDate.isFinite && date >= .distantPast && date <= .distantFuture
+    }
+}
+
+enum LiveTimerRange {
+    /// Geriye alinmis baslangic yedi gunu asabilir. Bitisi simdiden en az
+    /// yedi gun ileri tutmak, geciken widget yenilemelerinde sayaci durdurmaz.
+    static func interval(from origin: Date, at date: Date = .now) -> ClosedRange<Date> {
+        origin...max(origin, date).addingTimeInterval(7 * 86_400)
     }
 }
 

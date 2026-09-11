@@ -47,8 +47,7 @@ extension ClockinActivityAttributes.ContentState {
 
     var isPaused: Bool { pausedAt != nil }
 
-    /// `Text(timerInterval:)` ust sinira gelince durur; bir hafta yeterince uzak.
     var timerRange: ClosedRange<Date> {
-        timerStart...timerStart.addingTimeInterval(7 * 86_400)
+        LiveTimerRange.interval(from: timerStart)
     }
 }

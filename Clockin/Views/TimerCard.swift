@@ -42,6 +42,16 @@ struct TimerCard: View {
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
+                if let day = store.runningDayIfNotToday(at: now) {
+                    // Gece yarisini asan oturum bastan sona basladigi gune
+                    // yaziliyor. Bunu soylemezsek "Today" sifir kalinca
+                    // sayacin kaydedilmedigi saniliyor.
+                    Label("Counts toward \(day.formatted(.dateTime.month(.abbreviated).day()))",
+                          systemImage: "moon.stars")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .padding(.top, 2)
+                }
             }
             VStack {
                 controls

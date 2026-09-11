@@ -118,6 +118,95 @@ func runChecks() -> Int {
     failures += check(ClockinSnapshot.empty.todayDuration(at: today) == 0, "empty snapshot duration is zero")
     failures += check(ClockinSnapshot.empty.todayEarnings(at: today) == 0, "empty snapshot earnings are zero")
 
+    // Exercise the actual shared rules used by ClockStore, not the stand-in.
+    // Store mutation, status messages and persistence still need app-level tests.
+    let maximum = SessionDuration.maximum
+    let beyondInt = Double(Int.max) * 2
+    let displayCases: [(Double, String, String)] = [
+        (.nan, "00:00:00", "0m"),
+        (.infinity, "876000:00:00", "876000h"),
+        (-.infinity, "00:00:00", "0m"),
+        (-Double.greatestFiniteMagnitude, "00:00:00", "0m"),
+        (beyondInt, "876000:00:00", "876000h"),
+        (Double.greatestFiniteMagnitude, "876000:00:00", "876000h"),
+        (maximum, "876000:00:00", "876000h"),
+        (maximum + 1, "876000:00:00", "876000h"),
+        (3599.9, "00:59:59", "59m"),
+        (3661, "01:01:01", "1h 1m")
+    ]
+    for (value, clock, compact) in displayCases {
+        failures += check(DurationText.clock(value) == clock, "clock safely formats \(value)")
+        failures += check(DurationText.compact(value) == compact, "compact safely formats \(value)")
+    }
+    for value in [Double.nan, .infinity, -.infinity, -Double.greatestFiniteMagnitude, beyondInt, maximum + 1] {
+        failures += check(SessionDuration.clockInElapsed(value) == nil, "clockIn input rule rejects \(value)")
+        failures += check(!SessionDuration.isValid(value), "stored duration rule rejects \(value)")
+    }
+    let formMaximum: TimeInterval = 999 * 3600 + 59 * 60
+    failures += check(SessionDuration.clockInElapsed(formMaximum) == formMaximum, "maximum form input is accepted")
+    failures += check(SessionDuration.clockInElapsed(maximum) == maximum, "inclusive duration bound is accepted")
+    failures += check(SessionDuration.clockInElapsed(-60) == 0, "bounded negative clockIn input still clamps to zero")
+    failures += check(!SessionDuration.isValid(-60), "persisted negative duration is rejected")
+
+    for (accumulated, expected) in [(Double.nan, 0.0), (.infinity, maximum), (-1.0, 0.0), (beyondInt, maximum)] {
+        let invalid = RunningSession(start: today, accumulated: accumulated, resumedAt: nil, note: "invalid")
+        failures += check(invalid.elapsed(at: today) == expected, "paused elapsed safely clamps \(accumulated)")
+        failures += check(!invalid.hasValidDuration(at: today), "running validation rejects \(accumulated)")
+    }
+    let overrun = RunningSession(start: today, accumulated: maximum, resumedAt: today, note: "overrun")
+    failures += check(overrun.elapsed(at: later) == maximum, "elapsed addition saturates at the bound")
+    failures += check(!overrun.hasValidDuration(at: later), "store rule rejects an overrun before persistence")
+    let badResume = RunningSession(start: today, accumulated: 0, resumedAt: yesterdayStart, note: "invalid")
+    failures += check(!badResume.hasValidDuration(at: today), "resume before start is rejected")
+    let badDate = RunningSession(start: Date(timeIntervalSinceReferenceDate: .infinity), accumulated: 0, resumedAt: nil, note: "invalid")
+    failures += check(!badDate.hasValidDuration(at: today), "non-finite running date is rejected")
+
+    // Sabitler `Double` yazilmali; karisik literal dizisi `[Any]` cikariyor.
+    let horizons: [TimeInterval] = [0, 167 * 3600 + 59 * 60, 168 * 3600, 169 * 3600, formMaximum]
+    for elapsed in horizons {
+        let origin = today.addingTimeInterval(-elapsed)
+        let range = LiveTimerRange.interval(from: origin, at: today)
+        failures += check(range.lowerBound == origin, "timer preserves origin for \(elapsed)")
+        failures += check(range.upperBound == today.addingTimeInterval(7 * 86_400), "timer has seven future days for \(elapsed)")
+        failures += check(range.contains(later), "timer continues after evaluation time for \(elapsed)")
+    }
+    let futureRange = LiveTimerRange.interval(from: later, at: today)
+    failures += check(futureRange.lowerBound == later && futureRange.upperBound > later, "future origin still produces an ordered range")
+
+    do {
+        var payload = ClockinData()
+        payload.running = paused.running
+        payload.sessions = [WorkSession(id: UUID(), start: running.start, end: today,
+                                       duration: 5400, note: "valid", hourlyRate: 25, source: "Clockin")]
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        // Default JSON rejects non-finite numbers itself. Allow strings here
+        // to prove semantic validation also rejects them after numeric decoding.
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "Infinity", negativeInfinity: "-Infinity", nan: "NaN")
+        decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "Infinity", negativeInfinity: "-Infinity", nan: "NaN")
+        let valid = try decoder.decode(ClockinData.self, from: encoder.encode(payload))
+        failures += check(valid.running == payload.running && valid.sessions == payload.sessions, "store payload round-trip preserves valid durations")
+        for value in [Double.nan, .infinity, -.infinity, -Double.greatestFiniteMagnitude, -1, beyondInt, maximum + 1] {
+            var invalid = payload
+            invalid.running?.accumulated = value
+            let runningBytes = try encoder.encode(invalid)
+            failures += check((try? decoder.decode(ClockinData.self, from: runningBytes)) == nil, "disk/backup decoder rejects running duration \(value)")
+            invalid = payload
+            invalid.sessions[0].duration = value
+            let sessionBytes = try encoder.encode(invalid)
+            failures += check((try? decoder.decode(ClockinData.self, from: sessionBytes)) == nil, "disk/backup decoder rejects completed duration \(value)")
+        }
+        payload.running?.accumulated = maximum
+        payload.sessions[0].duration = maximum
+        let boundaryBytes = try encoder.encode(payload)
+        failures += check((try? decoder.decode(ClockinData.self, from: boundaryBytes)) != nil, "disk/backup decoder accepts the inclusive bound")
+        payload.running = badResume
+        let badResumeBytes = try encoder.encode(payload)
+        failures += check((try? decoder.decode(ClockinData.self, from: badResumeBytes)) == nil, "disk/backup decoder rejects inconsistent running dates")
+    } catch {
+        failures += check(false, "duration validation fixtures: \(error)")
+    }
+
     let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("clockin-snapshot-test-\(UUID().uuidString)", isDirectory: true)
     do {

@@ -136,13 +136,22 @@ final class ClockStore: ObservableObject {
 
     func clockIn(elapsed: TimeInterval = 0, note: String = "", at date: Date = .now) {
         guard data.running == nil else { return }
-        let safeElapsed = max(0, elapsed)
-        data.running = RunningSession(
+        guard let safeElapsed = SessionDuration.clockInElapsed(elapsed),
+              SessionDuration.isValidDate(date) else {
+            statusMessage = "Invalid elapsed time or date."
+            return
+        }
+        let running = RunningSession(
             start: date.addingTimeInterval(-safeElapsed),
             accumulated: safeElapsed,
             resumedAt: date,
             note: note
         )
+        guard running.hasValidDuration(at: date) else {
+            statusMessage = "Invalid elapsed time or date."
+            return
+        }
+        data.running = running
         save()
     }
 
@@ -154,8 +163,12 @@ final class ClockStore: ObservableObject {
     }
 
     func pause(at date: Date = .now) {
-        guard var running = data.running, let resumedAt = running.resumedAt else { return }
-        running.accumulated += max(0, date.timeIntervalSince(resumedAt))
+        guard var running = data.running, running.resumedAt != nil else { return }
+        guard running.hasValidDuration(at: date) else {
+            statusMessage = "Invalid elapsed time or date."
+            return
+        }
+        running.accumulated = running.elapsed(at: date)
         running.resumedAt = nil
         data.running = running
         save()
@@ -164,6 +177,10 @@ final class ClockStore: ObservableObject {
     func resume(at date: Date = .now) {
         guard var running = data.running, running.resumedAt == nil else { return }
         running.resumedAt = date
+        guard running.hasValidDuration(at: date) else {
+            statusMessage = "Invalid elapsed time or date."
+            return
+        }
         data.running = running
         save()
     }
@@ -171,6 +188,10 @@ final class ClockStore: ObservableObject {
     @discardableResult
     func clockOut(at date: Date = .now) -> WorkSession? {
         guard let running = data.running else { return nil }
+        guard running.hasValidDuration(at: date), date >= running.start else {
+            statusMessage = "Invalid elapsed time or date."
+            return nil
+        }
         let session = WorkSession(
             id: UUID(), start: running.start, end: date, duration: running.elapsed(at: date),
             note: running.note, hourlyRate: hourlyRate, source: "Clockin"
@@ -196,6 +217,10 @@ final class ClockStore: ObservableObject {
             id: UUID(), start: start, end: end, duration: end.timeIntervalSince(start),
             note: note, hourlyRate: hourlyRate, source: "Clockin"
         )
+        guard session.hasValidDuration else {
+            statusMessage = "Invalid session duration or dates."
+            return false
+        }
         let key = Self.deduplicationKey(session)
         guard !data.sessions.contains(where: { Self.deduplicationKey($0) == key }) else {
             statusMessage = "An entry with these exact times already exists."
@@ -323,9 +348,6 @@ final class ClockStore: ObservableObject {
         do {
             let content = try Data(contentsOf: url)
             let decoded = try JSONDecoder().decode(ClockinData.self, from: content)
-            guard decoded.sessions.allSatisfy({ $0.duration >= 0 && $0.end >= $0.start }) else {
-                throw CocoaError(.validationMissingMandatoryProperty)
-            }
             data = decoded
             save()
             statusMessage = "Backup restored."
@@ -380,6 +402,10 @@ final class ClockStore: ObservableObject {
     /// o da kaydin kimligini ve ice aktarma isaretlerini kaybettiriyordu.
     @discardableResult
     func updateSession(id: UUID, start: Date, end: Date, note: String) -> Bool {
+        guard SessionDuration.isValidDate(start), SessionDuration.isValidDate(end) else {
+            statusMessage = "Invalid session dates."
+            return false
+        }
         guard end > start else {
             statusMessage = "End time must be after the start time."
             return false
@@ -394,6 +420,10 @@ final class ClockStore: ObservableObject {
             let worked = end.timeIntervalSince(start) - gap
             guard worked > 0 else {
                 statusMessage = "The new times are shorter than this entry's break."
+                return false
+            }
+            guard SessionDuration.isValid(worked) else {
+                statusMessage = "Invalid session duration."
                 return false
             }
             data.sessions[index].duration = worked
@@ -414,6 +444,10 @@ final class ClockStore: ObservableObject {
     }
 
     func importSessions(_ imported: [WorkSession]) {
+        guard imported.allSatisfy(\.hasValidDuration) else {
+            statusMessage = "Invalid session duration or dates."
+            return
+        }
         var fresh: [WorkSession] = []
         var freshKeys = Set<String>()
         var claimedMatches = Set<Int>()
@@ -497,6 +531,18 @@ final class ClockStore: ObservableObject {
             if best == nil || overlap > best!.overlap { best = (index, overlap) }
         }
         return best?.index
+    }
+
+    /// Calisan seans bugune sayilmiyorsa, yazildigi gun.
+    ///
+    /// Gece yarisini asan bir oturum bastan sona basladigi gune ait sayilir.
+    /// Dogru olan bu: gece vardiyasi basladigi gunun isidir. Ama 02:00'de
+    /// "3 saat calistim" deyip sayaci baslatan biri "Today 0m" gorunce
+    /// uygulama bozulmus saniyor. Ekranlar bu gunu yazip sebebini soylesin.
+    func runningDayIfNotToday(at date: Date = .now) -> Date? {
+        guard let running = data.running,
+              !calendar.isDate(running.start, inSameDayAs: date) else { return nil }
+        return calendar.startOfDay(for: running.start)
     }
 
     func todayDuration(at date: Date = .now) -> TimeInterval {
