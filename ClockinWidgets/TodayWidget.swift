@@ -64,7 +64,9 @@ private struct TodayWidgetView: View {
     /// dugmeler saga dizildiginde ortada bos bir sutun kaliyordu.
     private var mediumLayout: some View {
         VStack(alignment: .leading, spacing: 6) {
+            // Olculer ve dugmeler ortali; durum satiri da onlarla hizali olsun.
             status
+                .frame(maxWidth: .infinity, alignment: .center)
             HStack(alignment: .top, spacing: 12) {
                 if let running {
                     sessionMetric(running, value: .system(.title3, design: .rounded).weight(.semibold),
