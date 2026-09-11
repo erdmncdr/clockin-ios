@@ -43,13 +43,14 @@ struct ClockinLiveActivity: Widget {
                 // cubugundaki Wi-Fi ve pil simgelerine yer kalmiyordu.
                 islandTimerText(context.state)
                     .monospacedDigit()
-                    .frame(maxWidth: 64)
+                    .frame(width: 50, alignment: .leading)
             } compactTrailing: {
                 Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode, maxFractionDigits: 0))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
+                    .frame(width: 44, alignment: .leading)
             } minimal: {
                 Image(systemName: "timer")
                     .foregroundStyle(palette.accent)
