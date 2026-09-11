@@ -63,12 +63,16 @@ private struct LevelBadge: View {
             ZStack(alignment: .leading) {
                 Capsule(style: .continuous).fill(palette.accent.opacity(0.12))
                 GeometryReader { geometry in
+                    let fill = geometry.size.width * progress
                     Capsule(style: .continuous)
                         .fill(palette.accent.opacity(0.22))
-                        .frame(width: geometry.size.width * progress)
+                        .frame(width: fill)
                     if !reduceMotion {
-                        // Isik tum rozeti tarar; kucuk XP dolgusunda da okunur.
+                        // Isik dolgunun bittigi yerde bitsin: tarama rozetin
+                        // tamamini gezerse ilerlemeyi degil rozeti anlatir.
                         BadgeSweep()
+                            .frame(width: fill, height: geometry.size.height)
+                            .clipped()
                     }
                 }
             }
@@ -100,9 +104,12 @@ private struct BadgeSweep: View {
             TimelineView(.animation(minimumInterval: 1.0 / 30, paused: scenePhase != .active)) { context in
                 let cycle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 6)
                 let phase = min(cycle / 1.8, 1)
-                let band = max(18, geometry.size.width * 0.35)
+                // Bant dolgunun kendisine gore olculur. Sabit genislikte bir
+                // bant, dar bir dolguyu bastan sona kaplayip taramak yerine
+                // tek parca yanip sonuyordu.
+                let band = max(6, geometry.size.width * 0.5)
                 LinearGradient(
-                    colors: [.clear, .white.opacity(0.35), .clear],
+                    colors: [.clear, .white.opacity(0.45), .clear],
                     startPoint: .leading, endPoint: .trailing
                 )
                 .frame(width: band, height: geometry.size.height)
