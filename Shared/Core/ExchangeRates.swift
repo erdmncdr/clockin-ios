@@ -97,7 +97,7 @@ final class ExchangeRateStore: ObservableObject {
         if ratesByDay.isEmpty {
             errorMessage = "Exchange rate unavailable"
         } else if liveCheckFailed {
-            errorMessage = "Live check failed — showing cached rate"
+            errorMessage = "Live check failed, showing cached rate"
         } else if stillMissing {
             errorMessage = "Some historical rates are still updating"
         } else {

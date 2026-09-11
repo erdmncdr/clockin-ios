@@ -17,7 +17,7 @@ enum MascotAsset: String {
     var message: String {
         switch self {
         case .idle: "Ready when you are"
-        case .working: "You are doing great — keep going!"
+        case .working: "You are doing great, keep going!"
         case .paused: "Taking a reset break"
         case .celebrate: "Every focused hour makes your companion stronger."
         }

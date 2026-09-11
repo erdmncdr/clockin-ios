@@ -19,11 +19,22 @@ struct TodayProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TodayEntry>) -> Void) {
         let now = Date.now
-        let entry = TodayEntry(date: now, snapshot: ClockinSnapshot.load() ?? .empty)
-        // Sure metni kendisi sayar. Kazanc ve gun donumu icin ceyrek saatte
-        // bir yenilenir; uygulama her degisiklikte ayrica yeniden yukletir.
-        let next = now.addingTimeInterval(15 * 60)
-        completion(Timeline(entries: [entry], policy: .after(next)))
+        let snapshot = ClockinSnapshot.load() ?? .empty
+        // Sure metni kendisi sayar, tutar sayamaz. Sayac islerken tutar tek bir
+        // girdide donup kalıyordu: kilit ekraninda saat ilerlerken para duruyor,
+        // hatta gunun toplami oturumun altinda kaliyordu. Bir saatlik girdiyi
+        // pesin uretiyoruz; her biri dakikasinin tutarini yaziyor ve onceden
+        // hazir olduklari icin yenileme butcesinden dusmuyorlar.
+        guard snapshot.running?.isPaused == false else {
+            let next = now.addingTimeInterval(15 * 60)
+            completion(Timeline(entries: [TodayEntry(date: now, snapshot: snapshot)],
+                                policy: .after(next)))
+            return
+        }
+        let entries = (0..<60).map { minute in
+            TodayEntry(date: now.addingTimeInterval(Double(minute) * 60), snapshot: snapshot)
+        }
+        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
     }
 }
 
@@ -101,7 +112,10 @@ private struct TodayWidgetView: View {
 
     private var lockScreen: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Label(isEarning ? "Working" : "Today", systemImage: isEarning ? "bolt.fill" : "clock")
+            // Sayilar gunun toplami; etiket de oyle desin. "Working" yaziyordu,
+            // ama yanindaki Live Activity oturumu gosterdigi icin ikisi ayri
+            // sureler gibi gorunuyordu. Simsek, sayacin isledigini anlatir.
+            Label("Today", systemImage: isEarning ? "bolt.fill" : "clock")
                 .font(.caption.weight(.semibold))
             todayDuration
                 .font(.headline)

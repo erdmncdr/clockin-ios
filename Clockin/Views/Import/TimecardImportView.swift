@@ -155,7 +155,7 @@ struct TimecardImportView: View {
             if let approved = review.approvedDuration {
                 LabeledContent("Page Approved", value: DurationText.compact(approved))
                 if abs(approved - review.duration) > 60 {
-                    Label("Copied rows are partial — totals do not match.", systemImage: "exclamationmark.triangle")
+                    Label("Copied rows are partial, totals do not match.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.orange)
                 } else {
                     Text("Copied rows match the page Approved total.")
