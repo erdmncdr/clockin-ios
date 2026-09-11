@@ -41,19 +41,36 @@ final class ClockStore: ObservableObject {
     init(fileURL: URL? = nil) {
         self.fileURL = fileURL ?? Self.defaultFileURL
         self.backupDirectory = self.fileURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
+        var loadFailureMessage: String?
+        var mustNotOverwrite = false
         if let content = try? Data(contentsOf: self.fileURL),
            let decoded = try? JSONDecoder().decode(ClockinData.self, from: content) {
             data = decoded
         } else {
             data = ClockinData()
+            // Dosya hic yoksa ilk kurulumdur. Varsa ama okunamiyorsa, bos veriyle
+            // devam etmeden once kopyasi kenara alinir: asagidaki ucret gecisi
+            // hemen `save()` cagirip kullanicinin dosyasinin uzerine yaziyordu.
+            if FileManager.default.fileExists(atPath: self.fileURL.path) {
+                let stamp = Int(Date().timeIntervalSince1970 * 1000)
+                let copy = self.fileURL.deletingLastPathComponent().appending(path: "clockin-unreadable-\(stamp).json")
+                if (try? FileManager.default.copyItem(at: self.fileURL, to: copy)) != nil {
+                    loadFailureMessage = "Your data could not be read. The original file was kept as \(copy.lastPathComponent). You can restore a backup from Settings."
+                } else {
+                    mustNotOverwrite = true
+                    loadFailureMessage = "Your data could not be read and no safety copy could be made. Restore a backup from Settings before adding entries."
+                }
+            }
         }
         let needsRateMigration = data.rateRules == nil
         if needsRateMigration {
             let july2026 = Calendar.current.date(from: DateComponents(year: 2026, month: 7, day: 1)) ?? .distantPast
             data.rateRules = [RateRule(effectiveFrom: july2026, hourlyRate: data.hourlyRate)]
         }
-        if needsRateMigration { save() }
+        // Kopya alinamadiysa okunamayan dosyanin uzerine hic yazilmaz.
+        if needsRateMigration, !mustNotOverwrite { save() }
         else { createAutomaticBackupIfNeeded() }
+        if let loadFailureMessage { statusMessage = loadFailureMessage }
     }
 
     static var defaultFileURL: URL {
@@ -368,9 +385,21 @@ final class ClockStore: ObservableObject {
             return false
         }
         guard let index = data.sessions.firstIndex(where: { $0.id == id }) else { return false }
+        let old = data.sessions[index]
+        // Calisilan sure her zaman bitis - baslangic degil: duraklatilan seansta
+        // mola, ice aktarilan kayitta dis kaynagin suresi fark yaratir. Yalnizca
+        // not degistiyse sure aynen kalir; saatler degistiyse bu fark korunur.
+        if start != old.start || end != old.end {
+            let gap = old.end.timeIntervalSince(old.start) - old.duration
+            let worked = end.timeIntervalSince(start) - gap
+            guard worked > 0 else {
+                statusMessage = "The new times are shorter than this entry's break."
+                return false
+            }
+            data.sessions[index].duration = worked
+        }
         data.sessions[index].start = start
         data.sessions[index].end = end
-        data.sessions[index].duration = end.timeIntervalSince(start)
         data.sessions[index].note = note
         save()
         statusMessage = "Entry updated."

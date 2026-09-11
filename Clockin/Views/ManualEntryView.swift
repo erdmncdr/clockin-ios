@@ -59,6 +59,20 @@ struct ManualEntryView: View {
         duration / 3600 * store.effectiveRate(at: resolvedStart, fallback: store.hourlyRate)
     }
 
+    /// Kaydedilecek saatler. Seciciler saniyeyi dusurdugu icin hic dokunulmamis
+    /// bir kayitta bile yeniden kurulan saat farkli cikiyor ve magaza saat
+    /// degisti sanip calisilan sureyi yeniden hesapliyordu.
+    private func savedTimes(for session: WorkSession) -> (start: Date, end: Date) {
+        let calendar = Calendar.current
+        let minute: (Date) -> Date = {
+            calendar.date(from: calendar.dateComponents([.year, .month, .day, .hour, .minute], from: $0)) ?? $0
+        }
+        if resolvedStart == minute(session.start), resolvedEnd == minute(session.end) {
+            return (session.start, session.end)
+        }
+        return (resolvedStart, resolvedEnd)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -106,7 +120,8 @@ struct ManualEntryView: View {
     private func save() {
         let saved: Bool
         if let editing {
-            saved = store.updateSession(id: editing.id, start: resolvedStart, end: resolvedEnd, note: note)
+            let times = savedTimes(for: editing)
+            saved = store.updateSession(id: editing.id, start: times.start, end: times.end, note: note)
         } else {
             saved = store.addManualSession(start: resolvedStart, end: resolvedEnd, note: note)
         }

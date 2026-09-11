@@ -17,6 +17,7 @@ final class SessionMirror {
     private var subscription: AnyCancellable?
     private var lastSnapshot: ClockinSnapshot?
     private var lastState: ClockinActivityAttributes.ContentState?
+    private var isRestartingActivity = false
 
     func start(observing store: ClockStore) {
         self.store = store
@@ -54,18 +55,39 @@ final class SessionMirror {
             running: running, hourlyRate: hourlyRate, earned: earned,
             usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil
         )
-        let hasActivity = !Activity<ClockinActivityAttributes>.activities.isEmpty
-        guard state != lastState || !hasActivity else { return }
-        lastState = state
+        // Yeniden kurulum surerken gelen senkronlar atlanir; yoksa eski etkinlik
+        // kapanmadan ikinci bir etkinlik istenebilirdi.
+        guard !isRestartingActivity else { return }
+        let activities = Activity<ClockinActivityAttributes>.activities
         let content = ActivityContent(state: state, staleDate: nil)
-        if hasActivity {
-            Task { await Self.updateAll(content) }
-        } else if ActivityAuthorizationInfo().areActivitiesEnabled {
-            _ = try? Activity.request(
-                attributes: ClockinActivityAttributes(currencyCode: currencyCode),
-                content: content
-            )
+        // Para birimi yalnizca etkinlik baslatilirken sabit alanlara yaziliyor;
+        // guncellemeler onu degistiremez. Birim degistiyse etkinlik kapatilip
+        // yeni birimle yeniden baslatilir, yoksa kilit ekrani eski birimde kalir.
+        if activities.contains(where: { $0.attributes.currencyCode != currencyCode }) {
+            isRestartingActivity = true
+            lastState = state
+            Task { [weak self] in
+                await Self.endAll()
+                Self.request(currencyCode: currencyCode, content: content)
+                self?.isRestartingActivity = false
+            }
+            return
         }
+        guard state != lastState || activities.isEmpty else { return }
+        lastState = state
+        if activities.isEmpty {
+            Self.request(currencyCode: currencyCode, content: content)
+        } else {
+            Task { await Self.updateAll(content) }
+        }
+    }
+
+    private static func request(currencyCode: String, content: ActivityContent<ClockinActivityAttributes.ContentState>) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        _ = try? Activity.request(
+            attributes: ClockinActivityAttributes(currencyCode: currencyCode),
+            content: content
+        )
     }
 
     // `Activity` Sendable degil; ana aktorden bir goreve gecirilemiyor. Bu
