@@ -33,7 +33,7 @@ struct TodayWidget: Widget {
             TodayWidgetView(entry: entry)
         }
         .configurationDisplayName("Today")
-        .description("Today's time and earnings, with the running timer.")
+        .description("The current session and today's time and earnings.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }
@@ -60,28 +60,25 @@ private struct TodayWidgetView: View {
     }
 
     private var homeScreen: some View {
-        HStack(alignment: .bottom) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
                 status
                 Spacer(minLength: 0)
-                Text("TODAY")
-                    .font(.caption2.weight(.bold))
-                    .tracking(1)
-                    .foregroundStyle(.white.opacity(0.6))
-                todayDuration
-                    .font(.system(.title2, design: .rounded).weight(.semibold))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .foregroundStyle(.white)
-                Text(snapshot.todayEarnings(at: entry.date).money(code: snapshot.currencyCode))
-                    .font(.headline)
-                    .foregroundStyle(palette.accent)
+                if let running {
+                    // Seans calisirken iki blok ayni yere sigmali; yazilar kuculur.
+                    metric("SESSION", duration: liveDuration(running.elapsed(at: entry.date), counts: isEarning),
+                           earnings: running.elapsed(at: entry.date) / 3600 * snapshot.hourlyRate, compact: true)
+                    metric("TODAY", duration: todayDuration,
+                           earnings: snapshot.todayEarnings(at: entry.date), compact: true)
+                } else {
+                    metric("TODAY", duration: todayDuration,
+                           earnings: snapshot.todayEarnings(at: entry.date), compact: false)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if family == .systemMedium {
-                actionButton
+                actionButtons
             }
         }
     }
@@ -99,11 +96,36 @@ private struct TodayWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private func metric(_ title: String, duration: some View, earnings: Double, compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 1 : 4) {
+            Text(title)
+                .font(.caption2.weight(.bold))
+                .tracking(1)
+                .foregroundStyle(.white.opacity(0.6))
+            duration
+                .font(compact ? .system(.headline, design: .rounded).weight(.semibold)
+                              : .system(.title2, design: .rounded).weight(.semibold))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .foregroundStyle(.white)
+            Text(earnings.money(code: snapshot.currencyCode))
+                .font(compact ? .caption.weight(.semibold) : .headline)
+                .monospacedDigit()
+                .foregroundStyle(palette.accent)
+        }
+    }
+
+    /// Bugunun toplami: tamamlanan oturumlar ve bugun baslayan calisan seans.
+    private var todayDuration: some View {
+        liveDuration(snapshot.todayDuration(at: entry.date),
+                     counts: isEarning && snapshot.runningCountsToday(at: entry.date))
+    }
+
     /// Calisirken sistem saati kendisi ilerletir; widget her saniye
-    /// yenilenemedigi icin tek yol bu.
-    @ViewBuilder private var todayDuration: some View {
-        let total = snapshot.todayDuration(at: entry.date)
-        if isEarning, snapshot.runningCountsToday(at: entry.date) {
+    /// yenilenemedigi icin tek yol bu. Duraklatildiysa sabit yazilir.
+    @ViewBuilder private func liveDuration(_ total: TimeInterval, counts: Bool) -> some View {
+        if counts {
             let start = entry.date.addingTimeInterval(-total)
             Text(timerInterval: start...start.addingTimeInterval(7 * 86_400), countsDown: false)
         } else {
@@ -123,28 +145,39 @@ private struct TodayWidgetView: View {
         }
     }
 
-    @ViewBuilder private var actionButton: some View {
-        if running == nil {
-            Button(intent: ClockInIntent()) {
-                Label("Clock in", systemImage: "play.fill")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.actionForeground)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(palette.accent, in: Capsule())
+    @ViewBuilder private var actionButtons: some View {
+        if let running {
+            VStack(spacing: 8) {
+                Button(intent: TogglePauseIntent()) {
+                    actionLabel(running.isPaused ? "Resume" : "Pause",
+                                systemImage: running.isPaused ? "play.fill" : "pause.fill",
+                                foreground: .white, background: .white.opacity(0.14))
+                }
+                .buttonStyle(.plain)
+                Button(intent: ClockOutIntent()) {
+                    actionLabel("Clock out", systemImage: "stop.fill",
+                                foreground: .red, background: .red.opacity(0.15))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .fixedSize()
         } else {
-            Button(intent: ClockOutIntent()) {
-                Label("Clock out", systemImage: "stop.fill")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.red)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(.red.opacity(0.15), in: Capsule())
+            Button(intent: ClockInIntent()) {
+                actionLabel("Clock in", systemImage: "play.fill",
+                            foreground: palette.actionForeground, background: palette.accent)
             }
             .buttonStyle(.plain)
         }
+    }
+
+    /// Iki dugme ust uste durdugu icin ayni genislikte olmali.
+    private func actionLabel(_ title: String, systemImage: String, foreground: Color, background: Color) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.subheadline.weight(.bold))
+            .foregroundStyle(foreground)
+            .frame(width: 124)
+            .padding(.vertical, 10)
+            .background(background, in: Capsule())
     }
 }
 
