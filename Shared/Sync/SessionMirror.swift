@@ -28,6 +28,10 @@ final class SessionMirror {
         sync()
     }
 
+    func refresh() {
+        sync()
+    }
+
     private func sync() {
         guard let store else { return }
         let snapshot = ClockinSnapshot(store: store)
@@ -36,16 +40,17 @@ final class SessionMirror {
             try? snapshot.write()
             WidgetCenter.shared.reloadAllTimelines()
         }
-        syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate, currencyCode: store.currencyCode)
+        syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate,
+                     earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode)
     }
 
-    private func syncActivity(running: RunningSession?, hourlyRate: Double, currencyCode: String) {
+    private func syncActivity(running: RunningSession?, hourlyRate: Double, earned: Double, currencyCode: String) {
         guard let running else {
             lastState = nil
             Task { await Self.endAll() }
             return
         }
-        let state = ClockinActivityAttributes.ContentState(running: running, hourlyRate: hourlyRate)
+        let state = ClockinActivityAttributes.ContentState(running: running, hourlyRate: hourlyRate, earned: earned)
         let hasActivity = !Activity<ClockinActivityAttributes>.activities.isEmpty
         guard state != lastState || !hasActivity else { return }
         lastState = state

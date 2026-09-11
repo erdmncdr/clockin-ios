@@ -14,9 +14,14 @@ struct ClockinLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    statusLabel(context.state)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        statusLabel(context.state)
+                            .font(.caption.weight(.semibold))
+                        Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode))
+                            .font(.title3.weight(.semibold))
+                            .monospacedDigit()
+                    }
+                    .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     timerText(context.state)
@@ -34,7 +39,10 @@ struct ClockinLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: context.state.isPaused ? "pause.fill" : "timer")
+                Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode, maxFractionDigits: 0))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
             } compactTrailing: {
                 timerText(context.state)
@@ -52,13 +60,15 @@ private func statusLabel(_ state: ClockinActivityAttributes.ContentState) -> som
     Label(state.isPaused ? "Paused" : "Working", systemImage: state.isPaused ? "pause.fill" : "bolt.fill")
 }
 
-/// Duraklatildiginda `pauseTime` metni o anda dondurur.
-private func timerText(_ state: ClockinActivityAttributes.ContentState) -> Text {
+@ViewBuilder
+private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some View {
+    // Saniyesiz gosterim uc yoldan denendi, hicbiri calismadi: `.timer` ve
+    // `.stopwatch` dakika hassasiyetinde "1 hour, 15 minutes" diye yaziyor;
+    // saniyeli sayaci gorunmez bir yer tutucuyla kirpmak Live Activity'de
+    // sayaci tamamen bos birakiyor. Duraklatildiginda `pauseTime` metni dondurur.
     Text(timerInterval: state.timerRange, pauseTime: state.pausedAt, countsDown: false, showsHours: true)
 }
 
-/// Kazanc Live Activity'de kendiliginden artamaz; guncelleme istemek yerine
-/// saatlik ucret gosterilir.
 private func rateText(_ state: ClockinActivityAttributes.ContentState, _ currencyCode: String) -> String {
     "\(state.hourlyRate.money(code: currencyCode)) / hr"
 }
@@ -78,6 +88,10 @@ private struct LockScreenActivityView: View {
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.white)
+                Text(state.earnedAtUpdate.money(code: currencyCode))
+                    .font(.title3.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(state.isPaused ? .orange : palette.accent)
                 Text(state.note.isEmpty ? rateText(state, currencyCode) : "\(state.note) · \(rateText(state, currencyCode))")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.6))
