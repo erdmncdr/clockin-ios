@@ -20,7 +20,11 @@ struct DashboardView: View {
                     // dakikada bir yenileme gun donumunu yakalamaya yetiyor.
                     TimelineView(.periodic(from: .now, by: store.running?.isPaused == false ? 1 : 60)) { context in
                         VStack(spacing: 14) {
-                            TimerCard(now: context.date) { sheet = .summary($0) }
+                            TimerCard(
+                                now: context.date,
+                                onClockOut: { sheet = .summary($0) },
+                                onStartWithElapsed: { sheet = .manualStart }
+                            )
                             TodayCard(now: context.date)
                         }
                     }

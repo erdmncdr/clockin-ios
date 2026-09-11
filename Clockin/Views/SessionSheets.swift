@@ -6,12 +6,14 @@ enum SessionSheet: Identifiable {
     case newEntry
     case edit(WorkSession)
     case summary(WorkSession)
+    case manualStart
 
     var id: String {
         switch self {
         case .newEntry: "new"
         case .edit(let session): "edit-\(session.id)"
         case .summary(let session): "summary-\(session.id)"
+        case .manualStart: "manual-start"
         }
     }
 }
@@ -38,6 +40,7 @@ private struct SessionSheetsModifier: ViewModifier {
                 case .newEntry: ManualEntryView()
                 case .edit(let session): ManualEntryView(editing: session)
                 case .summary(let session): SessionSummaryView(session: session)
+                case .manualStart: ManualStartView()
                 }
             }
             // Renk semasi tercihi en yakin sunuma uygulanir; sheet kendi

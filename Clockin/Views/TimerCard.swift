@@ -8,6 +8,7 @@ struct TimerCard: View {
     /// Yenilemeyi ust gorunum yonetir; bugun karti da ayni andan okusun diye.
     let now: Date
     let onClockOut: (WorkSession) -> Void
+    let onStartWithElapsed: () -> Void
 
     @State private var confirmCancel = false
 
@@ -80,10 +81,16 @@ struct TimerCard: View {
                     .foregroundStyle(.secondary)
             }
         } else {
-            Button { store.clockIn() } label: {
-                Label("Clock in", systemImage: "play.fill")
+            VStack(spacing: 12) {
+                Button { store.clockIn() } label: {
+                    Label("Clock in", systemImage: "play.fill")
+                }
+                .buttonStyle(PrimaryActionButtonStyle(palette: palette))
+                // Sayaci baslatmayi unutunca gecen sureyi kaybetmemek icin.
+                Button("Start with elapsed time", systemImage: "clock.arrow.circlepath", action: onStartWithElapsed)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-            .buttonStyle(PrimaryActionButtonStyle(palette: palette))
         }
     }
 

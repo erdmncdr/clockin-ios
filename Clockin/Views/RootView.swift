@@ -3,6 +3,8 @@ import SwiftUI
 enum AppTab: Hashable {
     case today
     case history
+    case insights
+    case settings
 }
 
 struct RootView: View {
@@ -19,6 +21,12 @@ struct RootView: View {
             HistoryView()
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(AppTab.history)
+            InsightsView()
+                .tabItem { Label("Insights", systemImage: "chart.bar.xaxis") }
+                .tag(AppTab.insights)
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape") }
+                .tag(AppTab.settings)
         }
         // Mac'te her gorunum temayi `@AppStorage`'dan kendisi okuyordu.
         // Burada bir kez okunup ortamla asagi iniyor.

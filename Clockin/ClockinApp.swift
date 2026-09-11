@@ -2,9 +2,9 @@ import SwiftUI
 
 @main
 struct ClockinApp: App {
-    /// Mac'teki `ClockStore`'un kopyasi; veri uygulamanin kendi
-    /// Application Support klasorunde duruyor, Mac ile paylasilmiyor.
-    @StateObject private var store = ClockStore()
+    /// Veri widget ile paylasilan grup klasorunde; Mac ile paylasilmiyor.
+    /// Kisayollar da ayni ornegi kullansin diye `SharedStore`'dan gelir.
+    @StateObject private var store = SharedStore.clock
 
     var body: some Scene {
         WindowGroup {
