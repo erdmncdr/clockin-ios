@@ -50,7 +50,7 @@ struct ClockinLiveActivity: Widget {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
-                    .frame(width: 44, alignment: .leading)
+                    .frame(width: 32, alignment: .trailing)
             } minimal: {
                 Image(systemName: "timer")
                     .foregroundStyle(palette.accent)
