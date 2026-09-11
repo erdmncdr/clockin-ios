@@ -68,12 +68,12 @@ private struct TodayWidgetView: View {
             HStack(alignment: .top, spacing: 12) {
                 if let running {
                     sessionMetric(running, value: .system(.title3, design: .rounded).weight(.semibold),
-                                  money: .subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                                  money: .subheadline.weight(.semibold), alignment: .center)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 todayMetric(value: .system(.title3, design: .rounded).weight(.semibold),
-                            money: .subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                            money: .subheadline.weight(.semibold), alignment: .center)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             Spacer(minLength: 0)
             actionButtons
@@ -110,19 +110,23 @@ private struct TodayWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func sessionMetric(_ running: RunningSession, value: Font, money: Font) -> some View {
+    private func sessionMetric(_ running: RunningSession, value: Font, money: Font,
+                               alignment: HorizontalAlignment = .leading) -> some View {
         let elapsed = running.elapsed(at: entry.date)
         return metric("SESSION", duration: liveDuration(elapsed, counts: isEarning),
-                      earnings: elapsed / 3600 * snapshot.hourlyRate, value: value, money: money)
+                      earnings: elapsed / 3600 * snapshot.hourlyRate, value: value, money: money,
+                      alignment: alignment)
     }
 
-    private func todayMetric(value: Font, money: Font) -> some View {
+    private func todayMetric(value: Font, money: Font, alignment: HorizontalAlignment = .leading) -> some View {
         metric("TODAY", duration: todayDuration,
-               earnings: snapshot.todayEarnings(at: entry.date), value: value, money: money)
+               earnings: snapshot.todayEarnings(at: entry.date), value: value, money: money,
+               alignment: alignment)
     }
 
-    private func metric(_ title: String, duration: some View, earnings: Double, value: Font, money: Font) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+    private func metric(_ title: String, duration: some View, earnings: Double, value: Font, money: Font,
+                        alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 1) {
             Text(title)
                 .font(.caption2.weight(.bold))
                 .tracking(1)
@@ -130,6 +134,10 @@ private struct TodayWidgetView: View {
             duration
                 .font(value)
                 .monospacedDigit()
+                // Sayac metni olasi en uzun deger icin genis yer ayiriyor ve
+                // rakamlari o alanin soluna yaziyordu; baslik ve tutar ortadayken
+                // sure sola kaymis gorunuyordu.
+                .multilineTextAlignment(alignment == .center ? .center : .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .foregroundStyle(.white)
@@ -144,8 +152,13 @@ private struct TodayWidgetView: View {
 
     /// Bugunun toplami: tamamlanan oturumlar ve bugun baslayan calisan seans.
     private var todayDuration: some View {
-        liveDuration(snapshot.todayDuration(at: entry.date),
-                     counts: isEarning && snapshot.runningCountsToday(at: entry.date))
+        let countsRunning = snapshot.runningCountsToday(at: entry.date)
+        let active = countsRunning ? (running?.elapsed(at: entry.date) ?? 0) : 0
+        // Tamamlanan kisim tam saniyeye yuvarlanir. Kayit sureleri kusuratli
+        // oldugu icin iki sayacin baslangici tam saniye farkla ayrilmiyor ve
+        // SESSION ile TODAY'in saniyeleri farkli anlarda degisiyordu.
+        let completed = (snapshot.todayDuration(at: entry.date) - active).rounded(.down)
+        return liveDuration(completed + active, counts: isEarning && countsRunning)
     }
 
     /// Calisirken sistem saati kendisi ilerletir; widget her saniye
