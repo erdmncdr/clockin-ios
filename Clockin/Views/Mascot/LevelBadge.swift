@@ -64,16 +64,18 @@ private struct LevelBadge: View {
                 Capsule(style: .continuous).fill(palette.accent.opacity(0.12))
                 GeometryReader { geometry in
                     let fill = geometry.size.width * progress
+                    // Isik dolgunun bittigi yerde bitsin: tarama rozetin
+                    // tamamini gezerse ilerlemeyi degil rozeti anlatir.
+                    //
+                    // Kirpma dolgunun kendi kapsul sekliyle yapilir. Dikdortgen
+                    // kirpma, yuvarlak ucun uzerinde duz bir cizgi birakiyordu.
                     Capsule(style: .continuous)
                         .fill(palette.accent.opacity(0.22))
                         .frame(width: fill)
-                    if !reduceMotion {
-                        // Isik dolgunun bittigi yerde bitsin: tarama rozetin
-                        // tamamini gezerse ilerlemeyi degil rozeti anlatir.
-                        BadgeSweep()
-                            .frame(width: fill, height: geometry.size.height)
-                            .clipped()
-                    }
+                        .overlay {
+                            if !reduceMotion { BadgeSweep() }
+                        }
+                        .clipShape(Capsule(style: .continuous))
                 }
             }
             .clipShape(Capsule(style: .continuous))
