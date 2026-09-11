@@ -24,7 +24,7 @@ struct ClockinLiveActivity: Widget {
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    timerText(context.state)
+                    islandTimerText(context.state)
                         .font(.title3.weight(.semibold))
                         .monospacedDigit()
                         .multilineTextAlignment(.trailing)
@@ -45,7 +45,7 @@ struct ClockinLiveActivity: Widget {
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
             } compactTrailing: {
-                timerText(context.state)
+                islandTimerText(context.state)
                     .monospacedDigit()
                     .frame(maxWidth: 64)
             } minimal: {
@@ -61,8 +61,25 @@ private func statusLabel(_ state: ClockinActivityAttributes.ContentState) -> som
 }
 
 @ViewBuilder
+private func islandTimerText(_ state: ClockinActivityAttributes.ContentState) -> some View {
+    if #available(iOS 18.0, *) {
+        let format = Duration.TimeFormatStyle(pattern: .hourMinute(padHourToLength: 2, roundSeconds: .down))
+        if let pausedAt = state.pausedAt {
+            Text(Duration.seconds(max(0, pausedAt.timeIntervalSince(state.timerStart))), format: format)
+        } else {
+            // Foundation's duration pattern preserves numeric HH:mm. The
+            // system advances this source even while the app is suspended.
+            Text(.durationOffset(to: state.timerStart), format: format)
+        }
+    } else {
+        timerText(state)
+    }
+}
+
+@ViewBuilder
 private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some View {
-    // Saniyesiz gosterim uc yoldan denendi, hicbiri calismadi: `.timer` ve
+    // Kilit ekrani icin saniyeli sayac. Adadaki saniyesiz gosterim
+    // `islandTimerText`'te; ondan once denenip calismayan yollar: `.timer` ve
     // `.stopwatch` dakika hassasiyetinde "1 hour, 15 minutes" diye yaziyor;
     // saniyeli sayaci gorunmez bir yer tutucuyla kirpmak Live Activity'de
     // sayaci tamamen bos birakiyor. Duraklatildiginda `pauseTime` metni dondurur.
