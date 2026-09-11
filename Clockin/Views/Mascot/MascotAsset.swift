@@ -3,6 +3,17 @@ import SwiftUI
 enum MascotAsset: String {
     case idle, working, paused, celebrate
 
+    /// Tek karakterli gorsel. `idle`/`paused` dosyalari dort maskotluk birer
+    /// sayfaydi; kartta yarim robotlar gorunuyordu, o dosyalar kaldirildi.
+    var imageName: String {
+        switch self {
+        case .idle: "pose2"
+        case .paused: "coffee1"
+        case .working: "working"
+        case .celebrate: "celebrate"
+        }
+    }
+
     var message: String {
         switch self {
         case .idle: "Ready when you are"
@@ -28,6 +39,7 @@ struct ClockinMascotImage: View {
 @MainActor
 struct ClockinMascotStage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.MascotDefault") private var defaultMode = "Auto"
     let state: MascotAsset
     @State private var pose: Int?
@@ -36,7 +48,7 @@ struct ClockinMascotStage: View {
     var body: some View {
         ZStack {
             if state == .celebrate {
-                ClockinMascotImage(asset: state.rawValue)
+                ClockinMascotImage(asset: state.imageName)
             } else if let pose {
                 ClockinPoseMascot(index: pose)
             } else if defaultMode == "Typing" {
@@ -49,14 +61,38 @@ struct ClockinMascotStage: View {
                 switch state {
                 case .working: ClockinFrameMascot(prefix: "frame", interval: 0.18)
                 case .paused: ClockinFrameMascot(prefix: "coffee", interval: 0.28)
-                case .idle, .celebrate: ClockinMascotImage(asset: state.rawValue)
+                case .idle, .celebrate: ClockinMascotImage(asset: state.imageName)
                 }
             }
-            if !reduceMotion && state != .celebrate {
+            if !reduceMotion && pose != nil && state != .celebrate {
                 ClockinMascotEffects()
+                    .id(poseToken)
                     .allowsHitTesting(false)
             }
         }
+        .phaseAnimator(breathing ? [false, true] : [false]) { content, lifted in
+            content
+                .offset(y: breathing && lifted ? -1.5 : 0)
+                .scaleEffect(breathing && lifted ? 1.018 : 1, anchor: .bottom)
+        } animation: { _ in
+            breathing ? .easeInOut(duration: 2.4) : nil
+        }
+        .phaseAnimator([false, true, false], trigger: state) { content, settling in
+            content
+                .scaleEffect(!reduceMotion && settling ? 0.96 : 1)
+                .offset(y: !reduceMotion && settling ? 2 : 0)
+        } animation: { settling in
+            reduceMotion ? nil : (settling ? .easeOut(duration: 0.1) : .spring(duration: 0.4, bounce: 0.2))
+        }
+        .phaseAnimator([false, true, false], trigger: poseToken) { content, reacting in
+            content
+                .scaleEffect(!reduceMotion && reacting ? 1.12 : 1)
+                .rotationEffect(.degrees(!reduceMotion && reacting ? -7 : 0))
+                .offset(y: !reduceMotion && reacting ? -4 : 0)
+        } animation: { reacting in
+            reduceMotion ? nil : .spring(duration: reacting ? 0.2 : 0.45, bounce: 0.3)
+        }
+        .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
         .contentShape(Rectangle())
         .onTapGesture { showPose() }
         .accessibilityElement(children: .ignore)
@@ -72,9 +108,11 @@ struct ClockinMascotStage: View {
         }
     }
 
+    private var breathing: Bool { state == .working && !reduceMotion && scenePhase == .active }
+
     private func showPose() {
         guard state != .celebrate else { return }
-        pose = Int.random(in: 1...4)
+        pose = (1...4).filter { $0 != pose }.randomElement()
         poseToken = UUID()
     }
 }
@@ -82,17 +120,21 @@ struct ClockinMascotStage: View {
 private struct ClockinPoseMascot: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let index: Int
-    @State private var moving = false
+    @Environment(\.scenePhase) private var scenePhase
+
+    private var isAnimating: Bool { !reduceMotion && scenePhase == .active }
 
     var body: some View {
         ClockinMascotImage(asset: "pose\(index)")
-            .scaleEffect(moving ? (index == 3 ? 1.05 : 0.98) : 1)
-            .offset(x: moving && index == 3 ? 5 : 0, y: moving ? -2 : 2)
-            .rotationEffect(.degrees(moving && index == 2 ? 5 : (moving && index == 4 ? -4 : 0)))
-            .animation(reduceMotion ? nil : .easeInOut(duration: index == 3 ? 0.28 : 0.7)
-                .repeatForever(autoreverses: true), value: moving)
-            .onAppear { moving = !reduceMotion }
-            .onChange(of: reduceMotion) { _, reduced in moving = !reduced }
+            .phaseAnimator(isAnimating ? [false, true] : [false]) { content, phase in
+                let moving = isAnimating && phase
+                content
+                    .scaleEffect(moving ? (index == 3 ? 1.05 : 0.98) : 1)
+                    .offset(x: moving && index == 3 ? 3 : 0, y: moving ? -2 : 0)
+                    .rotationEffect(.degrees(moving && index == 2 ? 4 : (moving && index == 4 ? -3 : 0)))
+            } animation: { _ in
+                isAnimating ? .easeInOut(duration: index == 3 ? 0.4 : 0.9) : nil
+            }
     }
 }
 

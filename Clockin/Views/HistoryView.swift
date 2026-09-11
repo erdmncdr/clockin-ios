@@ -3,6 +3,7 @@ import SwiftUI
 struct HistoryView: View {
     @EnvironmentObject private var store: ClockStore
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var sheet: SessionSheet?
     @State private var pendingDelete: WorkSession?
@@ -42,6 +43,7 @@ struct HistoryView: View {
                     }
                 }
             }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(palette.background)

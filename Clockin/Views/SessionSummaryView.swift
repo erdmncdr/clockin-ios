@@ -32,7 +32,7 @@ struct SessionSummaryView: View {
                     Divider().frame(height: 36)
                     metric("EARNED", store.earnings(for: session).money(code: store.currencyCode))
                     Divider().frame(height: 36)
-                    metric("XP", "+\(xp)")
+                    SummaryXP(value: xp)
                 }
                 .padding(.vertical, 14)
                 .card(palette)
@@ -69,12 +69,63 @@ private struct SessionCelebration: View {
     var body: some View {
         ClockinMascotStage(state: .celebrate)
             .frame(width: 64, height: 64)
-            .scaleEffect(appeared || reduceMotion ? 1 : 0.85)
-            .opacity(appeared ? 1 : 0)
+            .scaleEffect(appeared || reduceMotion ? 1 : 0.65)
+            .offset(y: appeared || reduceMotion ? 0 : 12)
+            .rotationEffect(.degrees(appeared || reduceMotion ? 0 : -10))
+            .opacity(appeared || reduceMotion ? 1 : 0)
+            .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
             .onAppear {
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) {
+                withAnimation(reduceMotion ? nil : .spring(duration: 0.65, bounce: 0.3)) {
                     appeared = true
                 }
             }
+    }
+}
+
+@MainActor
+private struct SummaryXP: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let value: Int
+    @State private var displayed = 0
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("XP")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.secondary)
+            Text("+\(reduceMotion ? value : displayed)")
+                .font(.headline)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(value) XP earned")
+        .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
+        .task(id: CountTarget(value: value, reduceMotion: reduceMotion)) {
+            guard !reduceMotion, value > 0 else {
+                displayed = value
+                return
+            }
+            displayed = 0
+            // Adim sayisi XP'den bagimsiz; yalniz bu metin yenilenir.
+            let steps = min(value, 24)
+            for step in 1...steps {
+                do { try await Task.sleep(for: .milliseconds(30)) }
+                catch { return }
+                let progress = Double(step) / Double(steps)
+                let next = step == steps ? value : Int(Double(value) * (1 - pow(1 - progress, 3)))
+                withAnimation(.easeOut(duration: 0.09)) {
+                    displayed = next
+                }
+            }
+        }
+    }
+
+    private struct CountTarget: Equatable {
+        let value: Int
+        let reduceMotion: Bool
     }
 }

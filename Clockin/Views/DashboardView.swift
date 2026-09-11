@@ -5,6 +5,7 @@ struct DashboardView: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
 
@@ -149,6 +150,7 @@ struct DashboardView: View {
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 11)
                         }
+                        .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 6)))
                         .buttonStyle(.hitTarget)
                         .contextMenu {
                             Button("Edit", systemImage: "pencil") { sheet = .edit(session) }
@@ -162,6 +164,7 @@ struct DashboardView: View {
                 .card(palette)
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: recent.map(\.id))
     }
 }
 
@@ -169,6 +172,7 @@ private struct TodayCard: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let now: Date
 
@@ -199,12 +203,16 @@ private struct TodayCard: View {
                     .tracking(1)
                     .foregroundStyle(.secondary)
                 Text(value)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: value)
                     .font(.headline)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if let detail {
                     Text(detail)
+                        .contentTransition(.numericText())
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: detail)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)

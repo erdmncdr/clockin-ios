@@ -5,6 +5,7 @@ struct TimerCard: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Yenilemeyi ust gorunum yonetir; bugun karti da ayni andan okusun diye.
     let now: Date
@@ -14,25 +15,38 @@ struct TimerCard: View {
     @State private var confirmCancel = false
 
     var body: some View {
+        let elapsed = DurationText.clock(store.elapsed(at: now))
+        let earned = store.currentEarnings(at: now)
+        let earnings = earned.money(code: store.currencyCode)
         VStack(spacing: 20) {
             VStack(spacing: 8) {
                 status
-                Text(DurationText.clock(store.elapsed(at: now)))
+                Text(elapsed)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: elapsed)
                     .font(.system(size: 60, weight: .medium, design: palette.fontDesign))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                Text(store.currentEarnings(at: now).money(code: store.currencyCode))
+                Text(earnings)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: earnings)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
-                    Text("≈ \((store.currentEarnings(at: now) * rate).money(code: "TRY"))")
+                    let converted = "≈ " + (earned * rate).money(code: "TRY")
+                    Text(converted)
+                        .contentTransition(.numericText())
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: converted)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
             }
-            controls
+            VStack {
+                controls
+            }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: store.running != nil)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
@@ -87,6 +101,7 @@ struct TimerCard: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+            .transition(controlTransition)
         } else {
             VStack(spacing: 12) {
                 Button { store.clockIn() } label: {
@@ -98,7 +113,12 @@ struct TimerCard: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+            .transition(controlTransition)
         }
+    }
+
+    private var controlTransition: AnyTransition {
+        reduceMotion ? .identity : .opacity.combined(with: .offset(y: 5))
     }
 
     private var statusColor: Color {

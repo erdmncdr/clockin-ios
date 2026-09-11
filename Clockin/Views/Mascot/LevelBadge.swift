@@ -63,30 +63,13 @@ private struct LevelBadge: View {
             ZStack(alignment: .leading) {
                 Capsule(style: .continuous).fill(palette.accent.opacity(0.12))
                 GeometryReader { geometry in
-                    // Bant ve yol dolguya oranlanir; az XP'de isik parlamaya donusmez.
-                    let fill = geometry.size.width * progress
                     Capsule(style: .continuous)
                         .fill(palette.accent.opacity(0.22))
-                        .frame(width: fill)
-                        .overlay {
-                            if !reduceMotion {
-                                // `withAnimation(...repeatForever)` bu ekranda hic ilerlemedi:
-                                // bir tam tur boyunca dolguda tek piksel degismedi. Bant konumu
-                                // artik dogrudan saatten hesaplaniyor. Yol dolgunun disinda
-                                // basliyor ve bitiyor; sicrama gorunmuyor, bekleme de oradan geliyor.
-                                TimelineView(.animation) { context in
-                                    let phase = context.date.timeIntervalSinceReferenceDate
-                                        .truncatingRemainder(dividingBy: 5.2) / 5.2
-                                    LinearGradient(
-                                        colors: [.clear, .white.opacity(0.30), .clear],
-                                        startPoint: .leading, endPoint: .trailing
-                                    )
-                                    .frame(width: fill * 0.55)
-                                    .offset(x: fill * (-1.4 + 4.1 * phase))
-                                }
-                            }
-                        }
-                        .clipShape(Capsule(style: .continuous))
+                        .frame(width: geometry.size.width * progress)
+                    if !reduceMotion {
+                        // Isik tum rozeti tarar; kucuk XP dolgusunda da okunur.
+                        BadgeSweep()
+                    }
                 }
             }
             .clipShape(Capsule(style: .continuous))
@@ -94,5 +77,39 @@ private struct LevelBadge: View {
                 Capsule(style: .continuous).stroke(palette.accent.opacity(0.26), lineWidth: 1)
             }
         }
+        .phaseAnimator([false, true, false], trigger: level) { content, highlighted in
+            content.overlay {
+                Capsule(style: .continuous)
+                    .stroke(palette.accent.opacity(!reduceMotion && highlighted ? 0.85 : 0), lineWidth: 1.5)
+                    .allowsHitTesting(false)
+            }
+            .brightness(!reduceMotion && highlighted ? 0.12 : 0)
+        } animation: { highlighted in
+            reduceMotion ? nil : .easeOut(duration: highlighted ? 0.2 : 0.7)
+        }
+        .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
+    }
+}
+
+private struct BadgeSweep: View {
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        GeometryReader { geometry in
+            // Kare yenilemesi sadece isikta kalir; XP hesabi tetiklenmez.
+            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: scenePhase != .active)) { context in
+                let cycle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 6)
+                let phase = min(cycle / 1.8, 1)
+                let band = max(18, geometry.size.width * 0.35)
+                LinearGradient(
+                    colors: [.clear, .white.opacity(0.35), .clear],
+                    startPoint: .leading, endPoint: .trailing
+                )
+                .frame(width: band, height: geometry.size.height)
+                .offset(x: -band + (geometry.size.width + band) * phase)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
