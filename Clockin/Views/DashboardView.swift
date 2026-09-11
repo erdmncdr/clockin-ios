@@ -6,7 +6,10 @@ struct DashboardView: View {
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
 
+    @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
+
     let showHistory: () -> Void
+    let showInsights: () -> Void
 
     @State private var sheet: SessionSheet?
     @State private var pendingDelete: WorkSession?
@@ -15,6 +18,22 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
+                    // Baslik yerine kendi ust satirimiz: solda seviye, sagda ekleme.
+                    // Arac cubugu ogesi rozeti yuvarlak zeminine kirpiyordu.
+                    HStack {
+                        DashboardLevelBadge(showInsights: showInsights)
+                        Spacer(minLength: 8)
+                        Button { sheet = .newEntry } label: {
+                            Image(systemName: "plus")
+                                .font(.headline)
+                                .frame(width: 36, height: 36)
+                                .background(palette.surface, in: Circle())
+                                .overlay { Circle().stroke(palette.surfaceStroke) }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(palette.accent)
+                        .accessibilityLabel("Add past entry")
+                    }
                     // Iki kart ayni andan okur. Her biri kendi TimelineView'uyla
                     // farkli anlarda yenilendiginde kazanc iki kartta bir sent
                     // farkli gorunuyordu. Sayac islemiyorsa degerler degismez;
@@ -26,6 +45,7 @@ struct DashboardView: View {
                                 onClockOut: { sheet = .summary($0) },
                                 onStartWithElapsed: { sheet = .manualStart }
                             )
+                            if mascotEnabled { MascotCard() }
                             TodayCard(now: context.date)
                         }
                     }
@@ -38,15 +58,7 @@ struct DashboardView: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .background(palette.background)
-            .navigationTitle("Clockin")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { sheet = .newEntry } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Add past entry")
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
         }
         .sessionSheets($sheet)
         .deleteSessionAlert($pendingDelete)

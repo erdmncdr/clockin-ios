@@ -13,6 +13,7 @@ struct SettingsView: View {
     @EnvironmentObject private var store: ClockStore
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @FocusState private var rateIsFocused: Bool
     @State private var rateText = ""
     @State private var showImporter = false
@@ -26,6 +27,7 @@ struct SettingsView: View {
             Form {
                 paySection
                 Section("Appearance") {
+                    Toggle("Focus companion", isOn: $mascotEnabled)
                     Picker("Theme", selection: $themeRaw) {
                         ForEach(ClockinThemeChoice.allCases) { theme in
                             Text(theme.rawValue).tag(theme.rawValue)
