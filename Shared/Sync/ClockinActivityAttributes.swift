@@ -10,6 +10,7 @@ struct ClockinActivityAttributes: ActivityAttributes {
         var pausedAt: Date?
         var hourlyRate: Double
         var earnedAtUpdate: Double
+        var usdTryRate: Double?
         var note: String
     }
 
@@ -24,10 +25,11 @@ extension ClockinActivityAttributes.ContentState {
         hourlyRate = try container.decode(Double.self, forKey: .hourlyRate)
         // Onceki surumun acik etkinliginde kazanc alani bulunmayabilir.
         earnedAtUpdate = try container.decodeIfPresent(Double.self, forKey: .earnedAtUpdate) ?? 0
+        usdTryRate = try container.decodeIfPresent(Double.self, forKey: .usdTryRate)
         note = try container.decode(String.self, forKey: .note)
     }
 
-    init(running: RunningSession, hourlyRate: Double, earned: Double) {
+    init(running: RunningSession, hourlyRate: Double, earned: Double, usdTryRate: Double? = nil) {
         if let resumedAt = running.resumedAt {
             timerStart = resumedAt.addingTimeInterval(-running.accumulated)
             pausedAt = nil
@@ -39,6 +41,7 @@ extension ClockinActivityAttributes.ContentState {
         }
         self.hourlyRate = hourlyRate
         earnedAtUpdate = earned
+        self.usdTryRate = usdTryRate
         note = running.note
     }
 

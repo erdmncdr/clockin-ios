@@ -8,6 +8,8 @@ import Foundation
 /// yazan digerinin degisikligini silerdi.
 @MainActor
 enum SharedStore {
+    static let exchangeRates = ExchangeRateStore()
+
     static let clock: ClockStore = {
         AppGroup.migrateLegacyDataIfNeeded()
         let store = ClockStore(fileURL: AppGroup.dataFileURL)

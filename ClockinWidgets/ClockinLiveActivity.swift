@@ -92,10 +92,18 @@ private struct LockScreenActivityView: View {
                     .font(.title3.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(state.isPaused ? .orange : palette.accent)
-                Text(state.note.isEmpty ? rateText(state, currencyCode) : "\(state.note) · \(rateText(state, currencyCode))")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
-                    .lineLimit(1)
+                if currencyCode == "USD", let rate = state.usdTryRate {
+                    Text("≈ \((state.earnedAtUpdate * rate).money(code: "TRY"))")
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                if !state.note.isEmpty {
+                    Text(state.note)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .lineLimit(1)
+                }
             }
             Spacer(minLength: 0)
             ActivityButtons(state: state, palette: palette)

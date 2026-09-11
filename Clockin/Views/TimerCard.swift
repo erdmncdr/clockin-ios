@@ -3,6 +3,7 @@ import SwiftUI
 /// Calisan seansi gosteren ve kontrol eden kart.
 struct TimerCard: View {
     @EnvironmentObject private var store: ClockStore
+    @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
 
     /// Yenilemeyi ust gorunum yonetir; bugun karti da ayni andan okusun diye.
@@ -24,6 +25,12 @@ struct TimerCard: View {
                 Text(store.currentEarnings(at: now).money(code: store.currencyCode))
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(palette.accent)
+                if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
+                    Text("≈ \((store.currentEarnings(at: now) * rate).money(code: "TRY"))")
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
             }
             controls
         }

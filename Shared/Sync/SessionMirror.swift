@@ -50,7 +50,10 @@ final class SessionMirror {
             Task { await Self.endAll() }
             return
         }
-        let state = ClockinActivityAttributes.ContentState(running: running, hourlyRate: hourlyRate, earned: earned)
+        let state = ClockinActivityAttributes.ContentState(
+            running: running, hourlyRate: hourlyRate, earned: earned,
+            usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil
+        )
         let hasActivity = !Activity<ClockinActivityAttributes>.activities.isEmpty
         guard state != lastState || !hasActivity else { return }
         lastState = state

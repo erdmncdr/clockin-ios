@@ -3,6 +3,7 @@ import SwiftUI
 /// Ana ekran: sayac, bugunun toplami ve son kayitlar.
 struct DashboardView: View {
     @EnvironmentObject private var store: ClockStore
+    @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
 
     let showHistory: () -> Void
@@ -28,6 +29,9 @@ struct DashboardView: View {
                             TodayCard(now: context.date)
                         }
                     }
+                    if store.currencyCode == "USD" {
+                        exchangeCard
+                    }
                     recentSection
                 }
                 .padding(16)
@@ -46,6 +50,65 @@ struct DashboardView: View {
         }
         .sessionSheets($sheet)
         .deleteSessionAlert($pendingDelete)
+    }
+
+    private var exchangeCard: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "dollarsign.arrow.circlepath")
+                .foregroundStyle(palette.secondary)
+                .frame(width: 28, height: 28)
+                .background(palette.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("USD / TRY")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .tracking(1)
+                if let rate = exchangeRates.latestRate {
+                    Text(String(format: "1 USD = %.3f TRY", rate))
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                    Text(rateStatusText)
+                        .font(.caption)
+                        .foregroundStyle(rateStatusColor)
+                } else {
+                    Text(exchangeRates.isLoading ? "Fetching live rate…" : "RATE UNAVAILABLE")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(exchangeRates.isLoading ? Color.secondary : Color.red)
+                    if !exchangeRates.isLoading, let error = exchangeRates.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                if let day = exchangeRates.latestDate {
+                    Text(day)
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            Spacer(minLength: 0)
+            if exchangeRates.isLoading {
+                ProgressView()
+                    .accessibilityLabel("Checking exchange rate")
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card(palette)
+    }
+
+    private var rateStatusText: String {
+        if exchangeRates.isLoading { return "Checking API…" }
+        if let error = exchangeRates.errorMessage { return error }
+        if let checked = exchangeRates.lastSuccessfulCheck {
+            return "API OK • checked \(checked.formatted(date: .omitted, time: .shortened))"
+        }
+        return "Cached rate"
+    }
+
+    private var rateStatusColor: Color {
+        if exchangeRates.errorMessage != nil { return .orange }
+        return exchangeRates.isLoading ? .secondary : palette.accent
     }
 
     @ViewBuilder private var recentSection: some View {
@@ -92,6 +155,7 @@ struct DashboardView: View {
 
 private struct TodayCard: View {
     @EnvironmentObject private var store: ClockStore
+    @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
 
     let now: Date
@@ -101,13 +165,18 @@ private struct TodayCard: View {
             metric("TODAY", DurationText.compact(store.todayDuration(at: now)), icon: "clock")
             Divider().frame(height: 36)
             metric("EARNED", store.todayEarnings(at: now).money(code: store.currencyCode),
-                   icon: "chart.line.uptrend.xyaxis")
+                   icon: "chart.line.uptrend.xyaxis", detail: earnedTRY)
         }
         .padding(.vertical, 14)
         .card(palette)
     }
 
-    private func metric(_ title: String, _ value: String, icon: String) -> some View {
+    private var earnedTRY: String? {
+        guard store.currencyCode == "USD", let rate = exchangeRates.latestRate else { return nil }
+        return "≈ " + (store.todayEarnings(at: now) * rate).money(code: "TRY")
+    }
+
+    private func metric(_ title: String, _ value: String, icon: String, detail: String? = nil) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundStyle(palette.accent.opacity(0.8))
@@ -122,6 +191,12 @@ private struct TodayCard: View {
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                if let detail {
+                    Text(detail)
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer(minLength: 0)
         }
