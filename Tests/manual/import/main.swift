@@ -1,0 +1,143 @@
+import Foundation
+
+// Ayni dokumun ikinci kez ice aktarilmasi kayit cogaltmamali.
+//
+// 9 Agustos 2026'da arsivde 29 saat gorunuyordu. Sebebi: ayni is iki kayit
+// halinde duruyor, baslangiclari ayni, bitisleri 5 dakika farkli. Dokum
+// duzeltilmis bitislerle yeniden alindiginda eski kayit hicbir satirla
+// eslesmiyor ve gun iki katina cikiyor.
+
+var checks = 0
+@MainActor func check(_ condition: Bool, _ name: String) {
+    guard condition else { print("FAILED: \(name)"); exit(1) }
+    checks += 1
+    print("ok: \(name)")
+}
+
+var calendar = Calendar(identifier: .gregorian)
+calendar.timeZone = .current
+@MainActor func at(_ day: Int, _ hour: Int, _ minute: Int) -> Date {
+    calendar.date(from: DateComponents(year: 2026, month: 8, day: day, hour: hour, minute: minute))!
+}
+@MainActor func session(day: Int = 9, _ sh: Int, _ sm: Int, _ eh: Int, _ em: Int,
+                        source: String, linked: String? = nil) -> WorkSession {
+    let start = at(day, sh, sm), end = at(day, eh, em)
+    var s = WorkSession(id: UUID(), start: start, end: end, duration: end.timeIntervalSince(start),
+                        note: "Rabbit 2.0", hourlyRate: 25, source: source)
+    s.matchedExternalSource = linked
+    return s
+}
+
+/// Verilen kayitlarla dolu, dosyaya yazilmis bir store.
+@MainActor func store(_ existing: [WorkSession]) -> (ClockStore, URL) {
+    let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let url = dir.appendingPathComponent("clockin.json")
+    let data = ClockinData(hourlyRate: 25, currencyCode: "USD", running: nil, sessions: existing)
+    try! JSONEncoder().encode(data).write(to: url)
+    return (ClockStore(fileURL: url), dir)
+}
+@MainActor func hours(_ s: ClockStore) -> Double { s.sessions.reduce(0.0) { $0 + $1.duration } / 3600 }
+
+// 1. Asil hata: isaretsiz, daha once ice aktarilmis bir kaydin uzerine
+//    duzeltilmis bitisle gelen ayni satir.
+do {
+    let legacy = session(11, 12, 19, 40, source: "starfleet")          // isaret yok
+    let (s, dir) = store([legacy]); defer { try? FileManager.default.removeItem(at: dir) }
+    let incoming = session(11, 12, 19, 45, source: "starfleet")
+    check(s.compareImportedSessions([incoming]).items.first?.kind == .matched,
+          "an updated timecard row is previewed as an update, not as new work")
+    s.importSessions([incoming])
+    check(s.sessions.count == 1, "re-importing a corrected row does not append a second copy")
+    check(abs(hours(s) - 8.55) < 0.01, "the day keeps one session's worth of hours")
+    check(s.sessions.first?.matchedExternalSource == "starfleet",
+          "the healed record is linked, so the next import matches it too")
+}
+
+// 2. Isaretli kayit zaten calisiyordu, bozulmamali.
+do {
+    let linked = session(11, 12, 19, 40, source: "starfleet", linked: "starfleet")
+    let (s, dir) = store([linked]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 45, source: "starfleet")])
+    check(s.sessions.count == 1, "an already linked record still updates in place")
+}
+
+// 3. Sayac kaydi da eskisi gibi eslesmeli.
+do {
+    let timer = session(11, 12, 19, 40, source: "Clockin")
+    let (s, dir) = store([timer]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 45, source: "starfleet")])
+    check(s.sessions.count == 1, "a timer entry is still corrected by the official row")
+}
+
+// 4. Fazla eslestirmeme: ayni gunun ayri, cakismayan isleri birlesmemeli.
+do {
+    let morning = session(9, 0, 11, 0, source: "starfleet")
+    let (s, dir) = store([morning]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(14, 0, 18, 0, source: "starfleet")])
+    check(s.sessions.count == 2, "two separate shifts on one day stay separate")
+}
+
+// 5. Az ortusen isler de ayri kalmali (esik kisa olanin yarisi).
+do {
+    let first = session(9, 0, 13, 0, source: "starfleet")             // 4 saat
+    let (s, dir) = store([first]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(12, 30, 16, 30, source: "starfleet")])  // 30 dk ortusuyor
+    check(s.sessions.count == 2, "a brief overlap is not treated as the same work")
+}
+
+// 6. Baska bir kaynak, isaretsiz bir kaydi sahiplenmemeli.
+do {
+    let other = session(11, 12, 19, 40, source: "starfleet")
+    let (s, dir) = store([other]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 45, source: "acme")])
+    check(s.sessions.count == 2, "a different employer's timecard does not absorb another's record")
+}
+
+// 7. Farkli gun, ayni saatler: gun siniri korunmali.
+do {
+    let ninth = session(day: 9, 11, 12, 19, 40, source: "starfleet")
+    let (s, dir) = store([ninth]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(day: 10, 11, 12, 19, 45, source: "starfleet")])
+    check(s.sessions.count == 2, "the same hours on the next day are a different session")
+}
+
+// 8. Birebir ayni satir yine atlanmali.
+do {
+    let existing = session(11, 12, 19, 40, source: "starfleet")
+    let (s, dir) = store([existing]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 40, source: "starfleet")])
+    check(s.sessions.count == 1, "an identical row is still skipped")
+}
+
+// 9. Iki ikiz birden varken tek satir yalnizca birini sahiplenir.
+do {
+    let twinA = session(11, 12, 19, 40, source: "starfleet")
+    let twinB = session(11, 12, 19, 45, source: "starfleet")
+    let (s, dir) = store([twinA, twinB]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 50, source: "starfleet")])
+    check(s.sessions.count == 2, "an existing duplicate pair is not grown by a third copy")
+}
+
+// 10. Bir dosyada ayni isin iki satiri varsa ikisi birden eklenmemeli.
+do {
+    let (s, dir) = store([]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 40, source: "starfleet"),
+                      session(11, 12, 19, 45, source: "starfleet")])
+    check(s.sessions.count == 1, "two near-identical rows in one file import as one session")
+}
+
+// 11. Arsivdeki ikizleri doguran gercek sira: once dokum alinir, sonra
+//     duzeltilmis hali ayri bir aktarmada gelir.
+do {
+    let (s, dir) = store([]); defer { try? FileManager.default.removeItem(at: dir) }
+    s.importSessions([session(11, 12, 19, 40, source: "starfleet")])
+    check(s.sessions.count == 1, "the first import of a timecard adds the row")
+    s.importSessions([session(11, 12, 19, 45, source: "starfleet")])
+    check(s.sessions.count == 1, "a later import of the corrected row updates it instead of doubling the day")
+    check(abs(hours(s) - 8.55) < 0.01, "the day still holds one shift")
+    s.importSessions([session(11, 12, 19, 50, source: "starfleet")])
+    check(s.sessions.count == 1, "a third correction still updates in place")
+}
+
+print("\(checks) import checks passed")

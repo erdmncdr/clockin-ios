@@ -380,6 +380,9 @@ final class ClockStore: ObservableObject {
     func compareImportedSessions(_ imported: [WorkSession],
                                  scope: ImportScope = .daysInFile) -> ImportComparisonSummary {
         var seenKeys = Set<String>()
+        // Onizleme ile asil aktarma ayni sonucu vermeli: ikisi de dosya icindeki
+        // ayni isin ikinci yazimini atlar.
+        var seenSessions: [WorkSession] = []
         var claimedMatches = Set<Int>()
         var indexByKey: [String: Int] = [:]
         for (index, session) in data.sessions.enumerated() {
@@ -395,11 +398,12 @@ final class ClockStore: ObservableObject {
                 touched.insert(duplicateIndex)
                 return ImportComparisonItem(session: session, kind: .duplicate)
             }
-            if seenKeys.contains(key) {
+            if seenKeys.contains(key) || seenSessions.contains(where: { sharedTime($0, session) != nil }) {
                 return ImportComparisonItem(session: session, kind: .duplicate)
             }
             seenKeys.insert(key)
-            if session.source != "Clockin", let index = findClockinMatch(for: session), !claimedMatches.contains(index) {
+            seenSessions.append(session)
+            if session.source != "Clockin", let index = findMatch(for: session), !claimedMatches.contains(index) {
                 claimedMatches.insert(index)
                 touched.insert(index)
                 return ImportComparisonItem(session: session, kind: .matched, localMatch: data.sessions[index])
@@ -521,7 +525,7 @@ final class ClockStore: ObservableObject {
             if freshKeys.contains(key) {
                 continue
             }
-            if session.source != "Clockin", let index = findClockinMatch(for: session) {
+            if session.source != "Clockin", let index = findMatch(for: session) {
                 guard !claimedMatches.contains(index) else {
                     continue
                 }
@@ -534,10 +538,15 @@ final class ClockStore: ObservableObject {
                 data.sessions[index].duration = session.duration
                 data.sessions[index].matchedExternalSource = session.source
                 corrected += 1
+            } else if fresh.contains(where: { sharedTime($0, session) != nil }) {
+                // Ayni dosyada ayni isin iki yazimi olabiliyor: birebir ayni
+                // satirlar zaten ataniyordu, birkac dakika farkli bitisler
+                // atlanmiyordu. Ikisi de dogru olamayacagi icin ilki kalir.
+                continue
             } else {
                 var authoritative = session
-                // Imported records stay linked so a later CSV can update the
-                // same row instead of appending a second copy.
+                // Ice aktarilan kayitlar isaretli kalir; boylece sonraki bir
+                // dokum ayni satiri ikinci kez eklemek yerine gunceller.
                 authoritative.matchedExternalSource = session.source
                 fresh.append(authoritative)
                 freshKeys.insert(key)
@@ -560,7 +569,7 @@ final class ClockStore: ObservableObject {
     /// ortusme orani (kisa olanin yuzdesi).
     private static let matchOverlapRatio = 0.5
 
-    /// Bir dis kayda karsilik gelen sayac kaydini bulur.
+    /// Bir dis kayda karsilik gelen yerel kaydi bulur.
     ///
     /// Eskiden baslangic/bitis 90 saniye, sure 120 saniye icinde olmak
     /// zorundaydi. Elle baslatilip durdurulan bir sayac icin bu esik
@@ -569,17 +578,35 @@ final class ClockStore: ObservableObject {
     /// durdurmayi unutup uzayan seanslar da dogru kayitla eslesir.
     ///
     /// Ilk uyan degil, en cok ortusen kayit secilir.
-    private func findClockinMatch(for external: WorkSession) -> Int? {
+    ///
+    /// Ayni kaynaktan gelmis yerel kayitlar da aranir. Once yalnizca sayac
+    /// kayitlari ve `matchedExternalSource` tasiyanlar bakiliyordu; isareti
+    /// olmayan, daha eski bir surumun ice aktardigi bir kayit hicbir satirla
+    /// eslesemiyordu. Dokum birkac dakika duzeltilmis bitisle yeniden
+    /// alindiginda ayni is ikinci kez ekleniyor ve gun iki katina cikiyordu.
+    /// 9 Agustos 2026 arsivde boyle 29 saat gorunuyor.
+    private func findMatch(for external: WorkSession) -> Int? {
         var best: (index: Int, overlap: TimeInterval)?
         for (index, local) in data.sessions.enumerated() {
-            guard (local.source == "Clockin" || local.matchedExternalSource != nil),
-                  calendar.isDate(local.start, inSameDayAs: external.start) else { continue }
-            let overlap = min(local.end, external.end).timeIntervalSince(max(local.start, external.start))
-            let shorter = min(local.duration, external.duration)
-            guard overlap > 0, shorter > 0, overlap >= shorter * Self.matchOverlapRatio else { continue }
+            guard local.source == "Clockin" || local.matchedExternalSource != nil
+                    || local.source == external.source else { continue }
+            guard let overlap = sharedTime(local, external) else { continue }
             if best == nil || overlap > best!.overlap { best = (index, overlap) }
         }
         return best?.index
+    }
+
+    /// Iki kaydin ayni isi tarif ettigi kabul ediliyorsa ortusen sure.
+    ///
+    /// Ayni gunde olmalari ve kisa olanin en az yarisinin ortusmesi gerekir.
+    /// Ayni anda iki is yapilamayacagi icin bu kadar ortusen iki kayit
+    /// pratikte ayni isin iki yazimidir.
+    private func sharedTime(_ a: WorkSession, _ b: WorkSession) -> TimeInterval? {
+        guard calendar.isDate(a.start, inSameDayAs: b.start) else { return nil }
+        let overlap = min(a.end, b.end).timeIntervalSince(max(a.start, b.start))
+        let shorter = min(a.duration, b.duration)
+        guard overlap > 0, shorter > 0, overlap >= shorter * Self.matchOverlapRatio else { return nil }
+        return overlap
     }
 
     /// Calisan seans bugune sayilmiyorsa, yazildigi gun.
