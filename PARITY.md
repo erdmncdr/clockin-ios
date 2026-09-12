@@ -51,12 +51,10 @@ labels. Rate requests use calendar-day keys and refresh when session dates chang
 including same-count edits and the active session's start date.
 
 Verification: warning-free simulator build; all four filters, the USD/TRY switch
-and tap day details exercised on iPhone 17 Pro / iOS 26.5 against the 612-record
-archive (ALL reports 612 completed, 2542h 15m). The period total and the TRY
-conversions were read off screen and disagree as they should: ALL shows
-$63.556,39 with a current-rate estimate, while the historical total for 30D
-(₺395.276,60) differs from the same period's current-rate figure (₺398.188,77),
-so the two conversions are demonstrably not sharing a rate.
+and tap day details exercised on iPhone 17 Pro / iOS 26.5. The period total and
+the TRY conversions were read off screen and disagree as they should: a period's
+historical-rate total differs from its current-rate figure, so the two
+conversions are demonstrably not sharing a rate.
 
 Twelve deterministic calculation checks cover date boundaries, historical
 conversion, missing rates, active/paused work, and empty data. They were shown to
@@ -135,7 +133,7 @@ Auto. They now come from one `CompanionMode` enum, which also owns the threshold
 and the locked-label text.
 
 Verification: warning-free simulator build; the picker was opened on
-iPhone 17 Pro / iOS 26.5 and lists all seven modes. That archive has every mode
+iPhone 17 Pro / iOS 26.5 and lists all seven modes. The archive used there has every mode
 unlocked, so the locked path cannot be reached through the UI there. It is covered
 instead by 17 checks on `CompanionMode` (locked selection reverts to Auto, the
 threshold itself unlocks, unknown or wrongly cased stored values fall back,

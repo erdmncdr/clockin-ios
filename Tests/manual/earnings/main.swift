@@ -5,7 +5,7 @@ let today = calendar.date(from: DateComponents(year: 2026, month: 9, day: 12, ho
 @MainActor func day(_ offset: Int) -> Date { calendar.date(byAdding: .day, value: offset, to: today)! }
 @MainActor func session(_ offset: Int, hours: Double) -> WorkSession {
     let start = day(offset)
-    return WorkSession(id: UUID(), start: start, end: start.addingTimeInterval(hours * 3600), duration: hours * 3600, note: "", hourlyRate: 25, source: "test")
+    return WorkSession(id: UUID(), start: start, end: start.addingTimeInterval(hours * 3600), duration: hours * 3600, note: "", hourlyRate: 40, source: "test")
 }
 let sessions = [session(0, hours: 2), session(-6, hours: 1), session(-7, hours: 4), session(-29, hours: 1), session(-30, hours: 3), session(-89, hours: 2), session(-90, hours: 5), session(1, hours: 9)]
 var checks = 0

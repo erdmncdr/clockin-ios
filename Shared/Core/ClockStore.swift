@@ -603,7 +603,6 @@ final class ClockStore: ObservableObject {
     /// olmayan, daha eski bir surumun ice aktardigi bir kayit hicbir satirla
     /// eslesemiyordu. Dokum birkac dakika duzeltilmis bitisle yeniden
     /// alindiginda ayni is ikinci kez ekleniyor ve gun iki katina cikiyordu.
-    /// 9 Agustos 2026 arsivde boyle 29 saat gorunuyor.
     private func findMatch(for external: WorkSession) -> Int? {
         var best: (index: Int, overlap: TimeInterval)?
         for (index, local) in data.sessions.enumerated() {

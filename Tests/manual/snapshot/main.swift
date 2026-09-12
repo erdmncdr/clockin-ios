@@ -177,7 +177,7 @@ func runChecks() -> Int {
         var payload = ClockinData()
         payload.running = paused.running
         payload.sessions = [WorkSession(id: UUID(), start: running.start, end: today,
-                                       duration: 5400, note: "valid", hourlyRate: 25, source: "Clockin")]
+                                       duration: 5400, note: "valid", hourlyRate: 40, source: "Clockin")]
         let encoder = JSONEncoder()
         let decoder = JSONDecoder()
         // Default JSON rejects non-finite numbers itself. Allow strings here

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Ayni anda iki is yapilamaz, dolayisiyla zamanlari cakisan iki kayit ya
 /// ayni isin iki yazimi ya da yanlis girilmis bir saattir. Ikisi de gunu
-/// sisirir: arsivde 9 Agustos 29 saat, 11 Eylul 25 saat gorunuyordu.
+/// sisirir; bir gun 24 saatten fazla gorunebilir.
 ///
 /// `addSession` yalnizca birebir ayni saatleri reddediyordu; bir dakika
 /// kaydirilmis ayni is uyarisiz giriyordu.

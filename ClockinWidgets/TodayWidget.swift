@@ -269,6 +269,6 @@ extension ClockinSnapshot {
     /// Widget galerisinde gosterilen ornek.
     static let placeholder = ClockinSnapshot(
         day: Calendar.current.startOfDay(for: .now), completedToday: 3 * 3600 + 25 * 60,
-        earnedToday: 85.42, running: nil, hourlyRate: 25, currencyCode: "USD"
+        earnedToday: 136.67, running: nil, hourlyRate: 40, currencyCode: "USD"
     )
 }
