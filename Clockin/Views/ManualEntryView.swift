@@ -55,6 +55,15 @@ struct ManualEntryView: View {
     }
 
     private var duration: TimeInterval { resolvedEnd.timeIntervalSince(resolvedStart) }
+
+    /// Bu saatlerin uzerine bindigi kayitlar.
+    ///
+    /// Kaydetmeyi engellemiyor: iki isi ayni saatte tutan biri olabilir ve
+    /// dogru olani bilen kullanici. Ama sessizce gecmemeli, cunku gun
+    /// toplamlari bu yuzden 24 saati asiyordu.
+    private var conflicts: [WorkSession] {
+        store.overlappingSessions(start: resolvedStart, end: resolvedEnd, excluding: editing?.id)
+    }
     private var earnings: Double {
         duration / 3600 * store.effectiveRate(at: resolvedStart, fallback: store.hourlyRate)
     }
@@ -82,6 +91,22 @@ struct ManualEntryView: View {
                     DatePicker("End", selection: $endTime, displayedComponents: .hourAndMinute)
                 } footer: {
                     if crossesMidnight { Text("Ends the next day.") }
+                }
+
+                if !conflicts.isEmpty {
+                    Section {
+                        ForEach(conflicts) { session in
+                            SessionRow(session: session, showsDay: true)
+                        }
+                    } header: {
+                        Label("Overlaps \(conflicts.count) existing \(conflicts.count == 1 ? "entry" : "entries")",
+                              systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .textCase(nil)
+                    } footer: {
+                        Text("You can still save. Two records covering the same time are counted twice in your totals.")
+                    }
+                    .listRowBackground(palette.surface)
                 }
 
                 Section("Note") {

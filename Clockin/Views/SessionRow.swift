@@ -9,6 +9,9 @@ struct SessionRow: View {
     /// Gun basligi altinda listelenirken tarih tekrar yazilmaz, saat araligi
     /// gosterilir.
     var showsDay = true
+    /// Baska bir kaydin uzerine biniyorsa saatler isaretlenir. Bu kayitlar
+    /// gun toplamina iki kez giriyor; arsivde 11 Eylul boyle 25 saat.
+    var conflicts = false
 
     private var isTimer: Bool { session.source == "Clockin" }
 
@@ -29,8 +32,16 @@ struct SessionRow: View {
                 .frame(width: 32, height: 32)
                 .background(palette.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.subheadline.weight(.medium))
+                HStack(spacing: 5) {
+                    Text(title)
+                        .font(.subheadline.weight(.medium))
+                    if conflicts {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .accessibilityLabel("Overlaps another entry")
+                    }
+                }
                 Text(session.note.isEmpty ? session.source : session.note)
                     .font(.caption)
                     .foregroundStyle(.secondary)

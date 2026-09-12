@@ -18,6 +18,7 @@ struct HistoryView: View {
             range: range, now: now, earnings: { store.earnings(for: $0) },
             activeEarnings: store.currentEarnings(at: now), rate: { exchangeRates.rate(onCalendarDay: $0) })
         let days = groupedDays(snapshot.sessions)
+        let conflicts = store.conflictingSessionIDs
 
         NavigationStack {
             List {
@@ -35,7 +36,8 @@ struct HistoryView: View {
                     Section {
                         ForEach(group.sessions) { session in
                             Button { sheet = .edit(session) } label: {
-                                SessionRow(session: session, showsDay: false)
+                                SessionRow(session: session, showsDay: false,
+                                           conflicts: conflicts.contains(session.id))
                             }
                             .buttonStyle(.plain)
                             .listRowBackground(palette.surface)
@@ -57,7 +59,7 @@ struct HistoryView: View {
                             }
                         }
                     } header: {
-                        dayHeader(group)
+                        dayHeader(group, conflicts: conflicts)
                     }
                 }
             }
@@ -88,8 +90,9 @@ struct HistoryView: View {
     /// oldugu icin iki sutun da tirtikli gorunuyor, basliklar da "Today" ile
     /// "Cum, 11 Eyl" arasinda gidip geliyordu. Simdi her gun ayni iskelet:
     /// ad, tarih, tek satir toplam.
-    private func dayHeader(_ group: DayGroup) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+    private func dayHeader(_ group: DayGroup, conflicts: Set<UUID>) -> some View {
+        let clashing = group.sessions.filter { conflicts.contains($0.id) }.count
+        return HStack(alignment: .firstTextBaseline, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 let labels = dayLabels(group.day)
                 SectionTitle(labels.title)
@@ -97,6 +100,15 @@ struct HistoryView: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .padding(.leading, 2)
+                // Gunun toplami dogru gorunse bile ustuste binen kayitlar
+                // sureyi iki kez sayiyor. Gun basliginda soylenmezse, satirlara
+                // tek tek bakmadan fark edilmiyor.
+                if clashing > 0 {
+                    Label("\(clashing) entries overlap", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                        .padding(.leading, 2)
+                }
             }
             Spacer(minLength: 8)
             HStack(spacing: 6) {

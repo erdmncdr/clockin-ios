@@ -9,6 +9,7 @@ final class ClockStore: ObservableObject {
             cachedTotals = nil
             cachedByDay = nil
             cachedDailyDurations = nil
+            cachedConflicts = nil
         }
     }
     @Published var statusMessage: String?
@@ -20,6 +21,7 @@ final class ClockStore: ObservableObject {
     /// Siralanmis kopyalar. `data` her degistiginde bosaltilir; boylece
     /// her okumada yeniden siralama yapilmaz.
     private var cachedSessions: [WorkSession]?
+    private var cachedConflicts: Set<UUID>?
     private var cachedRateRules: [RateRule]?
     /// Tamamlanmis oturumlarin toplamlari. Ekran saniyede bir yenileniyor ve
     /// bu degerler tek bir yenilemede alti kez isteniyordu; her biri butun
@@ -106,6 +108,23 @@ final class ClockStore: ObservableObject {
         let sorted = data.sessions.sorted { $0.start > $1.start }
         cachedSessions = sorted
         return sorted
+    }
+
+    /// Verilen araliga degen kayitlar. Elle giris ekrani bunu yazarken
+    /// gosterir; kayit engellenmez, yalnizca gorunur kilinir.
+    func overlappingSessions(start: Date, end: Date, excluding id: UUID? = nil) -> [WorkSession] {
+        SessionOverlap.touching(start: start, end: end, in: sessions, excluding: id)
+    }
+
+    /// Baska bir kayitla cakisan her kaydin kimligi.
+    ///
+    /// Gecmis ekrani her ciziminde soruluyor, bu yuzden `data` degisene kadar
+    /// saklanir; 600 kaydi her karede yeniden taramak gereksiz.
+    var conflictingSessionIDs: Set<UUID> {
+        if let cached = cachedConflicts { return cached }
+        let found = SessionOverlap.conflicting(in: sessions)
+        cachedConflicts = found
+        return found
     }
 
     var rateRules: [RateRule] {
