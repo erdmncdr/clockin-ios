@@ -55,9 +55,9 @@ struct BadgesView: View {
             DisclosureGroup("How XP works") {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("100 XP per hour: \(stats.baseXP.formatted()) XP")
-                    Text("Goals: +\(stats.goalXP.formatted()) XP • Streaks: +\(stats.streakXP.formatted()) XP")
-                    Text("Each daily goal adds 100 XP; reaching twice the goal adds another 250 XP. Each monthly goal adds 500 XP.")
+                    Text("Streaks: +\(stats.streakXP.formatted()) XP")
                     Text("Streak bonuses add up: 3 days +100, 7 +250, 14 +500, 30 +1,000 and 60 +2,000 XP.")
+                    Text("Goals do not add XP. They are yours to set, so a level built on them would not mean the same thing for everyone.")
                 }
                 .font(.footnote).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

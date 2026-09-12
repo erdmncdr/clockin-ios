@@ -24,7 +24,7 @@ enum StatsShareField: String, CaseIterable {
     case activeDays = "Active days", streak = "Streak", badges = "Badges", xp = "Total XP"
     case bestDay = "Best day", bestDayDuration = "Best day duration", longestStreak = "Best streak"
     case weekday = "Best weekday", hour = "Power hour", level = "Level"
-    case goalDays = "Goal days", doubleGoalDays = "2× goal days", goalMonths = "Month goals", momentum = "Momentum"
+    case fullDays = "8-hour days", longDays = "10-hour days", bigMonths = "100-hour months", momentum = "Momentum"
 }
 
 struct StatsShareRow: Equatable, Identifiable {
@@ -46,7 +46,7 @@ enum StatsShareFields {
         case .rhythm:
             fields = [.bestDay, .longestStreak, .activeDays, .weekday, .hour, .sessions]
         case .milestones:
-            fields = [.level, .xp, .badges, .goalDays, .doubleGoalDays, .goalMonths, .momentum]
+            fields = [.level, .xp, .badges, .fullDays, .longDays, .bigMonths, .momentum]
         }
         return fields.map { field in
             var value = values[field] ?? "No sessions"

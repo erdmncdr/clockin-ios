@@ -37,7 +37,7 @@ struct UsageGuideView: View {
                     topic("Money Momentum", icon: "flame.fill",
                           detail: "Today shows your effective hourly rate divided by 3,600, plus TRY per second for USD accounts when a rate is available. While a session is open, the strip tracks its next multiple-of-ten earnings target. At an exact multiple, the target moves to the next ten. When paused or idle, Your earning power shows the potential rate; paused time does not earn more money.")
                     topic("Insights", icon: "chart.xyaxis.line",
-                          detail: "Insights shows your goals, the work heatmap by day, week or month, your rhythm and reports. Use Edit goals to set daily and monthly hours; zero turns a goal off. While you work, the goals card says when you reach today's goal; otherwise it says when you would reach it if you started now. Changing goals recalculates past goal bonuses and your level.")
+                          detail: "Insights shows your goals, the work heatmap by day, week or month, your rhythm and reports. Use Edit goals to set daily and monthly hours; zero turns a goal off. While you work, the goals card says when you reach today's goal; otherwise it says when you would reach it if you started now. Goals are for tracking only and do not change your level or badges.")
                     topic("Level and badges", icon: "rosette",
                           detail: "Open Badges, or tap your level or the companion card on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Tap a badge for its requirement and current progress. Current-streak badges lock again when a streak ends.")
                 } header: {

@@ -13,14 +13,26 @@ struct InsightsSnapshot {
     var sessionCount = 0
     var longestStreak = 0
     var currentStreak = 0
-    var goalDays = 0
-    var doubleGoalDays = 0
-    var goalMonths = 0
+    /// Herkes icin ayni esikler; kullanicinin hedefine bagli degil.
+    var fullDays = 0
+    var longDays = 0
+    var bigMonths = 0
     var baseXP = 0
     var streakXP = 0
 
-    var goalXP: Int { goalDays * 100 + doubleGoalDays * 250 + goalMonths * 500 }
-    var xp: Int { baseXP + goalXP + streakXP }
+    /// Seviye yalnizca calisilan saatten ve seriden gelir.
+    ///
+    /// Mac'te hedeflere de XP veriliyor: her hedef gunu +100, iki kati +250,
+    /// her hedef ayi +500. Hedef kullanicinin kendi sectigi bir sayi ve
+    /// degistirilince butun gecmis yeniden puanlaniyor; gunluk hedefi 10
+    /// dakikaya ceken biri uzun bir arsivde aniden yuzlerce seviye aliyordu.
+    /// Seviye herkes icin ayni sekilde sayilabilen seylere dayanmali. Hedefler
+    /// kisisel takip icin kaliyor ama odul vermiyor.
+    var xp: Int { baseXP + streakXP }
+
+    static let fullDayHours: Double = 8
+    static let longDayHours: Double = 10
+    static let bigMonthHours: Double = 100
     var level: Int { max(1, xp / 500 + 1) }
 
     var averageSession: TimeInterval = 0
@@ -107,10 +119,8 @@ struct InsightsSnapshot {
             }
             if day >= weekStart && day <= today { recentWeek += duration }
             if day >= previousStart && day < weekStart { previousWeek += duration }
-            if dailyGoal > 0 {
-                if duration >= dailyGoal * 3600 { goalDays += 1 }
-                if duration >= dailyGoal * 7200 { doubleGoalDays += 1 }
-            }
+            if duration >= Self.fullDayHours * 3600 { fullDays += 1 }
+            if duration >= Self.longDayHours * 3600 { longDays += 1 }
             if let previousDay, calendar.dateComponents([.day], from: previousDay, to: day).day == 1 {
                 consecutive += 1
             } else {
@@ -119,9 +129,7 @@ struct InsightsSnapshot {
             longestStreak = max(longestStreak, consecutive)
             previousDay = day
         }
-        if monthlyGoal > 0 {
-            goalMonths = months.values.filter { $0 >= monthlyGoal * 3600 }.count
-        }
+        bigMonths = months.values.filter { $0 >= Self.bigMonthHours * 3600 }.count
         // Ay toplami donguden sonra belli oluyor; tahmin burada kurulur.
         goalEstimate = InsightsGoalEstimate.make(dailyGoal: dailyGoal, monthlyGoal: monthlyGoal,
             todayDuration: daily[today, default: 0], monthDuration: monthDuration,

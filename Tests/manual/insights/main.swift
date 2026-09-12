@@ -92,8 +92,8 @@ let integerThresholds: [(String, WritableKeyPath<InsightsSnapshot, Int>, Int)] =
     ("week", \.sessionCount, 7), ("sessions25", \.sessionCount, 25), ("sessions50", \.sessionCount, 50),
     ("sessions100", \.sessionCount, 100), ("sessions200", \.sessionCount, 200), ("sessions500", \.sessionCount, 500),
     ("xp", \.baseXP, 10000), ("xp25", \.baseXP, 25000), ("xp50", \.baseXP, 50000), ("xp100", \.baseXP, 100000),
-    ("goal", \.goalDays, 1), ("goal7", \.goalDays, 7), ("goal30", \.goalDays, 30),
-    ("doublegoal", \.doubleGoalDays, 1), ("monthgoal", \.goalMonths, 1), ("month3", \.goalMonths, 3), ("month12", \.goalMonths, 12),
+    ("fullday", \.fullDays, 1), ("fullday7", \.fullDays, 7), ("fullday30", \.fullDays, 30),
+    ("longday", \.longDays, 1), ("bigmonth", \.bigMonths, 1), ("bigmonth3", \.bigMonths, 3), ("bigmonth12", \.bigMonths, 12),
     ("earlybird", \.earlyBirdSessions, 5), ("nightowl", \.nightOwlSessions, 5), ("weekend", \.weekendDays, 4)
 ]
 @MainActor func unlocked(_ value: InsightsSnapshot, _ id: String) -> Bool { value.badges.first { $0.id == id }?.unlocked == true }
@@ -122,8 +122,22 @@ for (id, count) in [("active5", 5), ("active25", 25), ("active100", 100), ("acti
     value.daily[now.addingTimeInterval(Double(count) * 86400)] = 3600
     check(unlocked(value, id), "\(id) unlocked exactly at active-day threshold")
 }
-let goalValue = snapshot([session(date(9, 12), 2), session(date(9, 13), 2)], daily: 1, monthly: 4)
-check(goalValue.goalDays == 2 && goalValue.doubleGoalDays == 2 && goalValue.goalMonths == 1 && goalValue.xp == 1600, "exact goals generate cumulative base and goal XP")
+// Seviye hile ile sisirilemez: hedef ne olursa olsun XP ve rozetler ayni.
+let work = [session(date(9, 12), 2), session(date(9, 13), 2)]
+let noGoals = snapshot(work)
+for (daily, monthly) in [(0.1, 0.1), (1.0, 4.0), (24.0, 744.0)] {
+    let withGoals = snapshot(work, daily: daily, monthly: monthly)
+    check(withGoals.xp == noGoals.xp && withGoals.level == noGoals.level,
+          "goals of \(daily)h a day and \(monthly)h a month do not change XP or level")
+    check(withGoals.badges.map(\.unlocked) == noGoals.badges.map(\.unlocked),
+          "goals of \(daily)h a day and \(monthly)h a month do not unlock badges")
+}
+check(noGoals.xp == 400, "XP is 100 per hour plus streak bonuses and nothing else")
+// Sabit esikler: tam sinirda sayilir.
+let fullDay = snapshot([session(date(9, 10, 8), 8), session(date(9, 11, 8), 7.99), session(date(9, 12, 8), 10)])
+check(fullDay.fullDays == 2 && fullDay.longDays == 1, "8-hour and 10-hour days count at exactly the threshold")
+let bigMonth = snapshot((1...10).map { session(date(8, $0, 8), 10) } + [session(date(9, 1, 8), 9)])
+check(bigMonth.bigMonths == 1, "a calendar month counts once it holds 100 hours")
 let streakRecords = (0..<14).map { session(calendar.date(byAdding: .day, value: -$0, to: date(9, 1))!, 1) }
 let oldStreak = snapshot(streakRecords)
 check(oldStreak.currentStreak == 0 && oldStreak.longestStreak == 14 && oldStreak.streakXP == 850, "historical longest streak retains cumulative bonuses")

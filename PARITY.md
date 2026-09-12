@@ -37,10 +37,15 @@ were exercised on the iPhone 17 Pro simulator.
 | G1.08 Companion picker | Settings > Appearance. | |
 | G1.09 Match provenance | History rows show "Matched source" when a timer entry was corrected by a timecard. | |
 | G1.10 Goal estimate | Insights > Goals. The daily goal gives a clock time; the monthly goal gives work days and whether the month can hold them. The Mac's "N days away" for a daily goal always read 1. | |
-| G1.11 Badges | Badges tab: all 46, unlocked and locked groups, detail with requirement and progress. | |
+| G1.11 Badges | Badges tab: all 46, unlocked and locked groups, detail with requirement and progress. The seven Mac badges tied to the user's own goals use fixed thresholds instead (8-hour days, 10-hour days, 100-hour months), so they cannot be unlocked by lowering a goal. | |
 | G1.12 Guide | Settings > How to use Clockin. | |
 | G1.13 Money Momentum | Today. | |
 | G1.14 Focus radio | Settings > Focus radio, with lock screen playback (`UIBackgroundModes` audio). | Playback on a device and with the screen locked |
+
+Level differs from the Mac on purpose: XP comes only from hours worked and
+streak bonuses. The Mac also awards XP for meeting goals and recalculates it
+whenever a goal changes, so setting a 10-minute daily goal adds hundreds of
+levels at once. Goals stay on iPhone as a tracking tool without rewards.
 
 Also changed while porting: widgets and the Live Activity follow the chosen
 theme; a save that fails is rolled back in memory instead of showing work that

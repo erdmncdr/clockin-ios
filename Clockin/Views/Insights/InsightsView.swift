@@ -69,7 +69,7 @@ struct InsightsView: View {
                     Stepper(value: goalBinding($monthlyGoalHours, maximum: 744), in: 0...744) {
                         Text("Monthly: \(goalLabel(monthlyGoalHours))")
                     }
-                    Text("Whole-hour steps. Zero turns a goal off. Changing goals recalculates past goal bonuses and your level.")
+                    Text("Whole-hour steps. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(.top, 12)

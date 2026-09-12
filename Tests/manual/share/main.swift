@@ -22,7 +22,7 @@ check(rows(.rhythm, .privateStats).first?.value == values[.bestDay], "Private be
 check(rows(.rhythm, .publicStats).first?.value == "value:Best day • value:Best day duration",
       "Public best day includes duration")
 check(rows(.milestones, .privateStats) == rows(.milestones, .publicStats), "Privacy preserves every milestone")
-check(rows(.milestones, .privateStats).map(\.field) == [.level, .xp, .badges, .goalDays, .doubleGoalDays, .goalMonths, .momentum],
+check(rows(.milestones, .privateStats).map(\.field) == [.level, .xp, .badges, .fullDays, .longDays, .bigMonths, .momentum],
       "Milestones include all Mac fields")
 // Tum sayfalarda gizlilik siniri korunmali; yalniz genel bakisi sinamak yeterli degil.
 for page in StatsSharePage.allCases {

@@ -27,8 +27,8 @@ struct StatsShareSnapshot: Identifiable {
             .sessions: "\(stats.sessionCount)", .activeDays: "\(stats.daily.count)",
             .streak: "\(stats.currentStreak) days", .longestStreak: "\(stats.longestStreak) days",
             .badges: "\(stats.badges.filter(\.unlocked).count)", .xp: "\(stats.xp)", .level: "\(stats.level)",
-            .goalDays: "\(stats.goalDays)", .doubleGoalDays: "\(stats.doubleGoalDays)",
-            .goalMonths: "\(stats.goalMonths)", .momentum: String(format: "%+.0f%%", stats.monthTrend * 100),
+            .fullDays: "\(stats.fullDays)", .longDays: "\(stats.longDays)",
+            .bigMonths: "\(stats.bigMonths)", .momentum: String(format: "%+.0f%%", stats.monthTrend * 100),
             .weekday: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? "No sessions",
             .hour: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? "No sessions"
         ]
