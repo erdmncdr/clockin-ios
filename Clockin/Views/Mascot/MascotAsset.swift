@@ -166,33 +166,43 @@ private struct ClockinFrameMascot: View {
 
 private struct ClockinMascotEffects: View {
     @Environment(\.scenePhase) private var scenePhase
-    @State private var start = Date()
-    @State private var seed = Int.random(in: 0...4)
+    @State private var effect = Int.random(in: 0...4)
+    @State private var progress: Double = 0
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: scenePhase != .active)) { context in
-            let elapsed = max(0, context.date.timeIntervalSince(start))
-            let phase = min(elapsed.truncatingRemainder(dividingBy: 8) / 1.6, 1)
-            let eased = 1 - pow(1 - phase, 3)
-            let effect = (seed + Int(elapsed / 8)) % 5
-            Group {
-                switch effect {
-                case 0:
-                    Text("$  $  $").font(.system(size: 10, weight: .black, design: .rounded))
-                        .foregroundStyle(.green).offset(x: 13, y: -24 + 51 * eased).opacity(1 - eased)
-                case 1:
-                    Text("✦  ✧  ✦").font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.orange).scaleEffect(0.7 + 0.55 * eased).opacity(1 - 0.8 * eased)
-                case 2:
-                    Text("♪  ♫  ♪").font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.cyan).offset(x: -8 + 26 * eased, y: 8 - 28 * eased).opacity(1 - eased)
-                case 3:
-                    Text("✹  ✹").font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.yellow).rotationEffect(.degrees(-15 + 50 * eased)).opacity(1 - 0.8 * eased)
-                default:
-                    Text("+XP").font(.system(size: 10, weight: .black, design: .monospaced))
-                        .foregroundStyle(.green).offset(y: 2 - 27 * eased).opacity(1 - eased)
-                }
+        // Once saniyede 30 kez yeniden hesaplanan bir TimelineView'du. Simdi
+        // her sekiz saniyede bir etki secilip 0'dan 1'e tek bir animasyonla
+        // goturuluyor; ara kareleri sistem ekranin hizinda ciziyor.
+        Group {
+            switch effect {
+            case 0:
+                Text("$  $  $").font(.system(size: 10, weight: .black, design: .rounded))
+                    .foregroundStyle(.green).offset(x: 13, y: -24 + 51 * progress).opacity(1 - progress)
+            case 1:
+                Text("✦  ✧  ✦").font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.orange).scaleEffect(0.7 + 0.55 * progress).opacity(1 - 0.8 * progress)
+            case 2:
+                Text("♪  ♫  ♪").font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.cyan).offset(x: -8 + 26 * progress, y: 8 - 28 * progress).opacity(1 - progress)
+            case 3:
+                Text("✹  ✹").font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.yellow).rotationEffect(.degrees(-15 + 50 * progress)).opacity(1 - 0.8 * progress)
+            default:
+                Text("+XP").font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundStyle(.green).offset(y: 2 - 27 * progress).opacity(1 - progress)
+            }
+        }
+        .task(id: scenePhase == .active) {
+            guard scenePhase == .active else { return }
+            while !Task.isCancelled {
+                var reset = Transaction()
+                reset.disablesAnimations = true
+                withTransaction(reset) { progress = 0 }
+                // Onceki `1 - (1 - t)^3` egrisinin karsiligi.
+                withAnimation(.timingCurve(0.33, 1, 0.68, 1, duration: 1.6)) { progress = 1 }
+                do { try await Task.sleep(for: .seconds(8)) }
+                catch { return }
+                effect = (effect + 1) % 5
             }
         }
         .accessibilityHidden(true)

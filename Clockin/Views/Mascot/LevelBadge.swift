@@ -117,24 +117,35 @@ private struct LevelBadge: View {
 }
 
 private struct BadgeSweep: View {
-    @Environment(\.scenePhase) private var scenePhase
+    private enum Phase: CaseIterable { case start, end }
 
     var body: some View {
         GeometryReader { geometry in
-            // Kare yenilemesi sadece isikta kalir; XP hesabi tetiklenmez.
-            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: scenePhase != .active)) { context in
-                let cycle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 6)
-                let phase = min(cycle / 1.8, 1)
-                // Bant dolgunun kendisine gore olculur. Sabit genislikte bir
-                // bant, dar bir dolguyu bastan sona kaplayip taramak yerine
-                // tek parca yanip sonuyordu.
-                let band = max(6, geometry.size.width * 0.5)
-                LinearGradient(
-                    colors: [.clear, .white.opacity(0.45), .clear],
-                    startPoint: .leading, endPoint: .trailing
-                )
-                .frame(width: band, height: geometry.size.height)
-                .offset(x: -band + (geometry.size.width + band) * phase)
+            // Bant dolgunun kendisine gore olculur. Sabit genislikte bir
+            // bant, dar bir dolguyu bastan sona kaplayip taramak yerine
+            // tek parca yanip sonuyordu.
+            let band = max(6, geometry.size.width * 0.5)
+            LinearGradient(
+                colors: [.clear, .white.opacity(0.45), .clear],
+                startPoint: .leading, endPoint: .trailing
+            )
+            .frame(width: band, height: geometry.size.height)
+            // Once saniyede 30 kez yeniden cizilen bir TimelineView'du: 120 Hz
+            // ekranda kayan isik takiliyordu ve her karede gorunum bastan
+            // hesaplaniyordu. Simdi yalnizca uc noktalar veriliyor, ara kareleri
+            // sistem ekranin hizinda ciziyor. 4,2 saniye bekleme ve 1,8 saniye
+            // tarama; basa donus animasyonsuz.
+            //
+            // Bekleme ayri bir asama olarak yazilinca deger degismedigi icin
+            // sistem onu aninda geciyordu ve isik durmadan tariyordu. Gecikme
+            // taramanin kendisine ekleniyor.
+            .phaseAnimator(Phase.allCases) { content, phase in
+                content.offset(x: phase == .start ? -band : geometry.size.width)
+            } animation: { phase in
+                switch phase {
+                case .start: nil
+                case .end: .linear(duration: 1.8).delay(4.2)
+                }
             }
         }
         .allowsHitTesting(false)
