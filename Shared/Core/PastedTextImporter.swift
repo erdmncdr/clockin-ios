@@ -161,6 +161,9 @@ enum PastedTextImporter {
         guard values.count == 6,
               let start = date(monthName: values[0], day: values[1], year: values[2]),
               let end = date(monthName: values[3], day: values[4], year: values[5]) else { return nil }
+        // Yapistirilan sayfada aralik ters yazilmissa `start...end` calisma
+        // aninda cokuyor. Boyle bir araliktan yil cikarilamaz, yok sayilir.
+        guard start <= end else { return nil }
         return start...end
     }
 
