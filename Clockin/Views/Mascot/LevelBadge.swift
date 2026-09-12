@@ -50,11 +50,15 @@ private struct LevelBadge: View {
     private var progress: Double { min(max(Double(xp % 500) / 500, 0), 1) }
 
     var body: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 10))
+        // Kupa yerine dolgunun yuzdesi. Kupa hicbir seye karsilik gelmiyordu;
+        // rozetin anlatmak istedigi zaten bir sonraki seviyeye ne kadar
+        // kaldigi ve o sayi arkadaki dolguyu da okunur kiliyor.
+        HStack(spacing: 6) {
             Text("LV \(level)")
                 .font(.system(size: 12, weight: .black, design: .monospaced))
+            Text("\(Int(progress * 100))%")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(palette.accent.opacity(0.65))
         }
         .foregroundStyle(palette.accent)
         .padding(.horizontal, 10)

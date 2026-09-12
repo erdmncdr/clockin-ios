@@ -70,13 +70,28 @@ struct HistoryView: View {
         .deleteSessionAlert($pendingDelete)
     }
 
+    /// Gun basligi: solda gun, sagda o gunun toplami.
+    ///
+    /// Once sure ile tutar sagda alt alta duruyordu. Her gun farkli uzunlukta
+    /// oldugu icin iki sutun da tirtikli gorunuyor, basliklar da "Today" ile
+    /// "Cum, 11 Eyl" arasinda gidip geliyordu. Simdi her gun ayni iskelet:
+    /// ad, tarih, tek satir toplam.
     private func dayHeader(_ group: DayGroup) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            SectionTitle(dayTitle(group.day))
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                let labels = dayLabels(group.day)
+                SectionTitle(labels.title)
+                Text(labels.subtitle)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.leading, 2)
+            }
             Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 3) {
+            HStack(spacing: 6) {
                 Text(DurationText.compact(group.duration))
                     .foregroundStyle(.secondary)
+                Text("·")
+                    .foregroundStyle(.quaternary)
                 Text(group.earnings.money(code: store.currencyCode))
                     .foregroundStyle(palette.accent)
             }
@@ -87,13 +102,25 @@ struct HistoryView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func dayTitle(_ day: Date) -> String {
+    /// Iki satir hicbir zaman ayni seyi tekrarlamasin: gun adi ustteyse tarih
+    /// altta gunsuz yazilir, tarih ustteyse gun adi alta iner. Bir haftadan
+    /// eski gunlerde "PERSEMBE" hangi persembe oldugunu soylemiyor, o yuzden
+    /// orada tarih basa geciyor.
+    ///
+    /// Satirlardaki saatler ve tutarlar cihaz diliyle bicimleniyor; baslik da
+    /// ayni dili kullanmali.
+    private func dayLabels(_ day: Date) -> (title: String, subtitle: String) {
         let calendar = Calendar.current
-        if calendar.isDateInToday(day) { return "Today" }
-        if calendar.isDateInYesterday(day) { return "Yesterday" }
-        // Satirlardaki saatler ve tutarlar cihaz diliyle bicimleniyor; baslik
-        // da ayni dili kullanmali.
-        return day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        let full = day.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        if calendar.isDateInToday(day) { return ("TODAY", full) }
+        if calendar.isDateInYesterday(day) { return ("YESTERDAY", full) }
+        let days = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: .now)).day ?? 0
+        if days < 7 {
+            return (day.formatted(.dateTime.weekday(.wide)).uppercased(),
+                    day.formatted(.dateTime.day().month(.abbreviated)))
+        }
+        return (day.formatted(.dateTime.day().month(.abbreviated).year()).uppercased(),
+                day.formatted(.dateTime.weekday(.wide)))
     }
 
     private func groupedDays() -> [DayGroup] {

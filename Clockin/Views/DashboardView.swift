@@ -46,7 +46,7 @@ struct DashboardView: View {
                                 onClockOut: { sheet = .summary($0) },
                                 onStartWithElapsed: { sheet = .manualStart }
                             )
-                            if mascotEnabled { MascotCard() }
+                            if mascotEnabled { MascotCard(showInsights: showInsights) }
                             TodayCard(now: context.date)
                         }
                     }
