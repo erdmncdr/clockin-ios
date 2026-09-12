@@ -3,41 +3,55 @@ import SwiftUI
 @MainActor
 struct DashboardLevelBadge: View {
     @EnvironmentObject private var store: ClockStore
-    @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
-    @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     let showInsights: () -> Void
     @State private var level = 1
     @State private var xp = 0
-    @State private var refreshedAt: Date?
+    @State private var didLoad = false
+    /// Yalnizca seviye yukseldiginde artar; parlama buna bagli.
+    @State private var levelUps = 0
+    /// Veri her degistiginde artar ve hesaplamayi yeniden baslatir.
+    @State private var dataVersion = 0
 
     var body: some View {
         Button(action: showInsights) {
-            LevelBadge(level: level, xp: xp)
+            LevelBadge(level: level, xp: xp, levelUps: levelUps)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .accessibilityLabel("Level \(level), \(xp) XP")
         .accessibilityValue("\(500 - xp % 500) XP to next level")
-        .accessibilityHint("Opens Insights")
-        .task {
-            // Body ve store bildirimleri tum kayitlari tekrar taramasin.
-            // Sekmeye geri donuste de son hesaplamadan 60 saniye beklenir.
-            while !Task.isCancelled {
-                let now = Date()
-                let remaining = refreshedAt.map { 60 - now.timeIntervalSince($0) } ?? 0
-                if remaining > 0 {
-                    do { try await Task.sleep(for: .seconds(remaining)) }
-                    catch { return }
-                    continue
-                }
-                let stats = InsightsSnapshot(store: store, now: now,
-                                             dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
-                level = stats.level
-                xp = stats.xp
-                refreshedAt = now
+        .accessibilityHint("Opens your level and badges")
+        // Once yalnizca dakikada bir hesaplaniyordu, veri degisince degil.
+        // Gecmis sureyle baslatilan 4 saatlik bir oturum iptal edildiginde
+        // seviye bir dakika kadar yuksek kaliyordu; Rozetler sekmesi ayni anda
+        // dogru seviyeyi gosterdigi icin iki ekran birbirini tutmuyordu.
+        //
+        // Simdi her kayit degisikligi (iptal, bitirme, silme, duzenleme, ice
+        // aktarma, geri yukleme) hemen yeniden hesaplatir. Zamanla degisen tek
+        // sey calisan oturumun suresi; o yuzden yalnizca calisirken dakikada
+        // bir tazelenir. Store bildirimleri saniyede gelmedigi icin tarama
+        // maliyeti degismiyor.
+        .onReceive(store.objectWillChange) { _ in dataVersion &+= 1 }
+        .task(id: dataVersion) {
+            // `objectWillChange` deger yazilmadan once gelir; gorev bir sonraki
+            // turda basladigi icin burada okunan veri yenisidir.
+            refresh()
+            while store.running?.isPaused == false {
+                do { try await Task.sleep(for: .seconds(60)) }
+                catch { return }
+                refresh()
             }
         }
+    }
+
+    private func refresh() {
+        let stats = InsightsSnapshot(store: store, now: .now, dailyGoal: 0, monthlyGoal: 0)
+        // Ilk yuklemede ve seviye duserken kutlama yok; yalnizca gercek yukselis.
+        if didLoad, stats.level > level { levelUps &+= 1 }
+        level = stats.level
+        xp = stats.xp
+        didLoad = true
     }
 }
 
@@ -46,6 +60,7 @@ private struct LevelBadge: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let level: Int
     let xp: Int
+    let levelUps: Int
 
     private var progress: Double { min(max(Double(xp % 500) / 500, 0), 1) }
 
@@ -87,7 +102,7 @@ private struct LevelBadge: View {
                 Capsule(style: .continuous).stroke(palette.accent.opacity(0.26), lineWidth: 1)
             }
         }
-        .phaseAnimator([false, true, false], trigger: level) { content, highlighted in
+        .phaseAnimator([false, true, false], trigger: levelUps) { content, highlighted in
             content.overlay {
                 Capsule(style: .continuous)
                     .stroke(palette.accent.opacity(!reduceMotion && highlighted ? 0.85 : 0), lineWidth: 1.5)
