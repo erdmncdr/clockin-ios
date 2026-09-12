@@ -32,4 +32,21 @@ check(!snapshot(.week, running: old).includesActive, "active session outside per
 let empty = EarningsSnapshot(sessions: [], running: nil, range: .week, now: today, earnings: { $0.earnings }, activeEarnings: 0, rate: { _ in nil })
 check(empty.points.isEmpty && empty.earned == 0, "empty archive")
 check(week.points.map(\.day) == week.points.map(\.day).sorted(), "chart days chronological")
+// Ortalamalar: takvim gunleri bolen, calisilan gunler ayrica.
+check(week.calendarDays == 7, "7D averages divide by seven calendar days")
+check(week.activeDays == 2, "active days count only days with work")
+check(abs(week.dailyAverage - 10800 / 7) < 0.001, "daily average spreads work over calendar days")
+check(abs(week.weeklyAverage - 10800) < 0.001, "weekly average of a 7D period is its total")
+check(abs(week.activeDayAverage - 5400) < 0.001, "active-day average divides by worked days only")
+check(snapshot(.quarter).calendarDays == 90, "3M averages divide by ninety days")
+let all = snapshot(.all)
+check(all.calendarDays == 91, "ALL counts from the first entry's day through today")
+check(empty.calendarDays == 7 && empty.dailyAverage == 0 && empty.activeDayAverage == 0,
+      "an empty period averages to zero without dividing by zero")
+let emptyAll = EarningsSnapshot(sessions: [], running: nil, range: .all, now: today, earnings: { $0.earnings }, activeEarnings: 0, rate: { _ in nil })
+check(emptyAll.calendarDays == 1, "an empty archive in ALL still has a one-day divisor")
+let onlyRunning = EarningsSnapshot(sessions: [], running: RunningSession(start: day(-2), accumulated: 1800, resumedAt: nil, note: ""),
+    range: .all, now: today, calendar: calendar, earnings: { $0.earnings }, activeEarnings: 1, rate: { _ in nil })
+check(onlyRunning.calendarDays == 3, "ALL with only an active session counts from that session's day")
+
 print("\(checks) earnings checks passed")

@@ -140,4 +140,39 @@ do {
     check(s.sessions.count == 1, "a third correction still updates in place")
 }
 
+// 12. Satir satir secim.
+do {
+    let timer = session(10, 0, 18, 00, source: "Clockin")
+    let (s, dir) = store([timer]); defer { try? FileManager.default.removeItem(at: dir) }
+    let correction = session(10, 0, 18, 05, source: "starfleet")
+    let fresh = session(day: 5, 9, 0, 12, 0, source: "starfleet")
+    let summary = s.compareImportedSessions([correction, fresh])
+    check(summary.actionableItems.count == 2, "new rows and corrections are both selectable")
+    check(summary.sessionsToImport(excluding: []).count == 2, "everything selectable is selected by default")
+
+    s.importSessions(summary.sessionsToImport(excluding: [correction.id]))
+    check(s.sessions.count == 2, "leaving out a correction still imports the selected new row")
+    check(s.sessions.contains { $0.id == timer.id && abs($0.duration - 8 * 3600) < 60 },
+          "a correction that was left out does not touch the timer entry")
+}
+do {
+    let (s, dir) = store([]); defer { try? FileManager.default.removeItem(at: dir) }
+    let fresh = session(day: 5, 9, 0, 12, 0, source: "starfleet")
+    s.importSessions(s.compareImportedSessions([fresh]).sessionsToImport(excluding: [fresh.id]))
+    check(s.sessions.isEmpty, "a new row that was left out is not added")
+}
+do {
+    // Dosyada ayni isin iki yazimi: ikincisi tekrar sayilir. Ilki secimden
+    // cikarilinca ikincisi yeni is diye iceri girmemeli.
+    let (s, dir) = store([]); defer { try? FileManager.default.removeItem(at: dir) }
+    let first = session(10, 0, 18, 00, source: "starfleet")
+    let twin = session(10, 0, 18, 05, source: "starfleet")
+    let summary = s.compareImportedSessions([first, twin])
+    check(summary.items.map(\.kind) == [.new, .duplicate], "the in-file twin is previewed as a duplicate")
+    let chosen = summary.sessionsToImport(excluding: [first.id])
+    check(chosen.isEmpty, "leaving out a row does not let its duplicate through instead")
+    s.importSessions(chosen)
+    check(s.sessions.isEmpty, "nothing is imported when the only real row was left out")
+}
+
 print("\(checks) import checks passed")

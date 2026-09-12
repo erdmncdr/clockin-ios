@@ -57,3 +57,26 @@ struct DangerActionButtonStyle: ButtonStyle {
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: configuration.isPressed)
     }
 }
+
+/// Kendi zeminini ciziyor olan dugmeler icin yalnizca basma geri bildirimi:
+/// ust cubuktaki yuvarlak dugmeler, rozet karolari, secilebilir satirlar.
+///
+/// `.plain` basildigini hic gostermiyordu; parmak kalkana kadar dokunusun
+/// alinip alinmadigi belli olmuyordu. Hafif kuculme ve soluklasma yeter, daha
+/// fazlasi bu kadar sik dokunulan ogelerde goz yorar.
+struct PressableButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var scale: CGFloat = 0.94
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? scale : 1)
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .animation(reduceMotion ? nil : .spring(duration: 0.22, bounce: 0.35), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == PressableButtonStyle {
+    static var pressable: PressableButtonStyle { PressableButtonStyle() }
+    static func pressable(scale: CGFloat) -> PressableButtonStyle { PressableButtonStyle(scale: scale) }
+}

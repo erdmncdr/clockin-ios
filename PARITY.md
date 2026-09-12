@@ -19,6 +19,34 @@ Source links use these roots: **M** = `../Sources/Clockin` (the Mac app at the r
 
 Two corrections to the task's examples: the Mac already has an animated, interactive mascot; it is not an iPhone-only addition. Daily and monthly goals are editable on iPhone in Insights, despite having no Settings rows. The real orphaned iPhone preference is `Clockin.MascotDefault`.
 
+## Status, 13 September 2026
+
+Every item in section 1 is now ported. Each has deterministic checks under
+`Tests/manual/` (see `README.md`); the app builds warning free and the screens
+were exercised on the iPhone 17 Pro simulator.
+
+| Item | Where on iPhone | Not verified |
+|---|---|---|
+| G1.01 Automatic backups | Settings > Data > Automatic backups. Lists every backup; restoring first keeps the current data as a backup, so a restore can be undone. | |
+| G1.02 Select imports | Import review: every new row and correction starts selected; tap rows or All/None. | |
+| G1.03 Earnings chart | History. Averages per calendar and active day, historical TRY on rows, matched label. | |
+| G1.04 Focus chime | Settings > Focus chime. Local notifications from worked time; rescheduled from `SessionMirror`, so widget, Live Activity and Shortcuts changes also clear or move them. iOS sets the volume; the Mac sound list does not exist on iOS. | Delivery on a device, silent mode and Focus |
+| G1.05 Reports | Insights > Reports & records. The 30-day trend uses calendar days, the same days as History's 30D. | |
+| G1.06 Week/month heatmap | Insights > Work heatmap > Week, Month. | |
+| G1.07 Share stats | Insights, share button. Share and copy; no Save to Photos, which needs a photo library permission. | The system share sheet on a device |
+| G1.08 Companion picker | Settings > Appearance. | |
+| G1.09 Match provenance | History rows show "Matched source" when a timer entry was corrected by a timecard. | |
+| G1.10 Goal estimate | Insights > Goals. The daily goal gives a clock time; the monthly goal gives work days and whether the month can hold them. The Mac's "N days away" for a daily goal always read 1. | |
+| G1.11 Badges | Badges tab: all 46, unlocked and locked groups, detail with requirement and progress. | |
+| G1.12 Guide | Settings > How to use Clockin. | |
+| G1.13 Money Momentum | Today. | |
+| G1.14 Focus radio | Settings > Focus radio, with lock screen playback (`UIBackgroundModes` audio). | Playback on a device and with the screen locked |
+
+Also changed while porting: widgets and the Live Activity follow the chosen
+theme; a save that fails is rolled back in memory instead of showing work that
+is not on disk; Settings moved from the tab bar to a gear on Today, and the
+freed tab holds level and badges.
+
 ## 1. Missing and worth porting
 
 ### G1.01. Automatic-backup discovery and Restore latest (small)

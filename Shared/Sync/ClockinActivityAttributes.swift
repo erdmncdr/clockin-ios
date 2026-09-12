@@ -12,6 +12,7 @@ struct ClockinActivityAttributes: ActivityAttributes {
         var earnedAtUpdate: Double
         var usdTryRate: Double?
         var note: String
+        var theme: ClockinThemeChoice = .carbon
     }
 
     var currencyCode: String
@@ -27,9 +28,10 @@ extension ClockinActivityAttributes.ContentState {
         earnedAtUpdate = try container.decodeIfPresent(Double.self, forKey: .earnedAtUpdate) ?? 0
         usdTryRate = try container.decodeIfPresent(Double.self, forKey: .usdTryRate)
         note = try container.decode(String.self, forKey: .note)
+        theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon
     }
 
-    init(running: RunningSession, hourlyRate: Double, earned: Double, usdTryRate: Double? = nil) {
+    init(running: RunningSession, hourlyRate: Double, earned: Double, usdTryRate: Double? = nil, theme: ClockinThemeChoice = .carbon) {
         if let resumedAt = running.resumedAt {
             timerStart = resumedAt.addingTimeInterval(-running.accumulated)
             pausedAt = nil
@@ -39,6 +41,7 @@ extension ClockinActivityAttributes.ContentState {
             timerStart = running.start
             pausedAt = running.start.addingTimeInterval(running.accumulated)
         }
+        self.theme = theme
         self.hourlyRate = hourlyRate
         earnedAtUpdate = earned
         self.usdTryRate = usdTryRate

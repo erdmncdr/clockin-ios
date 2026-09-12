@@ -41,7 +41,7 @@ struct MascotCard: View {
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable)
             .foregroundStyle(.primary)
             .accessibilityHint("Opens Insights")
         }

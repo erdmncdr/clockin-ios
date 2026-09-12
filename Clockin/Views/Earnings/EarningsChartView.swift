@@ -12,6 +12,7 @@ struct EarningsChartView: View {
     let hasAnySessions: Bool
     @Binding var showTRY: Bool
     @State private var selectedDate: Date?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var converting: Bool { showTRY && currencyCode == "USD" }
     private var displayCode: String { converting ? "TRY" : currencyCode }
@@ -32,6 +33,7 @@ struct EarningsChartView: View {
                     Text("PERIOD EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                     Text(snapshot.earned.money(code: currencyCode))
                         .font(.title2.bold()).monospacedDigit()
+                        .contentTransition(.numericText())
                     if currencyCode == "USD", let latestRate {
                         Text("≈ " + (snapshot.earned * latestRate).money(code: "TRY") + " · current rate")
                             .font(.caption).foregroundStyle(.secondary)
@@ -40,7 +42,9 @@ struct EarningsChartView: View {
                 Spacer(minLength: 4)
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(DurationText.compact(snapshot.duration)).font(.headline)
+                        .contentTransition(.numericText())
                     Text("\(snapshot.sessions.count) completed").font(.caption)
+                        .contentTransition(.numericText())
                     if snapshot.includesActive { Text("+ active session").font(.caption2) }
                 }
                 .foregroundStyle(.secondary)
@@ -90,12 +94,50 @@ struct EarningsChartView: View {
                     Text("Tap a day in the chart to inspect it.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                averages
                 Text("Overnight sessions count toward their start date. Active work updates every minute.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
+        // Donem ya da para birimi degisince sayilar yuvarlanarak, cubuklar
+        // yeni yuksekliklerine kayarak gecsin; aniden degisen bir grafikte
+        // neyin arttigi okunmuyor.
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: range)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: showTRY)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: selectedDate)
+        .sensoryFeedback(.selection, trigger: selectedDate) { _, new in new != nil }
         .onChange(of: range) { _, _ in selectedDate = nil }
         .onChange(of: currencyCode) { _, _ in selectedDate = nil }
+    }
+
+    /// Donem ortalamalari. Takvim gunune bolunur, cunku soru "gunde ne kadar"
+    /// ve calisilmayan gunler de o sorunun parcasi; calisilan gunlerin
+    /// ortalamasi ayrica verilir.
+    private var averages: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AVERAGES · \(snapshot.calendarDays) CALENDAR \(snapshot.calendarDays == 1 ? "DAY" : "DAYS")")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                averageChip("Daily", DurationText.compact(snapshot.dailyAverage))
+                averageChip("Weekly", DurationText.compact(snapshot.weeklyAverage))
+                averageChip("Monthly", DurationText.compact(snapshot.monthlyAverage))
+                averageChip("Active days", "\(snapshot.activeDays)")
+                averageChip("Per active day", DurationText.compact(snapshot.activeDayAverage))
+            }
+        }
+    }
+
+    private func averageChip(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.caption2).foregroundStyle(.secondary)
+            Text(value).font(.subheadline.weight(.semibold)).monospacedDigit()
+                .contentTransition(.numericText())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 7).padding(.horizontal, 9)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 
     private var chart: some View {

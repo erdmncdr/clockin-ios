@@ -16,7 +16,7 @@ struct DashboardLevelBadge: View {
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .accessibilityLabel("Level \(level), \(xp) XP")
         .accessibilityValue("\(500 - xp % 500) XP to next level")
         .accessibilityHint("Opens Insights")

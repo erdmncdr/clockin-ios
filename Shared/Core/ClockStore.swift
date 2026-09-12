@@ -245,8 +245,11 @@ final class ClockStore: ObservableObject {
             statusMessage = "An entry with these exact times already exists."
             return false
         }
+        // Yazilamazsa kayit bellekte de kalmamali: ekranda gorunup diskte
+        // olmayan bir kayit uygulama kapaninca sessizce kaybolur.
+        let previous = data
         data.sessions.append(session)
-        save()
+        guard save() else { data = previous; return false }
         statusMessage = "Entry added."
         return true
     }
@@ -363,33 +366,86 @@ final class ClockStore: ObservableObject {
         }
     }
 
+    /// Dosyadan geri yukleme. Ayarlardaki "Restore from backup" bunu cagirir.
     func importBackup(from url: URL) {
-        do {
-            let content = try Data(contentsOf: url)
-            let decoded = try JSONDecoder().decode(ClockinData.self, from: content)
-            data = decoded
-            save()
-            statusMessage = "Backup restored."
-        } catch {
-            statusMessage = "Could not restore backup: \(error.localizedDescription)"
-        }
+        restoreBackup(from: url)
     }
 
     func restoreLatestBackup() {
-        let files = ((try? FileManager.default.contentsOfDirectory(
-            at: backupDirectory,
-            includingPropertiesForKeys: [.contentModificationDateKey],
-            options: [.skipsHiddenFiles]
-        )) ?? []).sorted {
-            let left = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-            let right = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-            return left > right
-        }
-        guard let latest = files.first else {
+        guard let latest = Self.readBackups(in: backupDirectory).first else {
             statusMessage = "No automatic backup exists yet."
             return
         }
-        importBackup(from: latest)
+        restoreBackup(from: latest.url)
+    }
+
+    /// Butun veriyi bir yedekle degistirir; once mevcut veriyi kenara koyar.
+    ///
+    /// Eskiden dogrudan uzerine yaziyordu. Otomatik yedek gunde bir alindigi
+    /// icin yanlislikla geri yukleyen biri son yedekten sonraki butun
+    /// kayitlarini geri donussuz kaybediyordu; uyari da "geri alinamaz"
+    /// diyordu. Simdi geri yukleme de bir yedektir: listeden "before restore"
+    /// kopyasi secilerek geri alinir.
+    ///
+    /// Kopya alinamazsa geri yukleme hic yapilmaz. Veriyi korumadan
+    /// degistirmektense hicbir sey yapmamak dogru.
+    @discardableResult
+    func restoreBackup(from url: URL) -> Bool {
+        let decoded: ClockinData
+        do {
+            decoded = try JSONDecoder().decode(ClockinData.self, from: Data(contentsOf: url))
+        } catch {
+            statusMessage = "Could not restore backup: \(error.localizedDescription)"
+            return false
+        }
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
+                let stamp = Int(Date().timeIntervalSince1970 * 1000)
+                let copy = backupDirectory.appending(path: "\(Self.safetyCopyPrefix)\(stamp)-\(UUID().uuidString).json")
+                try FileManager.default.copyItem(at: fileURL, to: copy)
+                // Kopya dosyanin eski degistirme tarihini tasir; listede en ustte,
+                // "simdi alinmis" olarak gorunmesi icin tarihi guncellenir.
+                try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: copy.path)
+                cachedBackupStats = nil
+            } catch {
+                statusMessage = "Nothing was restored: your current data could not be kept aside first (\(error.localizedDescription))."
+                return false
+            }
+        }
+        let previous = data
+        data = decoded
+        guard save() else { data = previous; return false }
+        cachedBackupStats = nil
+        statusMessage = "Backup restored. Your previous data was kept as a backup."
+        return true
+    }
+
+    nonisolated static let safetyCopyPrefix = "clockin-before-restore-"
+
+    var backupDirectoryURL: URL { backupDirectory }
+
+    /// Klasordeki yedekler, en yenisi basta. Her dosya acilip sayilir; ana
+    /// is parcacigini tutmamak icin ekran bunu arka planda cagirir.
+    nonisolated static func readBackups(in directory: URL) -> [AutomaticBackup] {
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles]
+        )) ?? []
+        let decoder = JSONDecoder()
+        return files.filter { $0.pathExtension == "json" }.compactMap { url -> AutomaticBackup? in
+            let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            // Okunamayan bir yedek listede yine gorunur ama geri yuklenemez;
+            // gizlemek, kullanicinin neden eksik oldugunu anlamamasina yol acar.
+            guard let content = try? Data(contentsOf: url),
+                  let decoded = try? decoder.decode(ClockinData.self, from: content) else {
+                return AutomaticBackup(url: url, date: date, sessionCount: nil, totalDuration: 0,
+                                       isSafetyCopy: url.lastPathComponent.hasPrefix(safetyCopyPrefix))
+            }
+            return AutomaticBackup(url: url, date: date, sessionCount: decoded.sessions.count,
+                                   totalDuration: decoded.sessions.reduce(0) { $0 + $1.duration },
+                                   isSafetyCopy: url.lastPathComponent.hasPrefix(safetyCopyPrefix))
+        }
+        .sorted { $0.date > $1.date }
     }
 
     func previewPastedText(_ text: String) -> [WorkSession] {
@@ -462,6 +518,7 @@ final class ClockStore: ObservableObject {
     /// o da kaydin kimligini ve ice aktarma isaretlerini kaybettiriyordu.
     @discardableResult
     func updateSession(id: UUID, start: Date, end: Date, note: String) -> Bool {
+        let previous = data
         guard SessionDuration.isValidDate(start), SessionDuration.isValidDate(end) else {
             statusMessage = "Invalid session dates."
             return false
@@ -491,15 +548,16 @@ final class ClockStore: ObservableObject {
         data.sessions[index].start = start
         data.sessions[index].end = end
         data.sessions[index].note = note
-        save()
+        guard save() else { data = previous; return false }
         statusMessage = "Entry updated."
         return true
     }
 
     func deleteSession(id: UUID) {
         guard let index = data.sessions.firstIndex(where: { $0.id == id }) else { return }
+        let previous = data
         data.sessions.remove(at: index)
-        save()
+        guard save() else { data = previous; return }
         statusMessage = "Session deleted."
     }
 
@@ -511,6 +569,7 @@ final class ClockStore: ObservableObject {
             statusMessage = "Invalid session duration or dates."
             return
         }
+        let previous = data
         // Silme once yapilir: aksi halde yeni kayitlar eklendikten sonra
         // indeksler kayiyor ve eslesme aramasi silinecek kayitlari da goruyor.
         var removed = 0
@@ -572,7 +631,7 @@ final class ClockStore: ObservableObject {
             }
         }
         data.sessions.append(contentsOf: fresh)
-        save()
+        guard save() else { data = previous; return }
         if fresh.isEmpty, matched == 0, corrected == 0, removed == 0 {
             statusMessage = "All entries were already imported."
         } else {
@@ -723,14 +782,23 @@ final class ClockStore: ObservableObject {
         "\(Int(session.start.timeIntervalSince1970))|\(Int(session.end.timeIntervalSince1970))|\(Int(session.duration))"
     }
 
-    private func save() {
+    /// Yazimin tutup tutmadigini doner.
+    ///
+    /// Once hatayi `statusMessage`'a yazip hicbir sey donmuyordu; cagiran hemen
+    /// ardindan "Entry updated." yazip hatanin uzerini ortuyordu. Kullanici
+    /// kaydedildi saniyor, disk eski halde kaliyordu. Mac'te ayni hata PR #9 ile
+    /// kapandi, bu kopyaya tasinmamisti.
+    @discardableResult
+    private func save() -> Bool {
         do {
             try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             createAutomaticBackupIfNeeded()
             let encoded = try JSONEncoder().encode(data)
             try encoded.write(to: fileURL, options: .atomic)
+            return true
         } catch {
             statusMessage = "Could not save: \(error.localizedDescription)"
+            return false
         }
     }
 
@@ -758,4 +826,18 @@ final class ClockStore: ObservableObject {
             // A failed backup must never block the primary save.
         }
     }
+}
+
+/// Yedek klasorundeki bir dosyanin ozeti.
+struct AutomaticBackup: Identifiable, Sendable {
+    let url: URL
+    let date: Date
+    /// `nil`: dosya okunamadi.
+    let sessionCount: Int?
+    let totalDuration: TimeInterval
+    /// Bir geri yuklemeden hemen once alinan kopya.
+    let isSafetyCopy: Bool
+
+    var id: URL { url }
+    var isReadable: Bool { sessionCount != nil }
 }

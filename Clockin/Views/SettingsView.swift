@@ -5,12 +5,15 @@ import UniformTypeIdentifiers
 private enum SettingsSheet: String, Identifiable {
     case rateSchedule
     case importTimecards
+    case backups
+    case guide
 
     var id: String { rawValue }
 }
 
 struct SettingsView: View {
     @EnvironmentObject private var store: ClockStore
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
@@ -26,6 +29,12 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    navigationRow("How to use Clockin", systemImage: "questionmark.circle") {
+                        rateIsFocused = false
+                        sheet = .guide
+                    }
+                }
                 paySection
                 Section("Appearance") {
                     Toggle("Focus companion", isOn: $mascotEnabled)
@@ -38,6 +47,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                FocusSettingsSection()
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)
@@ -46,7 +56,15 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Artik Bugun ekranindan sayfa olarak aciliyor.
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        rateIsFocused = false
+                        dismiss()
+                    }
+                }
                 ToolbarItemGroup(placement: .keyboard) {
                     if rateIsFocused {
                         Spacer()
@@ -65,6 +83,8 @@ struct SettingsView: View {
                     switch destination {
                     case .rateSchedule: RateScheduleView()
                     case .importTimecards: TimecardImportView()
+                    case .backups: BackupsView()
+                    case .guide: UsageGuideView()
                     }
                 }
                 // Sheet ayri bir sunum; renk semasi tercihi yeniden verilmeli.
@@ -87,7 +107,7 @@ struct SettingsView: View {
                     restoreBackup(from: url)
                 }
             } message: {
-                Text("This overwrites every session and the running timer on this iPhone with the selected backup. This cannot be undone.")
+                Text("This replaces every session and the running timer on this iPhone with the selected file. Your current data is kept as a backup first, so it can be restored from Automatic backups.")
             }
         }
     }
@@ -162,13 +182,20 @@ struct SettingsView: View {
                 pendingBackupURL = nil
                 showImporter = true
             } label: {
-                Label("Restore from backup…", systemImage: "square.and.arrow.down")
+                Label("Restore from file…", systemImage: "square.and.arrow.down")
+            }
+            navigationRow("Automatic backups", systemImage: "clock.arrow.circlepath") {
+                rateIsFocused = false
+                sheet = .backups
             }
         } header: {
             Text("Data")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 if let restoreMessage { Text(restoreMessage) }
+                if let latest = store.latestBackupDate {
+                    Text("Last automatic backup \(latest.formatted(.relative(presentation: .named))), \(store.backupCount) saved.")
+                }
                 Text("Data is stored only on this iPhone. Syncing with the Mac is not set up yet.")
             }
         }

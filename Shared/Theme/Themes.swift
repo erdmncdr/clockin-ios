@@ -1,17 +1,6 @@
 import SwiftUI
 
-enum ClockinThemeChoice: String, CaseIterable, Identifiable {
-    case carbon = "Carbon"
-    case neonOrange = "Neon Orange"
-    case electricBlue = "Electric Blue"
-    case synthwave = "Synthwave"
-    case dataDense = "Data Dense"
-    case aurora = "Aurora"
-    case terminalAmber = "Terminal Amber"
-    case daylight = "Daylight"
-
-    var id: String { rawValue }
-
+extension ClockinThemeChoice {
     var palette: ClockinPalette {
         switch self {
         case .carbon:
@@ -33,9 +22,6 @@ enum ClockinThemeChoice: String, CaseIterable, Identifiable {
         }
     }
 
-    static func selected(_ rawValue: String) -> ClockinThemeChoice {
-        ClockinThemeChoice(rawValue: rawValue) ?? .carbon
-    }
 }
 
 struct ClockinPalette {
@@ -45,6 +31,16 @@ struct ClockinPalette {
     let fontDesign: Font.Design
     let actionForeground: Color
     let colorScheme: ColorScheme
+
+    // Ada zemini sistem tarafindan siyah tutulur. Acik temanin koyu mavisi
+    // burada okunmaz; ayni mavi ailesinin acik tonu ve koyu yuzeyi kullanilir.
+    var dynamicIslandPalette: ClockinPalette {
+        ClockinPalette(background: .black,
+                       accent: colorScheme == .light ? Color(red: 0.42, green: 0.68, blue: 1) : accent,
+                       secondary: colorScheme == .light ? Color(red: 0.72, green: 0.6, blue: 1) : secondary,
+                       fontDesign: fontDesign,
+                       actionForeground: actionForeground, colorScheme: .dark)
+    }
 
     var surface: Color { colorScheme == .light ? .black.opacity(0.055) : .white.opacity(0.045) }
     var surfaceStroke: Color { colorScheme == .light ? .black.opacity(0.12) : .white.opacity(0.07) }

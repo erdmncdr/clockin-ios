@@ -76,4 +76,17 @@ struct ImportComparisonSummary {
     var matchedItems: [ImportComparisonItem] { items.filter { $0.kind == .matched } }
     var duplicateItems: [ImportComparisonItem] { items.filter { $0.kind == .duplicate } }
     var totalDuration: TimeInterval { items.reduce(0) { $0 + $1.session.duration } }
+
+    /// Yeni ve duzeltme satirlari: kullanicinin secebilecegi olanlar.
+    var actionableItems: [ImportComparisonItem] { items.filter { $0.kind != .duplicate } }
+
+    /// Secimden cikarilmayan yeni ve duzeltme satirlarinin kayitlari.
+    ///
+    /// Tekrarlar hic gonderilmez. Dosyanin kendi icindeki ikiz satir
+    /// onizlemede "tekrar" diye isaretleniyor; ikizinin secimi kaldirilinca
+    /// butun dosya gonderilseydi, ice aktarma o satiri bu kez yeni is sanip
+    /// ekleyecekti. Kullanicinin istemedigini soyledigi is arka kapidan girerdi.
+    func sessionsToImport(excluding excluded: Set<UUID>) -> [WorkSession] {
+        actionableItems.filter { !excluded.contains($0.id) }.map(\.session)
+    }
 }

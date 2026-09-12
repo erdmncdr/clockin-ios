@@ -27,7 +27,18 @@ struct EarningsSnapshot {
     let sessions: [WorkSession]
     let points: [EarningsDay]
     let includesActive: Bool
+    /// Ortalamalarin boleni: donemdeki takvim gunleri, bugun dahil. ALL icin
+    /// ilk kayittan bugune. Mac ile ayni tanim; bos gunler de sayilir, cunku
+    /// "gunde ne kadar calisiyorum" sorusu calismadigim gunleri de kapsar.
+    let calendarDays: Int
     var duration: TimeInterval { points.reduce(0) { $0 + $1.duration } }
+    var activeDays: Int { points.filter { $0.duration > 0 }.count }
+    var dailyAverage: TimeInterval { duration / Double(calendarDays) }
+    var weeklyAverage: TimeInterval { dailyAverage * 7 }
+    /// Mac'teki gibi ortalama ay uzunlugu.
+    var monthlyAverage: TimeInterval { dailyAverage * 30.44 }
+    /// Yalnizca calisilan gunlerin ortalamasi; hic calisilmadiysa sifir.
+    var activeDayAverage: TimeInterval { activeDays == 0 ? 0 : duration / Double(activeDays) }
     var earned: Double { points.reduce(0) { $0 + $1.earned } }
     var converted: Double? {
         guard points.allSatisfy({ $0.rate != nil }) else { return nil }
@@ -55,6 +66,14 @@ struct EarningsSnapshot {
             point.duration += running.elapsed(at: now)
             point.earned += activeEarnings
             days[day] = point
+        }
+        if let fixed = range.days {
+            calendarDays = fixed
+        } else {
+            let starts = self.sessions.map(\.start) + (includesActive ? [running!.start] : [])
+            let today = calendar.startOfDay(for: now)
+            let first = starts.min().map { calendar.startOfDay(for: $0) } ?? today
+            calendarDays = max(1, (calendar.dateComponents([.day], from: first, to: today).day ?? 0) + 1)
         }
         points = days.values.map { point in
             var point = point

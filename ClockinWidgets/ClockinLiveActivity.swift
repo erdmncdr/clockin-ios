@@ -4,15 +4,17 @@ import SwiftUI
 import WidgetKit
 
 struct ClockinLiveActivity: Widget {
-    private let palette = ClockinThemeChoice.carbon.palette
-
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ClockinActivityAttributes.self) { context in
-            LockScreenActivityView(state: context.state, currencyCode: context.attributes.currencyCode, palette: palette)
+            let palette = context.state.theme.palette
+            LockScreenActivityView(state: context.state, currencyCode: context.attributes.currencyCode)
+                .environment(\.palette, palette)
+                .environment(\.colorScheme, palette.colorScheme)
                 .activityBackgroundTint(palette.background)
                 .activitySystemActionForegroundColor(palette.accent)
         } dynamicIsland: { context in
-            DynamicIsland {
+            let palette = context.state.theme.palette.dynamicIslandPalette
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
                         statusLabel(context.state)
@@ -21,7 +23,7 @@ struct ClockinLiveActivity: Widget {
                             .font(.title3.weight(.semibold))
                             .monospacedDigit()
                     }
-                    .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
+                    .foregroundStyle(context.state.isPaused ? palette.secondary : palette.accent)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     islandTimerText(context.state)
@@ -35,7 +37,9 @@ struct ClockinLiveActivity: Widget {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        ActivityButtons(state: context.state, palette: palette)
+                        ActivityButtons(state: context.state)
+                            .environment(\.palette, palette)
+                            .environment(\.colorScheme, .dark)
                     }
                 }
             } compactLeading: {
@@ -54,11 +58,12 @@ struct ClockinLiveActivity: Widget {
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
-                    .foregroundStyle(context.state.isPaused ? .orange : palette.accent)
+                    .foregroundStyle(context.state.isPaused ? palette.secondary : palette.accent)
                     .frame(width: 32, alignment: .trailing)
             } minimal: {
                 Image(systemName: "timer")
                     .foregroundStyle(palette.accent)
+                    .accessibilityLabel(context.state.isPaused ? "Paused session" : "Working session")
             }
         }
     }
@@ -101,37 +106,37 @@ private func rateText(_ state: ClockinActivityAttributes.ContentState, _ currenc
 private struct LockScreenActivityView: View {
     let state: ClockinActivityAttributes.ContentState
     let currencyCode: String
-    let palette: ClockinPalette
+    @Environment(\.palette) private var palette
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 statusLabel(state)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(state.isPaused ? .orange : palette.accent)
+                    .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
                 timerText(state)
-                    .font(.system(size: 34, weight: .semibold, design: .rounded))
+                    .font(.system(size: 34, weight: .semibold, design: palette.fontDesign))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                 Text(state.earnedAtUpdate.money(code: currencyCode))
                     .font(.title3.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(state.isPaused ? .orange : palette.accent)
+                    .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
                 if currencyCode == "USD", let rate = state.usdTryRate {
                     Text("≈ \((state.earnedAtUpdate * rate).money(code: "TRY"))")
                         .font(.caption)
                         .monospacedDigit()
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(.secondary)
                 }
                 if !state.note.isEmpty {
                     Text(state.note)
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
-            ActivityButtons(state: state, palette: palette)
+            ActivityButtons(state: state)
         }
         .padding(16)
     }
@@ -139,17 +144,17 @@ private struct LockScreenActivityView: View {
 
 private struct ActivityButtons: View {
     let state: ClockinActivityAttributes.ContentState
-    let palette: ClockinPalette
+    @Environment(\.palette) private var palette
 
     var body: some View {
         HStack(spacing: 8) {
             Button(intent: TogglePauseIntent()) {
                 Image(systemName: state.isPaused ? "play.fill" : "pause.fill")
                     .frame(width: 40, height: 40)
-                    .background(.white.opacity(0.12), in: Circle())
+                    .background(palette.surfaceStroke, in: Circle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
             .accessibilityLabel(state.isPaused ? "Resume" : "Pause")
 
             Button(intent: ClockOutIntent()) {

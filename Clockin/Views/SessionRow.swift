@@ -3,6 +3,7 @@ import SwiftUI
 /// Tek bir kaydin satiri. Kendi dolgusu yok; kapsayici belirliyor.
 struct SessionRow: View {
     @EnvironmentObject private var store: ClockStore
+    @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
 
     let session: WorkSession
@@ -12,6 +13,21 @@ struct SessionRow: View {
     /// Baska bir kaydin uzerine biniyorsa saatler isaretlenir. Bu kayitlar
     /// gun toplamina iki kez giriyor ve gunu imkansiz bir toplama cikarabiliyor.
     var conflicts = false
+    /// USD hesaplarda o gunun kuruyla TL karsiligi. Yalnizca gecmiste; kucuk
+    /// listelerde (cakisma uyarisi gibi) satiri gereksiz uzatmasin.
+    var showsTRY = false
+
+    /// Resmi dokumle duzeltilmis bir sayac kaydi.
+    ///
+    /// Mac her `matchedExternalSource` tasiyan satira "Matched" yaziyor. Yeni
+    /// ice aktarilan kayitlar da kendi kaynaklariyla isaretlendigi icin bu,
+    /// her dokum satirinda ayni etiketi tekrarlamak olurdu; ikon zaten ice
+    /// aktarildigini soyluyor. Bilgi tasiyan durum, sayacin dokume gore
+    /// duzeltilmis olmasi.
+    private var matchedSource: String? {
+        guard let source = session.matchedExternalSource, source != session.source else { return nil }
+        return source
+    }
 
     private var isTimer: Bool { session.source == "Clockin" }
 
@@ -42,10 +58,17 @@ struct SessionRow: View {
                             .accessibilityLabel("Overlaps another entry")
                     }
                 }
-                Text(session.note.isEmpty ? session.source : session.note)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                if let matchedSource {
+                    Label("Matched \(matchedSource)", systemImage: "checkmark.seal.fill")
+                        .font(.caption)
+                        .foregroundStyle(palette.secondary)
+                        .lineLimit(1)
+                } else {
+                    Text(session.note.isEmpty ? session.source : session.note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 3) {
@@ -55,6 +78,13 @@ struct SessionRow: View {
                 Text(store.earnings(for: session).money(code: store.currencyCode))
                     .font(.caption)
                     .foregroundStyle(palette.accent)
+                if showsTRY, store.currencyCode == "USD",
+                   let rate = exchangeRates.rate(onCalendarDay: session.start) {
+                    Text("≈ " + (store.earnings(for: session) * rate).money(code: "TRY"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
             }
         }
         // Dugme etiketi olarak kullanildiginda metin vurgu rengini almasin.

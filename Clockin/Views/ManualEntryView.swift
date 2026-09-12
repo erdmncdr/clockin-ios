@@ -126,6 +126,9 @@ struct ManualEntryView: View {
                     }
                 }
             }
+            // Saatler degistikce cakisma bolumu aniden belirip kaybolmasin.
+            .animation(.smooth(duration: 0.25), value: conflicts.map(\.id))
+            .sensoryFeedback(.warning, trigger: conflicts.isEmpty) { _, isEmpty in !isEmpty }
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle(editing == nil ? "Add past entry" : "Edit entry")

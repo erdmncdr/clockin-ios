@@ -8,7 +8,9 @@ struct InsightsHeatmapView: View {
     let currencyCode: String
     let now: Date
 
-    @State private var range = 12
+    @AppStorage("Clockin.InsightsHeatmapDayRange") private var range = 12
+    @AppStorage("Clockin.InsightsHeatmapGrouping") private var grouping: InsightsGrouping = .day
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedDay: Date?
 
     private var calendar: Calendar {
@@ -18,12 +20,37 @@ struct InsightsHeatmapView: View {
     }
 
     var body: some View {
-        let today = calendar.startOfDay(for: now)
-        let weeks = weekStarts(through: today)
-        let selected = selectedDay ?? today
-
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("WORK HEATMAP")
+            Picker("Heatmap grouping", selection: $grouping) {
+                ForEach(InsightsGrouping.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Group {
+                if grouping == .day {
+                    dayContent
+                } else {
+                    InsightsAggregateHeatmapView(periods: InsightsPeriods.buckets(daily: daily, earnings: earnings,
+                        grouping: grouping, now: now, calendar: calendar), grouping: grouping, currencyCode: currencyCode)
+                        .id(grouping)
+                }
+            }
+            // Gorunum degisince icerik kesilip yenisi aniden belirmesin;
+            // kisa bir solma, hangi modda oldugunu goz kaybetmeden gosterir.
+            .transition(.opacity)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.28), value: grouping)
+        }
+        .padding(16).card(palette)
+        .sensoryFeedback(.selection, trigger: grouping)
+        .transaction { if reduceMotion { $0.animation = nil } }
+    }
+
+    private var dayContent: some View {
+        let today = calendar.startOfDay(for: now)
+        let weeks = InsightsPeriods.dayWeeks(daily: daily, now: now, range: range, calendar: calendar)
+        let selected = selectedDay ?? today
+
+        return VStack(alignment: .leading, spacing: 12) {
             Picker("Heatmap range", selection: $range) {
                 Text("4 weeks").tag(4)
                 Text("12 weeks").tag(12)
@@ -106,13 +133,15 @@ struct InsightsHeatmapView: View {
                     .font(.subheadline.weight(.semibold))
                 Text("\(DurationText.compact(daily[selected, default: 0])) • \(earnings[selected, default: 0].money(code: currencyCode))")
                     .font(.subheadline).monospacedDigit().foregroundStyle(palette.accent)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .snappy, value: selected)
                 if daily[selected, default: 0] == 0 {
                     Text("No time logged on this day.").font(.caption).foregroundStyle(.secondary)
                 }
             }
             .accessibilityElement(children: .combine)
         }
-        .padding(16).card(palette)
+        .sensoryFeedback(.selection, trigger: selectedDay)
     }
 
     private func dayCell(_ day: Date, today: Date, selected: Date) -> some View {
@@ -134,7 +163,7 @@ struct InsightsHeatmapView: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .disabled(day > today)
         .opacity(day > today ? 0 : 1)
         .accessibilityHidden(day > today)
@@ -144,7 +173,7 @@ struct InsightsHeatmapView: View {
     }
 
     private func heatColor(hours: Double) -> Color {
-        hours > 0 ? palette.accent.opacity(min(1, 0.25 + hours / 8 * 0.75)) : palette.surfaceStroke
+        hours > 0 ? palette.accent.opacity(InsightsPeriods.heatIntensity(hours)) : palette.surfaceStroke
     }
 
     private func weekdayLabel(_ index: Int) -> String {
@@ -152,25 +181,4 @@ struct InsightsHeatmapView: View {
         return symbols[(index + 1) % 7]
     }
 
-    private func weekStarts(through today: Date) -> [Date] {
-        let weekday = calendar.component(.weekday, from: today)
-        let offset = (weekday - 2 + 7) % 7
-        let last = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
-        let first: Date
-        if range == 0 {
-            let earliest = min(daily.keys.min() ?? today, today)
-            let earliestOffset = (calendar.component(.weekday, from: earliest) - 2 + 7) % 7
-            first = calendar.date(byAdding: .day, value: -earliestOffset, to: earliest) ?? earliest
-        } else {
-            first = calendar.date(byAdding: .weekOfYear, value: -(range - 1), to: last) ?? last
-        }
-        var result: [Date] = []
-        var cursor = first
-        while cursor <= last {
-            result.append(cursor)
-            guard let next = calendar.date(byAdding: .weekOfYear, value: 1, to: cursor), next > cursor else { break }
-            cursor = next
-        }
-        return result
-    }
 }

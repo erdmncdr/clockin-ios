@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct ClockinApp: App {
+    @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
     /// Veri widget ile paylasilan grup klasorunde; Mac ile paylasilmiyor.
@@ -23,6 +24,9 @@ struct ClockinApp: App {
                     await exchangeRates.refresh(sessionDates: rateDates)
                     guard !Task.isCancelled, !exchangeRates.liveCheckFailed,
                           exchangeRates.latestRate != nil else { return }
+                    SessionMirror.shared.refresh()
+                }
+                .onChange(of: themeRaw) { _, _ in
                     SessionMirror.shared.refresh()
                 }
                 .onChange(of: scenePhase) { _, phase in

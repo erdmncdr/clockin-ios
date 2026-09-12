@@ -1,5 +1,24 @@
 import SwiftUI
 
+// Ayarlar ve oturum ekranlari ayni sunum secimini paylasir; iki sheet yarismaz.
+private enum DashboardSheet: Identifiable {
+    case settings
+    case newEntry
+    case edit(WorkSession)
+    case summary(WorkSession)
+    case manualStart
+
+    var id: String {
+        switch self {
+        case .settings: "settings"
+        case .newEntry: "new"
+        case .edit(let session): "edit-\(session.id)"
+        case .summary(let session): "summary-\(session.id)"
+        case .manualStart: "manual-start"
+        }
+    }
+}
+
 /// Ana ekran: sayac, bugunun toplami ve son kayitlar.
 struct DashboardView: View {
     @EnvironmentObject private var store: ClockStore
@@ -10,9 +29,10 @@ struct DashboardView: View {
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
 
     let showHistory: () -> Void
-    let showInsights: () -> Void
+    /// Seviye rozeti ve arkadas karti seriyi ve rozetleri acar.
+    let showProgress: () -> Void
 
-    @State private var sheet: SessionSheet?
+    @State private var sheet: DashboardSheet?
     @State private var pendingDelete: WorkSession?
 
     var body: some View {
@@ -22,8 +42,18 @@ struct DashboardView: View {
                     // Baslik yerine kendi ust satirimiz: solda seviye, sagda ekleme.
                     // Arac cubugu ogesi rozeti yuvarlak zeminine kirpiyordu.
                     HStack {
-                        DashboardLevelBadge(showInsights: showInsights)
+                        DashboardLevelBadge(showInsights: showProgress)
                         Spacer(minLength: 8)
+                        Button { sheet = .settings } label: {
+                            Image(systemName: "gearshape")
+                                .font(.headline)
+                                .frame(width: 36, height: 36)
+                                .background(palette.surface, in: Circle())
+                                .overlay { Circle().stroke(palette.surfaceStroke) }
+                        }
+                        .buttonStyle(.pressable)
+                        .foregroundStyle(palette.accent)
+                        .accessibilityLabel("Settings")
                         Button { sheet = .newEntry } label: {
                             Image(systemName: "plus")
                                 .font(.headline)
@@ -31,7 +61,7 @@ struct DashboardView: View {
                                 .background(palette.surface, in: Circle())
                                 .overlay { Circle().stroke(palette.surfaceStroke) }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.pressable)
                         .foregroundStyle(palette.accent)
                         .accessibilityLabel("Add past entry")
                     }
@@ -46,10 +76,11 @@ struct DashboardView: View {
                                 onClockOut: { sheet = .summary($0) },
                                 onStartWithElapsed: { sheet = .manualStart }
                             )
-                            if mascotEnabled { MascotCard(showInsights: showInsights) }
+                            if mascotEnabled { MascotCard(showInsights: showProgress) }
                             TodayCard(now: context.date)
                         }
                     }
+                    MoneyMomentumView()
                     if store.currencyCode == "USD" {
                         exchangeCard
                     }
@@ -61,7 +92,18 @@ struct DashboardView: View {
             .background(palette.background)
             .toolbar(.hidden, for: .navigationBar)
         }
-        .sessionSheets($sheet)
+        .sheet(item: $sheet) { destination in
+            Group {
+                switch destination {
+                case .settings: SettingsView()
+                case .newEntry: ManualEntryView()
+                case .edit(let session): ManualEntryView(editing: session)
+                case .summary(let session): SessionSummaryView(session: session)
+                case .manualStart: ManualStartView()
+                }
+            }
+            .preferredColorScheme(palette.colorScheme)
+        }
         .deleteSessionAlert($pendingDelete)
     }
 

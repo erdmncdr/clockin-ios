@@ -15,6 +15,7 @@ struct ClockinSnapshot: Codable, Equatable, Sendable {
     /// Su an gecerli saatlik ucret.
     var hourlyRate: Double
     var currencyCode: String
+    var theme: ClockinThemeChoice = .carbon
 
     static let empty = ClockinSnapshot(
         day: .distantPast, completedToday: 0, earnedToday: 0,
@@ -23,24 +24,16 @@ struct ClockinSnapshot: Codable, Equatable, Sendable {
 }
 
 extension ClockinSnapshot {
-    @MainActor
-    init(store: ClockStore, at date: Date = .now) {
-        let calendar = Calendar.current
-        let day = calendar.startOfDay(for: date)
-        let activeEarnings = store.running.map {
-            calendar.isDate($0.start, inSameDayAs: date) ? store.currentEarnings(at: date) : 0
-        } ?? 0
-        // Kurus hassasiyetine yuvarlanir: calisan seansin milisaniyelik payi
-        // her seferinde farkli bir deger uretip ayni ozeti yeniden yazdiriyordu.
-        let earned = ((store.earnings(on: date) - activeEarnings) * 100).rounded() / 100
-        self.init(
-            day: day,
-            completedToday: store.dailyDurations[day] ?? 0,
-            earnedToday: max(0, earned),
-            running: store.running,
-            hourlyRate: store.effectiveRate(at: date, fallback: store.hourlyRate),
-            currencyCode: store.currencyCode
-        )
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        day = try container.decode(Date.self, forKey: .day)
+        completedToday = try container.decode(TimeInterval.self, forKey: .completedToday)
+        earnedToday = try container.decode(Double.self, forKey: .earnedToday)
+        running = try container.decodeIfPresent(RunningSession.self, forKey: .running)
+        hourlyRate = try container.decode(Double.self, forKey: .hourlyRate)
+        currencyCode = try container.decode(String.self, forKey: .currencyCode)
+        // Eski dosyalarda tema yok; kullanicinin widget verisi kaybolmasin.
+        theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon
     }
 
     /// `ClockStore` ile ayni kural: calisan seans yalnizca bugun basladiysa

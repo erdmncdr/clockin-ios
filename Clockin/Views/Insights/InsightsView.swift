@@ -6,6 +6,9 @@ struct InsightsView: View {
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
+    @State private var editingGoals = false
+
+    @State private var shareSnapshot: StatsShareSnapshot?
 
     init() {}
 
@@ -16,12 +19,11 @@ struct InsightsView: View {
                                              dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        levelCard(stats)
                         goalsCard(stats, now: context.date)
                         InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
                                             currencyCode: store.currencyCode, now: context.date)
                         totalsCard(stats)
-                        milestonesCard(stats)
+                        reportsCard(stats)
                     }
                     .padding(16)
                 }
@@ -29,44 +31,21 @@ struct InsightsView: View {
             }
             .background(palette.background)
             .navigationTitle("Insights")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
+                                                           monthlyGoal: monthlyGoalHours)
+                    } label: { Image(systemName: "square.and.arrow.up") }
+                    .accessibilityLabel("Share stats")
+                }
+            }
+            .sheet(item: $shareSnapshot) { snapshot in
+                ShareStatsView(snapshot: snapshot)
+            }
         }
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
-    }
-
-    private func levelCard(_ stats: InsightsSnapshot) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Level \(stats.level)", systemImage: "trophy.fill")
-                .font(.title2.bold())
-                .foregroundStyle(palette.accent)
-            Text("\(stats.xp.formatted()) XP")
-                .font(.headline).monospacedDigit()
-            SwiftUI.ProgressView(value: Double(stats.xp % 500) / 500)
-                .accessibilityLabel("Progress to next level")
-            Text("\(500 - stats.xp % 500) XP to level \(stats.level + 1)")
-                .font(.subheadline).foregroundStyle(.secondary)
-            Divider()
-            metric("Current streak", value: "\(stats.currentStreak) days")
-            metric("Longest streak", value: "\(stats.longestStreak) days")
-            DisclosureGroup("How XP works") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("100 XP per hour: \(stats.baseXP.formatted()) XP")
-                    Text("Goals: +\(stats.goalXP.formatted()) XP • Streaks: +\(stats.streakXP.formatted()) XP")
-                    Text("Each daily goal adds 100 XP; reaching twice the goal adds another 250 XP. Each monthly goal adds 500 XP.")
-                    Text("Streak bonuses add up: 3 days +100, 7 +250, 14 +500, 30 +1,000 and 60 +2,000 XP.")
-                }
-                .font(.footnote).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 8)
-            }
-            .font(.subheadline)
-            if let running = store.running {
-                Label(running.isPaused ? "Includes paused session" : "Includes running session • updates every minute",
-                      systemImage: running.isPaused ? "pause.circle" : "clock")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding(16).card(palette)
     }
 
     private func goalsCard(_ stats: InsightsSnapshot, now: Date) -> some View {
@@ -75,7 +54,14 @@ struct InsightsView: View {
             goalRow("Today", duration: stats.daily[Calendar.current.startOfDay(for: now), default: 0],
                     hours: dailyGoalHours)
             goalRow("This month", duration: stats.monthDuration, hours: monthlyGoalHours)
-            DisclosureGroup("Edit goals") {
+            ForEach(estimateLines(stats.goalEstimate), id: \.self) { line in
+                Text(line).font(.caption).foregroundStyle(.secondary)
+                    .transition(.opacity)
+            }
+            // Acik/kapali durumu burada tutulur. Tutulmadiginda ilk hedef
+            // girilince ustteki satirlar degisiyor ve bolum kendiliginden
+            // kapaniyordu; ikinci dokunus baska bir yere denk geliyordu.
+            DisclosureGroup("Edit goals", isExpanded: $editingGoals) {
                 VStack(alignment: .leading, spacing: 14) {
                     Stepper(value: goalBinding($dailyGoalHours, maximum: 24), in: 0...24) {
                         Text("Daily: \(goalLabel(dailyGoalHours))")
@@ -91,6 +77,9 @@ struct InsightsView: View {
             .font(.subheadline)
         }
         .padding(16).card(palette)
+        .animation(.smooth(duration: 0.25), value: stats.goalEstimate)
+        .sensoryFeedback(.selection, trigger: dailyGoalHours)
+        .sensoryFeedback(.selection, trigger: monthlyGoalHours)
     }
 
     private func goalRow(_ title: String, duration: TimeInterval, hours: Double) -> some View {
@@ -142,32 +131,50 @@ struct InsightsView: View {
         .padding(16).card(palette)
     }
 
-    private func milestonesCard(_ stats: InsightsSnapshot) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionTitle("MILESTONES")
-            milestone("First session", detail: "\(stats.sessionCount) completed sessions", unlocked: stats.sessionCount > 0)
-            milestone("Century", detail: "\(DurationText.compact(stats.totalDuration)) / 100h", unlocked: stats.totalDuration >= 360_000)
-            milestone("Fortnight fire", detail: "\(stats.longestStreak) / 14 consecutive days", unlocked: stats.longestStreak >= 14)
-            milestone("Marathon", detail: "\(DurationText.compact(stats.longestSession)) / 4h in one completed session", unlocked: stats.longestSession >= 14_400)
-            milestone("Goal setter", detail: "\(stats.goalDays) daily goals reached", unlocked: stats.goalDays > 0)
-            milestone("Double down", detail: "\(stats.doubleGoalDays) double-goal days", unlocked: stats.doubleGoalDays > 0)
-            milestone("Month finisher", detail: "\(stats.goalMonths) monthly goals reached", unlocked: stats.goalMonths > 0)
+    private func estimateLines(_ estimate: InsightsGoalEstimate) -> [String] {
+        var lines: [String] = []
+        let time = { (date: Date) in date.formatted(date: .omitted, time: .shortened) }
+        switch estimate.daily {
+        case .off: break
+        case .reached: lines.append("Today's goal is reached.")
+        case .finish(let date): lines.append("At this pace you reach today's goal at \(time(date)).")
+        case .startNow(let date): lines.append("Start now and you reach today's goal at \(time(date)).")
         }
-        .padding(16).card(palette)
+        switch estimate.monthly {
+        case .off: break
+        case .reached: lines.append("This month's goal is reached.")
+        case .workDays(let days, let fits):
+            let amount = "\(days) \(days == 1 ? "day" : "days")"
+            lines.append(fits
+                ? "At your 7-day average, this month's goal is about \(amount) of work away."
+                : "At your 7-day average, this month's goal needs about \(amount) of work, more than this month has left.")
+        case .unavailable:
+            lines.append("No work in the last 7 days to estimate this month's goal from.")
+        }
+        if lines.isEmpty { lines.append("Set a daily or monthly goal to get started.") }
+        return lines
     }
 
-    private func milestone(_ title: String, detail: String, unlocked: Bool) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: unlocked ? "checkmark.seal.fill" : "lock")
-                .foregroundStyle(unlocked ? palette.accent : palette.secondary)
-                .frame(width: 24)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+    private func reportsCard(_ stats: InsightsSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle("REPORTS & RECORDS")
+            metric("Average completed session", value: DurationText.compact(stats.averageSession))
+            metric("Best weekday", value: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? "No sessions")
+            metric("Best start hour", value: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? "No sessions")
+            metric("Average earnings / hour", value: stats.hourlyEarnings.money(code: store.currencyCode))
+            metric("Last 30 days", value: DurationText.compact(stats.recentMonth))
+            metric("Preceding 30 days", value: DurationText.compact(stats.previousMonth))
+            metric("30-day trend", value: String(format: "%+.0f%%", stats.monthTrend * 100))
+            Divider()
+            metric("Best completed day", value: DurationText.compact(stats.bestDayDuration))
+            if let day = stats.bestDay {
+                Text(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
+                    .font(.caption).foregroundStyle(.secondary)
             }
+            Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them, the same days History's 30D shows.")
+                .font(.caption).foregroundStyle(.secondary)
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityValue(unlocked ? "Unlocked" : "Locked")
+        .padding(16).card(palette)
     }
 
     private func metric(_ title: String, value: String) -> some View {
@@ -184,5 +191,18 @@ struct InsightsView: View {
         }
         .font(.subheadline)
         .accessibilityElement(children: .combine)
+    }
+}
+
+// LevelBadge gibi mevcut cagiricilar korunur; store bagimliligi saf hesaplama dosyasina sizmaz.
+extension InsightsSnapshot {
+    @MainActor
+    init(store: ClockStore, now: Date, dailyGoal: Double, monthlyGoal: Double) {
+        let sessions = store.sessions
+        self.init(sessions: sessions, running: store.running,
+                  sessionEarnings: Dictionary(sessions.map { ($0.id, store.earnings(for: $0)) },
+                                              uniquingKeysWith: { first, _ in first }),
+                  runningEarnings: store.currentEarnings(at: now), now: now, calendar: .current,
+                  dailyGoal: dailyGoal, monthlyGoal: monthlyGoal)
     }
 }

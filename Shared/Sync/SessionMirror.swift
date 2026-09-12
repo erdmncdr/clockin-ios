@@ -18,6 +18,7 @@ final class SessionMirror {
     private var lastSnapshot: ClockinSnapshot?
     private var lastState: ClockinActivityAttributes.ContentState?
     private var isRestartingActivity = false
+    private var activityTask: Task<Void, Never>?
 
     func start(observing store: ClockStore) {
         self.store = store
@@ -35,25 +36,51 @@ final class SessionMirror {
 
     private func sync() {
         guard let store else { return }
-        let snapshot = ClockinSnapshot(store: store)
+        // Standart UserDefaults uzantidan okunamaz. Temayi mevcut atomik
+        // ozete eklemek ikinci bir paylasim kanali gerektirmez; tema degisimi
+        // de esitsizlik yaratarak timeline ve acik etkinligi yeniler.
+        let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
+        let snapshot = ClockinSnapshot(store: store, theme: theme)
         if snapshot != lastSnapshot {
-            lastSnapshot = snapshot
-            try? snapshot.write()
-            WidgetCenter.shared.reloadAllTimelines()
+            do {
+                try snapshot.write()
+                lastSnapshot = snapshot
+                WidgetCenter.shared.reloadAllTimelines()
+            } catch {
+                // Basarisiz yazimi onbellege alma; sonraki yenileme tekrar dener.
+            }
         }
+        syncChimes(running: store.running)
         syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate,
-                     earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode)
+                     earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)
     }
 
-    private func syncActivity(running: RunningSession?, hourlyRate: Double, earned: Double, currencyCode: String) {
+    /// Odak cani burada yeniden kurulur, gorunumde degil.
+    ///
+    /// Once `RootView` izliyordu. Kilit ekranindaki Live Activity dugmesi ya da
+    /// Kisayollar mesaiyi bitirdiginde uygulama arka planda, hicbir ekran
+    /// yuklenmeden calisiyor; bekleyen yirmi bildirim silinmiyor ve mesai
+    /// bittikten sonra saatlerce calmaya devam ediyordu.
+    private func syncChimes(running: RunningSession?) {
+        let defaults = UserDefaults.standard
+        FocusChimeController.shared.update(
+            running: running,
+            enabled: defaults.bool(forKey: "Clockin.ChimeEnabled"),
+            interval: defaults.integer(forKey: "Clockin.ChimeIntervalMinutes"),
+            sound: defaults.string(forKey: "Clockin.ChimeSound") ?? FocusChimeSound.notification.rawValue
+        )
+    }
+
+    private func syncActivity(running: RunningSession?, hourlyRate: Double, earned: Double, currencyCode: String, theme: ClockinThemeChoice) {
         guard let running else {
             lastState = nil
-            Task { await Self.endAll() }
+            enqueueActivityOperation { await Self.endAll() }
             return
         }
         let state = ClockinActivityAttributes.ContentState(
             running: running, hourlyRate: hourlyRate, earned: earned,
-            usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil
+            usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil,
+            theme: theme
         )
         // Yeniden kurulum surerken gelen senkronlar atlanir; yoksa eski etkinlik
         // kapanmadan ikinci bir etkinlik istenebilirdi.
@@ -66,19 +93,36 @@ final class SessionMirror {
         if activities.contains(where: { $0.attributes.currencyCode != currencyCode }) {
             isRestartingActivity = true
             lastState = state
-            Task { [weak self] in
+            enqueueActivityOperation { [weak self] in
                 await Self.endAll()
                 Self.request(currencyCode: currencyCode, content: content)
                 self?.isRestartingActivity = false
+                // Bekleme sirasinda tema degismisse en son secimi de aktar.
+                self?.sync()
             }
             return
         }
         guard state != lastState || activities.isEmpty else { return }
         lastState = state
         if activities.isEmpty {
-            Self.request(currencyCode: currencyCode, content: content)
+            enqueueActivityOperation {
+                if Activity<ClockinActivityAttributes>.activities.isEmpty {
+                    Self.request(currencyCode: currencyCode, content: content)
+                } else {
+                    await Self.updateAll(content)
+                }
+            }
         } else {
-            Task { await Self.updateAll(content) }
+            enqueueActivityOperation { await Self.updateAll(content) }
+        }
+    }
+
+    // Hizli tema degisikliklerinde eski bir async guncelleme yenisini ezmesin.
+    private func enqueueActivityOperation(_ operation: @escaping @MainActor @Sendable () async -> Void) {
+        let previous = activityTask
+        activityTask = Task {
+            await previous?.value
+            await operation()
         }
     }
 

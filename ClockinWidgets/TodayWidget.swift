@@ -42,6 +42,7 @@ struct TodayWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TodayWidget", provider: TodayProvider()) { entry in
             TodayWidgetView(entry: entry)
+                .environment(\.palette, entry.snapshot.theme.palette)
         }
         .configurationDisplayName("Today")
         .description("The current session and today's time and earnings.")
@@ -53,8 +54,9 @@ private struct TodayWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: TodayEntry
 
-    /// Widget uygulamanin `UserDefaults`'una erisemiyor; tema sabit.
-    private let palette = ClockinThemeChoice.carbon.palette
+    @Environment(\.palette) private var palette
+    @Environment(\.colorScheme) private var systemColorScheme
+    @Environment(\.showsWidgetContainerBackground) private var showsBackground
 
     private var snapshot: ClockinSnapshot { entry.snapshot }
     private var running: RunningSession? { snapshot.running }
@@ -68,7 +70,12 @@ private struct TodayWidgetView: View {
             default: smallLayout
             }
         }
-        .containerBackground(for: .widget) { palette.background }
+        // Kilit ekrani ve zemini kaldirilmis widget sistemin renklerini kullanir.
+        .environment(\.colorScheme, family == .accessoryRectangular || !showsBackground
+                     ? systemColorScheme : palette.colorScheme)
+        .containerBackground(for: .widget) {
+            if family != .accessoryRectangular { palette.background }
+        }
     }
 
     /// Orta boy: olculer yan yana, dugmeler altta. Olculer ust uste ve
@@ -80,11 +87,11 @@ private struct TodayWidgetView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
             HStack(alignment: .top, spacing: 12) {
                 if let running {
-                    sessionMetric(running, value: .system(.title3, design: .rounded).weight(.semibold),
+                    sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
                                   money: .subheadline.weight(.semibold), alignment: .center)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
-                todayMetric(value: .system(.title3, design: .rounded).weight(.semibold),
+                todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
                             money: .subheadline.weight(.semibold), alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -99,12 +106,12 @@ private struct TodayWidgetView: View {
             status
             Spacer(minLength: 0)
             if let running {
-                sessionMetric(running, value: .system(.headline, design: .rounded).weight(.semibold),
+                sessionMetric(running, value: .system(.headline, design: palette.fontDesign).weight(.semibold),
                               money: .caption.weight(.semibold))
-                todayMetric(value: .system(.headline, design: .rounded).weight(.semibold),
+                todayMetric(value: .system(.headline, design: palette.fontDesign).weight(.semibold),
                             money: .caption.weight(.semibold))
             } else {
-                todayMetric(value: .system(.title2, design: .rounded).weight(.semibold), money: .headline)
+                todayMetric(value: .system(.title2, design: palette.fontDesign).weight(.semibold), money: .headline)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -175,7 +182,7 @@ private struct TodayWidgetView: View {
                 .tracking(1)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.secondary)
             duration
                 .font(value)
                 .monospacedDigit()
@@ -185,7 +192,7 @@ private struct TodayWidgetView: View {
                 .multilineTextAlignment(alignment == .center ? .center : .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
             Text(earnings.money(code: snapshot.currencyCode))
                 .font(money)
                 .monospacedDigit()
@@ -222,10 +229,11 @@ private struct TodayWidgetView: View {
             Circle()
                 .fill(running == nil ? Color.gray : (isEarning ? palette.accent : .orange))
                 .frame(width: 7, height: 7)
+                .accessibilityHidden(true)
             Text(running == nil ? "READY" : (isEarning ? "WORKING" : "PAUSED"))
                 .font(.caption2.weight(.bold))
                 .tracking(1)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -235,7 +243,7 @@ private struct TodayWidgetView: View {
                 Button(intent: TogglePauseIntent()) {
                     actionLabel(running.isPaused ? "Resume" : "Pause",
                                 systemImage: running.isPaused ? "play.fill" : "pause.fill",
-                                foreground: .white, background: .white.opacity(0.14))
+                                foreground: palette.colorScheme == .light ? .black : .white, background: palette.surfaceStroke)
                 }
                 .buttonStyle(.plain)
                 Button(intent: ClockOutIntent()) {

@@ -27,6 +27,7 @@ struct HistoryView: View {
                         ForEach(EarningsRange.allCases) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    .sensoryFeedback(.selection, trigger: range)
                     EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
                         now: now, latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY)
@@ -37,7 +38,7 @@ struct HistoryView: View {
                         ForEach(group.sessions) { session in
                             Button { sheet = .edit(session) } label: {
                                 SessionRow(session: session, showsDay: false,
-                                           conflicts: conflicts.contains(session.id))
+                                           conflicts: conflicts.contains(session.id), showsTRY: true)
                             }
                             .buttonStyle(.plain)
                             .listRowBackground(palette.surface)

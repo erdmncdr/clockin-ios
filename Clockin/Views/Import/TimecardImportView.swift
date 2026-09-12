@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import UIKit
 import UniformTypeIdentifiers
 
 @MainActor
@@ -21,6 +20,10 @@ struct TimecardImportView: View {
     @State private var leftoverAction: LeftoverAction = .keep
     @State private var chosenLeftovers: Set<UUID> = []
     @State private var showsDeleteConfirmation = false
+    /// Secimden cikarilan yeni/duzeltme satirlari. Mac'teki gibi hepsi secili
+    /// baslar; bos kume "hepsini al" demek, boylece yeni bir satir sessizce
+    /// disarida kalmaz.
+    @State private var excluded: Set<UUID> = []
 
     private enum LeftoverAction: String, CaseIterable, Identifiable {
         case keep, choose, deleteAll
@@ -87,6 +90,7 @@ struct TimecardImportView: View {
                                 showsDeleteConfirmation = true
                             }
                         }
+                        .disabled(!canImport(review))
                     case .result:
                         Button("Done") { dismiss() }
                     }
@@ -117,6 +121,14 @@ struct TimecardImportView: View {
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
+        .sensoryFeedback(.selection, trigger: excluded)
+        .sensoryFeedback(trigger: resultToken) { _, _ in .success }
+    }
+
+    /// Sonuc ekranina gecildiginde bir kez titresim.
+    private var resultToken: Bool {
+        if case .result = phase { return true }
+        return false
     }
 
     @ViewBuilder private var sourceSections: some View {
@@ -145,14 +157,21 @@ struct TimecardImportView: View {
         .listRowBackground(palette.surface)
 
         Section {
-            Button("Paste", systemImage: "doc.on.clipboard") {
-                if let pasted = UIPasteboard.general.string, !pasted.isEmpty {
-                    text = pasted
-                    errorMessage = nil
-                } else {
-                    errorMessage = "The clipboard does not contain text."
+            // Sistem yapistirma dugmesi. `UIPasteboard.general.string` okumak
+            // iOS'ta her seferinde "yapistirmaya izin ver" sorusu cikariyordu;
+            // bu dugmeye basmak zaten izin sayildigi icin soru cikmaz.
+            PasteButton(payloadType: String.self) { strings in
+                let pasted = strings.joined(separator: "\n")
+                Task { @MainActor in
+                    if pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        errorMessage = "The clipboard does not contain text."
+                    } else {
+                        text = pasted
+                        errorMessage = nil
+                    }
                 }
             }
+            .buttonBorderShape(.capsule)
             TextEditor(text: $text)
                 .font(.body.monospaced())
                 .frame(minHeight: 180)
@@ -187,6 +206,12 @@ struct TimecardImportView: View {
             Text(review.sourceTitle).font(.headline)
             LabeledContent("Recognized entries", value: "\(review.sessions.count)")
             LabeledContent("Imported duration", value: DurationText.compact(review.duration))
+            LabeledContent("Selected to import") {
+                Text("\(selected(review).count) of \(review.summary.actionableItems.count) · \(DurationText.compact(selected(review).reduce(0) { $0 + $1.duration }))")
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: excluded)
+            }
             LabeledContent("New", value: "\(review.newItems.count)")
             LabeledContent("Matched • corrections", value: "\(review.matchedItems.count)")
             LabeledContent("Duplicate • skipped", value: "\(review.duplicateItems.count)")
@@ -207,9 +232,9 @@ struct TimecardImportView: View {
         }
         .listRowBackground(palette.surface)
 
-        comparisonSection("New", items: review.newItems)
-        comparisonSection("Matched • corrections", items: review.matchedItems)
-        comparisonSection("Duplicate • skipped", items: review.duplicateItems)
+        comparisonSection("New", items: review.newItems, selectable: true)
+        comparisonSection("Matched • corrections", items: review.matchedItems, selectable: true)
+        comparisonSection("Duplicate • skipped", items: review.duplicateItems, selectable: false)
         leftoverSections(review)
 
         Section {
@@ -221,6 +246,7 @@ struct TimecardImportView: View {
                 }
             }
             .buttonStyle(PrimaryActionButtonStyle(palette: palette))
+            .disabled(!canImport(review))
             Button("Change source") {
                 phase = .source
                 errorMessage = nil
@@ -321,25 +347,77 @@ struct TimecardImportView: View {
 
     private func importButtonTitle(_ review: TimecardImportReview) -> String {
         let count = removalIDs(review).count
-        guard count > 0 else { return "Import timecards" }
-        return "Import and delete \(count)"
+        let chosen = selected(review).count
+        if chosen == 0 { return count > 0 ? "Delete \(count) without importing" : "Nothing selected" }
+        guard count > 0 else { return "Import \(chosen) \(chosen == 1 ? "entry" : "entries")" }
+        return "Import \(chosen) and delete \(count)"
     }
 
-    @ViewBuilder private func comparisonSection(_ title: String, items: [ImportComparisonItem]) -> some View {
+    private func selected(_ review: TimecardImportReview) -> [WorkSession] {
+        review.summary.sessionsToImport(excluding: excluded)
+    }
+
+    /// Hic secim yoksa ve silinecek bir sey de yoksa yapilacak is yok.
+    private func canImport(_ review: TimecardImportReview) -> Bool {
+        !selected(review).isEmpty || !removalIDs(review).isEmpty
+    }
+
+    @ViewBuilder private func comparisonSection(_ title: String, items: [ImportComparisonItem],
+                                                selectable: Bool) -> some View {
         if !items.isEmpty {
-            Section(title) {
+            Section {
                 ForEach(items) { item in
-                    TimecardImportItemRow(item: item)
+                    if selectable {
+                        selectableRow(item)
+                    } else {
+                        TimecardImportItemRow(item: item)
+                    }
+                }
+            } header: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    if selectable {
+                        let ids = Set(items.map(\.id))
+                        let allOn = ids.isDisjoint(with: excluded)
+                        Button(allOn ? "None" : "All") {
+                            if allOn { excluded.formUnion(ids) } else { excluded.subtract(ids) }
+                        }
+                        .font(.caption.weight(.semibold))
+                        .textCase(nil)
+                    }
                 }
             }
             .listRowBackground(palette.surface)
         }
     }
 
+    private func selectableRow(_ item: ImportComparisonItem) -> some View {
+        let isOn = !excluded.contains(item.id)
+        return Button {
+            if isOn { excluded.insert(item.id) } else { excluded.remove(item.id) }
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isOn ? palette.accent : .secondary)
+                    .contentTransition(.symbolEffect(.replace))
+                TimecardImportItemRow(item: item)
+                    .opacity(isOn ? 1 : 0.5)
+                    .animation(.easeOut(duration: 0.18), value: isOn)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(isOn ? "Will be imported. Double tap to leave it out." : "Left out. Double tap to import it.")
+    }
+
     private func reviewText() {
         isEditingText = false
         do {
             let sessions = try PastedTextImporter.parse(text, hourlyRate: store.hourlyRate)
+            excluded = []
             prepareReview(sessions, sourceTitle: "Pasted timecards",
                           approvedDuration: PastedTextImporter.approvedSummaryDuration(in: text))
         } catch {
@@ -353,6 +431,7 @@ struct TimecardImportView: View {
             let granted = url.startAccessingSecurityScopedResource()
             defer { if granted { url.stopAccessingSecurityScopedResource() } }
             let sessions = try CSVImporter.parse(data: Data(contentsOf: url), hourlyRate: store.hourlyRate)
+            excluded = []
             prepareReview(sessions, sourceTitle: url.lastPathComponent)
         } catch {
             errorMessage = error.localizedDescription
@@ -376,8 +455,9 @@ struct TimecardImportView: View {
 
     private func confirm(_ review: TimecardImportReview) {
         guard case .review = phase else { return }
-        store.importSessions(review.sessions, removing: removalIDs(review))
+        store.importSessions(selected(review), removing: removalIDs(review))
         chosenLeftovers = []
+        excluded = []
         leftoverAction = .keep
         // Ortak mesaj sonraki islemlerle degisebilir; bu islemin sonucunu sakla.
         phase = .result(store.statusMessage ?? "Import finished.")
@@ -389,6 +469,7 @@ private struct TimecardImportReview {
     let sourceTitle: String
     let approvedDuration: TimeInterval?
     let leftovers: [WorkSession]
+    let summary: ImportComparisonSummary
     var newItems: [ImportComparisonItem] = []
     var matchedItems: [ImportComparisonItem] = []
     var duplicateItems: [ImportComparisonItem] = []
@@ -400,6 +481,7 @@ private struct TimecardImportReview {
         self.sourceTitle = sourceTitle
         self.approvedDuration = approvedDuration
         self.leftovers = summary.leftovers
+        self.summary = summary
         // Gruplar ve toplam bir kez hazirlanir; satirlar tekrar taramaz.
         for item in summary.items {
             duration += item.session.duration
