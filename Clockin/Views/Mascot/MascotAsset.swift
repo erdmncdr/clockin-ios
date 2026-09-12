@@ -46,17 +46,19 @@ struct ClockinMascotStage: View {
     @State private var poseToken = UUID()
 
     var body: some View {
-        ZStack {
+        // Esikler secim aninda uygulanir; burada yalnizca kayitli ad okunur.
+        let mode = CompanionMode(rawValue: defaultMode) ?? .auto
+        return ZStack {
             if state == .celebrate {
                 ClockinMascotImage(asset: state.imageName)
             } else if let pose {
                 ClockinPoseMascot(index: pose)
-            } else if defaultMode == "Typing" {
+            } else if mode == .typing {
                 ClockinFrameMascot(prefix: "frame", interval: 0.18)
-            } else if defaultMode == "Coffee" {
+            } else if mode == .coffee {
                 ClockinFrameMascot(prefix: "coffee", interval: 0.28)
-            } else if let fixed = ["Victory", "Stretch", "Dance", "Music"].firstIndex(of: defaultMode) {
-                ClockinPoseMascot(index: fixed + 1)
+            } else if let fixed = mode.fixedPoseIndex {
+                ClockinPoseMascot(index: fixed)
             } else {
                 switch state {
                 case .working: ClockinFrameMascot(prefix: "frame", interval: 0.18)

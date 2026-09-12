@@ -45,6 +45,24 @@ final class ExchangeRateStore: ObservableObject {
         return ratesByDay.keys.filter { $0 <= key }.max().flatMap { ratesByDay[$0] }
     }
 
+    /// Grafikteki kutular yerel takvim gunune gore. Yerel gece yarisini
+    /// oldugu gibi UTC'ye cevirmek, UTC'nin ilerisindeki saat dilimlerinde bir
+    /// onceki gunun kurunu sormak demek: 12 Eylul 00:00 (UTC+3) aslinda
+    /// 11 Eylul 21:00 UTC. Bu yuzden gunun ortasi sabitleniyor.
+    nonisolated static func calendarRateDate(_ date: Date) -> Date {
+        var local = Calendar(identifier: .gregorian)
+        local.timeZone = .current
+        var parts = local.dateComponents([.year, .month, .day], from: date)
+        parts.hour = 12
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(secondsFromGMT: 0)!
+        return utc.date(from: parts) ?? date
+    }
+
+    func rate(onCalendarDay date: Date) -> Double? {
+        rate(on: Self.calendarRateDate(date))
+    }
+
     func refresh(sessionDates: [Date]) async {
         let requestedDays = Array(Set(sessionDates.map { formatter.string(from: $0) })).sorted()
         let missingDays = requestedDays.filter { ratesByDay[$0] == nil }

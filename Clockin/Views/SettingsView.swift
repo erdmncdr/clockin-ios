@@ -14,6 +14,7 @@ struct SettingsView: View {
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
+    @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
     @FocusState private var rateIsFocused: Bool
     @State private var rateText = ""
     @State private var showImporter = false
@@ -28,6 +29,9 @@ struct SettingsView: View {
                 paySection
                 Section("Appearance") {
                     Toggle("Focus companion", isOn: $mascotEnabled)
+                    if mascotEnabled {
+                        companionBehavior
+                    }
                     Picker("Theme", selection: $themeRaw) {
                         ForEach(ClockinThemeChoice.allCases) { theme in
                             Text(theme.rawValue).tag(theme.rawValue)
@@ -114,6 +118,30 @@ struct SettingsView: View {
         } footer: {
             if let date = store.currentRateEffectiveFrom {
                 Text("Current rate applies from \(date.formatted(.dateTime.month(.abbreviated).day().year()))")
+            }
+        }
+    }
+
+    private var companionBehavior: some View {
+        // Suren oturum da toplama dahil, Mac'teki gibi. Ayarlar acikken esik
+        // asilirsa secenek kendiliginden acilsin diye tazeleniyor; dakikada bir
+        // yetiyor, saatlik esikler icin saniyede bir bos yere yeniden ciziyordu.
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let hours = store.allDuration(at: context.date) / 3600
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("Default behavior", selection: Binding(
+                    get: { CompanionMode.resolve(mascotDefault, totalHours: hours).rawValue },
+                    set: { mascotDefault = CompanionMode.resolve($0, totalHours: hours).rawValue }
+                )) {
+                    ForEach(CompanionMode.allCases) { mode in
+                        Text(mode.menuLabel(totalHours: hours))
+                            .tag(mode.rawValue)
+                            .disabled(!mode.isUnlocked(totalHours: hours))
+                    }
+                }
+                Text("Auto follows your session. Unlock Victory at 10h, Stretch at 25h, Dance at 50h, and Music at 100h of total work, including your active session.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }

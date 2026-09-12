@@ -2,6 +2,11 @@ import SwiftUI
 
 struct HistoryView: View {
     @EnvironmentObject private var store: ClockStore
+    @EnvironmentObject private var exchangeRates: ExchangeRateStore
+    @State private var range: EarningsRange = .month
+    @State private var showTRY = false
+    @State private var now = Date.now
+    private let refresh = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -9,10 +14,23 @@ struct HistoryView: View {
     @State private var pendingDelete: WorkSession?
 
     var body: some View {
-        let days = groupedDays()
+        let snapshot = EarningsSnapshot(sessions: store.sessions, running: store.running,
+            range: range, now: now, earnings: { store.earnings(for: $0) },
+            activeEarnings: store.currentEarnings(at: now), rate: { exchangeRates.rate(onCalendarDay: $0) })
+        let days = groupedDays(snapshot.sessions)
 
         NavigationStack {
             List {
+                Section {
+                    Picker("Period", selection: $range) {
+                        ForEach(EarningsRange.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
+                        now: now, latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
+                        hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY)
+                }
+                .listRowBackground(palette.surface)
                 ForEach(days, id: \.day) { group in
                     Section {
                         ForEach(group.sessions) { session in
@@ -47,15 +65,6 @@ struct HistoryView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(palette.background)
-            .overlay {
-                if days.isEmpty {
-                    ContentUnavailableView(
-                        "No sessions yet",
-                        systemImage: "clock",
-                        description: Text("Clock in or add a past entry to see it here.")
-                    )
-                }
-            }
             .navigationTitle("History")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -66,6 +75,9 @@ struct HistoryView: View {
                 }
             }
         }
+        .onAppear { now = .now }
+        .onReceive(refresh) { now = $0 }
+        .onReceive(store.objectWillChange) { now = .now }
         .sessionSheets($sheet)
         .deleteSessionAlert($pendingDelete)
     }
@@ -123,12 +135,12 @@ struct HistoryView: View {
                 day.formatted(.dateTime.weekday(.wide)))
     }
 
-    private func groupedDays() -> [DayGroup] {
+    private func groupedDays(_ sessions: [WorkSession]) -> [DayGroup] {
         let calendar = Calendar.current
         var groups: [DayGroup] = []
 
         // Kayitlar zaten sirali; gruplama ve toplamlar tek geciste hesaplanir.
-        for session in store.sessions {
+        for session in sessions {
             let day = calendar.startOfDay(for: session.start)
             if groups.last?.day != day {
                 groups.append(DayGroup(day: day))

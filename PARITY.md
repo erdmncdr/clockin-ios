@@ -39,6 +39,46 @@ Port: keep selected actionable IDs in review state, expose accessible toggles an
 
 ### G1.03. Earnings charts, period filtering and historical TRY analysis (large)
 
+**Chart port implemented after this audit:** History now has 7D / 30D / 3M
+(90 calendar days) / ALL filters shared by the daily bar chart, period totals
+and completed-session list. Totals include eligible active work by start date,
+refreshed once per minute. Tap or drag selects a calendar day and shows worked
+duration, original earnings, TRY equivalent and applied rate. USD accounts can
+switch the chart to historical TRY; other currencies retain their own label.
+Missing conversion rates stay missing rather than becoming zero or silently
+using today's rate. Current-rate summary and historical-rate total have separate
+labels. Rate requests use calendar-day keys and refresh when session dates change,
+including same-count edits and the active session's start date.
+
+Verification: warning-free simulator build; all four filters, the USD/TRY switch
+and tap day details exercised on iPhone 17 Pro / iOS 26.5 against the 612-record
+archive (ALL reports 612 completed, 2542h 15m). The period total and the TRY
+conversions were read off screen and disagree as they should: ALL shows
+$63.556,39 with a current-rate estimate, while the historical total for 30D
+(₺395.276,60) differs from the same period's current-rate figure (₺398.188,77),
+so the two conversions are demonstrably not sharing a rate.
+
+Twelve deterministic calculation checks cover date boundaries, historical
+conversion, missing rates, active/paused work, and empty data. They were shown to
+fail on deliberately broken copies of the source (latest rate applied to every
+day; missing rates treated as zero; an off-by-one period window). Run:
+`swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Earnings/EarningsSnapshot.swift Tests/manual/earnings/main.swift -o /tmp/clockin-earnings-tests && /tmp/clockin-earnings-tests`.
+
+Corrected after that first pass: the chart carried a `chartGesture` with
+`minimumDistance: 0`, which swallowed the list's vertical scroll. Because the
+chart sits at the top of History, dragging down to read older sessions selected
+days instead of scrolling. Selection is now a `SpatialTapGesture`, which taps
+without competing with the scroll; both were re-checked on the simulator. The
+empty state also told people with no sessions at all to choose a wider period,
+which ALL already is; that copy now depends on whether any session exists.
+
+Real-device accessibility, very large archives, and the drag-to-scrub interaction
+Mac offers remain untested or unported.
+
+Remaining parts of the broader original G1.03 scope: historical TRY on individual
+session rows and calendar-day/active-day averages. The text below is the original
+audit, before this chart port.
+
 Mac Earnings History has 7D, 30D, 3M (90 days) and ALL filters affecting completed-session lists, scoped time/money/session totals, and inclusion of an active session by its start date. It renders a horizontally scrollable daily line/area/point chart, despite copy calling it a bar chart. A USD/TRY toggle chooses original earnings or daily historical-rate conversion. Point details show date, worked duration, USD, TRY and applied exchange rate. The summary's approximate TRY uses the latest rate, distinct from historical chart conversion. Session rows can show historical TRY. Calendar-day daily/weekly/monthly averages, active days and active-day averages accompany the chart.
 
 iPhone History is an unfiltered completed-session list. Insights has time/earnings totals and a day heatmap, but no earnings chart, selected-period earnings, historical TRY rows/details, or these averages. The historical exchange-rate backend exists on iPhone and is still populated.
@@ -82,6 +122,31 @@ Mac implementation: [M:ProgressView.swift:104-112](/Users/erdemincedere/Desktop/
 Port: reuse a consistent stats snapshot, build phone preview/page controls, render via the iOS image path, and share/save/copy through native interfaces. Include privacy preview and fix the Mac badge-count mismatch first. Likely omission: substantial standalone view plus AppKit export integrations.
 
 ### G1.08. Mascot default-behavior picker and unlock explanation (small)
+
+**Ported after this audit:** iPhone Settings → Appearance now has Default behavior,
+using `Clockin.MascotDefault`. All seven Mac modes are listed; locked choices
+show their hour threshold and cannot be selected. Total work includes the active
+session. The explanation lists the 10/25/50/100-hour unlocks. The control is hidden
+when Focus companion is off.
+
+The mode names were duplicated as plain strings in the picker and in
+`ClockinMascotStage`; a typo on either side would have silently fallen back to
+Auto. They now come from one `CompanionMode` enum, which also owns the thresholds
+and the locked-label text.
+
+Verification: warning-free simulator build; the picker was opened on
+iPhone 17 Pro / iOS 26.5 and lists all seven modes. That archive has every mode
+unlocked, so the locked path cannot be reached through the UI there. It is covered
+instead by 17 checks on `CompanionMode` (locked selection reverts to Auto, the
+threshold itself unlocks, unknown or wrongly cased stored values fall back,
+locked labels carry their hour threshold), shown to fail on broken copies of the
+rule. Run:
+`swiftc -swift-version 6 Clockin/Views/Mascot/CompanionMode.swift Tests/manual/companion/main.swift -o /tmp/clockin-companion-tests && /tmp/clockin-companion-tests`.
+
+Live threshold crossing while Settings is open is still unexercised; the refresh
+that would show it was also reduced from once a second to once a minute, since the
+thresholds are measured in hours. The simulator's stored preference is currently
+Typing, not Auto. The original audit below describes the gap before this port.
 
 Mac Settings writes Auto, Typing, Coffee, Victory (10h), Stretch (25h), Dance (50h), Music (100h). Locked selections revert to Auto. iPhone `ClockinMascotStage` reads exactly this key and implements every mode, but no UI writes it. The enable toggle is unrelated. Both apps also let a tap temporarily show a random pose, without these fixed-mode unlock gates.
 
