@@ -1,0 +1,57 @@
+# Clockin for iPhone
+
+The iPhone version of Clockin: the same time tracker as the Mac app, with a
+home screen and lock screen widget, a Live Activity while the timer runs, and
+Shortcuts actions for clocking in and out.
+
+It keeps its own data on the phone and does not sync with the Mac app. History
+comes in the same way it does on the Mac, from a timecard CSV or pasted
+timecard text, and Settings can export a full backup.
+
+## Build and run
+
+Requires Xcode with the iOS 17 SDK or later. From this folder:
+
+```bash
+xcodebuild -project Clockin.xcodeproj -scheme Clockin -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build/DerivedData build
+xcrun simctl install booted build/DerivedData/Build/Products/Debug-iphonesimulator/Clockin.app
+xcrun simctl launch booted com.erdmncdr.clockin
+```
+
+Running on a real iPhone needs a development team set in Xcode; the project
+does not define one.
+
+## Layout
+
+```text
+Clockin.xcodeproj   targets: Clockin, ClockinWidgets
+Clockin/            the app: screens, Shortcuts provider, icon
+Shared/Core/        store, models and importers, ported from ../Sources/Clockin
+Shared/Sync/        App Group storage, widget snapshot, Live Activity state
+Shared/Intents/     clock in, clock out, pause
+ClockinWidgets/     widget and Live Activity
+Tests/manual/       dependency-free checks
+```
+
+`Shared/Core` started as a copy of the Mac sources. Fixes to shared logic have
+to be carried across by hand, for example:
+
+```bash
+diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
+```
+
+## Checks
+
+Each check prints `ok` lines and exits non-zero on the first failure.
+
+```bash
+swiftc -swift-version 6 -strict-concurrency=complete Shared/Core/Models.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/snapshot/main.swift -o /tmp/clockin-snapshot-tests && /tmp/clockin-snapshot-tests
+swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Earnings/EarningsSnapshot.swift Tests/manual/earnings/main.swift -o /tmp/clockin-earnings-tests && /tmp/clockin-earnings-tests
+swiftc -swift-version 6 Clockin/Views/Mascot/CompanionMode.swift Tests/manual/companion/main.swift -o /tmp/clockin-companion-tests && /tmp/clockin-companion-tests
+swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift Tests/manual/import/main.swift -o /tmp/clockin-import-tests && /tmp/clockin-import-tests
+swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/SessionOverlap.swift Tests/manual/overlap/main.swift -o /tmp/clockin-overlap-tests && /tmp/clockin-overlap-tests
+swiftc -swift-version 6 Shared/Core/ExchangeRates.swift Tests/manual/raterange/main.swift -o /tmp/clockin-ratedate-tests && TZ=Europe/Istanbul /tmp/clockin-ratedate-tests
+```
+
+`PARITY.md` lists what the Mac app has that this one does not yet. `HANDOFF.md`
+holds the working notes, in Turkish.

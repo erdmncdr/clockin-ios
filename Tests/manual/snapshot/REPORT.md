@@ -3,7 +3,7 @@
 Added `Tests/manual/snapshot/main.swift` and documented its invocation under
 the build commands in `HANDOFF.md`. Production sources were not modified.
 
-Run from `/Users/erdemincedere/Desktop/Clockin/clockin-ios`:
+Run from the `iOS` folder:
 
 ```bash
 swiftc -swift-version 6 -strict-concurrency=complete Shared/Core/Models.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/snapshot/main.swift -o /tmp/clockin-snapshot-tests && /tmp/clockin-snapshot-tests
