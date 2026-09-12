@@ -377,23 +377,60 @@ final class ClockStore: ObservableObject {
         (try? PastedTextImporter.parse(text, hourlyRate: hourlyRate)) ?? []
     }
 
-    func compareImportedSessions(_ imported: [WorkSession]) -> ImportComparisonSummary {
+    func compareImportedSessions(_ imported: [WorkSession],
+                                 scope: ImportScope = .daysInFile) -> ImportComparisonSummary {
         var seenKeys = Set<String>()
         var claimedMatches = Set<Int>()
-        let existingKeys = Set(data.sessions.map(Self.deduplicationKey))
+        var indexByKey: [String: Int] = [:]
+        for (index, session) in data.sessions.enumerated() {
+            let key = Self.deduplicationKey(session)
+            if indexByKey[key] == nil { indexByKey[key] = index }
+        }
+        // Dosyanin dokundugu kayitlar artikta sayilmasin: bir satirla eslesen
+        // ya da zaten ayni olan bir kayit zaten dosyanin karsiligidir.
+        var touched = Set<Int>()
         let items = imported.map { session -> ImportComparisonItem in
             let key = Self.deduplicationKey(session)
-            if existingKeys.contains(key) || seenKeys.contains(key) {
+            if let duplicateIndex = indexByKey[key] {
+                touched.insert(duplicateIndex)
+                return ImportComparisonItem(session: session, kind: .duplicate)
+            }
+            if seenKeys.contains(key) {
                 return ImportComparisonItem(session: session, kind: .duplicate)
             }
             seenKeys.insert(key)
             if session.source != "Clockin", let index = findClockinMatch(for: session), !claimedMatches.contains(index) {
                 claimedMatches.insert(index)
+                touched.insert(index)
                 return ImportComparisonItem(session: session, kind: .matched, localMatch: data.sessions[index])
             }
             return ImportComparisonItem(session: session, kind: .new)
         }
-        return ImportComparisonSummary(items: items)
+        return ImportComparisonSummary(items: items,
+                                       leftovers: leftoverSessions(imported, scope: scope, touched: touched))
+    }
+
+    /// Kapsama giren, dosyanin dokunmadigi kendi sayac kayitlarin.
+    ///
+    /// Yalnizca `source == "Clockin"` olanlar: daha once baska bir dosyadan
+    /// gelmis kayitlar kullanicinin elle tuttugu kayit degil, onlari bir dokum
+    /// eksik diye silmek veri kaybi olur.
+    private func leftoverSessions(_ imported: [WorkSession],
+                                  scope: ImportScope, touched: Set<Int>) -> [WorkSession] {
+        let days = Set(imported.map { calendar.startOfDay(for: $0.start) })
+        guard let first = days.min(), let last = days.max() else { return [] }
+        // `data.sessions` yazilma sirasinda duruyor; liste gun gun okunacagi
+        // icin tarihe gore siralanir.
+        return data.sessions.enumerated().compactMap { index, session -> WorkSession? in
+            guard !touched.contains(index),
+                  session.source == "Clockin", session.matchedExternalSource == nil else { return nil }
+            let day = calendar.startOfDay(for: session.start)
+            switch scope {
+            case .daysInFile: return days.contains(day) ? session : nil
+            case .wholeRange: return (day >= first && day <= last) ? session : nil
+            }
+        }
+        .sorted { $0.start > $1.start }
     }
 
     /// Var olan bir kaydin saatlerini ve notunu degistirir.
@@ -443,10 +480,21 @@ final class ClockStore: ObservableObject {
         statusMessage = "Session deleted."
     }
 
-    func importSessions(_ imported: [WorkSession]) {
+    /// - Parameter removing: silinecek kendi kayitlarinin kimlikleri. Ice
+    ///   aktarma kendiliginden hicbir sey silmez; bu kume yalnizca kullanici
+    ///   onizlemede acikca sectiginde dolar.
+    func importSessions(_ imported: [WorkSession], removing: Set<UUID> = []) {
         guard imported.allSatisfy(\.hasValidDuration) else {
             statusMessage = "Invalid session duration or dates."
             return
+        }
+        // Silme once yapilir: aksi halde yeni kayitlar eklendikten sonra
+        // indeksler kayiyor ve eslesme aramasi silinecek kayitlari da goruyor.
+        var removed = 0
+        if !removing.isEmpty {
+            let before = data.sessions.count
+            data.sessions.removeAll { removing.contains($0.id) }
+            removed = before - data.sessions.count
         }
         var fresh: [WorkSession] = []
         var freshKeys = Set<String>()
@@ -497,12 +545,13 @@ final class ClockStore: ObservableObject {
         }
         data.sessions.append(contentsOf: fresh)
         save()
-        if fresh.isEmpty, matched == 0, corrected == 0 {
+        if fresh.isEmpty, matched == 0, corrected == 0, removed == 0 {
             statusMessage = "All entries were already imported."
         } else {
             var parts = ["Imported \(fresh.count)"]
             if corrected > 0 { parts.append("corrected \(corrected) Clockin \(corrected == 1 ? "entry" : "entries")") }
             if matched > 0 { parts.append("matched \(matched)") }
+            if removed > 0 { parts.append("deleted \(removed) Clockin \(removed == 1 ? "entry" : "entries")") }
             statusMessage = parts.joined(separator: ", ") + "."
         }
     }
