@@ -13,6 +13,7 @@ Timer with pause, cancel and start with elapsed time; manual entries, editing an
 - Shortcuts and Siri actions: Clock In, Clock Out, Pause or Resume
 - Haptics on timer actions, a celebration on the clock-out summary
 - Overlap warnings in History and in the entry editor
+- Desk mode: a full-screen timer in landscape that keeps the screen on while a session runs
 
 ## Mac only
 

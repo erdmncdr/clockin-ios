@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct ClockinApp: App {
+    @UIApplicationDelegateAdaptor(ClockinAppDelegate.self) private var appDelegate
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
