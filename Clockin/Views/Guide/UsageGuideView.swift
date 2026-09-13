@@ -37,7 +37,7 @@ struct UsageGuideView: View {
                     topic("Money Momentum", icon: "flame.fill",
                           detail: "Today shows your effective hourly rate divided by 3,600, plus TRY per second for USD accounts when a rate is available. While a session is open, the strip tracks its next multiple-of-ten earnings target. At an exact multiple, the target moves to the next ten. When paused or idle, Your earning power shows the potential rate; paused time does not earn more money.")
                     topic("Insights", icon: "chart.xyaxis.line",
-                          detail: "Insights shows your goals, the work heatmap by day, week or month, your rhythm and reports. Use Edit goals to set daily and monthly hours; zero turns a goal off. While you work, the goals card says when you reach today's goal; otherwise it says when you would reach it if you started now. Goals are for tracking only and do not change your level or badges.")
+                          detail: "Insights shows your goals, the work heatmap by day, week or month, your rhythm and reports. Use Edit goals to set daily and monthly hours, including values like 7.5; zero turns a goal off. Once a goal is set, Today shows its progress too. While you work, the goals card says when you reach today's goal; otherwise it says when you would reach it if you started now. Goals are for tracking only and do not change your level or badges.")
                     topic("Level and badges", icon: "rosette",
                           detail: "Open Badges, or tap your level or the companion card on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Tap a badge for its requirement and current progress. Current-streak badges lock again when a streak ends.")
                 } header: {
@@ -54,7 +54,7 @@ struct UsageGuideView: View {
                     topic("Widgets and Live Activity", icon: "apps.iphone",
                           detail: "Add Clockin's Today widget to your Home Screen or Lock Screen to see time and earnings. The medium Home Screen widget has Clock in, Pause or Resume, and Clock out controls. During a session, Live Activity shows the timer on the Lock Screen and on supported devices in Dynamic Island, when Live Activities are allowed. Its Lock Screen and expanded island controls let you pause, resume, or clock out.")
                     topic("Shortcuts and Siri", icon: "square.stack.3d.up",
-                          detail: "In Shortcuts, use Clockin's Clock In, Clock Out, and Pause or Resume actions. You can also ask Siri to clock in with Clockin, clock out with Clockin, or pause Clockin. Pause or Resume toggles the current session's state.")
+                          detail: "In Shortcuts, use Clockin's Clock In, Clock Out, and Pause or Resume actions. You can also ask Siri to clock in with Clockin, clock out with Clockin, or pause Clockin. Pause or Resume toggles the current session's state, and Clock In also resumes a paused session.")
                 } header: {
                     Text("Keep Clockin handy")
                 }

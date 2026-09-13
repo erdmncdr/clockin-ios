@@ -8,7 +8,7 @@ import Foundation
 
 struct ClockInIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Clock In"
-    static let description = IntentDescription("Starts the Clockin timer.")
+    static let description = IntentDescription("Starts the Clockin timer, or resumes it if it is paused.")
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -16,8 +16,13 @@ struct ClockInIntent: LiveActivityIntent {
         return .result(dialog: "Open Clockin to continue.")
         #else
         let store = SharedStore.clock
-        guard store.running == nil else {
-            return .result(dialog: "A session is already running.")
+        // Mac'teki Option-Command-I gibi: duraklatilmis oturum devam eder.
+        if let running = store.running {
+            guard running.isPaused else {
+                return .result(dialog: "A session is already running.")
+            }
+            store.resume()
+            return .result(dialog: "Resumed.")
         }
         store.clockIn()
         return .result(dialog: "Clocked in.")

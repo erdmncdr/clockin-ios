@@ -29,6 +29,8 @@ struct DashboardView: View {
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
 
     let showHistory: () -> Void
+    /// Hedef karti hedeflerin duzenlendigi Insights'i acar.
+    let showInsights: () -> Void
     /// Seviye rozeti ve arkadas karti seriyi ve rozetleri acar.
     let showProgress: () -> Void
 
@@ -52,6 +54,7 @@ struct DashboardView: View {
                             )
                             if mascotEnabled { MascotCard(showInsights: showProgress) }
                             TodayCard(now: context.date)
+                            TodayGoalsCard(now: context.date, showInsights: showInsights)
                         }
                     }
                     MoneyMomentumView()

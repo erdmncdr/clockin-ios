@@ -20,7 +20,7 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            DashboardView(showHistory: { tab = .history }, showProgress: { tab = .badges })
+            DashboardView(showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()

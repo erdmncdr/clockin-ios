@@ -52,6 +52,13 @@ theme; a save that fails is rolled back in memory instead of showing work that
 is not on disk; Settings moved from the tab bar to a gear on Today, and the
 freed tab holds level and badges.
 
+Smaller gaps closed after the audit: Today shows goal progress bars when a
+goal is set, as the Mac home screen does; goals accept decimal hours such as
+7.5, typed with a comma or a dot; and the Clock In action resumes a paused
+session, like the Mac's Option-Command-I. Still different on purpose: History
+has no collapsible day groups or flat session list, since its period filters
+already keep the list short.
+
 ## 1. Missing and worth porting
 
 ### G1.01. Automatic-backup discovery and Restore latest (small)

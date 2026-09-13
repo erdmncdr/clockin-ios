@@ -7,6 +7,7 @@ struct InsightsView: View {
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @State private var editingGoals = false
+    @FocusState private var focusedGoal: String?
 
     @State private var shareSnapshot: StatsShareSnapshot?
 
@@ -32,6 +33,11 @@ struct InsightsView: View {
             .background(palette.background)
             .navigationTitle("Insights")
             .toolbar {
+                // Ondalik klavyede Return yok; alan buradan birakilir.
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { focusedGoal = nil }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
@@ -63,13 +69,11 @@ struct InsightsView: View {
             // kapaniyordu; ikinci dokunus baska bir yere denk geliyordu.
             DisclosureGroup("Edit goals", isExpanded: $editingGoals) {
                 VStack(alignment: .leading, spacing: 14) {
-                    Stepper(value: goalBinding($dailyGoalHours, maximum: 24), in: 0...24) {
-                        Text("Daily: \(goalLabel(dailyGoalHours))")
-                    }
-                    Stepper(value: goalBinding($monthlyGoalHours, maximum: 744), in: 0...744) {
-                        Text("Monthly: \(goalLabel(monthlyGoalHours))")
-                    }
-                    Text("Whole-hour steps. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
+                    GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
+                                   focus: $focusedGoal)
+                    GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
+                                   focus: $focusedGoal)
+                    Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(.top, 12)
@@ -96,17 +100,6 @@ struct InsightsView: View {
                 Text("No goal set").font(.caption).foregroundStyle(.secondary)
             }
         }
-    }
-
-    private func goalBinding(_ value: Binding<Double>, maximum: Int) -> Binding<Int> {
-        Binding {
-            guard value.wrappedValue.isFinite else { return 0 }
-            return Int(min(max(value.wrappedValue.rounded(), 0), Double(maximum)))
-        } set: { value.wrappedValue = Double($0) }
-    }
-
-    private func goalLabel(_ value: Double) -> String {
-        value > 0 ? "\(value.formatted(.number.precision(.fractionLength(0...2))))h" : "No goal"
     }
 
     private func totalsCard(_ stats: InsightsSnapshot) -> some View {
