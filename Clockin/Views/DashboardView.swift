@@ -39,32 +39,6 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    // Baslik yerine kendi ust satirimiz: solda seviye, sagda ekleme.
-                    // Arac cubugu ogesi rozeti yuvarlak zeminine kirpiyordu.
-                    HStack {
-                        DashboardLevelBadge(showInsights: showProgress)
-                        Spacer(minLength: 8)
-                        Button { sheet = .settings } label: {
-                            Image(systemName: "gearshape")
-                                .font(.headline)
-                                .frame(width: 36, height: 36)
-                                .background(palette.surface, in: Circle())
-                                .overlay { Circle().stroke(palette.surfaceStroke) }
-                        }
-                        .buttonStyle(.pressable)
-                        .foregroundStyle(palette.accent)
-                        .accessibilityLabel("Settings")
-                        Button { sheet = .newEntry } label: {
-                            Image(systemName: "plus")
-                                .font(.headline)
-                                .frame(width: 36, height: 36)
-                                .background(palette.surface, in: Circle())
-                                .overlay { Circle().stroke(palette.surfaceStroke) }
-                        }
-                        .buttonStyle(.pressable)
-                        .foregroundStyle(palette.accent)
-                        .accessibilityLabel("Add past entry")
-                    }
                     // Iki kart ayni andan okur. Her biri kendi TimelineView'uyla
                     // farkli anlarda yenilendiginde kazanc iki kartta bir sent
                     // farkli gorunuyordu. Sayac islemiyorsa degerler degismez;
@@ -86,9 +60,12 @@ struct DashboardView: View {
                     }
                     recentSection
                 }
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .padding(.top, 6)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .pinnedHeader { header }
             .background(palette.background)
             .toolbar(.hidden, for: .navigationBar)
         }
@@ -105,6 +82,40 @@ struct DashboardView: View {
             .preferredColorScheme(palette.colorScheme)
         }
         .deleteSessionAlert($pendingDelete)
+    }
+
+    // Baslik yerine kendi ust satirimiz: solda seviye, sagda ayarlar ve ekleme.
+    // Arac cubugu ogesi rozeti yuvarlak zeminine kirpiyordu. Icerikle birlikte
+    // kaydiginda durum cubugunun altina giriyordu; diger sekmelerin basligi
+    // gibi ustte sabit durur.
+    private var header: some View {
+        HStack {
+            DashboardLevelBadge(showInsights: showProgress)
+            Spacer(minLength: 8)
+            Button { sheet = .settings } label: {
+                Image(systemName: "gearshape")
+                    .font(.headline)
+                    .frame(width: 36, height: 36)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.surfaceStroke) }
+            }
+            .buttonStyle(.pressable)
+            .foregroundStyle(palette.accent)
+            .accessibilityLabel("Settings")
+            Button { sheet = .newEntry } label: {
+                Image(systemName: "plus")
+                    .font(.headline)
+                    .frame(width: 36, height: 36)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.surfaceStroke) }
+            }
+            .buttonStyle(.pressable)
+            .foregroundStyle(palette.accent)
+            .accessibilityLabel("Add past entry")
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 8)
     }
 
     private var exchangeCard: some View {
@@ -265,5 +276,20 @@ private struct TodayCard: View {
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
+    }
+}
+
+private extension View {
+    /// Kaydirilan icerigin ustunde sabit duran bir satir. iOS 26'da gezinme
+    /// cubugunun yumusak kenar efektini alir; oncesinde cubuk malzemesi.
+    @ViewBuilder
+    func pinnedHeader<Header: View>(@ViewBuilder _ header: () -> Header) -> some View {
+        if #available(iOS 26, *) {
+            safeAreaBar(edge: .top, spacing: 0, content: header)
+        } else {
+            safeAreaInset(edge: .top, spacing: 0) {
+                header().background(.bar)
+            }
+        }
     }
 }
