@@ -60,5 +60,33 @@ swiftc -swift-version 6 Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models
 swiftc -swift-version 6 Clockin/Audio/ChimeSchedule.swift Tests/manual/chime/main.swift -o /tmp/clockin-chime-tests && /tmp/clockin-chime-tests
 ```
 
-`PARITY.md` lists what the Mac app has that this one does not yet. `HANDOFF.md`
-holds the working notes, in Turkish.
+`PARITY.md` compares the two apps: what is shared, what only one of them has,
+what differs on purpose, and Mac issues still open.
+
+## Platform notes
+
+Things that cost time to find and are easy to break again:
+
+- **Live Activity values.** A Live Activity only advances time by itself.
+  Earnings change when the app sends an update, so the app refreshes it on
+  launch, when going to the background and from its buttons.
+- **Hours and minutes in the Dynamic Island.** `Text(timerInterval:)` always
+  shows seconds, and the timer and stopwatch format styles spell minutes out as
+  words. On iOS 18, `Text(.durationOffset(to:), format:
+  Duration.TimeFormatStyle(pattern: .hourMinute(...)))` shows `02:45` and keeps
+  advancing.
+- **One store.** The app, widgets, Shortcuts and Live Activity buttons all use
+  `SharedStore.clock`. Separate instances would write the same file without
+  seeing each other's changes. `SessionMirror` updates the widget, the Live
+  Activity and the chime from store changes rather than from views, because
+  Shortcuts can run with no screen loaded.
+- **Swipe to delete with confirmation.** Do not give the button
+  `role: .destructive`: `List` removes the row before the alert is answered.
+- **Sheets and color scheme.** `preferredColorScheme` applies to the nearest
+  presentation, so every sheet, nested ones included, sets it again.
+- **Shortcuts in the simulator.** An ad-hoc signed build shows the App
+  Shortcuts in Spotlight, but `linkd` refuses to run them without a team ID.
+  Widget and Live Activity buttons are not affected.
+- **App Group in the simulator.** `codesign -d --entitlements` does not list
+  the group for simulator builds; check with
+  `xcrun simctl get_app_container booted com.erdmncdr.clockin groups`.
