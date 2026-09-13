@@ -63,7 +63,7 @@ swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Sh
 ```
 
 `PARITY.md` compares the two apps: what is shared, what only one of them has,
-what differs on purpose, and Mac issues still open.
+and what differs on purpose.
 
 ## Platform notes
 

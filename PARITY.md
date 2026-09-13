@@ -46,15 +46,3 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 ```bash
 diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
 ```
-
-## Open Mac issues
-
-Found while comparing the apps and still present in the Mac sources. None of them affect the iPhone app.
-
-1. **Non-USD history chart.** The chart's toggle, labels and TRY conversion assume USD, so an EUR, GBP or TRY account sees mislabeled amounts (`HistoryView.swift`).
-2. **Backup wording.** Settings says backups are "Created automatically before each save"; they are made at most once a day.
-3. **Money milestone.** At exactly 10, 20 and so on, the target shows zero to go while the progress bar resets to empty (`MainView.swift`).
-4. **Radio state.** "Playing" is set as soon as playback is requested, so a dead stream still looks on (`RadioController.swift`).
-5. **Heatmap refresh.** The heatmap refreshes on a 20-second timer and on session count, so an edit that keeps the count can show stale values for a while (`HeatmapView.swift`).
-6. **Update check interval.** The last check time lives only in memory, so restarts and failures can check more often than every six hours (`UpdateChecker.swift`).
-7. **Unused code.** `MainView.settingsSection` and `ShareStatsCard` are never shown.
