@@ -34,7 +34,7 @@ struct MoneyMomentumView: View {
                         Text("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec")
                             .foregroundStyle(momentum.isEarning ? palette.accent : .secondary)
                         if let rate = momentum.tryPerSecond {
-                            Text("≈ +\(rate.money(code: "TRY", maxFractionDigits: 4))/sec")
+                            Text("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec")
                                 .foregroundStyle(.secondary)
                         }
                     }
