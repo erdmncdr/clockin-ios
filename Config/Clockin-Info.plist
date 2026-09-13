@@ -7,6 +7,10 @@
          de ProMotion ekranda ayni akicilikta olsun. -->
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+    <!-- Yalnizca standart HTTPS kullaniliyor (kur API'si, radyo akisi); her
+         yuklemede sifreleme sorusu sorulmasin. -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>
