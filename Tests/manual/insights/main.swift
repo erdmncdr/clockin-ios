@@ -15,7 +15,7 @@ calendar.firstWeekday = 2
 }
 @MainActor func session(_ start: Date, _ hours: Double) -> WorkSession {
     WorkSession(id: UUID(), start: start, end: start.addingTimeInterval(hours * 3600),
-                duration: hours * 3600, note: "", hourlyRate: 40, source: "Clockin")
+                duration: hours * 3600, note: "", hourlyRate: 10, source: "Clockin")
 }
 let now = date(9, 13, 12)
 @MainActor func snapshot(_ sessions: [WorkSession] = [], running: RunningSession? = nil,
@@ -46,7 +46,7 @@ check(overnight.daily[date(8, 31)] == 7200 && overnight.daily[date(9, 1)] == 360
 let active = RunningSession(start: date(9, 13, 11), accumulated: 0, resumedAt: date(9, 13, 11), note: "")
 let live = snapshot([session(date(9, 12, 10), 2)], running: active, daily: 2)
 check(live.totalDuration == 10800 && live.averageSession == 7200 && live.bestDayDuration == 7200, "running work contributes to totals but not completed reports")
-check(live.hourlyEarnings == 30 && live.recentMonth == 7200, "hourly earnings includes active earnings while trend excludes active work")
+check(live.hourlyEarnings == 20 && live.recentMonth == 7200, "hourly earnings includes active earnings while trend excludes active work")
 check(live.goalEstimate.daily == .finish(date(9, 13, 13)), "running ETA adds only remaining daily work")
 check(snapshot(running: active, daily: 1).goalEstimate.daily == .reached, "goal met exactly takes precedence over running ETA")
 check(snapshot(running: active, daily: 0.5).goalEstimate.daily == .reached, "exceeded goal never estimates a past finish")
@@ -155,7 +155,7 @@ let months = InsightsPeriods.buckets(daily: daily, earnings: earnings, grouping:
 check(months.map(\.start) == [date(8, 1), date(9, 1)] && months.map(\.earnings) == [30, 70], "midnight month boundary belongs to new month")
 check(months[0].end == date(9, 1) && months[1].end == date(10, 1), "month end is exclusive")
 let liveBuckets = InsightsPeriods.buckets(daily: live.daily, earnings: live.dailyEarnings, grouping: .week, now: now, calendar: calendar)
-check(liveBuckets.last?.duration == 10800 && liveBuckets.last?.earnings == 90, "aggregate cells include running work and earnings")
+check(liveBuckets.last?.duration == 10800 && liveBuckets.last?.earnings == 60, "aggregate cells include running work and earnings")
 let blanks = InsightsPeriods.buckets(daily: [date(7, 1): 3600], earnings: [:], grouping: .month, now: now, calendar: calendar)
 check(blanks.count == 3 && blanks[1].duration == 0 && blanks[1].intensity == 0, "empty intervening months stay visible")
 check(InsightsPeriods.buckets(daily: [:], earnings: [:], grouping: .week, now: now, calendar: calendar).count == 1, "empty archive shows current empty period")
