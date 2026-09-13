@@ -9,8 +9,8 @@ var checks = 0
 var calendar = Calendar(identifier: .gregorian)
 calendar.timeZone = .current
 @MainActor func s(_ day: Int, _ sh: Int, _ sm: Int, _ eh: Int, _ em: Int, id: UUID = UUID()) -> WorkSession {
-    let start = calendar.date(from: DateComponents(year: 2026, month: 9, day: day, hour: sh, minute: sm))!
-    var end = calendar.date(from: DateComponents(year: 2026, month: 9, day: day, hour: eh, minute: em))!
+    let start = calendar.date(from: DateComponents(year: 2026, month: 3, day: day, hour: sh, minute: sm))!
+    var end = calendar.date(from: DateComponents(year: 2026, month: 3, day: day, hour: eh, minute: em))!
     if end < start { end = end.addingTimeInterval(86_400) }
     return WorkSession(id: id, start: start, end: end, duration: end.timeIntervalSince(start),
                        note: "", hourlyRate: 40, source: "Clockin")
@@ -28,11 +28,11 @@ check(SessionOverlap.intersects(s(11, 22, 0, 2, 0), s(12, 0, 30, 1, 0)), "an ove
 // touching
 do {
     let a = s(11, 9, 0, 12, 0), b = s(11, 14, 0, 18, 0)
-    let noon = calendar.date(from: DateComponents(year: 2026, month: 9, day: 11, hour: 10))!
-    let one = calendar.date(from: DateComponents(year: 2026, month: 9, day: 11, hour: 11))!
+    let noon = calendar.date(from: DateComponents(year: 2026, month: 3, day: 11, hour: 10))!
+    let one = calendar.date(from: DateComponents(year: 2026, month: 3, day: 11, hour: 11))!
     let hits = SessionOverlap.touching(start: noon, end: one, in: [a, b])
     check(hits.count == 1 && hits.first?.id == a.id, "touching finds only the records a range reaches")
-    let wide = calendar.date(from: DateComponents(year: 2026, month: 9, day: 11, hour: 15))!
+    let wide = calendar.date(from: DateComponents(year: 2026, month: 3, day: 11, hour: 15))!
     check(SessionOverlap.touching(start: noon, end: wide, in: [a, b]).count == 2,
           "a range spanning both records reports both")
     check(SessionOverlap.touching(start: a.start, end: a.end, in: [a, b], excluding: a.id).isEmpty,
