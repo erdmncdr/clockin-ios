@@ -26,11 +26,7 @@ struct GoalHoursField: View {
                 .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .focused(focus, equals: title)
                 .accessibilityLabel("\(title) goal in hours")
-                .onChange(of: text) { _, newValue in
-                    if let parsed = GoalProgress.parseHours(newValue, maximum: maximum), parsed != hours {
-                        hours = parsed
-                    }
-                }
+                .onSubmit(commit)
             Text("h").foregroundStyle(.secondary)
             Stepper(title,
                     onIncrement: { hours = GoalProgress.stepped(hours, by: step, maximum: maximum) },
@@ -47,11 +43,21 @@ struct GoalHoursField: View {
         }
         .onChange(of: focus.wrappedValue) { oldValue, newValue in
             guard oldValue == title, newValue != title else { return }
-            // Bos birakilan alan hedefi kapatir; gecersiz ya da yarim girdi
-            // kayitli degere doner.
-            if text.trimmingCharacters(in: .whitespaces).isEmpty { hours = 0 }
-            text = Self.format(hours)
+            commit()
         }
+    }
+
+    /// Yazilan deger alan birakilinca kaydedilir, her tusta degil. Yoksa
+    /// "30" yazarken once "3" kaydediliyor, sinir disi "30" reddedilince
+    /// hedef sessizce 3 saat kaliyordu. Bos alan hedefi kapatir; gecersiz ya
+    /// da sinir disi girdi kayitli degere doner.
+    private func commit() {
+        if text.trimmingCharacters(in: .whitespaces).isEmpty {
+            hours = 0
+        } else if let parsed = GoalProgress.parseHours(text, maximum: maximum) {
+            hours = parsed
+        }
+        text = Self.format(hours)
     }
 
     /// Hedef yoksa alan bos kalir ve "0" yer tutucusu gorunur; yazmadan once
