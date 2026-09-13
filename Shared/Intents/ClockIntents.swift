@@ -3,8 +3,11 @@ import Foundation
 
 // `LiveActivityIntent`: widget ya da Live Activity dugmesinden cagrilsa bile
 // uygulamanin surecinde calisir, boylece ekrandaki magazayla ayni ornegi
-// degistirir. Tipler widget uzantisinda da derlenmeli ki dugmeler onlara
-// basvurabilsin; uzantidaki dal hic calismaz.
+// degistirir. Her islemden sonra widget ozeti hemen yazilir: sistem widget'i
+// intent biter bitmez yeniler, magaza degisikligini izleyen senkron ise bir
+// sonraki turda calisir ve widget eski durumu okuyabilirdi. Tipler widget
+// uzantisinda da derlenmeli ki dugmeler onlara basvurabilsin; uzantidaki dal
+// hic calismaz.
 
 struct ClockInIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Clock In"
@@ -22,9 +25,11 @@ struct ClockInIntent: LiveActivityIntent {
                 return .result(dialog: "A session is already running.")
             }
             store.resume()
+            SessionMirror.shared.refresh()
             return .result(dialog: "Resumed.")
         }
         store.clockIn()
+        SessionMirror.shared.refresh()
         return .result(dialog: "Clocked in.")
         #endif
     }
@@ -43,6 +48,7 @@ struct ClockOutIntent: LiveActivityIntent {
         guard let session = store.clockOut() else {
             return .result(dialog: "No session is running.")
         }
+        SessionMirror.shared.refresh()
         let duration = DurationText.compact(session.duration)
         let earned = store.earnings(for: session).money(code: store.currencyCode)
         return .result(dialog: "Clocked out after \(duration), earned \(earned).")
@@ -65,10 +71,11 @@ struct TogglePauseIntent: LiveActivityIntent {
         }
         if running.isPaused {
             store.resume()
-            return .result(dialog: "Resumed.")
+        } else {
+            store.pause()
         }
-        store.pause()
-        return .result(dialog: "Paused.")
+        SessionMirror.shared.refresh()
+        return .result(dialog: running.isPaused ? "Resumed." : "Paused.")
         #endif
     }
 }

@@ -35,7 +35,7 @@ struct EarningsChartView: View {
                         .font(.title2.bold()).monospacedDigit()
                         .contentTransition(.numericText())
                     if currencyCode == "USD", let latestRate {
-                        Text("≈ " + (snapshot.earned * latestRate).money(code: "TRY") + " · current rate")
+                        Text((snapshot.earned * latestRate).money(code: "TRY") + " · current rate")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -185,7 +185,7 @@ struct EarningsChartView: View {
                 .font(.subheadline).monospacedDigit()
             if currencyCode == "USD" {
                 if let rate = point.rate, let converted = point.converted {
-                    Text("≈ \(converted.money(code: "TRY")) · 1 USD = \(rate.formatted(.number.precision(.fractionLength(3)))) TRY")
+                    Text("\(converted.money(code: "TRY")) · 1 USD = \(rate.formatted(.number.precision(.fractionLength(3)))) TRY")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
                     Text("Historical rate unavailable").font(.caption).foregroundStyle(.orange)

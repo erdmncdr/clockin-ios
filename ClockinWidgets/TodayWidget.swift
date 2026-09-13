@@ -21,18 +21,17 @@ struct TodayProvider: TimelineProvider {
         let now = Date.now
         let snapshot = ClockinSnapshot.load() ?? .empty
         // Sure metni kendisi sayar, tutar sayamaz. Sayac islerken tutar tek bir
-        // girdide donup kalıyordu: kilit ekraninda saat ilerlerken para duruyor,
+        // girdide donup kaliyordu: kilit ekraninda saat ilerlerken para duruyor,
         // hatta gunun toplami oturumun altinda kaliyordu. Bir saatlik girdiyi
-        // pesin uretiyoruz; her biri dakikasinin tutarini yaziyor ve onceden
-        // hazir olduklari icin yenileme butcesinden dusmuyorlar.
+        // pesin uretiyoruz; ilk dakikalar sik, sonrasi dakikada bir.
         guard snapshot.running?.isPaused == false else {
             let next = now.addingTimeInterval(15 * 60)
             completion(Timeline(entries: [TodayEntry(date: now, snapshot: snapshot)],
                                 policy: .after(next)))
             return
         }
-        let entries = (0..<60).map { minute in
-            TodayEntry(date: now.addingTimeInterval(Double(minute) * 60), snapshot: snapshot)
+        let entries = ClockinSnapshot.runningTimelineDates(from: now).map { date in
+            TodayEntry(date: date, snapshot: snapshot)
         }
         completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
     }

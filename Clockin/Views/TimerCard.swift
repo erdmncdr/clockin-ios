@@ -34,7 +34,7 @@ struct TimerCard: View {
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
-                    let converted = "≈ " + (earned * rate).money(code: "TRY")
+                    let converted = (earned * rate).money(code: "TRY")
                     Text(converted)
                         .contentTransition(.numericText())
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: converted)
