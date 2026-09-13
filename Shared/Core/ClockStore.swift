@@ -141,7 +141,14 @@ final class ClockStore: ObservableObject {
     /// asan bir seansin tutari clock out aninda birden degisiyordu.
     func currentEarnings(at date: Date = .now) -> Double {
         guard let running = data.running else { return 0 }
-        return running.elapsed(at: date) / 3600 * effectiveRate(at: running.start, fallback: hourlyRate)
+        return running.elapsed(at: date) / 3600 * currentRate(at: date)
+    }
+
+    /// Su an kazanilan saatlik ucret: calisan seans varsa onun basladigi
+    /// gunun ucreti, yoksa bugunun. Saniyelik hiz gostergeleri bunu kullanir
+    /// ki gosterilen hiz kazancin gercekten arttigi hizla ayni olsun.
+    func currentRate(at date: Date = .now) -> Double {
+        effectiveRate(at: data.running?.start ?? date, fallback: hourlyRate)
     }
 
     /// Her oturum icin cagrilir; ara dizi ayirmamak icin tek gecisde tarar.

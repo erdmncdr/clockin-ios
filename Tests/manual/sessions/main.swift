@@ -93,6 +93,7 @@ MainActor.assumeIsolated {
         let now = local(5, 1)
         check(abs(s.currentEarnings(at: now) - 80) < 0.001,
               "a session that started before a raise earns the old rate while running")
+        check(s.currentRate(at: now) == 40, "the per-second rate shown matches the rate the session earns")
         let live = s.currentEarnings(at: now)
         let saved = s.clockOut(at: now).map(s.earnings(for:)) ?? -1
         check(abs(live - saved) < 0.001, "clocking out does not change what the session earned")
