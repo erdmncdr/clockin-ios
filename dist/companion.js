@@ -5,10 +5,10 @@
   const speech = document.querySelector('#companion-speech');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const moods = {
-    hello: {frames:['assets/mascot-hello.png'], text:'Selam, ben Clockin.\nBugün birlikte çalışalım mı?'},
-    working: {frames:[1,2,3,4].map(n => `assets/companion/frame${n}.png`), text:'Sen işine odaklan.\nZamanını ben takip ederim.'},
-    coffee: {frames:[1,2,3,4].map(n => `assets/companion/coffee${n}.png`), text:'Bir kahve molası?\nDöndüğünde buradayım.'},
-    celebrate: {frames:['assets/companion/celebrate.png'], text:'Her seans bir adım daha.\nİlerlemeni birlikte görelim.'}
+    hello: {frames:['assets/mascot-hello.png'], text:'hello'},
+    working: {frames:[1,2,3,4].map(n => `assets/companion/frame${n}.png`), text:'working'},
+    coffee: {frames:[1,2,3,4].map(n => `assets/companion/coffee${n}.png`), text:'coffee'},
+    celebrate: {frames:['assets/companion/celebrate.png'], text:'celebrate'}
   };
   let mood = 'hello', frame = 0, scene = 0;
   let paused = reduced.matches, visible = true, tick = null, change = null;
@@ -31,7 +31,7 @@
   function setMood(name, text) {
     mood = name; frame = 0;
     hero.dataset.mood = name;
-    speech.textContent = text || moods[name].text;
+    speech.textContent = ClockinLocale.t(text || moods[name].text);
     paint(); timers();
   }
   function setPaused(value) {
@@ -49,7 +49,7 @@
     setMood(scenes[scene]);
   });
   document.querySelectorAll('[data-download]').forEach(button => {
-    const greet = () => {override = true; setMood('celebrate', DOWNLOAD_URL ? 'Mac’inde görüşürüz!' : 'Yakında Mac’inde\ngörüşmek üzere!');};
+    const greet = () => {override = true; setMood('celebrate', DOWNLOAD_URL ? 'seeYou' : 'soon');};
     const restore = () => {override = false; setMood(scenes[scene]);};
     button.addEventListener('pointerenter', event => {if(event.pointerType !== 'touch') greet();});
     button.addEventListener('pointerleave', restore);
@@ -60,5 +60,7 @@
   document.addEventListener('visibilitychange', timers);
   reduced.addEventListener('change', () => setPaused(reduced.matches));
   speech.style.whiteSpace = 'pre-line';
+  document.addEventListener('clockin-language',()=>{speech.textContent=ClockinLocale.t(override?(DOWNLOAD_URL?'seeYou':'soon'):moods[mood].text);});
+  setMood('hello');
   setPaused(paused);
 })();

@@ -11,17 +11,17 @@ document.querySelectorAll('[data-download]').forEach(button => {
 document.querySelectorAll('.dialog-close,.dialog-done').forEach(button => button.addEventListener('click', () => dialog.close()));
 dialog.addEventListener('click', event => { if (event.target === dialog) { const rect = dialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close(); } });
 
-const captions = {
-  timer: 'Başlat, mola ver, kaldığın yerden devam et.',
-  history: 'Çalışmanın karşılığını gün gün gör.',
-  progress: 'Her çalışma seansı, bir adım daha.'
-};
+const captions = {timer:'captionTimer',history:'captionHistory',progress:'captionProgress'};
 const stage = document.querySelector('#product-stage');
 document.querySelectorAll('[data-screen]').forEach(button => {
   button.addEventListener('click', () => {
     const screen = button.dataset.screen;
     stage.dataset.active = screen;
     document.querySelectorAll('[data-screen]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-    document.querySelector('.screen-caption').textContent = captions[screen];
+    document.querySelector('.screen-caption').textContent = ClockinLocale.t(captions[screen]);
   });
 });
+
+function translateCaption(){document.querySelector('.screen-caption').textContent=ClockinLocale.t(captions[stage.dataset.active]);}
+document.addEventListener('clockin-language',translateCaption);
+translateCaption();

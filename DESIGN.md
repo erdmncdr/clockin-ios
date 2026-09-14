@@ -6,7 +6,7 @@ Reference: [Apple on Refero](https://styles.refero.design/style/aecac5da-f397-4d
 
 Palette: porcelain #f5f6f8, ink #20242b, secondary #626873, line #dde0e6, Clockin orange #f78a18, navy #172237. Orange comes from the existing app icon. Cyan is confined to the supplied robot artwork.
 
-Typography: native system sans with slightly rounded forms on supporting controls; large medium-weight headings, tight tracking; 17px body, 14px labels. Turkish copy. No caps eyebrows; scene numbers identify the three successive parts of a workday.
+Typography: native system sans with slightly rounded forms on supporting controls; large medium-weight headings, tight tracking; 17px body, 14px labels. English default, with a complete Turkish translation. No caps eyebrows; scene numbers identify the three successive parts of a workday.
 
 Layout: asymmetric text/mascot hero; one immersive sticky workday stage followed by switchable real screenshots; brief closing download area. No testimonial, pricing, logo wall or feature-card grid. Mascot sits outside any card. Real app captures use entirely synthetic records in an isolated demo app.
 
@@ -15,3 +15,5 @@ Motion: the central workday is the single expressive moment. Native scrolling ch
 Composition: desktop copy and mascot on the left, usable app panel on the right, sequential scene navigation below. Mobile stacks the short title over the panel and brings the mascot beside its lower edge. The effect belongs to Clockin's actual focus/break/earnings cycle rather than unrelated decorative sections.
 
 Download state is configured separately. An unpublished installer must not be presented as an available download. Current preview explains that the macOS installer is being prepared.
+
+Appearance: preserve porcelain in light mode; use blue charcoal #141923, raised surfaces #202938 and muted text #a5afbe in dark mode. Story scenes retain distinct dark navy, warm charcoal and deep green surroundings. The timer’s mint running color and amber paused color are driven by session state, independently of story scene or theme. A compact EN/TR control and outlined sun/moon button belong in the header. SVG play/pause icons share a 24px viewBox and light stroke.
