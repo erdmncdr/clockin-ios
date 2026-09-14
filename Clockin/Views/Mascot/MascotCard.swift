@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MascotCard: View {
     @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var nudges = NudgeController.shared
     @Environment(\.palette) private var palette
 
     /// Kart Insights'a gotursun. Eskiden "Tap your level..." yaziyordu ama
@@ -10,6 +11,8 @@ struct MascotCard: View {
     let showInsights: () -> Void
 
     private var state: MascotAsset {
+        if store.running?.isPaused == false { return .working }
+        if nudges.mood?.isAngry == true { return .angry }
         guard let running = store.running else { return .idle }
         return running.isPaused ? .paused : .working
     }
@@ -27,7 +30,7 @@ struct MascotCard: View {
                             .font(.caption2.weight(.black))
                             .foregroundStyle(.secondary)
                             .tracking(1)
-                        Text(state.message)
+                        Text(store.running?.isPaused == false ? state.message : (nudges.mood?.line ?? state.message))
                             .font(.subheadline.weight(.semibold))
                             .fixedSize(horizontal: false, vertical: true)
                         Text("See your streak and progress")

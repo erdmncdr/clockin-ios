@@ -38,6 +38,7 @@ final class SessionMirror {
     func finishPendingUpdates() async {
         await LongSessionReminderController.shared.finishPendingUpdates()
         await FocusChimeController.shared.finishPendingUpdates()
+        await NudgeController.shared.finishPendingUpdates()
         await activityTask?.value
     }
 
@@ -59,6 +60,7 @@ final class SessionMirror {
         }
         LongSessionReminderController.shared.update(running: store.running)
         syncChimes(running: store.running)
+        NudgeController.shared.update(store: store)
         syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate,
                      earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)
     }

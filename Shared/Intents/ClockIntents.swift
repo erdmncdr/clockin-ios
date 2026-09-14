@@ -22,9 +22,13 @@ struct ClockInIntent: LiveActivityIntent {
                 return .result(dialog: "A session is already running.")
             }
             store.resume()
+            SessionMirror.shared.refresh()
+            await SessionMirror.shared.finishPendingUpdates()
             return .result(dialog: "Resumed.")
         }
         store.clockIn()
+        SessionMirror.shared.refresh()
+        await SessionMirror.shared.finishPendingUpdates()
         return .result(dialog: "Clocked in.")
         #endif
     }
@@ -43,6 +47,8 @@ struct ClockOutIntent: LiveActivityIntent {
         guard let session = store.clockOut() else {
             return .result(dialog: "No session is running.")
         }
+        SessionMirror.shared.refresh()
+        await SessionMirror.shared.finishPendingUpdates()
         let duration = DurationText.compact(session.duration)
         let earned = store.earnings(for: session).money(code: store.currencyCode)
         return .result(dialog: "Clocked out after \(duration), earned \(earned).")
@@ -65,9 +71,13 @@ struct TogglePauseIntent: LiveActivityIntent {
         }
         if running.isPaused {
             store.resume()
+            SessionMirror.shared.refresh()
+            await SessionMirror.shared.finishPendingUpdates()
             return .result(dialog: "Resumed.")
         }
         store.pause()
+        SessionMirror.shared.refresh()
+        await SessionMirror.shared.finishPendingUpdates()
         return .result(dialog: "Paused.")
         #endif
     }

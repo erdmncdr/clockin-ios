@@ -1,12 +1,14 @@
 import SwiftUI
+import UIKit
 
 enum MascotAsset: String {
-    case idle, working, paused, celebrate
+    case idle, working, paused, celebrate, angry
 
     /// Tek karakterli gorsel. `idle`/`paused` dosyalari dort maskotluk birer
     /// sayfaydi; kartta yarim robotlar gorunuyordu, o dosyalar kaldirildi.
     var imageName: String {
         switch self {
+        case .angry: "angry1"
         case .idle: "pose2"
         case .paused: "coffee1"
         case .working: "working"
@@ -16,6 +18,7 @@ enum MascotAsset: String {
 
     var message: String {
         switch self {
+        case .angry: "Your companion is waiting"
         case .idle: "Ready when you are"
         case .working: "You are doing great, keep going!"
         case .paused: "Taking a reset break"
@@ -28,7 +31,7 @@ struct ClockinMascotImage: View {
     let asset: String
 
     var body: some View {
-        Image(asset)
+        Image(asset.hasPrefix("angry") && UIImage(named: asset) == nil ? "pose1" : asset)
             .resizable()
             .interpolation(.none)
             .scaledToFit()
@@ -53,6 +56,8 @@ struct ClockinMascotStage: View {
                 ClockinMascotImage(asset: state.imageName)
             } else if let pose {
                 ClockinPoseMascot(index: pose)
+            } else if state == .angry {
+                ClockinFrameMascot(prefix: "angry", interval: 0.35, frameCount: 2)
             } else if mode == .typing {
                 ClockinFrameMascot(prefix: "frame", interval: 0.18)
             } else if mode == .coffee {
@@ -63,7 +68,7 @@ struct ClockinMascotStage: View {
                 switch state {
                 case .working: ClockinFrameMascot(prefix: "frame", interval: 0.18)
                 case .paused: ClockinFrameMascot(prefix: "coffee", interval: 0.28)
-                case .idle, .celebrate: ClockinMascotImage(asset: state.imageName)
+                case .idle, .celebrate, .angry: ClockinMascotImage(asset: state.imageName)
                 }
             }
             if !reduceMotion && pose != nil && state != .celebrate {
@@ -146,19 +151,20 @@ private struct ClockinFrameMascot: View {
     @Environment(\.scenePhase) private var scenePhase
     let prefix: String
     let interval: Double
+    var frameCount = 4
     @State private var frame = 1
 
     private var isAnimating: Bool { !reduceMotion && scenePhase == .active }
 
     var body: some View {
-        ClockinMascotImage(asset: "\(prefix)\(frame)")
+        ClockinMascotImage(asset: "\(prefix)\(isAnimating ? frame : 1)")
             .task(id: isAnimating) {
                 guard isAnimating else { return }
                 // Gorev gorunumle yasar; sayacin yenilenmesi kareleri sifirlamaz.
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(interval)) }
                     catch { return }
-                    frame = frame % 4 + 1
+                    frame = frame % frameCount + 1
                 }
             }
     }

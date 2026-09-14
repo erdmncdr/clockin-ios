@@ -41,6 +41,9 @@ struct SettingsView: View {
                     if mascotEnabled {
                         companionBehavior
                     }
+                }
+                NudgeSettingsSection()
+                Section {
                     Picker("Theme", selection: $themeRaw) {
                         ForEach(ClockinThemeChoice.allCases) { theme in
                             Text(theme.rawValue).tag(theme.rawValue)

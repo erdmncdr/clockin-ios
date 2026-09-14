@@ -14,6 +14,10 @@ struct RootView: View {
     @AppStorage("Clockin.ChimeEnabled") private var chimeEnabled = false
     @AppStorage("Clockin.ChimeIntervalMinutes") private var chimeInterval = 10
     @AppStorage("Clockin.ChimeSound") private var chimeSound = FocusChimeSound.notification.rawValue
+    @AppStorage(NudgePlanner.enabledKey) private var nudgesEnabled = true
+    @AppStorage(NudgePlanner.toneKey) private var nudgeTone = NudgeTone.grumpy.rawValue
+    @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
+    @ObservedObject private var nudges = NudgeController.shared
     @State private var tab: AppTab = .today
     @ObservedObject private var reminder = LongSessionReminderController.shared
 
@@ -45,6 +49,15 @@ struct RootView: View {
         .preferredColorScheme(palette.colorScheme)
         // Oturum degisiklikleri `SessionMirror`'dan gelir; o ekran yokken de
         // calisir. Burada yalnizca uygulama acikken degisen tercihler izlenir.
+        .onChange(of: nudgesEnabled) { _, _ in nudges.update(store: store) }
+        .onChange(of: nudgeTone) { _, _ in nudges.update(store: store) }
+        .onChange(of: dailyGoalHours) { _, _ in nudges.update(store: store) }
+        .onChange(of: nudges.openToday, initial: true) { _, requested in
+            if requested {
+                tab = .today
+                nudges.openToday = false
+            }
+        }
         .onChange(of: chimeEnabled) { _, _ in updateChimes() }
         .onChange(of: chimeInterval) { _, _ in updateChimes() }
         .onChange(of: chimeSound) { _, _ in updateChimes() }
@@ -55,12 +68,14 @@ struct RootView: View {
             // Arka plana gecerken hazir kuyrugu silme; uygulama eklerken askiya alinabilir.
             guard scenePhase == .active else { return }
             reminder.update(running: store.running, force: true)
+            nudges.update(store: store)
             updateChimes(force: true)
             // On planda uzun oturumlarda da kuyruk bitmesin. Arka planda iOS teslim eder.
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(60)) }
                 catch { return }
                 updateChimes(force: true)
+                nudges.update(store: store)
             }
         }
     }

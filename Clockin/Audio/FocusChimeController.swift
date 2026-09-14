@@ -47,6 +47,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         await refreshPermission()
         enqueue()
         LongSessionReminderController.shared.update(running: SharedStore.clock.running, force: true)
+        NudgeController.shared.update(store: SharedStore.clock)
     }
 
     func refreshPermission() async {
@@ -103,8 +104,10 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             let pending = await center.pendingNotificationRequests()
             guard processed == revision else { continue }
             let otherCount = pending.filter { !identifiers.contains($0.identifier) }.count
-            // Hatirlatici henuz eklenmediyse bile ona bir yer ayir.
-            let reserved = pending.contains { $0.identifier == LongSessionReminderNotification.identifier } ? 0 : 1
+            // Henuz eklenmemis hatirlatici ve nudgelar icin de yer ayir.
+            let reminderReserve = pending.contains { $0.identifier == LongSessionReminderNotification.identifier } ? 0 : 1
+            let nudgeCount = pending.filter { $0.identifier.hasPrefix(NudgePlanner.prefix) }.count
+            let reserved = reminderReserve + max(0, NudgePlanner.maximumPending - nudgeCount)
             let dates = ChimeSchedule.fireDates(now: now, worked: running.elapsed(at: now),
                 isPaused: running.isPaused, enabled: enabled, intervalMinutes: interval,
                 count: max(0, 64 - otherCount - reserved))
@@ -141,6 +144,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
         willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         let id = notification.request.identifier
+        if id.hasPrefix(NudgePlanner.prefix) { return [] }
         if id == LongSessionReminderNotification.identifier {
             let start = Self.reminderStart(notification.request.content)
             return await MainActor.run {
@@ -157,6 +161,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse) async {
+        if response.notification.request.identifier.hasPrefix(NudgePlanner.prefix) {
+            if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+                await MainActor.run { NudgeController.shared.openToday = true }
+            }
+            return
+        }
         guard response.notification.request.content.categoryIdentifier == LongSessionReminderNotification.category else { return }
         let start = Self.reminderStart(response.notification.request.content)
         await LongSessionReminderController.shared.handle(action: response.actionIdentifier, start: start)
