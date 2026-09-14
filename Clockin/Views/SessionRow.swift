@@ -80,7 +80,7 @@ struct SessionRow: View {
                     .foregroundStyle(palette.accent)
                 if showsTRY, store.currencyCode == "USD",
                    let rate = exchangeRates.rate(onCalendarDay: session.start) {
-                    Text("≈ " + (store.earnings(for: session) * rate).money(code: "TRY"))
+                    Text((store.earnings(for: session) * rate).money(code: "TRY"))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .monospacedDigit()
