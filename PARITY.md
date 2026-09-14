@@ -11,6 +11,7 @@ Timer with pause, cancel and start with elapsed time; manual entries, editing an
 - Home screen and lock screen widgets
 - Live Activity and Dynamic Island, with pause and clock out
 - Shortcuts and Siri actions: Clock In, Clock Out, Pause or Resume
+- iOS 18 controls for clock in/out and pause/resume in Control Center, Lock Screen slots, and the Action Button on supported iPhones
 - Haptics on timer actions, a celebration on the clock-out summary
 - Overlap warnings in History and in the entry editor
 

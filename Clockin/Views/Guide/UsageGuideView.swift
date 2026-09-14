@@ -53,6 +53,10 @@ struct UsageGuideView: View {
                           detail: "In Settings > Focus, play or stop Radio Paradise and adjust radio volume from 0-100%. Streaming uses internet data. Connecting and error messages report loading or connection failure; tap Play to retry. Lock Screen Now Playing offers play and pause. Audio interruptions and unplugging headphones stop playback; press Play to restart. Playback continues with the screen locked.")
                     topic("Widgets and Live Activity", icon: "apps.iphone",
                           detail: "Add Clockin's Today widget to your Home Screen or Lock Screen to see time and earnings. The medium Home Screen widget has Clock in, Pause or Resume, and Clock out controls. During a session, Live Activity shows the timer on the Lock Screen and on supported devices in Dynamic Island, when Live Activities are allowed. Its Lock Screen and expanded island controls let you pause, resume, or clock out.")
+                    if #available(iOS 18.0, *) {
+                        topic("Control Center, Lock Screen, and Action Button", icon: "timer",
+                              detail: "In Control Center, touch and hold to edit, tap Add a Control, and search for Clockin. Add Clock In / Clock Out or Pause / Resume. To add a Lock Screen control, touch and hold the Lock Screen, tap Customize > Lock Screen, remove a bottom control, and tap plus to choose Clockin. On supported iPhones, open Settings > Action Button, choose Controls, and select a Clockin control. Clockin stays on while working or paused; turning it off saves the session. Pause / Resume does nothing when no session is running.")
+                    }
                     topic("Shortcuts and Siri", icon: "square.stack.3d.up",
                           detail: "In Shortcuts, use Clockin's Clock In, Clock Out, and Pause or Resume actions. You can also ask Siri to clock in with Clockin, clock out with Clockin, or pause Clockin. Pause or Resume toggles the current session's state, and Clock In also resumes a paused session.")
                 } header: {

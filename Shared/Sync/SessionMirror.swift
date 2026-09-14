@@ -46,6 +46,9 @@ final class SessionMirror {
                 try snapshot.write()
                 lastSnapshot = snapshot
                 WidgetCenter.shared.reloadAllTimelines()
+                if #available(iOS 18.0, *) {
+                    ControlCenter.shared.reloadAllControls()
+                }
             } catch {
                 // Basarisiz yazimi onbellege alma; sonraki yenileme tekrar dener.
             }
