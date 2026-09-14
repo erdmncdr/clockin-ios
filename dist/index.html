@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
   <script src="companion.js" defer></script>
+  <script src="journey.js" defer></script>
+  <link rel="stylesheet" href="journey.css">
 </head>
 <body>
   <a class="skip-link" href="#main">İçeriğe geç</a>
@@ -31,13 +33,44 @@
         <div class="companion-controls"><span>Dokun, tanışalım.</span><button id="pause-companion" aria-pressed="false">Hareketi durdur</button></div>
       </div>
     </section>
-    <section class="product-section" id="uygulama" aria-labelledby="product-title">
-      <div class="wrap product-intro"><h2 id="product-title">Bir bakışta günün.</h2><p>Çalışma süren, kazancın ve ilerlemen.<br>Hepsi Mac’inde, elinin altında.</p></div>
-      <div class="tour-guide wrap" id="tour-guide" hidden>
-        <img id="guide-image" src="assets/mascot-hello.png" width="96" height="96" alt="Clockin rehberin">
-        <div class="guide-copy" role="status"><span id="guide-title">Önce işe başlayalım.</span><p id="guide-speech">Bir tıkla sayacı başlat. Süren ve kazancın birlikte ilerlesin.</p></div>
-        <button id="next-tour">Devam et <span aria-hidden="true">→</span></button><button id="close-tour" aria-label="Tanıtımı kapat">×</button>
+    <section class="journey" id="uygulama" aria-label="Clockin ile örnek bir iş günü" data-scene="work">
+      <div class="journey-sticky">
+        <div class="journey-orbit" aria-hidden="true"></div>
+        <div class="journey-top"><span><img src="assets/clockin-icon.png" width="26" height="26" alt=""> Clockin’i dene</span><button class="motion-toggle" aria-pressed="false">Hareketi durdur</button></div>
+        <div class="journey-layout">
+          <div class="journey-copy">
+            <span class="day-moment" id="day-moment">09.00 / Yeni bir başlangıç</span>
+            <h2 id="journey-title" aria-live="polite">Bir tık.<br> Ve odaktasın.</h2>
+            <p id="journey-description">İlk adımı sen at. Süreni ve emeğinin karşılığını Clockin takip etsin.</p>
+            <div class="journey-speech"><img id="journey-mascot" src="assets/companion/frame1.png" width="160" height="160" alt="Çalışan Clockin maskotu"><p id="journey-speech">Hazırım. Hadi başlayalım.</p></div>
+          </div>
+          <div class="demo-space">
+            <div class="demo-window" aria-label="Etkileşimli Clockin demosu">
+              <div class="demo-titlebar"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>clockin</span><span class="demo-label">Demo</span></div>
+              <div class="demo-timer" id="demo-timer-panel">
+                <div class="demo-state"><span></span><span id="demo-status">Başlamaya hazır</span></div>
+                <div class="timer-face"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="110"/><circle class="timer-track" cx="120" cy="120" r="110"/></svg><div><span id="demo-time">00:00:00</span><small>çalışma süren</small></div></div>
+                <div class="demo-earnings"><span>Bu seans</span><strong id="demo-money">₺0,00</strong></div>
+                <button class="demo-action" id="demo-toggle">Çalışmaya başla <span aria-hidden="true">▶</span></button>
+                <p class="demo-disclaimer">Örnek sayaç · Saatlik ₺300</p>
+              </div>
+              <div class="demo-summary" id="demo-summary" hidden>
+                <span class="summary-label">Bugünkü emeğin</span><strong>₺1.250<span>,00</span></strong><p>4 saat 10 dakika. Kendin için bir adım daha.</p>
+                <svg class="earnings-chart" viewBox="0 0 320 150" role="img" aria-label="Örnek günlük kazanç grafiği: kazanç gün içinde 1.250 liraya yükseliyor"><path class="chart-grid" d="M0 30H320M0 85H320M0 140H320"/><path class="chart-area" d="M0 140 C30 140 38 119 65 119 S110 102 138 90 S171 90 190 75 S224 65 242 42 S288 36 316 9 L316 150H0Z"/><path class="chart-line" pathLength="1" d="M0 140 C30 140 38 119 65 119 S110 102 138 90 S171 90 190 75 S224 65 242 42 S288 36 316 9"/></svg>
+                <div class="chart-times"><span>09.00</span><span>13.40</span></div>
+                <div class="level-up"><span aria-hidden="true">✦</span><div>Biraz daha ilerledin.<small>Her seansla deneyim kazan.</small></div><b>+250 XP</b></div>
+                <p class="demo-disclaimer">Örnek bir iş günü</p>
+              </div>
+            </div>
+            <div class="floating-note" id="floating-note"><span aria-hidden="true">↗</span> Kendi ritminde.</div>
+          </div>
+        </div>
+        <div class="journey-bottom"><nav aria-label="Demo sahneleri"><button data-journey="0" aria-current="step"><span>01</span> Odaklan</button><button data-journey="1"><span>02</span> Mola ver</button><button data-journey="2"><span>03</span> Karşılığını gör</button></nav><span class="scroll-hint">Keşfetmek için kaydır <span aria-hidden="true">↓</span></span></div>
+        <div class="journey-progress" aria-hidden="true"><span></span></div>
       </div>
+    </section>
+    <section class="product-section" id="ekranlar" aria-labelledby="product-title">
+      <div class="wrap product-intro"><h2 id="product-title">Mac’inde böyle görünür.</h2><p>Çalışma süren, kazancın ve ilerlemen.<br>Hepsi elinin altında.</p></div>
       <div class="screen-picker" role="group" aria-label="Uygulama ekranını seç"><button data-screen="timer" aria-pressed="true">Zamanın</button><button data-screen="history" aria-pressed="false">Kazancın</button><button data-screen="progress" aria-pressed="false">İlerlemen</button></div>
       <div class="product-stage wrap" id="product-stage" data-active="timer">
         <figure class="app-screen" data-image="history"><img src="assets/app-history-large.png" width="1755" height="3021" alt="Clockin geçmiş ekranı: günlük kazanç grafiği ve çalışma ortalamaları. Örnek veriler." loading="lazy"></figure>

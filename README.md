@@ -13,8 +13,12 @@ Images: 1755 × 3021 PNG exports from the actual app window at 150% interface si
 Validation: all three image selections checked in the browser at 390px viewport width, native image dimensions confirmed, no horizontal overflow. Desktop image dimensions and overflow checked at 1280px; no browser console errors. JavaScript syntax and local asset references checked.
 
 
-## Interactive companion
+## Interactive workday
 
-The hero greets visitors, cycles through the app's original typing, coffee and celebration artwork, and responds to clicks and download-button hover/focus. Speech is written text. “Birlikte bakalım” opens a three-step tour synchronized with the real screenshot gallery. A pause button, reduced-motion preference, tab visibility and on-screen visibility gate automatic animation. The tour can be closed or finished; focus returns to the active gallery selector. No external service or audio is used.
+The hero uses the original Clockin mascot frames and written greetings. “Birlikte bakalım” opens a scroll-driven three-scene demo: focus, break and daily results. Scene navigation also works by keyboard. This illustrative web demo is labeled separately from the genuine app screenshot gallery below it.
 
-Companion validation: mobile 390px walkthrough (all three steps, finish and close), click-to-change pose, pause/resume frame changes, focus restoration and no horizontal overflow or console errors.
+`journey.js` derives the scene and panel perspective from the page's native scroll position. No wheel interception or third-party animation runtime. The sample timer starts only after the visitor presses its button, uses monotonic elapsed time, and pauses when leaving the work scene. Its sample hourly rate is explicit; the final daily summary is independently labeled sample data. Nothing is recorded or sent to a service.
+
+Both motion controls stop sprite playback, perspective changes and scene transitions. The OS reduced-motion preference also disables these effects. Sprite and timer repaint intervals stop off-screen or in a hidden tab. A running sample timer retains elapsed time without background repaints.
+
+Validation: actual browser interaction at 1280×850, 390×844 and 320×667. Scroll and scene navigation, timer start/pause/resume and frozen paused value, motion controls, all three real screenshot selections and the download dialog checked. No horizontal overflow or console errors; all screenshots remain 1755px wide. Reduced-motion CSS and preference listener reviewed; OS preference emulation was not available in this browser.

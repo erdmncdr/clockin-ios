@@ -6,10 +6,12 @@ Reference: [Apple on Refero](https://styles.refero.design/style/aecac5da-f397-4d
 
 Palette: porcelain #f5f6f8, ink #20242b, secondary #626873, line #dde0e6, Clockin orange #f78a18, navy #172237. Orange comes from the existing app icon. Cyan is confined to the supplied robot artwork.
 
-Typography: native system sans with slightly rounded forms on supporting controls; large medium-weight headings, tight tracking; 17px body, 14px labels. Turkish copy. No caps eyebrows or decorative numbers.
+Typography: native system sans with slightly rounded forms on supporting controls; large medium-weight headings, tight tracking; 17px body, 14px labels. Turkish copy. No caps eyebrows; scene numbers identify the three successive parts of a workday.
 
-Layout: asymmetric text/mascot hero; wide product stage below with switchable real screenshots; brief closing download area. No testimonial, pricing, logo wall or feature-card grid. Mascot sits outside any card. Real app captures use entirely synthetic records in an isolated demo app.
+Layout: asymmetric text/mascot hero; one immersive sticky workday stage followed by switchable real screenshots; brief closing download area. No testimonial, pricing, logo wall or feature-card grid. Mascot sits outside any card. Real app captures use entirely synthetic records in an isolated demo app.
 
-Motion: original sprite frames play at a quiet pace in the visible companion. Scenes change every ten seconds; direct interaction changes the pose or starts a short product tour. Visitors can pause motion. Reduced-motion and hidden-page settings stop automatic playback. A user-initiated tour scrolls to its guide and advances the screenshot gallery. No parallax. Native anchors, buttons, and dialog; visible focus and responsive single column.
+Motion: the central workday is the single expressive moment. Native scrolling changes a navy focus scene (#182238), warm coffee scene (#eadfd1) and soft green results scene (#dce8e3). A subtly turning app panel, original animated mascot frames, changing speech and a drawn earnings graph respond to progress. Generous desktop space becomes a compact full-height phone composition. No scroll trapping, full-screen blur, particle system or animation dependency. Motion controls and reduced-motion preference stop decorative movement; the sample timer still answers explicit input. The hero keeps its existing greetings. Genuine screenshots remain intact below the clearly labeled interactive demo.
+
+Composition: desktop copy and mascot on the left, usable app panel on the right, sequential scene navigation below. Mobile stacks the short title over the panel and brings the mascot beside its lower edge. The effect belongs to Clockin's actual focus/break/earnings cycle rather than unrelated decorative sections.
 
 Download state is configured separately. An unpublished installer must not be presented as an available download. Current preview explains that the macOS installer is being prepared.
