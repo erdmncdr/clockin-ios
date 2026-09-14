@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="Clockin ile çalışma süreni ve kazancını Mac’inde takip et. Küçük bir çalışma arkadaşı, gün boyu yanında.">
+  <title>Clockin — Zamanın yerini bulsun.</title>
+  <link rel="icon" type="image/png" href="assets/clockin-icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">İçeriğe geç</a>
+  <header class="site-header wrap">
+    <a class="brand" href="#" aria-label="Clockin ana sayfa"><img src="assets/clockin-icon.png" width="46" height="46" alt=""><span>clockin</span></a>
+    <nav aria-label="Ana gezinme"><a href="#uygulama">Uygulamaya göz at</a><button class="small-download" data-download>Mac için indir <span aria-hidden="true">↓</span></button></nav>
+  </header>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">Zamanın<br>yerini bulsun.</h1>
+        <p>Sen işine odaklan.<br>Clockin süreni ve kazancını takip etsin.</p>
+        <button class="download-button" data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg>Mac için indir</button>
+        <p class="compatibility">macOS 14 ve üzeri <span aria-hidden="true">/</span> Apple Silicon & Intel</p>
+      </div>
+      <div class="hero-art"><img src="assets/mascot-hello.png" width="640" height="640" alt="Clockin’in gülümseyen küçük robotu iki elini kaldırarak selamlıyor." fetchpriority="high"><span class="mascot-note">Küçük çalışma arkadaşın.</span></div>
+    </section>
+    <section class="product-section" id="uygulama" aria-labelledby="product-title">
+      <div class="wrap product-intro"><h2 id="product-title">Bir bakışta günün.</h2><p>Çalışma süren, kazancın ve ilerlemen.<br>Hepsi Mac’inde, elinin altında.</p></div>
+      <div class="screen-picker" role="group" aria-label="Uygulama ekranını seç"><button data-screen="timer" aria-pressed="true">Zamanın</button><button data-screen="history" aria-pressed="false">Kazancın</button><button data-screen="progress" aria-pressed="false">İlerlemen</button></div>
+      <div class="product-stage wrap" id="product-stage" data-active="timer">
+        <figure class="app-screen" data-image="history"><img src="assets/app-history.png" width="390" height="682" alt="Clockin geçmiş ekranı: günlük kazanç grafiği ve çalışma ortalamaları. Örnek veriler." loading="lazy"></figure>
+        <figure class="app-screen" data-image="timer"><img src="assets/app-timer.png" width="390" height="682" alt="Clockin sayacı: aktif çalışma süresi, anlık kazanç ve odak maskotu. Örnek veriler." loading="lazy"></figure>
+        <figure class="app-screen" data-image="progress"><img src="assets/app-progress.png" width="390" height="682" alt="Clockin ilerleme ekranı: seviye, deneyim puanı ve çalışma serisi. Örnek veriler." loading="lazy"></figure>
+      </div>
+      <p class="screen-caption" aria-live="polite">Başlat, mola ver, kaldığın yerden devam et.</p>
+      <p class="demo-note">Uygulamadan gerçek görüntüler. Veriler örnektir.</p>
+    </section>
+    <section class="closing wrap" aria-labelledby="closing-title"><img src="assets/mascot-coffee.png" width="160" height="160" alt="Kahve molasındaki Clockin maskotu" loading="lazy"><h2 id="closing-title">Güzel bir iş günü olsun.</h2><button class="download-button" data-download>Mac için indir <span aria-hidden="true">↓</span></button></section>
+  </main>
+  <footer class="site-footer wrap"><a class="wordmark" href="#">clockin</a><span>Mac’inde, kendi ritminde.</span><span>© 2026 Clockin</span></footer>
+  <dialog id="download-dialog" aria-labelledby="download-title"><button class="dialog-close" aria-label="Kapat">×</button><img src="assets/clockin-icon.png" alt="" width="72" height="72"><h2 id="download-title">Clockin yola çıkıyor.</h2><p>Mac kurulum paketi hazırlanıyor. Hazır olduğunda buradan tek tıkla indirebileceksin.</p><button class="download-button dialog-done">Tamam</button></dialog>
+</body>
+</html>
