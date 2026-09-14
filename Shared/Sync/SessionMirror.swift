@@ -34,6 +34,13 @@ final class SessionMirror {
         sync()
     }
 
+    // Bildirim yaniti tamamlanmadan arka plan aynalarini bitir.
+    func finishPendingUpdates() async {
+        await LongSessionReminderController.shared.finishPendingUpdates()
+        await FocusChimeController.shared.finishPendingUpdates()
+        await activityTask?.value
+    }
+
     private func sync() {
         guard let store else { return }
         // Standart UserDefaults uzantidan okunamaz. Temayi mevcut atomik
@@ -50,6 +57,7 @@ final class SessionMirror {
                 // Basarisiz yazimi onbellege alma; sonraki yenileme tekrar dener.
             }
         }
+        LongSessionReminderController.shared.update(running: store.running)
         syncChimes(running: store.running)
         syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate,
                      earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)

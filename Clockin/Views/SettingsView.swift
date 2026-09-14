@@ -48,6 +48,7 @@ struct SettingsView: View {
                     }
                 }
                 FocusSettingsSection()
+                LongSessionReminderSettingsSection()
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)

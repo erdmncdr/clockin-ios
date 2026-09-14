@@ -37,6 +37,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     override private init() {
         super.init()
         center.delegate = self
+        LongSessionReminderNotification.register(on: center)
     }
 
     // Izin isteme yalnizca kullanicinin acma hareketinden cagrilir.
@@ -45,6 +46,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         catch { errorMessage = "Could not request notifications: \(error.localizedDescription)" }
         await refreshPermission()
         enqueue()
+        LongSessionReminderController.shared.update(running: SharedStore.clock.running, force: true)
     }
 
     func refreshPermission() async {
@@ -101,9 +103,11 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             let pending = await center.pendingNotificationRequests()
             guard processed == revision else { continue }
             let otherCount = pending.filter { !identifiers.contains($0.identifier) }.count
+            // Hatirlatici henuz eklenmediyse bile ona bir yer ayir.
+            let reserved = pending.contains { $0.identifier == LongSessionReminderNotification.identifier } ? 0 : 1
             let dates = ChimeSchedule.fireDates(now: now, worked: running.elapsed(at: now),
                 isPaused: running.isPaused, enabled: enabled, intervalMinutes: interval,
-                count: max(0, 64 - otherCount))
+                count: max(0, 64 - otherCount - reserved))
             if dates.isEmpty { errorMessage = "No notification slots available. Reopen Clockin later to try again." }
             for (index, date) in dates.enumerated() {
                 guard processed == revision else { break }
@@ -137,6 +141,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
         willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         let id = notification.request.identifier
+        if id == LongSessionReminderNotification.identifier {
+            let start = Self.reminderStart(notification.request.content)
+            return await MainActor.run {
+                LongSessionReminderController.shared.shouldPresent(start: start) ? [.sound, .banner] : []
+            }
+        }
         if id == "Clockin.FocusChimePreview" { return [.sound, .banner] }
         guard id.hasPrefix("Clockin.FocusChime.") else { return [] }
         return await MainActor.run {
@@ -144,4 +154,19 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             return [.sound, .banner]
         }
     }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse) async {
+        guard response.notification.request.content.categoryIdentifier == LongSessionReminderNotification.category else { return }
+        let start = Self.reminderStart(response.notification.request.content)
+        await LongSessionReminderController.shared.handle(action: response.actionIdentifier, start: start)
+    }
+
+    nonisolated private static func reminderStart(_ content: UNNotificationContent) -> Date? {
+        guard let value = content.userInfo[LongSessionReminderNotification.startKey] as? Double,
+              value.isFinite else { return nil }
+        return Date(timeIntervalSinceReferenceDate: value)
+    }
+
+    func finishPendingUpdates() async { await worker?.value }
 }

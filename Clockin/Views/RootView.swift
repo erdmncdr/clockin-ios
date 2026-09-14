@@ -15,12 +15,13 @@ struct RootView: View {
     @AppStorage("Clockin.ChimeIntervalMinutes") private var chimeInterval = 10
     @AppStorage("Clockin.ChimeSound") private var chimeSound = FocusChimeSound.notification.rawValue
     @State private var tab: AppTab = .today
+    @ObservedObject private var reminder = LongSessionReminderController.shared
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
 
     var body: some View {
         TabView(selection: $tab) {
-            DashboardView(showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
+            DashboardView(isSelected: tab == .today, showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()
@@ -47,9 +48,13 @@ struct RootView: View {
         .onChange(of: chimeEnabled) { _, _ in updateChimes() }
         .onChange(of: chimeInterval) { _, _ in updateChimes() }
         .onChange(of: chimeSound) { _, _ in updateChimes() }
+        .onChange(of: reminder.pendingEndTime, initial: true) { _, start in
+            if start != nil { tab = .today }
+        }
         .task(id: scenePhase) {
             // Arka plana gecerken hazir kuyrugu silme; uygulama eklerken askiya alinabilir.
             guard scenePhase == .active else { return }
+            reminder.update(running: store.running, force: true)
             updateChimes(force: true)
             // On planda uzun oturumlarda da kuyruk bitmesin. Arka planda iOS teslim eder.
             while !Task.isCancelled {

@@ -58,6 +58,7 @@ swiftc -swift-version 6 Clockin/Views/Momentum/MoneyMomentum.swift Tests/manual/
 swiftc -swift-version 6 Clockin/Views/Share/ShareStatsFields.swift Tests/manual/share/main.swift -o /tmp/clockin-share-tests && /tmp/clockin-share-tests
 swiftc -swift-version 6 Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/widgettheme/main.swift -o /tmp/clockin-widgettheme-tests && /tmp/clockin-widgettheme-tests
 swiftc -swift-version 6 Clockin/Audio/ChimeSchedule.swift Tests/manual/chime/main.swift -o /tmp/clockin-chime-tests && /tmp/clockin-chime-tests
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-reminder-module-cache Shared/Core/Models.swift Clockin/Audio/LongSessionReminderSchedule.swift Tests/manual/reminder/main.swift -o /tmp/clockin-reminder-tests && /tmp/clockin-reminder-tests
 swiftc -swift-version 6 Clockin/Views/Goals/GoalProgress.swift Tests/manual/goals/main.swift -o /tmp/clockin-goals-tests && /tmp/clockin-goals-tests
 ```
 
@@ -79,8 +80,8 @@ Things that cost time to find and are easy to break again:
 - **One store.** The app, widgets, Shortcuts and Live Activity buttons all use
   `SharedStore.clock`. Separate instances would write the same file without
   seeing each other's changes. `SessionMirror` updates the widget, the Live
-  Activity and the chime from store changes rather than from views, because
-  Shortcuts can run with no screen loaded.
+  Activity, the chime and the long session reminder from store changes rather
+  than from views, because Shortcuts can run with no screen loaded.
 - **Swipe to delete with confirmation.** Do not give the button
   `role: .destructive`: `List` removes the row before the alert is answered.
 - **Sheets and color scheme.** `preferredColorScheme` applies to the nearest
