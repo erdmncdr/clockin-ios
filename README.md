@@ -17,7 +17,7 @@ Validation: all three image selections checked in the browser at 390px viewport 
 
 The hero uses the original Clockin mascot frames and written greetings. “Birlikte bakalım” opens a scroll-driven three-scene demo: focus, break and daily results. Scene navigation also works by keyboard. This illustrative web demo is labeled separately from the genuine app screenshot gallery below it.
 
-`journey.js` derives the scene and panel perspective from the page's native scroll position. No wheel interception or third-party animation runtime. The sample timer starts only after the visitor presses its button, uses monotonic elapsed time, and pauses when entering the break or results scene. The first break visit seeds one hour of sample work; resuming preserves and advances it. Timer colors and the mascot follow the running/paused state in either scene. Its sample hourly rate is explicit; the final daily summary is independently labeled sample data. Nothing is recorded or sent to a service.
+`journey.js` derives the scene and panel perspective from the page's native scroll position. No wheel interception or third-party animation runtime. The sample timer starts only after the visitor presses its button, uses monotonic elapsed time, and pauses when entering the break or results scene. Every scene entry resets its example: focus starts at zero, break starts paused at one hour, and results show the fixed sample day. Resuming advances the current scene’s timer until the next scene change. Timer colors and the mascot follow the running/paused state in either scene. Its sample hourly rate is explicit; the final daily summary is independently labeled sample data. Nothing is recorded or sent to a service.
 
 The OS reduced-motion preference disables sprite playback, perspective changes and scene transitions. Motion toggle buttons are not shown. Sprite and timer repaint intervals stop off-screen or in a hidden tab. A running sample timer retains elapsed time without background repaints.
 
@@ -29,4 +29,6 @@ English is the default language, independent of browser locale. EN/TR changes al
 
 Play/pause controls use consistent inline SVG strokes. No movement-toggle buttons are reintroduced.
 
-Validation for language/theme update: desktop 1280×850 and phone 320×667, both themes, English/Turkish and persistence after reload; focus start/pause, one-hour break seed and resume with green/amber colors and matching mascot. Sample earnings, scene navigation, localized image selector and download dialog checked.
+Validation for language/theme update: desktop 1280×850 and phone 320×667, both themes, English/Turkish and persistence after reload; focus start/pause, one-hour break reset and resume with green/amber colors and matching mascot. Sample earnings, scene navigation, localized image selector and download dialog checked.
+
+Scene reset validation: forward/backward scroll and scene navigation restore timer, button, mascot and floating note together. Staying within the same scene does not reset a running timer.

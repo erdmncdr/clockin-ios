@@ -16,7 +16,7 @@
   const icons={play:'<path d="m9 5 10 7-10 7Z"/>',pause:'<path d="M8 5v14M16 5v14"/>',coffee:'<path d="M5 8h11v7a5.5 5.5 0 0 1-11 0V8Zm11 1h2a3 3 0 0 1 0 6h-2M4 21h14M8 3v2m5-2v2"/>',arrow:'<path d="M6 18 18 6M6 6h12v12"/>',spark:'<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/>'};
   const icon=name=>`<svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name]}</svg>`;
   let active=-1,inView=false,motionPaused=reduced.matches,raf=0,frame=0,spriteTimer;
-  let elapsed=0,running=false,started=0,timerTick,breakSeeded=false;
+  let elapsed=0,running=false,started=0,timerTick;
   const seconds=()=>elapsed+(running?(performance.now()-started)/1000:0);
   const state=()=>running?'running':elapsed>0?'paused':'ready';
   const mood=()=>active===2?'reward':state()==='paused'?'break':'work';
@@ -65,9 +65,12 @@
     if(index===active)return;
     active=index;frame=0;
     section.dataset.scene=scenes[index];
-    // A break demonstrates a completed hour. Preserve the sample session on later visits.
-    if(index>0)setRunning(false);
-    if(index===1&&!breakSeeded){elapsed=Math.max(3600,elapsed);breakSeeded=true;}
+    // Each story scene starts a fresh example, in either scroll direction.
+    // Scrolling within the same scene leaves its interactive timer untouched.
+    running=false;
+    started=0;
+    elapsed=index===1?3600:0;
+    timerLoop();
     timerPanel.hidden=index===2;summary.hidden=index!==2;
     nav.forEach((button,i)=>{if(i===index)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');});
     translateScene();
