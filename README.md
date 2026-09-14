@@ -8,4 +8,6 @@ When a signed installer has been published and its anonymous download verified, 
 
 Screenshots were captured from a separate app bundle and separate demo JSON. They do not contain the user's work records. The labels on the site are Turkish; application captures reflect its current English interface.
 
-Validation: JavaScript syntax and local HTML asset references checked. Browser interaction and viewport testing has not yet been performed.
+Images: 1755 × 3021 PNG exports from the actual app window at 150% interface size, rendered at 3× through AppKit. Each uses a distinct large-image filename to avoid stale low-resolution browser caches. Mobile image width is up to 420 CSS pixels with 20px side margins.
+
+Validation: all three image selections checked in the browser at 390px viewport width, native image dimensions confirmed, no horizontal overflow. Desktop image dimensions and overflow checked at 1280px; no browser console errors. JavaScript syntax and local asset references checked.
