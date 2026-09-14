@@ -3,7 +3,6 @@
   const hero = document.querySelector('.companion');
   const image = document.querySelector('#companion-image');
   const speech = document.querySelector('#companion-speech');
-  const pause = document.querySelector('#pause-companion');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const moods = {
     hello: {frames:['assets/mascot-hello.png'], text:'Selam, ben Clockin.\nBugün birlikte çalışalım mı?'},
@@ -37,9 +36,6 @@
   }
   function setPaused(value) {
     paused = reduced.matches || value;
-    pause.disabled = reduced.matches;
-    pause.setAttribute('aria-pressed', String(paused));
-    pause.textContent = reduced.matches ? 'Hareket azaltıldı' : (paused ? 'Hareketi aç' : 'Hareketi durdur');
     document.documentElement.classList.toggle('motion-paused', paused);
     document.dispatchEvent(new CustomEvent('clockin-motion', {detail:{paused}}));
     timers();
@@ -48,12 +44,10 @@
     document.querySelector('#uygulama').scrollIntoView({behavior:paused ? 'instant' : 'smooth',block:'start'});
     document.querySelector('#demo-toggle').focus({preventScroll:true});
   });
-  document.addEventListener('clockin-toggle-motion', () => setPaused(!paused));
   document.querySelector('#meet-companion').addEventListener('click', () => {
     scene = (scene + 1) % scenes.length;
     setMood(scenes[scene]);
   });
-  pause.addEventListener('click', () => setPaused(!paused));
   document.querySelectorAll('[data-download]').forEach(button => {
     const greet = () => {override = true; setMood('celebrate', DOWNLOAD_URL ? 'Mac’inde görüşürüz!' : 'Yakında Mac’inde\ngörüşmek üzere!');};
     const restore = () => {override = false; setMood(scenes[scene]);};

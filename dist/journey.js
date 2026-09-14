@@ -8,7 +8,6 @@
   const timerPanel = document.querySelector('#demo-timer-panel');
   const summary = document.querySelector('#demo-summary');
   const mascot = document.querySelector('#journey-mascot');
-  const motion = section.querySelector('.motion-toggle');
   const nav = [...section.querySelectorAll('[data-journey]')];
   const scenes = [
     {name:'work', time:'09.00 / Yeni bir başlangıç', title:'Bir tık.<br> Ve odaktasın.', description:'İlk adımı sen at. Süreni ve emeğinin karşılığını Clockin takip etsin.', speech:'Hazırım. Hadi başlayalım.', note:'Kendi ritminde.', frames:[1,2,3,4].map(n=>`assets/companion/frame${n}.png`), alt:'Bilgisayarında çalışan Clockin maskotu'},
@@ -82,12 +81,8 @@
   toggle.addEventListener('click',()=>setRunning(!running));
   function setMotion(value){
     motionPaused=value || reduced.matches;
-    motion.setAttribute('aria-pressed',String(motionPaused));
-    motion.disabled=reduced.matches;
-    motion.textContent=reduced.matches?'Hareket azaltıldı':motionPaused?'Hareketi aç':'Hareketi durdur';
     sprites();paintTimer();
   }
-  motion.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('clockin-toggle-motion')));
   document.addEventListener('clockin-motion',event=>setMotion(event.detail.paused));
   document.addEventListener('visibilitychange',()=>{sprites();timerLoop();paintTimer();});
   window.addEventListener('scroll',schedule,{passive:true});
