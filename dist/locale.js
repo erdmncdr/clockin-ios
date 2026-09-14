@@ -1,6 +1,7 @@
 'use strict';
 const CLOCKIN_TRANSLATIONS = {
   "en": {
+    "sourceLink": "Source on GitHub",
     "skip": "Skip to content",
     "explore": "Explore Clockin",
     "download": "Download for Mac",
@@ -88,6 +89,7 @@ const CLOCKIN_TRANSLATIONS = {
     "themeLight": "Switch to light mode"
   },
   "tr": {
+    "sourceLink": "GitHub’da kaynak kod",
     "skip": "İçeriğe geç",
     "explore": "Uygulamaya göz at",
     "download": "Mac için indir",

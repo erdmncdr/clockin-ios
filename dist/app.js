@@ -1,6 +1,6 @@
 'use strict';
 // Set only after the signed installer has been published and verified.
-const DOWNLOAD_URL = null;
+const DOWNLOAD_URL = 'https://github.com/ismailakdag/clockin/releases/download/macos-v1.1.0/Clockin-1.1.0-4.dmg';
 const dialog = document.querySelector('#download-dialog');
 document.querySelectorAll('[data-download]').forEach(button => {
   button.addEventListener('click', () => {

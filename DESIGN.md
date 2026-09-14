@@ -14,6 +14,6 @@ Motion: the central workday is the single expressive moment. Native scrolling ch
 
 Composition: desktop copy and mascot on the left, usable app panel on the right, sequential scene navigation below. Mobile stacks the short title over the panel and brings the mascot beside its lower edge. The effect belongs to Clockin's actual focus/break/earnings cycle rather than unrelated decorative sections.
 
-Download state is configured separately. An unpublished installer must not be presented as an available download. Current preview explains that the macOS installer is being prepared.
+Download state is configured separately. An unpublished installer must not be presented as an available download. The published download points to the verified, Apple-notarized Mac installer. A quiet footer link leads developers to the MIT-licensed source on GitHub.
 
 Appearance: preserve porcelain in light mode; use blue charcoal #141923, raised surfaces #202938 and muted text #a5afbe in dark mode. Story scenes retain distinct dark navy, warm charcoal and deep green surroundings. The timer’s mint running color and amber paused color are driven by session state, independently of story scene or theme. A compact EN/TR control and outlined sun/moon button belong in the header. SVG play/pause icons share a 24px viewBox and light stroke.

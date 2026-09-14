@@ -4,7 +4,7 @@ Static English/Turkish product page, with the existing app icon, mascot and genu
 
 Serve `dist/` with a static HTTP server. No install or build step is needed. Hosting is configured in `.openai/hosting.json`.
 
-When a signed installer has been published and its anonymous download verified, set `DOWNLOAD_URL` in `dist/app.js` to that exact HTTPS DMG URL. Until then the download action explicitly explains that the package is being prepared.
+The download action points to the verified public macOS 1.1.0 (4) DMG in `ismailakdag/clockin`. Subsequent updates come through the native app's signed `macos-updates/appcast.xml` feed. Update the pinned website URL when publishing a later Mac installer; do not use GitHub's shared latest-release URL because the repository also ships iPhone builds. The footer links to the public MIT-licensed source repository.
 
 Screenshots were captured from a separate app bundle and separate demo JSON. They do not contain the user's work records. The site labels and companion copy switch between English and Turkish; genuine application captures retain the app’s English interface.
 
