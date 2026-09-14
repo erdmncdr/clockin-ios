@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" href="assets/clockin-icon.png">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
+  <script src="companion.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">İçeriğe geç</a>
@@ -24,10 +25,19 @@
         <button class="download-button" data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg>Mac için indir</button>
         <p class="compatibility">macOS 14 ve üzeri <span aria-hidden="true">/</span> Apple Silicon & Intel</p>
       </div>
-      <div class="hero-art"><img src="assets/mascot-hello.png" width="640" height="640" alt="Clockin’in gülümseyen küçük robotu iki elini kaldırarak selamlıyor." fetchpriority="high"><span class="mascot-note">Küçük çalışma arkadaşın.</span></div>
+      <div class="hero-art companion" data-mood="hello">
+        <div class="speech-bubble"><p id="companion-speech">Selam, ben Clockin.<br>Bugün birlikte çalışalım mı?</p><button id="start-tour">Birlikte bakalım <span aria-hidden="true">↗</span></button></div>
+        <button class="mascot-character" id="meet-companion" aria-label="Clockin maskotuyla tanış, sonraki pozu göster"><img id="companion-image" src="assets/mascot-hello.png" width="640" height="640" alt="" fetchpriority="high"></button>
+        <div class="companion-controls"><span>Dokun, tanışalım.</span><button id="pause-companion" aria-pressed="false">Hareketi durdur</button></div>
+      </div>
     </section>
     <section class="product-section" id="uygulama" aria-labelledby="product-title">
       <div class="wrap product-intro"><h2 id="product-title">Bir bakışta günün.</h2><p>Çalışma süren, kazancın ve ilerlemen.<br>Hepsi Mac’inde, elinin altında.</p></div>
+      <div class="tour-guide wrap" id="tour-guide" hidden>
+        <img id="guide-image" src="assets/mascot-hello.png" width="96" height="96" alt="Clockin rehberin">
+        <div class="guide-copy" role="status"><span id="guide-title">Önce işe başlayalım.</span><p id="guide-speech">Bir tıkla sayacı başlat. Süren ve kazancın birlikte ilerlesin.</p></div>
+        <button id="next-tour">Devam et <span aria-hidden="true">→</span></button><button id="close-tour" aria-label="Tanıtımı kapat">×</button>
+      </div>
       <div class="screen-picker" role="group" aria-label="Uygulama ekranını seç"><button data-screen="timer" aria-pressed="true">Zamanın</button><button data-screen="history" aria-pressed="false">Kazancın</button><button data-screen="progress" aria-pressed="false">İlerlemen</button></div>
       <div class="product-stage wrap" id="product-stage" data-active="timer">
         <figure class="app-screen" data-image="history"><img src="assets/app-history-large.png" width="1755" height="3021" alt="Clockin geçmiş ekranı: günlük kazanç grafiği ve çalışma ortalamaları. Örnek veriler." loading="lazy"></figure>

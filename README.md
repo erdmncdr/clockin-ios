@@ -11,3 +11,10 @@ Screenshots were captured from a separate app bundle and separate demo JSON. The
 Images: 1755 × 3021 PNG exports from the actual app window at 150% interface size, rendered at 3× through AppKit. Each uses a distinct large-image filename to avoid stale low-resolution browser caches. Mobile image width is up to 420 CSS pixels with 20px side margins.
 
 Validation: all three image selections checked in the browser at 390px viewport width, native image dimensions confirmed, no horizontal overflow. Desktop image dimensions and overflow checked at 1280px; no browser console errors. JavaScript syntax and local asset references checked.
+
+
+## Interactive companion
+
+The hero greets visitors, cycles through the app's original typing, coffee and celebration artwork, and responds to clicks and download-button hover/focus. Speech is written text. “Birlikte bakalım” opens a three-step tour synchronized with the real screenshot gallery. A pause button, reduced-motion preference, tab visibility and on-screen visibility gate automatic animation. The tour can be closed or finished; focus returns to the active gallery selector. No external service or audio is used.
+
+Companion validation: mobile 390px walkthrough (all three steps, finish and close), click-to-change pose, pause/resume frame changes, focus restoration and no horizontal overflow or console errors.

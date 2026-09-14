@@ -10,6 +10,6 @@ Typography: native system sans with slightly rounded forms on supporting control
 
 Layout: asymmetric text/mascot hero; wide product stage below with switchable real screenshots; brief closing download area. No testimonial, pricing, logo wall or feature-card grid. Mascot sits outside any card. Real app captures use entirely synthetic records in an isolated demo app.
 
-Motion: a single short arrival for the mascot. No scroll effects, parallax or endless animation. Respect reduced motion. Native anchors, buttons, and dialog; visible focus and responsive single column.
+Motion: original sprite frames play at a quiet pace in the visible companion. Scenes change every ten seconds; direct interaction changes the pose or starts a short product tour. Visitors can pause motion. Reduced-motion and hidden-page settings stop automatic playback. A user-initiated tour scrolls to its guide and advances the screenshot gallery. No parallax. Native anchors, buttons, and dialog; visible focus and responsive single column.
 
 Download state is configured separately. An unpublished installer must not be presented as an available download. Current preview explains that the macOS installer is being prepared.
