@@ -18,6 +18,7 @@ struct SettingsView: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
+    @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     @FocusState private var rateIsFocused: Bool
     @State private var rateText = ""
     @State private var showImporter = false
@@ -46,6 +47,12 @@ struct SettingsView: View {
                             Text(theme.rawValue).tag(theme.rawValue)
                         }
                     }
+                }
+                Section {
+                    Toggle("Desk mode in landscape", isOn: $deskModeEnabled)
+                        .onChange(of: deskModeEnabled) { _, _ in DeskMode.refreshOrientations() }
+                } footer: {
+                    Text("Turn the phone sideways for a large timer that keeps the screen on while you work. Turn it off to keep Clockin upright.")
                 }
                 FocusSettingsSection()
                 dataSection
