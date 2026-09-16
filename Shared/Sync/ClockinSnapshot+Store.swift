@@ -16,7 +16,7 @@ extension ClockinSnapshot {
             completedToday: store.dailyDurations[day] ?? 0,
             earnedToday: max(0, earned),
             running: store.running,
-            hourlyRate: store.effectiveRate(at: date, fallback: store.hourlyRate),
+            hourlyRate: store.currentRate(at: date),
             currencyCode: store.currencyCode,
             theme: theme
         )

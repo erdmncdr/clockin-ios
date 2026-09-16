@@ -133,7 +133,7 @@ final class ClockStore: ObservableObject {
         cachedRateRules = sorted
         return sorted
     }
-    var currentRateEffectiveFrom: Date? { rateRules.filter { $0.applies(to: Date(), calendar: calendar) }.max { $0.effectiveFrom < $1.effectiveFrom }?.effectiveFrom }
+    var currentRateEffectiveFrom: Date? { effectiveRateRule(at: .now)?.effectiveFrom }
 
     func elapsed(at date: Date = .now) -> TimeInterval { data.running?.elapsed(at: date) ?? 0 }
     /// Calisan seans, kayda gectiginde olacagi gibi basladigi gunun ucretiyle
@@ -154,12 +154,18 @@ final class ClockStore: ObservableObject {
     /// Her oturum icin cagrilir; ara dizi ayirmamak icin tek gecisde tarar.
     /// `max(by:)` gibi esitlikte ilk kurali korur.
     func effectiveRate(at date: Date, fallback: Double) -> Double {
+        effectiveRateRule(at: date)?.hourlyRate ?? fallback
+    }
+
+    /// The schedule label and earnings must select the same rule, including
+    /// legacy files containing multiple rules with the same start date.
+    func effectiveRateRule(at date: Date) -> RateRule? {
         var best: RateRule?
         for rule in rateRules where rule.applies(to: date, calendar: calendar) {
             if let current = best, rule.effectiveFrom <= current.effectiveFrom { continue }
             best = rule
         }
-        return best?.hourlyRate ?? fallback
+        return best
     }
 
     func earnings(for session: WorkSession) -> Double {
@@ -286,6 +292,10 @@ final class ClockStore: ObservableObject {
             statusMessage = "Rate period end must be on or after its start."
             return
         }
+        guard !(data.rateRules ?? []).contains(where: { calendar.isDate($0.effectiveFrom, inSameDayAs: day) }) else {
+            statusMessage = "A rate already starts on this day. Edit that rate instead."
+            return
+        }
         guard !overlapsRatePeriod(start: day, end: end, excluding: nil) else {
             statusMessage = "Rate period overlaps an existing period."
             return
@@ -302,6 +312,10 @@ final class ClockStore: ObservableObject {
         let end = effectiveUntil.map { calendar.startOfDay(for: $0) }
         guard end == nil || end! >= day else {
             statusMessage = "Rate period end must be on or after its start."
+            return
+        }
+        guard !(data.rateRules ?? []).contains(where: { $0.id != id && calendar.isDate($0.effectiveFrom, inSameDayAs: day) }) else {
+            statusMessage = "A rate already starts on this day. Edit that rate instead."
             return
         }
         guard !overlapsRatePeriod(start: day, end: end, excluding: id) else {
@@ -323,7 +337,7 @@ final class ClockStore: ObservableObject {
     }
 
     private func syncCurrentRate() {
-        if let current = (data.rateRules ?? []).filter({ $0.applies(to: Date(), calendar: calendar) }).max(by: { $0.effectiveFrom < $1.effectiveFrom }) {
+        if let current = effectiveRateRule(at: .now) {
             data.hourlyRate = current.hourlyRate
         }
     }

@@ -34,6 +34,13 @@ final class SessionMirror {
         sync()
     }
 
+    /// Long-lived view tasks must read today's preferences, not the
+    /// AppStorage values captured when their view task first started.
+    func refreshChimes(force: Bool = false) {
+        guard let store else { return }
+        syncChimes(running: store.running, force: force)
+    }
+
     private func sync() {
         guard let store else { return }
         // Standart UserDefaults uzantidan okunamaz. Temayi mevcut atomik
@@ -61,13 +68,14 @@ final class SessionMirror {
     /// Kisayollar mesaiyi bitirdiginde uygulama arka planda, hicbir ekran
     /// yuklenmeden calisiyor; bekleyen yirmi bildirim silinmiyor ve mesai
     /// bittikten sonra saatlerce calmaya devam ediyordu.
-    private func syncChimes(running: RunningSession?) {
+    private func syncChimes(running: RunningSession?, force: Bool = false) {
         let defaults = UserDefaults.standard
         FocusChimeController.shared.update(
             running: running,
             enabled: defaults.bool(forKey: "Clockin.ChimeEnabled"),
             interval: defaults.integer(forKey: "Clockin.ChimeIntervalMinutes"),
-            sound: defaults.string(forKey: "Clockin.ChimeSound") ?? FocusChimeSound.notification.rawValue
+            sound: defaults.string(forKey: "Clockin.ChimeSound") ?? FocusChimeSound.notification.rawValue,
+            force: force
         )
     }
 

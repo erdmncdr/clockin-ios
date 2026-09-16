@@ -32,60 +32,20 @@ struct ManualEntryView: View {
         _note = State(initialValue: editing?.note ?? "")
     }
 
-    /// Secilen gunun tarihini, secilen saatle birlestirir.
-    private func combine(_ time: Date) -> Date {
-        let calendar = Calendar.current
-        let d = calendar.dateComponents([.year, .month, .day], from: day)
-        let t = calendar.dateComponents([.hour, .minute], from: time)
-        var merged = DateComponents()
-        merged.year = d.year; merged.month = d.month; merged.day = d.day
-        merged.hour = t.hour; merged.minute = t.minute
-        return calendar.date(from: merged) ?? day
+    private var resolvedTimes: (start: Date, end: Date) {
+        EntryTimes.editorTimes(day: day, startTime: startTime, endTime: endTime, replacing: editing)
     }
-
-    private var resolvedStart: Date { combine(startTime) }
-
-    /// Kesin kucukluk: esitlikte gece yarisi asilmis saymak, ayni saati iki
-    /// kez secen birine sessizce 24 saatlik bir kayit yazardi.
-    private var crossesMidnight: Bool { combine(endTime) < resolvedStart }
-
-    private var resolvedEnd: Date {
-        EntryTimes.end(start: resolvedStart, end: combine(endTime), calendar: .current)
-    }
-
-    /// Kaydedilecek sure, magazanin kaydedecegiyle ayni hesap. Duraklatilmis
-    /// ya da ice aktarilmis bir kayitta saatler degisince mola korunur;
-    /// onizleme araligin tamamini gosterip kaydedilenden fazla goruyordu.
+    private var resolvedStart: Date { resolvedTimes.start }
+    private var resolvedEnd: Date { resolvedTimes.end }
+    private var crossesMidnight: Bool { !Calendar.current.isDate(resolvedStart, inSameDayAs: resolvedEnd) }
     private var duration: TimeInterval {
-        guard let editing else { return resolvedEnd.timeIntervalSince(resolvedStart) }
-        let times = savedTimes(for: editing)
-        return EntryTimes.workedDuration(start: times.start, end: times.end, replacing: editing)
+        EntryTimes.workedDuration(start: resolvedStart, end: resolvedEnd, replacing: editing)
     }
-
-    /// Bu saatlerin uzerine bindigi kayitlar.
-    ///
-    /// Kaydetmeyi engellemiyor: iki isi ayni saatte tutan biri olabilir ve
-    /// dogru olani bilen kullanici. Ama sessizce gecmemeli, cunku gun
-    /// toplamlari bu yuzden 24 saati asiyordu.
     private var conflicts: [WorkSession] {
         store.overlappingSessions(start: resolvedStart, end: resolvedEnd, excluding: editing?.id)
     }
     private var earnings: Double {
         duration / 3600 * store.effectiveRate(at: resolvedStart, fallback: store.hourlyRate)
-    }
-
-    /// Kaydedilecek saatler. Seciciler saniyeyi dusurdugu icin hic dokunulmamis
-    /// bir kayitta bile yeniden kurulan saat farkli cikiyor ve magaza saat
-    /// degisti sanip calisilan sureyi yeniden hesapliyordu.
-    private func savedTimes(for session: WorkSession) -> (start: Date, end: Date) {
-        let calendar = Calendar.current
-        let minute: (Date) -> Date = {
-            calendar.date(from: calendar.dateComponents([.year, .month, .day, .hour, .minute], from: $0)) ?? $0
-        }
-        if resolvedStart == minute(session.start), resolvedEnd == minute(session.end) {
-            return (session.start, session.end)
-        }
-        return (resolvedStart, resolvedEnd)
     }
 
     var body: some View {
@@ -94,9 +54,12 @@ struct ManualEntryView: View {
                 Section {
                     DatePicker("Day", selection: $day, displayedComponents: .date)
                     DatePicker("Start", selection: $startTime, displayedComponents: .hourAndMinute)
-                    DatePicker("End", selection: $endTime, displayedComponents: .hourAndMinute)
+                    DatePicker("End", selection: $endTime,
+                               displayedComponents: editing == nil ? .hourAndMinute : [.date, .hourAndMinute])
                 } footer: {
-                    if crossesMidnight { Text("Ends the next day.") }
+                    if crossesMidnight {
+                        Text("Ends on \(resolvedEnd.formatted(date: .abbreviated, time: .omitted)).")
+                    }
                 }
 
                 if !conflicts.isEmpty {
@@ -154,8 +117,7 @@ struct ManualEntryView: View {
     private func save() {
         let saved: Bool
         if let editing {
-            let times = savedTimes(for: editing)
-            saved = store.updateSession(id: editing.id, start: times.start, end: times.end, note: note)
+            saved = store.updateSession(id: editing.id, start: resolvedStart, end: resolvedEnd, note: note)
         } else {
             saved = store.addManualSession(start: resolvedStart, end: resolvedEnd, note: note)
         }

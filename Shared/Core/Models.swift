@@ -103,6 +103,31 @@ extension ClockinData {
 /// magaza ayni hesabi kullanir; ikisi ayri hesaplayinca ekranda gorulen sure
 /// kaydedilenden farkli cikiyordu.
 enum EntryTimes {
+    /// Resolve the editor's day and minute-resolution controls into the
+    /// exact timestamps used for preview, overlap checks, and saving.
+    static func editorTimes(day: Date, startTime: Date, endTime: Date,
+                            replacing old: WorkSession?, calendar: Calendar = .current) -> (start: Date, end: Date) {
+        func combine(_ time: Date) -> Date {
+            var components = calendar.dateComponents([.year, .month, .day], from: day)
+            let clock = calendar.dateComponents([.hour, .minute], from: time)
+            components.hour = clock.hour
+            components.minute = clock.minute
+            return calendar.date(from: components) ?? day
+        }
+        let start = combine(startTime)
+        // Existing entries expose an explicit end date in the editor. Only
+        // new entries infer overnight work from time-only controls.
+        let resolvedEnd = old == nil
+            ? end(start: start, end: combine(endTime), calendar: calendar)
+            : (calendar.dateInterval(of: .minute, for: endTime)?.start ?? endTime)
+        if let old,
+           calendar.isDate(start, equalTo: old.start, toGranularity: .minute),
+           calendar.isDate(resolvedEnd, equalTo: old.end, toGranularity: .minute) {
+            return (old.start, old.end)
+        }
+        return (start, resolvedEnd)
+    }
+
     /// Bitis baslangictan onceyse ertesi gundur. Takvim gunu eklenir, 24 saat
     /// degil: saat geri alinan gecede 22:00-06:00 dokuz saattir.
     static func end(start: Date, end: Date, calendar: Calendar) -> Date {

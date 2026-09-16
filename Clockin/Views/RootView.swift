@@ -96,7 +96,6 @@ struct RootView: View {
     }
 
     private func updateChimes(force: Bool = false) {
-        FocusChimeController.shared.update(running: store.running, enabled: chimeEnabled,
-            interval: chimeInterval, sound: chimeSound, force: force)
+        SessionMirror.shared.refreshChimes(force: force)
     }
 }

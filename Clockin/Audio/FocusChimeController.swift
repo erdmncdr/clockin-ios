@@ -5,9 +5,11 @@ import UserNotifications
 // Kritik sesler ozel yetki ister; burada yalnizca normal sistem sesleri var.
 enum FocusChimeSound: String, CaseIterable, Identifiable {
     case notification = "Default notification"
-    case ringtone = "Default ringtone"
     var id: String { rawValue }
-    var sound: UNNotificationSound { self == .ringtone ? .defaultRingtone : .default }
+    // Ringtones are reserved for incoming-call notifications and play for
+    // 30 seconds. A work reminder (including legacy ringtone preferences)
+    // must use the short notification sound instead.
+    var sound: UNNotificationSound { .default }
 }
 
 @MainActor

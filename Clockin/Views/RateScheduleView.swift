@@ -11,7 +11,7 @@ struct RateScheduleView: View {
 
     var body: some View {
         let rules = store.rateRules
-        let currentID = rules.last(where: { $0.applies(to: .now) })?.id
+        let currentID = store.effectiveRateRule(at: .now)?.id
 
         NavigationStack {
             List {

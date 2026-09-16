@@ -25,9 +25,7 @@ struct FocusSettingsSection: View {
                     LabeledContent("Every", value: "\(interval) min of work")
                 }
                 .accessibilityValue("\(interval) minutes of work")
-                Picker("Sound", selection: $sound) {
-                    ForEach(FocusChimeSound.allCases) { Text($0.rawValue).tag($0.rawValue) }
-                }
+                LabeledContent("Sound", value: "Default notification")
                 Button("Preview chime", systemImage: "speaker.wave.2") {
                     Task { await chime.preview(sound: sound) }
                 }
