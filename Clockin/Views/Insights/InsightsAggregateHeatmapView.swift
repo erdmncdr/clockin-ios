@@ -53,7 +53,7 @@ struct InsightsAggregateHeatmapView: View {
                     if currencyCode == "USD" {
                         if let conversion = selected.conversion(currencyCode: currencyCode,
                             startRate: exchangeRates.rate(onCalendarDay: selected.start), latestRate: exchangeRates.latestRate) {
-                            Text("≈ \(conversion.earnings.money(code: "TRY")) • 1 USD = \(conversion.rate.formatted(.number.precision(.fractionLength(3)))) TRY")
+                            Text("\(conversion.earnings.money(code: "TRY")) • 1 USD = \(conversion.rate.formatted(.number.precision(.fractionLength(3)))) TRY")
                             Text(conversion.usedLatest ? "Latest rate fallback applied to the whole period." : "Period start rate applied to the whole period.")
                         } else {
                             Text("TRY rate unavailable.")

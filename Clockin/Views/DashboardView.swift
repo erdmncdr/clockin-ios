@@ -267,7 +267,7 @@ private struct TodayCard: View {
 
     private var earnedTRY: String? {
         guard store.currencyCode == "USD", let rate = exchangeRates.latestRate else { return nil }
-        return "≈ " + (store.todayEarnings(at: now) * rate).money(code: "TRY")
+        return (store.todayEarnings(at: now) * rate).money(code: "TRY")
     }
 
     private func metric(_ title: String, _ value: String, icon: String, detail: String? = nil) -> some View {

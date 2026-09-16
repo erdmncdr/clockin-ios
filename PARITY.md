@@ -15,6 +15,7 @@ Timer with pause, cancel and start with elapsed time; manual entries, editing an
 - Long session reminder with Clock out, Set end time, and Remind in 1 hour actions
 - Haptics on timer actions, a celebration on the clock-out summary
 - Overlap warnings in History and in the entry editor
+- Desk mode: a full-screen timer in landscape that keeps the screen on while a session runs
 
 ## Mac only
 
@@ -48,18 +49,3 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 ```bash
 diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
 ```
-
-## Open Mac issues
-
-Found while comparing the apps and still present in the Mac sources. None of them affect the iPhone app unless noted.
-
-1. **Non-USD history chart.** The chart's toggle, labels and TRY conversion assume USD, so an EUR, GBP or TRY account sees mislabeled amounts (`HistoryView.swift`).
-2. **Competing import matches.** When two incoming rows match the same entry, the preview calls the second one new, but importing silently skips it instead of trying the next best match (`ClockStore.swift`). Shared with iPhone.
-3. **Backup wording.** Settings says backups are "Created automatically before each save"; they are made at most once a day.
-4. **Editor edge cases.** The duration preview ignores a preserved break, and an overnight end adds a fixed 24 hours, which is off by an hour across a DST change (`ManualEntryView.swift`). Shared with iPhone.
-5. **Rate change during a session.** A running session is priced at today's rate, a saved one at its start date's rate, so a session crossing a rate change can change value at clock-out. Shared with iPhone.
-6. **Money milestone.** At exactly 10, 20 and so on, the target shows zero to go while the progress bar resets to empty (`MainView.swift`).
-7. **Radio state.** "Playing" is set as soon as playback is requested, so a dead stream still looks on (`RadioController.swift`).
-8. **Heatmap refresh.** The heatmap refreshes on a 20-second timer and on session count, so an edit that keeps the count can show stale values for a while (`HeatmapView.swift`).
-9. **Update check interval.** The last check time lives only in memory, so restarts and failures can check more often than every six hours (`UpdateChecker.swift`).
-10. **Unused code.** `MainView.settingsSection` and `ShareStatsCard` are never shown.

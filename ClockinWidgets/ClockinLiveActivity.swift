@@ -22,6 +22,11 @@ struct ClockinLiveActivity: Widget {
                         Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode))
                             .font(.title3.weight(.semibold))
                             .monospacedDigit()
+                        if let label = asOfText(context.state) {
+                            Text(label)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .foregroundStyle(context.state.isPaused ? palette.secondary : palette.accent)
                 }
@@ -54,7 +59,9 @@ struct ClockinLiveActivity: Widget {
                     .minimumScaleFactor(0.6)
                     .frame(width: 50, alignment: .leading)
             } compactTrailing: {
-                Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode, maxFractionDigits: 0))
+                // Tam sayiya asagi yuvarlanir: $1,61 "$2" yaziyordu, kazanilandan
+                // fazlasi. Tutar son guncellemeye ait oldugu icin zaten geride kalabilir.
+                Text(context.state.earnedAtUpdate.rounded(.down).money(code: context.attributes.currencyCode, maxFractionDigits: 0))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
@@ -99,6 +106,17 @@ private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some 
     Text(timerInterval: state.timerRange, pauseTime: state.pausedAt, countsDown: false, showsHours: true)
 }
 
+/// Tutarin ait oldugu an. Live Activity tutari kendisi ilerletemez; uygulama
+/// arka plandayken guncelleme gelmez ve sure akarken para donuk kalir.
+/// Etkinlik yalnizca uygulama onde degilken gorunur, yani gorundugu her an
+/// tutar en son uygulamadan cikildigi ana aittir; bu yuzden calisan seansta
+/// hep yazilir. Sistemin `isStale` bayragina guvenilmedi: simulatorde eskime
+/// tarihi gecse de gelmedi.
+private func asOfText(_ state: ClockinActivityAttributes.ContentState) -> String? {
+    guard !state.isPaused, let updatedAt = state.updatedAt else { return nil }
+    return "as of " + updatedAt.formatted(date: .omitted, time: .shortened)
+}
+
 private func rateText(_ state: ClockinActivityAttributes.ContentState, _ currencyCode: String) -> String {
     "\(state.hourlyRate.money(code: currencyCode)) / hr"
 }
@@ -122,8 +140,10 @@ private struct LockScreenActivityView: View {
                     .font(.title3.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
-                if currencyCode == "USD", let rate = state.usdTryRate {
-                    Text("≈ \((state.earnedAtUpdate * rate).money(code: "TRY"))")
+                let converted = currencyCode == "USD" ? state.usdTryRate.map { (state.earnedAtUpdate * $0).money(code: "TRY") } : nil
+                let asOf = asOfText(state)
+                if converted != nil || asOf != nil {
+                    Text([converted, asOf].compactMap { $0 }.joined(separator: " · "))
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)

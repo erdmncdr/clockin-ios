@@ -16,7 +16,7 @@ struct MoneyMomentumView: View {
         // Hareketsiz durumda seyrek yenileme, tarihli ucret degisimini yine yakalar.
         TimelineView(.periodic(from: .now, by: sessionState == .working ? (reduceMotion ? 1 : 0.25) : 60)) { context in
             let momentum = MoneyMomentum(
-                hourlyRate: store.effectiveRate(at: context.date, fallback: store.hourlyRate),
+                hourlyRate: store.currentRate(at: context.date),
                 currentEarnings: store.currentEarnings(at: context.date), state: sessionState,
                 currencyCode: store.currencyCode, usdTryRate: exchangeRates.latestRate
             )
@@ -34,7 +34,7 @@ struct MoneyMomentumView: View {
                         Text("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec")
                             .foregroundStyle(momentum.isEarning ? palette.accent : .secondary)
                         if let rate = momentum.tryPerSecond {
-                            Text("≈ +\(rate.money(code: "TRY", maxFractionDigits: 4))/sec")
+                            Text("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec")
                                 .foregroundStyle(.secondary)
                         }
                     }

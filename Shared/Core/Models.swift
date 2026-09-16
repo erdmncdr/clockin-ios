@@ -99,6 +99,29 @@ extension ClockinData {
     }
 }
 
+/// Elle girilen ya da duzenlenen kaydin saatleri. Duzenleyici onizlemesi ile
+/// magaza ayni hesabi kullanir; ikisi ayri hesaplayinca ekranda gorulen sure
+/// kaydedilenden farkli cikiyordu.
+enum EntryTimes {
+    /// Bitis baslangictan onceyse ertesi gundur. Takvim gunu eklenir, 24 saat
+    /// degil: saat geri alinan gecede 22:00-06:00 dokuz saattir.
+    static func end(start: Date, end: Date, calendar: Calendar) -> Date {
+        guard end < start else { return end }
+        return calendar.date(byAdding: .day, value: 1, to: end) ?? end.addingTimeInterval(86_400)
+    }
+
+    /// Kaydedilecek calisilan sure. Yeni kayit araligin tamamidir. Saatleri
+    /// degismeyen kayit suresini korur; saatleri degisen kayit, duraklatma ya
+    /// da dis kaynak yuzunden aralikla sure arasindaki farki korur. Sonuc
+    /// sifir ya da negatifse bu saatler kaydin molasindan kisadir.
+    static func workedDuration(start: Date, end: Date, replacing old: WorkSession?) -> TimeInterval {
+        guard let old else { return end.timeIntervalSince(start) }
+        guard start != old.start || end != old.end else { return old.duration }
+        let gap = old.end.timeIntervalSince(old.start) - old.duration
+        return end.timeIntervalSince(start) - gap
+    }
+}
+
 enum DurationText {
     static func clock(_ interval: TimeInterval) -> String {
         let seconds = Int(SessionDuration.clamped(interval))
