@@ -42,6 +42,9 @@ struct TodayWidget: Widget {
         StaticConfiguration(kind: "TodayWidget", provider: TodayProvider()) { entry in
             TodayWidgetView(entry: entry)
                 .environment(\.palette, entry.snapshot.theme.palette)
+                // Girdiler arasi rakam gecisi bulanik animasyonla cizilip
+                // islemci harciyordu; degerler dogrudan degissin.
+                .contentTransition(.identity)
         }
         .configurationDisplayName("Today")
         .description("The current session and today's time and earnings.")

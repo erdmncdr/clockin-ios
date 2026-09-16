@@ -95,8 +95,21 @@ MainActor.assumeIsolated {
     check(!store.setEarlierRate(nil, changedOn: day) && store.rateRules == custom, "simple toggle cannot erase custom periods")
     check(!store.setRate(99, from: day) && store.rateRules == custom, "simple rate change cannot overwrite custom schedule")
     check(!store.setRate(99, from: nil) && store.rateRules == custom, "always also protects custom schedule")
+    check(store.todayDuration(at: today.addingTimeInterval(3600)) == 3600, "today duration uses the timeline date")
+    check(store.todayEarnings(at: today.addingTimeInterval(3600)) == 45, "today earnings uses the timeline date")
     let todaySnapshot = ClockinSnapshot(store: store, at: today.addingTimeInterval(3600))
     check(todaySnapshot.hourlyRate == 45, "widget and Live Activity receive today's raised running rate")
+    check(todaySnapshot == ClockinSnapshot(store: store, at: today.addingTimeInterval(7200)), "running ticks do not change widget snapshot")
+    check(todaySnapshot.earnedToday == 0, "snapshot contains completed earnings only")
+    check(store.monthDuration(at: today.addingTimeInterval(3600)) == 6 * 3600, "cached month includes completed work and live duration")
+    check(store.monthDuration(at: today.addingTimeInterval(7200)) == 7 * 3600, "cached month advances without rescanning completed work")
+    store.pause(at: today.addingTimeInterval(3600))
+    let pausedSnapshot = ClockinSnapshot(store: store, at: today.addingTimeInterval(3600))
+    check(pausedSnapshot != todaySnapshot, "pause changes widget snapshot")
+    check(store.todayDuration(at: today.addingTimeInterval(7200)) == 3600, "paused today duration stays fixed")
+    store.resume(at: today.addingTimeInterval(7200))
+    check(ClockinSnapshot(store: store, at: today.addingTimeInterval(7200)) != pausedSnapshot, "resume changes widget snapshot")
+    check(store.currentEarnings(at: today.addingTimeInterval(10800)) == 90, "cached running rate preserves pause accounting")
     store.cancelRunning()
 
     data.rateRules = [RateRule(effectiveFrom: day.addingTimeInterval(-86400), effectiveUntil: day, hourlyRate: 25),
@@ -130,6 +143,36 @@ MainActor.assumeIsolated {
     try! FileManager.default.createDirectory(at: liveURL, withIntermediateDirectories: false)
     check(!live.setEarlierRate(10, changedOn: day), "failed save is reported")
     check(live.rateRules == rollback && live.hourlyRate == 35, "failed save rolls back rules and current rate")
+
+    check(live.monthDuration(at: today) == 7 * 3600, "clock out invalidates monthly completed cache")
+    let completedSnapshot = ClockinSnapshot(store: live, at: day)
+    let removedSession = live.sessions.first { calendar.isDate($0.start, inSameDayAs: day) }!
+    // Silme testi icin yazilabilir fikstur kullanilir.
+    let mutableURL = directory.appendingPathComponent("mutable.json")
+    try! JSONEncoder().encode(live.data).write(to: mutableURL)
+    let mutable = ClockStore(fileURL: mutableURL, calendar: calendar, now: { today })
+    _ = mutable.monthDuration(at: today)
+    _ = mutable.todayEarnings(at: day)
+    mutable.deleteSession(id: removedSession.id)
+    check(mutable.monthDuration(at: today) == 6 * 3600, "deletion invalidates monthly cache")
+    check(ClockinSnapshot(store: mutable, at: day) != completedSnapshot, "deletion changes widget snapshot")
+    let nextDay = today.addingTimeInterval(86400)
+    check(ClockinSnapshot(store: store, at: nextDay) != ClockinSnapshot(store: store, at: today), "midnight changes widget snapshot")
+    check(ClockinSnapshot(store: store, at: today, theme: .carbon) != ClockinSnapshot(store: store, at: today, theme: .daylight), "theme change refreshes widget snapshot")
+
+    let nextMonth = calendar.date(byAdding: .month, value: 1, to: today)!
+    check(mutable.monthDuration(at: nextMonth) == 0, "month rollover does not reuse previous monthly totals")
+    check(mutable.monthDuration(at: today) == 6 * 3600, "returning to previous month rebuilds the correct total")
+    check(store.currentRate(at: day.addingTimeInterval(-86400)) == 25, "idle rate cache follows queried day")
+    check(store.currentRate(at: today) == 45, "idle rate cache crosses the rate boundary")
+    let cancelledSnapshot = ClockinSnapshot(store: store, at: today)
+    check(cancelledSnapshot != todaySnapshot && cancelledSnapshot.running == nil, "cancellation changes snapshot")
+    mutable.clockIn(at: day.addingTimeInterval(3600))
+    let firstTick = ClockinSnapshot(store: mutable, at: day.addingTimeInterval(7200))
+    check(firstTick == ClockinSnapshot(store: mutable, at: day.addingTimeInterval(7200.123)), "subsecond time never changes completed snapshot values")
+    _ = mutable.clockOut(at: day.addingTimeInterval(7200))
+    let endedSnapshot = ClockinSnapshot(store: mutable, at: day.addingTimeInterval(7200))
+    check(endedSnapshot != firstTick && endedSnapshot.earnedToday == 35, "clock out updates completed snapshot totals")
 
     data.sessions = []
     data.running = nil

@@ -16,30 +16,28 @@ final class NudgeController: ObservableObject {
     private var revision = 0
     private var worker: Task<Void, Never>?
 
-    private struct State: Codable {
+    private var persistedState: State?
+
+    private struct State: Codable, Equatable {
         var pause: NudgePauseObservation?
         var scheduled: [PlannedNudge] = []
     }
 
     private init() {
         state = defaults.data(forKey: stateKey).flatMap { try? JSONDecoder().decode(State.self, from: $0) } ?? State()
+        persistedState = state
     }
 
     func update(store: ClockStore) {
         let now = Date.now
         let calendar = Calendar.current
         state.pause = NudgePauseObservation.reconcile(state.pause, running: store.running, now: now)
-        // Saat dilimi degisince store'un gun onbellegi eski sinirlari tasiyabilir.
-        var daily: [Date: TimeInterval] = [:]
-        for session in store.sessions {
-            daily[calendar.startOfDay(for: session.start), default: 0] += session.duration
-        }
-        input = NudgeInput(now: now, calendar: calendar, dailyDurations: daily, sessions: store.sessions,
+        input = NudgeInput(now: now, calendar: calendar, dailyDurations: store.dailyDurations, sessions: store.sessions,
             running: store.running, observedPauseDate: state.pause?.date,
             dailyGoalHours: defaults.double(forKey: "Clockin.GoalDailyHours"),
             tone: NudgeTone(rawValue: defaults.string(forKey: NudgePlanner.toneKey) ?? "") ?? .grumpy,
             enabled: defaults.object(forKey: NudgePlanner.enabledKey) as? Bool ?? true)
-        if input?.enabled == false || store.running?.isPaused == false { mood = nil }
+        if (input?.enabled == false || store.running?.isPaused == false), mood != nil { mood = nil }
         persist()
         revision += 1
         guard worker == nil else { return }
@@ -62,7 +60,8 @@ final class NudgeController: ObservableObject {
             input.now = .now
             input.enabled = input.enabled && [.authorized, .provisional, .ephemeral].contains(permission.authorizationStatus)
             input.consumed = state.scheduled.filter { $0.fireDate <= input.now }
-            mood = NudgePlanner.currentMood(input)
+            let nextMood = NudgePlanner.currentMood(input)
+            if mood != nextMood { mood = nextMood }
             errorMessage = nil
             let plan = NudgePlanner.plan(input)
             let desired = Dictionary(uniqueKeysWithValues: plan.map { ($0.identifier, $0) })
@@ -151,6 +150,8 @@ final class NudgeController: ObservableObject {
     func finishPendingUpdates() async { await worker?.value }
 
     private func persist() {
-        if let data = try? JSONEncoder().encode(state) { defaults.set(data, forKey: stateKey) }
+        guard state != persistedState, let data = try? JSONEncoder().encode(state) else { return }
+        defaults.set(data, forKey: stateKey)
+        persistedState = state
     }
 }

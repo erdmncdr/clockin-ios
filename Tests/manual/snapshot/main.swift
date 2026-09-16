@@ -259,14 +259,14 @@ func runChecks() -> Int {
     let dates = ClockinSnapshot.runningTimelineDates(from: start)
     let offsets = dates.map { $0.timeIntervalSince(start) }
     failures += check(offsets.first == 0, "the first entry is now, so a resume shows its amount at once")
-    failures += check(offsets.prefix(24) == ArraySlice(stride(from: 0.0, to: 120, by: 5)),
-                      "the first two minutes update every five seconds")
-    failures += check(offsets.contains(120) && offsets.contains(585) && !offsets.contains(590),
-                      "until ten minutes, every fifteen seconds")
+    failures += check(offsets.prefix(8) == ArraySlice(stride(from: 0.0, to: 120, by: 15)),
+                      "the first two minutes update every fifteen seconds")
+    failures += check(offsets.contains(120) && offsets.contains(570) && !offsets.contains(585),
+                      "until ten minutes, every thirty seconds")
     failures += check(offsets.last == 3540 && offsets.allSatisfy { $0 < 3600 },
                       "then every minute, ending inside the hour")
-    failures += check(zip(offsets, offsets.dropFirst()).allSatisfy { $0 < $1 } && offsets.count == 106,
-                      "entries are strictly increasing and 106 in total")
+    failures += check(zip(offsets, offsets.dropFirst()).allSatisfy { $0 < $1 } && offsets.count == 74,
+                      "entries are strictly increasing and 74 in total")
     return failures
 }
 

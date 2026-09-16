@@ -12,6 +12,8 @@ struct TimerCard: View {
     let onClockOut: (WorkSession) -> Void
     let onStartWithElapsed: () -> Void
 
+    @Environment(\.clockinContentActive) private var contentActive
+
     @State private var confirmCancel = false
 
     var body: some View {
@@ -22,22 +24,17 @@ struct TimerCard: View {
             VStack(spacing: 8) {
                 status
                 Text(elapsed)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: elapsed)
                     .font(.system(size: 60, weight: .medium, design: palette.fontDesign))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text(earnings)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: earnings)
                     .font(.title3.weight(.semibold))
+                    .monospacedDigit()
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
                     let converted = (earned * rate).money(code: "TRY")
                     Text(converted)
-                        .contentTransition(.numericText())
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: converted)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -62,10 +59,11 @@ struct TimerCard: View {
         .frame(maxWidth: .infinity)
         .card(palette)
         .sensoryFeedback(trigger: store.running?.isPaused) { old, new in
+            guard contentActive else { return nil }
             switch (old, new) {
-            case (nil, .some): .start
-            case (.some, nil): .stop
-            default: .impact(weight: .light)
+            case (nil, .some): return .start
+            case (.some, nil): return .stop
+            default: return .impact(weight: .light)
             }
         }
         .alert("Cancel active session?", isPresented: $confirmCancel) {
@@ -139,5 +137,43 @@ struct TimerCard: View {
     private var statusText: String {
         guard let running = store.running else { return "READY TO FOCUS" }
         return running.isPaused ? "PAUSED" : "FOCUS SESSION"
+    }
+}
+
+private struct ClockinContentActiveKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var clockinContentActive: Bool {
+        get { self[ClockinContentActiveKey.self] }
+        set { self[ClockinContentActiveKey.self] = newValue }
+    }
+}
+
+private struct VisibleTimelineSchedule: TimelineSchedule {
+    let interval: TimeInterval
+    let active: Bool
+
+    func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnySequence<Date> {
+        guard active else { return AnySequence([startDate]) }
+        return AnySequence(PeriodicTimelineSchedule(from: Date(timeIntervalSinceReferenceDate: 0), by: interval)
+            .entries(from: startDate, mode: mode))
+    }
+}
+
+struct ActiveTimeline<Content: View>: View {
+    @Environment(\.clockinContentActive) private var contentActive
+    @Environment(\.scenePhase) private var scenePhase
+    let interval: TimeInterval
+    @ViewBuilder let content: (Date) -> Content
+
+    var body: some View {
+        TimelineView(VisibleTimelineSchedule(interval: interval, active: contentActive && scenePhase == .active)) { context in
+            // Ayri kartlar ayni saniyeyi okur; kurus farki olusmaz.
+            content(Date(timeIntervalSinceReferenceDate: floor(context.date.timeIntervalSinceReferenceDate)))
+                // Saniyelik rakam animasyonu CPU'da blur cizdirip telefonu isitiyor.
+                .transaction { $0.animation = nil; $0.disablesAnimations = true }
+        }
     }
 }

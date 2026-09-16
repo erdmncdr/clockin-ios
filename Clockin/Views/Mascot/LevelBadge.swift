@@ -1,8 +1,17 @@
 import SwiftUI
+import UIKit
 
 @MainActor
 struct DashboardLevelBadge: View {
     @EnvironmentObject private var store: ClockStore
+    @Environment(\.clockinContentActive) private var contentActive
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var appeared = false
+    private var active: Bool { appeared && contentActive && scenePhase == .active }
+    private struct RefreshKey: Equatable {
+        let version: Int
+        let active: Bool
+    }
     let showInsights: () -> Void
     @State private var level = 1
     @State private var xp = 0
@@ -14,7 +23,7 @@ struct DashboardLevelBadge: View {
 
     var body: some View {
         Button(action: showInsights) {
-            LevelBadge(level: level, xp: xp, levelUps: levelUps)
+            LevelBadge(level: level, xp: xp, levelUps: levelUps, active: active)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -22,18 +31,11 @@ struct DashboardLevelBadge: View {
         .accessibilityLabel("Level \(level), \(xp) XP")
         .accessibilityValue("\(500 - xp % 500) XP to next level")
         .accessibilityHint("Opens your level and badges")
-        // Once yalnizca dakikada bir hesaplaniyordu, veri degisince degil.
-        // Gecmis sureyle baslatilan 4 saatlik bir oturum iptal edildiginde
-        // seviye bir dakika kadar yuksek kaliyordu; Rozetler sekmesi ayni anda
-        // dogru seviyeyi gosterdigi icin iki ekran birbirini tutmuyordu.
-        //
-        // Simdi her kayit degisikligi (iptal, bitirme, silme, duzenleme, ice
-        // aktarma, geri yukleme) hemen yeniden hesaplatir. Zamanla degisen tek
-        // sey calisan oturumun suresi; o yuzden yalnizca calisirken dakikada
-        // bir tazelenir. Store bildirimleri saniyede gelmedigi icin tarama
-        // maliyeti degismiyor.
+        .onAppear { appeared = true }
+        .onDisappear { appeared = false }
         .onReceive(store.objectWillChange) { _ in dataVersion &+= 1 }
-        .task(id: dataVersion) {
+        .task(id: RefreshKey(version: dataVersion, active: active)) {
+            guard active else { return }
             // `objectWillChange` deger yazilmadan once gelir; gorev bir sonraki
             // turda basladigi icin burada okunan veri yenisidir.
             refresh()
@@ -61,6 +63,7 @@ private struct LevelBadge: View {
     let level: Int
     let xp: Int
     let levelUps: Int
+    let active: Bool
 
     private var progress: Double { min(max(Double(xp % 500) / 500, 0), 1) }
 
@@ -92,7 +95,7 @@ private struct LevelBadge: View {
                         .fill(palette.accent.opacity(0.22))
                         .frame(width: fill)
                         .overlay {
-                            if !reduceMotion { BadgeSweep() }
+                            if active && !reduceMotion { BadgeSweep() }
                         }
                         .clipShape(Capsule(style: .continuous))
                 }
@@ -105,50 +108,68 @@ private struct LevelBadge: View {
         .phaseAnimator([false, true, false], trigger: levelUps) { content, highlighted in
             content.overlay {
                 Capsule(style: .continuous)
-                    .stroke(palette.accent.opacity(!reduceMotion && highlighted ? 0.85 : 0), lineWidth: 1.5)
+                    .stroke(palette.accent.opacity(active && !reduceMotion && highlighted ? 0.85 : 0), lineWidth: 1.5)
                     .allowsHitTesting(false)
             }
-            .brightness(!reduceMotion && highlighted ? 0.12 : 0)
+            .brightness(active && !reduceMotion && highlighted ? 0.12 : 0)
         } animation: { highlighted in
-            reduceMotion ? nil : .easeOut(duration: highlighted ? 0.2 : 0.7)
+            !active || reduceMotion ? nil : .easeOut(duration: highlighted ? 0.2 : 0.7)
         }
         .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
     }
 }
 
-private struct BadgeSweep: View {
-    private enum Phase: CaseIterable { case start, end }
+private struct BadgeSweep: UIViewRepresentable {
+    func makeUIView(context: Context) -> BadgeSweepLayerView { BadgeSweepLayerView() }
+    func updateUIView(_ view: BadgeSweepLayerView, context: Context) {}
+    static func dismantleUIView(_ view: BadgeSweepLayerView, coordinator: ()) { view.stop() }
+}
 
-    var body: some View {
-        GeometryReader { geometry in
-            // Bant dolgunun kendisine gore olculur. Sabit genislikte bir
-            // bant, dar bir dolguyu bastan sona kaplayip taramak yerine
-            // tek parca yanip sonuyordu.
-            let band = max(6, geometry.size.width * 0.5)
-            LinearGradient(
-                colors: [.clear, .white.opacity(0.45), .clear],
-                startPoint: .leading, endPoint: .trailing
-            )
-            .frame(width: band, height: geometry.size.height)
-            // Once saniyede 30 kez yeniden cizilen bir TimelineView'du: 120 Hz
-            // ekranda kayan isik takiliyordu ve her karede gorunum bastan
-            // hesaplaniyordu. Simdi yalnizca uc noktalar veriliyor, ara kareleri
-            // sistem ekranin hizinda ciziyor. 4,2 saniye bekleme ve 1,8 saniye
-            // tarama; basa donus animasyonsuz.
-            //
-            // Bekleme ayri bir asama olarak yazilinca deger degismedigi icin
-            // sistem onu aninda geciyordu ve isik durmadan tariyordu. Gecikme
-            // taramanin kendisine ekleniyor.
-            .phaseAnimator(Phase.allCases) { content, phase in
-                content.offset(x: phase == .start ? -band : geometry.size.width)
-            } animation: { phase in
-                switch phase {
-                case .start: nil
-                case .end: .linear(duration: 1.8).delay(4.2)
-                }
-            }
+private final class BadgeSweepLayerView: UIView {
+    private let band = CAGradientLayer()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        isAccessibilityElement = false
+        band.colors = [UIColor.clear.cgColor, UIColor.white.withAlphaComponent(0.45).cgColor, UIColor.clear.cgColor]
+        band.startPoint = CGPoint(x: 0, y: 0.5)
+        band.endPoint = CGPoint(x: 1, y: 0.5)
+        layer.addSublayer(band)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let width = max(6, bounds.width * 0.5)
+        let frame = CGRect(x: -width, y: 0, width: width, height: bounds.height)
+        if band.frame != frame {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            band.frame = frame
+            CATransaction.commit()
+            stop()
         }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+        startIfVisible()
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil { stop() } else { startIfVisible() }
+    }
+
+    func stop() { band.removeAllAnimations() }
+
+    private func startIfVisible() {
+        guard window != nil, bounds.width > 0, band.animation(forKey: "sweep") == nil else { return }
+        // Gradient sabit kalir; yalnizca konum render sunucusunda hareket eder.
+        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
+        animation.values = [0, 0, bounds.width + band.bounds.width]
+        animation.keyTimes = [0, 0.7, 1]
+        animation.duration = 6
+        animation.repeatCount = .infinity
+        band.add(animation, forKey: "sweep")
     }
 }

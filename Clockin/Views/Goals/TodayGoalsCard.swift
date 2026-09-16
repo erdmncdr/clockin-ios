@@ -6,7 +6,6 @@ import SwiftUI
 struct TodayGoalsCard: View {
     @EnvironmentObject private var store: ClockStore
     @Environment(\.palette) private var palette
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
 
@@ -43,13 +42,7 @@ struct TodayGoalsCard: View {
         }
     }
 
-    /// Ayin tamamlanmis gunleri magazanin gunluk onbelleginden gelir; saniyede
-    /// bir butun kayitlari taramaz.
-    private var monthWorked: TimeInterval {
-        let calendar = Calendar.current
-        let active = store.running.map { calendar.isDate($0.start, equalTo: now, toGranularity: .month) ? $0.elapsed(at: now) : 0 } ?? 0
-        return GoalProgress.monthWorked(daily: store.dailyDurations, active: active, now: now, calendar: calendar)
-    }
+    private var monthWorked: TimeInterval { store.monthDuration(at: now) }
 
     private func row(_ title: String, _ goal: GoalProgress) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -62,7 +55,6 @@ struct TodayGoalsCard: View {
                     .font(.subheadline.weight(.bold))
                     .monospacedDigit()
                     .foregroundStyle(.primary)
-                    .contentTransition(.numericText())
                 Text("/ \(DurationText.compact(goal.target))")
                     .font(.caption)
                     .monospacedDigit()
@@ -76,13 +68,11 @@ struct TodayGoalsCard: View {
                 }
             }
             .frame(height: 6)
-            .animation(reduceMotion ? nil : .smooth(duration: 0.4), value: goal.fraction)
             Text(goal.isReached ? "Goal reached" : "\(DurationText.compact(goal.remaining)) to go")
                 .font(.caption)
+                .monospacedDigit()
                 .foregroundStyle(goal.isReached ? palette.accent : .secondary)
-                .contentTransition(.numericText())
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: goal.isReached)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title) goal")
         .accessibilityValue(goal.isReached

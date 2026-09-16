@@ -17,4 +17,27 @@ enum ChimeSchedule {
             now.addingTimeInterval(remaining + Double($0) * interval)
         }
     }
+
+    struct Reconciliation {
+        let removed: [Int]
+        let additions: [Int: Date]
+    }
+
+    static func reconcile(desired: [Date], existing: [Int: Date]) -> Reconciliation {
+        var kept = Set<Int>()
+        var missing: [Date] = []
+        for date in desired.prefix(maximumCount) {
+            if let slot = existing.keys.sorted().first(where: {
+                !kept.contains($0) && abs(existing[$0]!.timeIntervalSince(date)) < 0.01
+            }) {
+                kept.insert(slot)
+            } else {
+                missing.append(date)
+            }
+        }
+        let free = (0..<maximumCount).filter { !kept.contains($0) }
+        return Reconciliation(removed: existing.keys.filter { !kept.contains($0) }.sorted(),
+                              additions: Dictionary(uniqueKeysWithValues: zip(free, missing)))
+    }
+
 }

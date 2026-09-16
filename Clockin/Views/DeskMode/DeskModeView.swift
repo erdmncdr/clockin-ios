@@ -9,12 +9,12 @@ struct DeskModeView: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.clockinContentActive) private var contentActive
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: store.running?.isPaused == false ? 1 : 60)) { context in
-            let now = context.date
+        ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
             let elapsed = store.running == nil ? 0 : store.elapsed(at: now)
             let todayDuration = store.todayDuration(at: now)
             let todayEarnings = store.todayEarnings(at: now)
@@ -35,10 +35,11 @@ struct DeskModeView: View {
         }
         .background { palette.background.ignoresSafeArea() }
         .sensoryFeedback(trigger: store.running?.isPaused) { old, new in
+            guard contentActive, scenePhase == .active else { return nil }
             switch (old, new) {
-            case (nil, .some): .start
-            case (.some, nil): .stop
-            default: .impact(weight: .light)
+            case (nil, .some): return .start
+            case (.some, nil): return .stop
+            default: return .impact(weight: .light)
             }
         }
     }
@@ -62,14 +63,10 @@ struct DeskModeView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.4)
                 .foregroundStyle(store.running == nil ? Color.secondary : Color.primary)
-                .contentTransition(reduceMotion ? .identity : .numericText())
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: clock)
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(earnings)
                     .font(.title.weight(.semibold))
                     .foregroundStyle(palette.accent)
-                    .contentTransition(reduceMotion ? .identity : .numericText())
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: earnings)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
                     Text((earned * rate).money(code: "TRY"))
                         .font(.title3)

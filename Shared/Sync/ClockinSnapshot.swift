@@ -72,8 +72,10 @@ extension ClockinSnapshot {
     /// sistemin yenileme butcesinden dusmez; saat dolunca bir kez yenilenir.
     static func runningTimelineDates(from now: Date) -> [Date] {
         var offsets: [TimeInterval] = []
-        offsets += stride(from: 0, to: 120, by: 5).map { $0 }
-        offsets += stride(from: 120, to: 600, by: 15).map { $0 }
+        // Her girdi widget'i yeniden cizdirir; bes saniyelik adimlar sayac
+        // calistikca telefonu isitiyordu. Kurus hassasiyeti icin bu yeterli.
+        offsets += stride(from: 0, to: 120, by: 15).map { $0 }
+        offsets += stride(from: 120, to: 600, by: 30).map { $0 }
         offsets += stride(from: 600, to: 3600, by: 60).map { $0 }
         return offsets.map { now.addingTimeInterval($0) }
     }

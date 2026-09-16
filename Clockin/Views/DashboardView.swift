@@ -38,6 +38,7 @@ struct DashboardView: View {
     /// Seviye rozeti ve arkadas karti seriyi ve rozetleri acar.
     let showProgress: () -> Void
 
+    @State private var appeared = false
     @State private var sheet: DashboardSheet?
     @State private var pendingDelete: WorkSession?
     @ObservedObject private var reminder = LongSessionReminderController.shared
@@ -46,20 +47,18 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    // Iki kart ayni andan okur. Her biri kendi TimelineView'uyla
-                    // farkli anlarda yenilendiginde kazanc iki kartta bir sent
-                    // farkli gorunuyordu. Sayac islemiyorsa degerler degismez;
-                    // dakikada bir yenileme gun donumunu yakalamaya yetiyor.
-                    TimelineView(.periodic(from: .now, by: store.running?.isPaused == false ? 1 : 60)) { context in
+                    ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
+                        TimerCard(
+                            now: now,
+                            onClockOut: { sheet = .summary($0) },
+                            onStartWithElapsed: { sheet = .manualStart }
+                        )
+                    }
+                    if mascotEnabled { MascotCard(showInsights: showProgress) }
+                    ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
                         VStack(spacing: 14) {
-                            TimerCard(
-                                now: context.date,
-                                onClockOut: { sheet = .summary($0) },
-                                onStartWithElapsed: { sheet = .manualStart }
-                            )
-                            if mascotEnabled { MascotCard(showInsights: showProgress) }
-                            TodayCard(now: context.date)
-                            TodayGoalsCard(now: context.date, showInsights: showInsights)
+                            TodayCard(now: now)
+                            TodayGoalsCard(now: now, showInsights: showInsights)
                         }
                     }
                     MoneyMomentumView()
@@ -77,6 +76,9 @@ struct DashboardView: View {
             .background(palette.background)
             .toolbar(.hidden, for: .navigationBar)
         }
+        .environment(\.clockinContentActive, appeared && isSelected && sheet == nil && pendingDelete == nil && scenePhase == .active)
+        .onAppear { appeared = true }
+        .onDisappear { appeared = false }
         .sheet(item: $sheet, onDismiss: presentReminderEnd) { destination in
             Group {
                 switch destination {
@@ -250,8 +252,6 @@ private struct TodayCard: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     let now: Date
 
     var body: some View {
@@ -281,16 +281,12 @@ private struct TodayCard: View {
                     .tracking(1)
                     .foregroundStyle(.secondary)
                 Text(value)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: value)
                     .font(.headline)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if let detail {
                     Text(detail)
-                        .contentTransition(.numericText())
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: detail)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)

@@ -83,7 +83,9 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     private func enqueue() {
         revision += 1
         // Durdurma, devam eden bir izin veya ekleme istegini beklemez.
-        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        if !enabled || running == nil || running?.isPaused == true {
+            center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        }
         guard worker == nil else { return }
         worker = Task { [weak self] in
             guard let self else { return }
@@ -97,12 +99,9 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         var processed = -1
         while processed != revision {
             processed = revision
-            center.removePendingNotificationRequests(withIdentifiers: identifiers)
             await refreshPermission()
             guard processed == revision else { continue }
             errorMessage = nil
-            guard enabled, canNotify, let running, !running.isPaused else { continue }
-            let now = Date.now
             let pending = await center.pendingNotificationRequests()
             guard processed == revision else { continue }
             let otherCount = pending.filter { !identifiers.contains($0.identifier) }.count
@@ -110,16 +109,29 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             let reminderReserve = pending.contains { $0.identifier == LongSessionReminderNotification.identifier } ? 0 : 1
             let nudgeCount = pending.filter { $0.identifier.hasPrefix(NudgePlanner.prefix) }.count
             let reserved = reminderReserve + max(0, NudgePlanner.maximumPending - nudgeCount)
-            let dates = ChimeSchedule.fireDates(now: now, worked: running.elapsed(at: now),
-                isPaused: running.isPaused, enabled: enabled, intervalMinutes: interval,
+            let now = Date.now
+            let working = enabled && canNotify && running?.isPaused == false
+            let dates = ChimeSchedule.fireDates(now: now, worked: running?.elapsed(at: now) ?? 0,
+                isPaused: running?.isPaused ?? true, enabled: working, intervalMinutes: interval,
                 count: max(0, 64 - otherCount - reserved))
-            if dates.isEmpty { errorMessage = "No notification slots available. Reopen Clockin later to try again." }
-            for (index, date) in dates.enumerated() {
+            let existing = Dictionary(uniqueKeysWithValues: pending.compactMap { request -> (Int, Date)? in
+                guard let slot = identifiers.firstIndex(of: request.identifier) else { return nil }
+                let date = (request.content.userInfo["fireDate"] as? Double).map(Date.init(timeIntervalSinceReferenceDate:))
+                return (slot, date ?? .distantPast)
+            })
+            // Dakikalik tamamlama ayni bildirimleri silip eklemez.
+            let changes = ChimeSchedule.reconcile(desired: dates, existing: existing)
+            if !changes.removed.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: changes.removed.map { identifiers[$0] })
+            }
+            if working && dates.isEmpty { errorMessage = "No notification slots available. Reopen Clockin later to try again." }
+            for (index, date) in changes.additions.sorted(by: { $0.value < $1.value }) {
                 guard processed == revision else { break }
                 let content = UNMutableNotificationContent()
                 content.title = "Focus chime"
                 content.body = "Another interval of focused work."
                 content.sound = sound.sound
+                content.userInfo = ["fireDate": date.timeIntervalSinceReferenceDate]
                 let delay = date.timeIntervalSinceNow
                 guard delay > 0 else { continue }
                 let request = UNNotificationRequest(identifier: identifiers[index], content: content,

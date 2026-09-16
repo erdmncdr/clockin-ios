@@ -10,6 +10,8 @@ final class ClockStore: ObservableObject {
             cachedByDay = nil
             cachedDailyDurations = nil
             cachedConflicts = nil
+            cachedCurrentRate = nil
+            cachedMonthDuration = nil
         }
     }
     @Published var statusMessage: String?
@@ -24,6 +26,20 @@ final class ClockStore: ObservableObject {
     private var cachedSessions: [WorkSession]?
     private var cachedConflicts: Set<UUID>?
     private var cachedRateRules: [RateRule]?
+    private var cachedCurrentRate: (day: Date, rate: Double)?
+    private var cachedMonthDuration: (month: Date, duration: TimeInterval)?
+    private var cachedTimeZone: String?
+
+    private func validateCalendarCaches() {
+        let zone = calendar.timeZone.identifier
+        guard cachedTimeZone != zone else { return }
+        cachedTimeZone = zone
+        cachedByDay = nil
+        cachedDailyDurations = nil
+        cachedTotals = nil
+        cachedCurrentRate = nil
+        cachedMonthDuration = nil
+    }
     /// Tamamlanmis oturumlarin toplamlari. Ekran saniyede bir yenileniyor ve
     /// bu degerler tek bir yenilemede alti kez isteniyordu; her biri butun
     /// oturumlari bastan tariyordu.
@@ -152,7 +168,12 @@ final class ClockStore: ObservableObject {
     /// gunun ucreti, yoksa bugunun. Saniyelik hiz gostergeleri bunu kullanir
     /// ki gosterilen hiz kazancin gercekten arttigi hizla ayni olsun.
     func currentRate(at date: Date = .now) -> Double {
-        effectiveRate(at: data.running?.start ?? date, fallback: hourlyRate)
+        validateCalendarCaches()
+        let day = calendar.startOfDay(for: data.running?.start ?? date)
+        if let cached = cachedCurrentRate, cached.day == day { return cached.rate }
+        let rate = effectiveRate(at: day, fallback: hourlyRate)
+        cachedCurrentRate = (day, rate)
+        return rate
     }
 
     /// Her oturum icin cagrilir; ara dizi ayirmamak icin tek gecisde tarar.
@@ -853,15 +874,22 @@ final class ClockStore: ObservableObject {
     }
 
     func todayDuration(at date: Date = .now) -> TimeInterval {
-        duration(on: date)
+        let active = data.running.map { calendar.isDate($0.start, inSameDayAs: date) ? $0.elapsed(at: date) : 0 } ?? 0
+        return completedTotals(on: date).duration + active
     }
 
     func todayEarnings(at date: Date = .now) -> Double {
-        earnings(on: date)
+        let active = data.running.map { calendar.isDate($0.start, inSameDayAs: date) ? currentEarnings(at: date) : 0 } ?? 0
+        return completedTotals(on: date).earnings + active
+    }
+
+    func completedTotals(on date: Date) -> (duration: TimeInterval, earnings: Double) {
+        totalsByDay()[calendar.startOfDay(for: date)] ?? (0, 0)
     }
 
     /// Gun -> (sure, kazanc). Tek gecisde kurulur, `data` degisene kadar durur.
     private func totalsByDay() -> [Date: (duration: TimeInterval, earnings: Double)] {
+        validateCalendarCaches()
         if let cached = cachedByDay { return cached }
         var result: [Date: (duration: TimeInterval, earnings: Double)] = [:]
         for session in data.sessions {
@@ -880,6 +908,7 @@ final class ClockStore: ObservableObject {
     /// kez; her seferinde butun oturumlar taranip her biri icin takvim islemi
     /// yapiliyordu.
     var dailyDurations: [Date: TimeInterval] {
+        validateCalendarCaches()
         if let cached = cachedDailyDurations { return cached }
         let result = totalsByDay().mapValues(\.duration)
         cachedDailyDurations = result
@@ -908,13 +937,20 @@ final class ClockStore: ObservableObject {
     }
 
     func monthDuration(at date: Date = .now) -> TimeInterval {
-        let completed = data.sessions.filter { calendar.isDate($0.start, equalTo: date, toGranularity: .month) }
-            .reduce(0) { $0 + $1.duration }
-        let active = data.running.map { calendar.isDate($0.start, equalTo: date, toGranularity: .month) ? $0.elapsed(at: date) : 0 } ?? 0
-        return completed + active
+        validateCalendarCaches()
+        let month = calendar.dateInterval(of: .month, for: date)!
+        if cachedMonthDuration?.month != month.start {
+            let completed = dailyDurations.reduce(0) { total, entry in
+                total + (entry.key >= month.start && entry.key < month.end ? entry.value : 0)
+            }
+            cachedMonthDuration = (month.start, completed)
+        }
+        let active = data.running.map { month.contains($0.start) && $0.start < month.end ? $0.elapsed(at: date) : 0 } ?? 0
+        return (cachedMonthDuration?.duration ?? 0) + active
     }
 
     private func totals() -> (duration: TimeInterval, earnings: Double) {
+        validateCalendarCaches()
         if let cached = cachedTotals { return cached }
         var duration: TimeInterval = 0
         var earned: Double = 0

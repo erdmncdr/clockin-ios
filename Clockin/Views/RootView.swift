@@ -43,6 +43,7 @@ struct RootView: View {
                 .accessibilityHidden(showsDeskMode)
             if showsDeskMode {
                 DeskModeView(onClockOut: { deskSummary = $0 })
+                    .environment(\.clockinContentActive, deskSummary == nil)
                     .statusBarHidden()
                     .persistentSystemOverlays(.hidden)
                     .transition(.opacity)
@@ -97,7 +98,7 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView(selection: $tab) {
-            DashboardView(isSelected: tab == .today, showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
+            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil, showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()
