@@ -183,6 +183,7 @@ private struct RatePeriodEditor: View {
                 .listRowBackground(palette.surface)
             }
             .hapticFeedback(selectionFeedback)
+            .scrollDismissesKeyboard(.interactively)
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle(editing == nil ? "Add rate period" : "Edit rate period")

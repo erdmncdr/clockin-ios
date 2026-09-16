@@ -35,6 +35,8 @@ struct InsightsView: View {
                         .padding(16)
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    // Asagi kaydirmak da klavyeyi kapatir.
+                    .scrollDismissesKeyboard(.interactively)
                     .task(id: openGoalEditor) {
                         guard openGoalEditor else { return }
                         editingGoals = true

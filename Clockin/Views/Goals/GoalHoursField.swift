@@ -15,6 +15,7 @@ struct GoalHoursField: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
+        VStack(alignment: .trailing, spacing: 8) {
         HStack(spacing: 10) {
             Text(title)
             Spacer(minLength: 8)
@@ -43,6 +44,12 @@ struct GoalHoursField: View {
                     onDecrement: { setHours(GoalProgress.stepped(hours, by: -step, maximum: maximum)) })
                 .labelsHidden()
         }
+        if isFocused {
+            // Klavye araci sekmede ilk odakta cikmiyordu; Done alanin altinda durur.
+            Button("Done") { isFocused = false }
+                .font(.subheadline.weight(.semibold))
+        }
+        }
         .hapticFeedback(selectionFeedback)
         .onAppear { text = Self.format(hours) }
         .onChange(of: hours) { _, newValue in
@@ -59,14 +66,6 @@ struct GoalHoursField: View {
             if isFocused { commit() }
             isFocused = false
             pendingFocus = false
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                if isFocused {
-                    Spacer()
-                    Button("Done") { isFocused = false }
-                }
-            }
         }
     }
 
