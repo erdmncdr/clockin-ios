@@ -49,7 +49,7 @@ struct ManualStartView: View {
                 Section("Preview") {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         let start = context.date.addingTimeInterval(-elapsed)
-                        let rate = store.effectiveRate(at: context.date, fallback: store.hourlyRate)
+                        let rate = store.effectiveRate(at: start, fallback: store.hourlyRate)
                         VStack(alignment: .leading, spacing: 12) {
                             LabeledContent("Start time") {
                                 Text(start.formatted(date: .abbreviated, time: .shortened))

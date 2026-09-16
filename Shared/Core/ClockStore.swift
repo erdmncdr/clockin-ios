@@ -15,7 +15,8 @@ final class ClockStore: ObservableObject {
     @Published var statusMessage: String?
 
     private let fileURL: URL
-    private let calendar = Calendar.autoupdatingCurrent
+    private let calendar: Calendar
+    private let now: () -> Date
     private let backupDirectory: URL
 
     /// Siralanmis kopyalar. `data` her degistiginde bosaltilir; boylece
@@ -40,7 +41,10 @@ final class ClockStore: ObservableObject {
     /// alindiginda 30 dosyalik gecmis birkac saati anca kapsiyordu.
     private static let automaticBackupInterval: TimeInterval = 86_400
 
-    init(fileURL: URL? = nil) {
+    init(fileURL: URL? = nil, calendar: Calendar = .autoupdatingCurrent,
+         now: @escaping () -> Date = { .now }) {
+        self.calendar = calendar
+        self.now = now
         self.fileURL = fileURL ?? Self.defaultFileURL
         self.backupDirectory = self.fileURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
         var loadFailureMessage: String?
@@ -273,6 +277,121 @@ final class ClockStore: ObservableObject {
         return true
     }
 
+    var rateHistorySummary: RateHistorySummary {
+        let rules = rateRules
+        guard let current = rules.last, current.effectiveUntil == nil,
+              current.effectiveFrom <= calendar.startOfDay(for: now()) else { return .custom }
+        if rules.count == 1 { return .single(current.hourlyRate) }
+        guard rules.count == 2, let earlier = rules.first,
+              let end = earlier.effectiveUntil,
+              earlier.effectiveFrom <= end,
+              calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: end))
+                == calendar.startOfDay(for: current.effectiveFrom) else { return .custom }
+        return .changed(earlier: earlier.hourlyRate, current: current.hourlyRate,
+                        on: calendar.startOfDay(for: current.effectiveFrom))
+    }
+
+    var rateToday: Date { calendar.startOfDay(for: now()) }
+
+    var hasWorkBeforeToday: Bool {
+        data.sessions.contains { $0.start < rateToday }
+            || data.running.map { $0.start < rateToday } == true
+    }
+
+    private func historyStart(before day: Date) -> Date {
+        let previous = calendar.date(byAdding: .day, value: -1, to: day) ?? day
+        return calendar.startOfDay(for: ([Date(timeIntervalSince1970: 0), previous]
+            + data.sessions.map(\.start) + rateRules.map(\.effectiveFrom)
+            + [data.running?.start].compactMap { $0 }).min()!)
+    }
+
+    func proposedRates(earlier: Double?, changedOn day: Date) -> [RateRule]? {
+        guard rateHistorySummary != .custom else { return nil }
+        let day = calendar.startOfDay(for: day)
+        guard day <= rateToday else { return nil }
+        let current = effectiveRate(at: now(), fallback: hourlyRate)
+        let start = historyStart(before: day)
+        guard let earlier else {
+            return [RateRule(effectiveFrom: start, hourlyRate: current)]
+        }
+        guard earlier.isFinite, earlier >= 0,
+              let end = calendar.date(byAdding: .day, value: -1, to: day) else { return nil }
+        return [RateRule(effectiveFrom: start, effectiveUntil: end, hourlyRate: earlier),
+                RateRule(effectiveFrom: day, hourlyRate: current)]
+    }
+
+    func proposedRates(for value: Double, from day: Date?) -> [RateRule]? {
+        guard value.isFinite, value >= 0, rateHistorySummary != .custom else { return nil }
+        var rules = rateRules
+        guard let requestedDay = day else {
+            guard let index = rules.indices.last else { return nil }
+            rules[index].hourlyRate = value
+            return rules
+        }
+        let day = calendar.startOfDay(for: requestedDay)
+        guard day <= rateToday,
+              let end = calendar.date(byAdding: .day, value: -1, to: day) else { return nil }
+        if !rules.isEmpty {
+            rules[0].effectiveFrom = historyStart(before: day)
+        }
+        rules = rules.filter { $0.effectiveFrom < day }.map { rule in
+            var rule = rule
+            if rule.effectiveUntil == nil || rule.effectiveUntil! > end {
+                rule.effectiveUntil = end
+            }
+            return rule
+        }
+        rules.append(RateRule(effectiveFrom: day, hourlyRate: value))
+        return rules
+    }
+
+    func earningsImpact(ofRates proposed: [RateRule]) -> (sessions: Int, delta: Double) {
+        var count = 0
+        var delta = 0.0
+        for session in data.sessions {
+            var best: RateRule?
+            for rule in proposed where rule.applies(to: session.start, calendar: calendar) {
+                if let current = best, rule.effectiveFrom <= current.effectiveFrom { continue }
+                best = rule
+            }
+            let earned = session.duration / 3600 * (best?.hourlyRate ?? session.hourlyRate)
+            let difference = earned - earnings(for: session)
+            if abs(difference) > 0.000_001 {
+                count += 1
+                delta += difference
+            }
+        }
+        return (count, delta)
+    }
+
+    @discardableResult
+    func setRate(_ value: Double, from day: Date?) -> Bool {
+        applyRateHistory(proposedRates(for: value, from: day))
+    }
+
+    @discardableResult
+    func setEarlierRate(_ earlier: Double?, changedOn day: Date) -> Bool {
+        applyRateHistory(proposedRates(earlier: earlier, changedOn: day))
+    }
+
+    private func applyRateHistory(_ proposed: [RateRule]?) -> Bool {
+        guard let proposed, !proposed.isEmpty else {
+            statusMessage = rateHistorySummary == .custom
+                ? "Edit this custom rate schedule in Rate schedule."
+                : "Enter a nonnegative amount and a date no later than today."
+            return false
+        }
+        let previous = data
+        data.rateRules = proposed
+        syncCurrentRate()
+        guard save() else {
+            data = previous
+            return false
+        }
+        statusMessage = nil
+        return true
+    }
+
     func updateRate(_ value: Double) {
         guard value >= 0, value.isFinite else { return }
         data.hourlyRate = value
@@ -337,7 +456,7 @@ final class ClockStore: ObservableObject {
     }
 
     private func syncCurrentRate() {
-        if let current = effectiveRateRule(at: .now) {
+        if let current = effectiveRateRule(at: now()) {
             data.hourlyRate = current.hourlyRate
         }
     }

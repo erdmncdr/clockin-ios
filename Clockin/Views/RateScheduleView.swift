@@ -10,7 +10,7 @@ struct RateScheduleView: View {
     @State private var pendingDelete: RateRule?
 
     var body: some View {
-        let rules = store.rateRules
+        let rules = Array(store.rateRules.reversed())
         let currentID = store.effectiveRateRule(at: .now)?.id
 
         NavigationStack {
@@ -61,7 +61,7 @@ struct RateScheduleView: View {
                 } header: {
                     Text("Rate periods")
                 } footer: {
-                    Text("Open-ended rules can be combined with dated periods. The applicable rule with the latest start date determines the rate. Keep at least one rate period.")
+                    Text("Each period sets the hourly rate for work that starts within it. The newest period that covers a day wins.")
                 }
 
                 Section {

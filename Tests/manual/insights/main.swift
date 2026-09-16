@@ -20,7 +20,9 @@ calendar.firstWeekday = 2
 let now = date(9, 13, 12)
 @MainActor func snapshot(_ sessions: [WorkSession] = [], running: RunningSession? = nil,
                          daily: Double = 0, monthly: Double = 0) -> InsightsSnapshot {
-    InsightsSnapshot(sessions: sessions, running: running, runningEarnings: (running?.elapsed(at: now) ?? 0) / 3600 * 40,
+    InsightsSnapshot(sessions: sessions, running: running,
+                     sessionEarnings: Dictionary(uniqueKeysWithValues: sessions.map { ($0.id, $0.earnings) }),
+                     runningEarnings: (running?.elapsed(at: now) ?? 0) / 3600 * 40,
                      now: now, calendar: calendar, dailyGoal: daily, monthlyGoal: monthly)
 }
 let empty = snapshot()

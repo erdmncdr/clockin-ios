@@ -26,7 +26,7 @@ struct UsageGuideView: View {
                     topic("Review your own entries", icon: "checklist",
                           detail: "In the import review, Your own entries lists Clockin entries not covered by the incoming rows. Days in file checks only dates with imported rows; Whole range checks every day from the first to the last imported date. Review these entries and choose what to keep or delete before importing. Deletions require confirmation. Import older history first and check totals before adding newer exports.")
                     topic("Rate schedules", icon: "calendar.badge.plus",
-                          detail: "In Settings (the gear on Today), open Pay > Rate schedule. Add a rate period or tap one to edit its hourly rate, start date, and optional end date. The end date is included. If periods overlap, the applicable one with the latest start wins. Completed sessions use the rate for their start date; the running session uses the currently effective rate. Changing periods recalculates earnings.")
+                          detail: "In Settings > Pay, turn on Earlier work had a different rate and enter the change date and earlier rate. When you change the hourly rate, choose Today, Pick a date, or Always after reviewing the earnings impact. Work uses the rate for the day it started, including running sessions. Use Rate schedule for more complex periods.")
                 } header: {
                     Text("Manage your records")
                 }

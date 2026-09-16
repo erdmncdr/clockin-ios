@@ -54,8 +54,10 @@ struct InsightsSnapshot {
 
     // Kurallar store tarafinda cozulur; saf hesaplama etkin ucretleri duz girdi olarak alir.
     init(sessions: [WorkSession], running: RunningSession? = nil,
-         sessionEarnings: [UUID: Double] = [:], runningEarnings: Double = 0,
+         sessionEarnings: [UUID: Double], runningEarnings: Double = 0,
          now: Date, calendar: Calendar, dailyGoal: Double = 0, monthlyGoal: Double = 0) {
+        precondition(sessions.allSatisfy { sessionEarnings[$0.id] != nil },
+                     "Pass rule-based earnings for every completed session.")
         let today = calendar.startOfDay(for: now)
         let weekStart = calendar.date(byAdding: .day, value: -6, to: today) ?? today
         let previousStart = calendar.date(byAdding: .day, value: -13, to: today) ?? today
@@ -73,7 +75,7 @@ struct InsightsSnapshot {
         // Tum kayitlarin kazanci ve rekorlari satir basina degil, bir kez hesaplanir.
         for session in sessions {
             let day = calendar.startOfDay(for: session.start)
-            dailyEarnings[day, default: 0] += sessionEarnings[session.id] ?? session.earnings
+            dailyEarnings[day, default: 0] += sessionEarnings[session.id]!
             daily[day, default: 0] += session.duration
             let weekday = calendar.component(.weekday, from: session.start)
             let hour = calendar.component(.hour, from: session.start)

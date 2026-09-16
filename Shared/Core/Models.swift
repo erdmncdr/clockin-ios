@@ -19,6 +19,12 @@ struct WorkSession: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+enum RateHistorySummary: Equatable {
+    case single(Double)
+    case changed(earlier: Double, current: Double, on: Date)
+    case custom
+}
+
 struct RateRule: Codable, Identifiable, Hashable, Sendable {
     var id: UUID = UUID()
     var effectiveFrom: Date
