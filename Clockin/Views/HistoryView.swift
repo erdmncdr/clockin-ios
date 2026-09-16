@@ -27,7 +27,7 @@ struct HistoryView: View {
                         ForEach(EarningsRange.allCases) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    .sensoryFeedback(.selection, trigger: range)
+                    .hapticFeedback(.selection, trigger: range)
                     EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
                         now: now, latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY)

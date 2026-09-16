@@ -26,6 +26,8 @@ struct EarningsChartView: View {
         return start...interval.end
     }
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
@@ -53,7 +55,7 @@ struct EarningsChartView: View {
                 Text("DAILY EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                 Spacer()
                 if currencyCode == "USD" {
-                    Picker("Chart currency", selection: $showTRY) {
+                    Picker("Chart currency", selection: $showTRY.hapticSelection($selectionFeedback)) {
                         Text("USD").tag(false)
                         Text("TRY").tag(true)
                     }
@@ -102,10 +104,11 @@ struct EarningsChartView: View {
         // Donem ya da para birimi degisince sayilar yuvarlanarak, cubuklar
         // yeni yuksekliklerine kayarak gecsin; aniden degisen bir grafikte
         // neyin arttigi okunmuyor.
+        .hapticFeedback(selectionFeedback)
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: range)
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: showTRY)
         .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: selectedDate)
-        .sensoryFeedback(.selection, trigger: selectedDate) { _, new in new != nil }
+        .hapticFeedback(.selection, trigger: selectedDate) { _, new in new != nil }
         .onChange(of: range) { _, _ in selectedDate = nil }
         .onChange(of: currencyCode) { _, _ in selectedDate = nil }
     }

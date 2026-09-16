@@ -25,7 +25,7 @@ struct InsightsBadgesView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).card(palette)
-        .sensoryFeedback(.selection, trigger: selectedBadge?.id)
+        .hapticFeedback(.selection, trigger: selectedBadge?.id) { _, new in new != nil }
         .transaction { if reduceMotion { $0.animation = nil } }
         .sheet(item: $selectedBadge) { selected in
             InsightsBadgeDetail(badge: badges.first { $0.id == selected.id } ?? selected)
@@ -60,6 +60,7 @@ struct InsightsBadgesView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
+                    .buttonPressHaptic(false)
                     .accessibilityLabel(badge.title)
                     .accessibilityValue(badge.unlocked ? "Unlocked" : "Locked")
                     .accessibilityHint("Opens requirement and current progress")

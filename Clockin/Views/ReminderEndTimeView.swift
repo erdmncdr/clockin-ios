@@ -8,6 +8,7 @@ struct ReminderEndTimeView: View {
     @State private var end: Date
     @State private var summary: WorkSession?
     @State private var errorMessage: String?
+    @State private var sessionFeedback = HapticSignal()
 
     init(running: RunningSession) {
         self.running = running
@@ -43,6 +44,7 @@ struct ReminderEndTimeView: View {
                 }
             }
         }
+        .hapticFeedback(sessionFeedback)
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
@@ -50,19 +52,23 @@ struct ReminderEndTimeView: View {
 
     private func clockOut() {
         guard LongSessionReminderSchedule.matches(start: running.start, running: store.running) else {
+            Haptics.play(.validationFailed)
             errorMessage = "This session is no longer running."
             return
         }
         guard LongSessionReminderSchedule.validEnd(end, running: running, now: .now) else {
+            Haptics.play(.validationFailed)
             errorMessage = "Choose a time between when you last resumed and now."
             return
         }
         let saved = store.clockOut(at: end)
         SessionMirror.shared.refresh()
         guard store.running == nil, let saved else {
+            Haptics.play(.validationFailed)
             errorMessage = store.statusMessage ?? "Could not save this session."
             return
         }
+        sessionFeedback.send(.sessionEnded)
         summary = saved
     }
 }

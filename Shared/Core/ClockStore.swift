@@ -730,10 +730,11 @@ final class ClockStore: ObservableObject {
     /// - Parameter removing: silinecek kendi kayitlarinin kimlikleri. Ice
     ///   aktarma kendiliginden hicbir sey silmez; bu kume yalnizca kullanici
     ///   onizlemede acikca sectiginde dolar.
-    func importSessions(_ imported: [WorkSession], removing: Set<UUID> = []) {
+    @discardableResult
+    func importSessions(_ imported: [WorkSession], removing: Set<UUID> = []) -> Bool {
         guard imported.allSatisfy(\.hasValidDuration) else {
             statusMessage = "Invalid session duration or dates."
-            return
+            return false
         }
         let previous = data
         // Silme once yapilir: aksi halde yeni kayitlar eklendikten sonra
@@ -800,7 +801,7 @@ final class ClockStore: ObservableObject {
             }
         }
         data.sessions.append(contentsOf: fresh)
-        guard save() else { data = previous; return }
+        guard save() else { data = previous; return false }
         if fresh.isEmpty, matched == 0, corrected == 0, removed == 0 {
             statusMessage = "All entries were already imported."
         } else {
@@ -810,6 +811,7 @@ final class ClockStore: ObservableObject {
             if removed > 0 { parts.append("deleted \(removed) Clockin \(removed == 1 ? "entry" : "entries")") }
             statusMessage = parts.joined(separator: ", ") + "."
         }
+        return true
     }
 
     /// Iki kaydin ayni isi tarif ettigini kabul etmek icin gereken en az

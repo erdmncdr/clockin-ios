@@ -54,21 +54,23 @@ struct ShareStatsView: View {
     @State private var preview: UIImage?
     @State private var status: String?
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 12) {
                         SectionTitle("SHARE YOUR STATS")
-                        Picker("Privacy", selection: $privacy) {
+                        Picker("Privacy", selection: $privacy.hapticSelection($selectionFeedback)) {
                             ForEach(StatsSharePrivacy.allCases) { Text($0.rawValue).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Stats privacy")
                         Text("Private hides headline time, earnings and best-day duration. XP, level, streaks and rhythm remain visible. It is not anonymization.")
                             .font(.caption).foregroundStyle(.secondary)
-                        Picker("Page", selection: $page) {
+                        Picker("Page", selection: $page.hapticSelection($selectionFeedback)) {
                             ForEach(StatsSharePage.allCases) { Text($0.rawValue).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Preview page")
-                        Picker("Export", selection: $mode) {
+                        Picker("Export", selection: $mode.hapticSelection($selectionFeedback)) {
                             ForEach(StatsShareMode.allCases) { Text($0.rawValue).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Image pages")
                     }.padding(16).card(palette)
@@ -101,6 +103,7 @@ struct ShareStatsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
+        .hapticFeedback(selectionFeedback)
         .tint(palette.accent).fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
         .onAppear(perform: render)

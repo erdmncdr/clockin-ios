@@ -35,6 +35,8 @@ struct RootView: View {
         showsDeskMode && scenePhase == .active && store.running?.isPaused == false
     }
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         ZStack {
             // Sekmeler masa modunun altinda yasamaya devam eder; dik cevirince
@@ -49,6 +51,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .hapticFeedback(selectionFeedback)
         .animation(.easeInOut(duration: 0.25), value: showsDeskMode)
         // Mac'te her gorunum temayi `@AppStorage`'dan kendisi okuyordu.
         // Burada bir kez okunup ortamla asagi iniyor.
@@ -97,7 +100,7 @@ struct RootView: View {
     }
 
     private var tabs: some View {
-        TabView(selection: $tab) {
+        TabView(selection: $tab.hapticSelection($selectionFeedback)) {
             DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil, showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)

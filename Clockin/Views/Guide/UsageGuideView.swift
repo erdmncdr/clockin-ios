@@ -47,6 +47,8 @@ struct UsageGuideView: View {
                 Section {
                     topic("Backups and restoring", icon: "externaldrive.fill",
                           detail: "In Settings, Data > Export backup shares a portable JSON copy. Automatic backups lists saved copies with their dates and entry counts; open one to restore it. Clockin saves an automatic copy once a day while you use it. Restore from file lets you choose a JSON backup. Restoring replaces the current entries and running timer, but saves your current data first. Use Automatic backups to return to that saved copy.")
+                    topic("Haptics", icon: "hand.tap",
+                          detail: "Settings > Appearance > Haptics controls gentle feedback for taps, selections, and completed actions. Turn it off to silence Clockin feedback. Scrolling and the running timer stay silent.")
                     topic("Focus chime", icon: "bell.badge",
                           detail: "In Settings > Focus, turn on Focus chime to request notification permission. Choose 1-120 minutes of worked time and the default notification sound or ringtone. Preview needs notification permission. Pauses do not count. New sessions and interval or enable changes skip past chimes and use the next worked-time boundary. Up to 20 chimes are queued, refreshed while Clockin is open and when you return. Pausing, clocking out or cancelling clears pending chimes, also when you do it from the widget, the Live Activity or Shortcuts. iOS controls volume, silent mode, Focus, and delivery timing; there is no chime volume slider or Mac sound library.")
                     topic("Long session reminder", icon: "clock.badge.exclamationmark",

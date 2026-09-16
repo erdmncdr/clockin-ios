@@ -10,6 +10,7 @@ import SwiftUI
 struct HitTargetButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .pressHaptic(isPressed: configuration.isPressed)
             .contentShape(Rectangle())
     }
 }

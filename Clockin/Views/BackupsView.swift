@@ -61,7 +61,7 @@ struct BackupsView: View {
                 }
             }
             .animation(.smooth(duration: 0.3), value: message)
-            .sensoryFeedback(trigger: message) { _, _ in restored ? .success : .error }
+            .hapticFeedback(.destructiveConfirmation, trigger: pending?.id) { _, new in new != nil }
             .task { await reload() }
             .confirmationDialog(pending.map(title) ?? "", isPresented: Binding(
                 get: { pending != nil }, set: { if !$0 { pending = nil } }
@@ -111,6 +111,7 @@ struct BackupsView: View {
 
     private func restore(_ backup: AutomaticBackup) {
         restored = store.restoreBackup(from: backup.url)
+        Haptics.play(restored ? .backupRestored : .validationFailed)
         // Ortak mesaj baska bir islemle degisebilir; bu geri yuklemenin sonucu tutulur.
         message = store.statusMessage
         Task { await reload() }

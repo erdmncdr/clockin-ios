@@ -7,14 +7,18 @@ struct NudgeSettingsSection: View {
     @ObservedObject private var chime = FocusChimeController.shared
     @ObservedObject private var nudges = NudgeController.shared
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         Section {
             Toggle("Nudges", isOn: Binding(get: { enabled }, set: { value in
+                let changed = enabled != value
                 enabled = value
+                if changed { selectionFeedback.send(.selection) }
                 SessionMirror.shared.refresh()
                 if value { requestPermission() }
             }))
-            Picker("Tone", selection: $tone) {
+            Picker("Tone", selection: $tone.hapticSelection($selectionFeedback)) {
                 ForEach(NudgeTone.allCases, id: \.rawValue) { Text($0.rawValue).tag($0.rawValue) }
             }
             if enabled {
@@ -36,6 +40,7 @@ struct NudgeSettingsSection: View {
                 if let error = chime.errorMessage { Text(error).foregroundStyle(.red) }
             }
         }
+        .hapticFeedback(selectionFeedback)
         .onChange(of: tone) { _, _ in SessionMirror.shared.refresh() }
         .task { await chime.refreshPermission() }
     }

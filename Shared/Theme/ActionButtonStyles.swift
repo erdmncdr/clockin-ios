@@ -12,6 +12,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         configuration.label
+            .pressHaptic(isPressed: configuration.isPressed)
             .font(.headline)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
@@ -30,6 +31,7 @@ struct SecondaryActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: 13, style: .continuous)
         configuration.label
+            .pressHaptic(isPressed: configuration.isPressed)
             .font(.subheadline.weight(.semibold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
@@ -47,6 +49,7 @@ struct DangerActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: 13, style: .continuous)
         configuration.label
+            .pressHaptic(isPressed: configuration.isPressed)
             .font(.subheadline.weight(.semibold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
@@ -70,6 +73,7 @@ struct PressableButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .pressHaptic(isPressed: configuration.isPressed)
             .scaleEffect(configuration.isPressed && !reduceMotion ? scale : 1)
             .opacity(configuration.isPressed ? 0.75 : 1)
             .animation(reduceMotion ? nil : .spring(duration: 0.22, bounce: 0.35), value: configuration.isPressed)

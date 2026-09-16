@@ -11,6 +11,7 @@ struct GoalHoursField: View {
     var focus: FocusState<String?>.Binding
 
     @State private var text = ""
+    @State private var selectionFeedback = HapticSignal()
 
     var body: some View {
         HStack(spacing: 10) {
@@ -29,10 +30,11 @@ struct GoalHoursField: View {
                 .onSubmit(commit)
             Text("h").foregroundStyle(.secondary)
             Stepper(title,
-                    onIncrement: { hours = GoalProgress.stepped(hours, by: step, maximum: maximum) },
-                    onDecrement: { hours = GoalProgress.stepped(hours, by: -step, maximum: maximum) })
+                    onIncrement: { setHours(GoalProgress.stepped(hours, by: step, maximum: maximum)) },
+                    onDecrement: { setHours(GoalProgress.stepped(hours, by: -step, maximum: maximum)) })
                 .labelsHidden()
         }
+        .hapticFeedback(selectionFeedback)
         .onAppear { text = Self.format(hours) }
         .onChange(of: hours) { _, newValue in
             // Adim dugmesi ya da baska bir ekran degistirdiyse alani esitle;
@@ -53,15 +55,22 @@ struct GoalHoursField: View {
     /// da sinir disi girdi kayitli degere doner.
     private func commit() {
         if text.trimmingCharacters(in: .whitespaces).isEmpty {
-            hours = 0
+            setHours(0)
         } else if let parsed = GoalProgress.parseHours(text, maximum: maximum) {
-            hours = parsed
+            setHours(parsed)
+        } else {
+            Haptics.play(.validationFailed)
         }
         text = Self.format(hours)
     }
 
-    /// Hedef yoksa alan bos kalir ve "0" yer tutucusu gorunur; yazmadan once
-    /// silinecek bir sifir olmaz.
+    private func setHours(_ value: Double) {
+        guard value != hours else { return }
+        hours = value
+        selectionFeedback.send(.selection)
+    }
+
+    /// Hedef yoksa alan bos kalir; sifir yalnizca yer tutucudur.
     static func format(_ hours: Double) -> String {
         guard hours.isFinite, hours > 0 else { return "" }
         return hours.formatted(.number.precision(.fractionLength(0...2)).grouping(.never))

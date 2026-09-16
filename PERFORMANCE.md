@@ -21,26 +21,58 @@
 
 ## Complete haptic inventory
 
-All 14 explicit calls are SwiftUI `sensoryFeedback`; no direct UIKit, Core Haptics or AudioServices haptic calls were found. None observes elapsed time, earnings, progress, or a render counter.
+`Shared/Theme/HapticEvent.swift` contains the pure event mapping and enabled policy.
+`Shared/Theme/Haptics.swift` is the only hardware/SwiftUI adapter. It lives beside
+the shared button styles so both targets compile without project changes;
+`WIDGET_EXTENSION` excludes all playback code and makes press feedback a no-op.
+UIKit generators are allocated on first use, prepared for a deliberate action,
+and reused. There is no timer, background task, or per-render generator allocation.
 
-| File | Trigger | Event |
+Settings > Appearance > Haptics persists `Clockin.HapticsEnabled`, default true.
+Every app-controlled haptic, including the former 14 calls, passes this gate.
+Turning it off is silent. Turning it back on gives one selection confirmation.
+SwiftUI playback is also gated on the active scene; immediate UIKit playback
+requires the foreground active application. The app does not read or change the
+iOS system haptics setting.
+
+| File / interaction | Feedback | Trigger and duplicate prevention |
 | --- | --- | --- |
-| TimerCard.swift | `running?.isPaused` | Clock in, pause, resume, clock out/cancel; now gated by visible Today content |
-| DeskMode/DeskModeView.swift | `running?.isPaused` | Same actions; gated by visible, active desk mode, avoiding feedback from the underlying Today screen |
-| Insights/InsightsBadgesView.swift | `selectedBadge?.id` | Badge selection |
-| Insights/InsightsAggregateHeatmapView.swift | `selectedStart` | Period selection |
-| Insights/InsightsView.swift | `dailyGoalHours` | Daily goal edit |
-| Insights/InsightsView.swift | `monthlyGoalHours` | Monthly goal edit |
-| Insights/InsightsHeatmapView.swift | `grouping` | Grouping selection |
-| Insights/InsightsHeatmapView.swift | `selectedDay` | Day selection or selection reset |
-| Earnings/EarningsChartView.swift | `selectedDate` | Chart selection, only when non-nil |
-| HistoryView.swift | `range` | Range selection |
-| ManualEntryView.swift | `conflicts.isEmpty` | Warning when an edited entry begins overlapping another entry |
-| BackupsView.swift | `message` | Backup operation result |
-| Import/TimecardImportView.swift | `excluded` | Import row selection |
-| Import/TimecardImportView.swift | `resultToken` | Completed import |
+| ButtonStyles / ActionButtonStyles: hitTarget, pressable, Primary, Secondary, Danger | Light impact | Only false-to-true `isPressed`; never release or a held press. Semantic controls below suppress this style haptic. |
+| Today header Settings and Add; Today session rows; level badge; companion text link; goal card; radio Play/Stop; summary Done; import Done / Change source; Share PNG | Light impact | Custom button press only. Opening a sheet or changing tabs programmatically adds nothing. |
+| TimerCard and DeskMode: Clock in | Start | Local action signal; no observer of running state. |
+| TimerCard and DeskMode: Pause / Resume | Light impact | Local action signal; style feedback suppressed. |
+| TimerCard and DeskMode: Clock out; TimerCard: confirmed cancellation; ReminderEndTime: successful Clock out | Stop | Local action signal; no second feedback from the covered Today screen. |
+| Root tab bar | Selection | User-written tab binding only; notification/deep-link navigation is silent. |
+| History range; earnings chart day tap; USD/TRY picker | Selection | Range or explicit selection changes. Clearing the chart selection is silent. This checkout has no History page-swipe control. Vertical scrolling stays silent. |
+| Heatmap grouping and 4/12/all weeks; day / week / month cell; Today shortcut selecting a different cell | Selection | User selection only; no style haptic, none on reset, auto-scroll or data refresh. |
+| Badge cell | Selection | Non-nil badge selection only; style suppressed and dismissal silent. |
+| Settings Haptics, Focus companion, Desk mode, Focus chime, Nudges; Theme, Tone and Long session reminder pickers; chime interval stepper | Selection | Explicit control writes, not preference observers or normalization on appearance. |
+| Settings Earlier work toggle | Selection when enabled; Warning when requesting removal | Removal opens confirmation without a selection haptic. |
+| Goal editor daily/monthly steps and valid text commits | Selection | A changed value from the control sends one signal. The two former parent observers were removed. |
+| Rate editor Has end date | Selection | Explicit toggle binding. |
+| Import row / All / None / leftover row; Period and These entries segments | Selection | Explicit selection signal. Clearing selections after import or a new source is silent. |
+| Share stats Privacy / Page / Export segments | Selection | Explicit selection binding. |
+| Manual entry Add / Save; rate period Add / Save; rate-change prompt Today / chosen date / Always | Success notification | Only after a successful save; immediate outcome buttons have no press haptic. |
+| Automatic backup restore; Settings restore from file | Success or Error notification | Actual Bool result, not the message string. Repeating the same outcome still gives feedback. |
+| Finished timecard import | Success notification | Successful persisted import only; import action style suppressed. Failed import gives Error. |
+| Entry/rate save failures; invalid goal text; import parse/read/empty-paste failures; backup open/restore failures; invalid reminder end time | Error notification | Explicit attempted operation only. |
+| Session deletion; rate-period deletion; cancel-session prompt; import deletion prompt; backup replacement prompt; remove earlier rate prompt | Warning notification | Confirmation becomes presented, never on dismissal. No immediate press haptic on the prompt-opening action. |
+| Focus companion tap / accessibility action | Soft impact, intensity 0.6 | One direct reaction event; works with Reduce Motion without starting animation. |
 
-## Verification
+The previous overlap-warning feedback observed computed conflicts and could react
+to store changes. It is now visual only; failed saves give Error. Goal preferences,
+backup messages and import selection resets no longer act as hardware triggers.
+The remaining value triggers represent explicit UI selection or confirmation.
+Session actions retain their Start / Stop / light mapping, but no longer vibrate
+when widgets, Shortcuts, backup restore or notifications change the store.
+
+No haptic observes elapsed time, earnings, progress, rates, snapshots, scroll
+position, appearance, scene activation or companion animation frames. The
+performance changes above, including `ActiveTimeline` scheduling and disabled
+animation transactions, remain unchanged. No playback is added to widgets,
+Live Activities, intents or notification handlers.
+
+## Performance baseline verification
 
 - All 20 commands in `README.md` passed, with 851 `ok` lines. The extended rate/cache/snapshot suite reports `84 rate checks passed`; the notification reconciliation suite reports `28 chime checks passed`.
 - The new timeline-date regression failed against the original implementation and passed after the fix. Additional checks cover live/paused totals, rate boundaries, monthly rollover, cache invalidation, snapshot stability, notification top-ups and unchanged requests.
@@ -56,3 +88,19 @@ It returned `BUILD FAILED` because the sandbox denied the SwiftUI macro plugin: 
 No CPU percentage, on-device haptics, visible layout or frame pacing has been verified in this environment. Rebuild outside the sandbox, repeat the same Today/History trace with a running session, and check sheet/tab/desk transitions, inactive/background behavior, Reduce Motion and larger text sizes. Logs are in `/tmp/clockin-perf-build.log` and `/tmp/clockin-perf-checks/`.
 
 No project configuration, signing, version number, commit or push was changed.
+
+## Haptics verification
+
+- All 21 README check suites passed, with 911 `ok` lines. New output: `58 haptics checks passed`. Import and backup tests now also assert the actual success/failure result used by the outcome haptic (`26 import checks passed`, `29 backup checks passed`). Commands without a cache path used `-module-cache-path /tmp/clockin-haptics-module-cache` because the default user cache is outside the sandbox's writable roots.
+- The helper and custom button styles passed isolated Swift 6 strict-concurrency type checking against the iOS 17 Simulator target, both as app code and with `WIDGET_EXTENSION` / application-extension restrictions. All 28 changed/new production Swift files passed parsing. `git diff --check` passed.
+- The requested build was attempted on the final source:
+
+```sh
+cd iOS && xcodebuild -project Clockin.xcodeproj -scheme Clockin -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/clockin-haptics-dd build CODE_SIGNING_ALLOWED=NO
+```
+
+It exited 65 with `BUILD FAILED`: `sandbox-exec: sandbox_apply: Operation not permitted`, followed by the existing `PaletteEnvironment.swift` `@Entry` macro failing to load. A separate full-source type-check attempt also hit the sandbox's SwiftUI `@State` macro restriction. These checks do not establish a successful full app build or visible UI behavior.
+
+Logs: `/tmp/clockin-haptics-build.log`, `/tmp/clockin-haptics-checks/summary.txt`, `/tmp/clockin-haptics-typecheck.log`, `/tmp/clockin-haptics-styles-typecheck.log`, `/tmp/clockin-haptics-widget-typecheck.log`, `/tmp/clockin-haptics-parse.log`.
+
+On a phone, check every row of the inventory above with Haptics on and off. Also leave an active timer running, scroll History and the heatmap, dismiss sheets, switch Today/desk mode, background the app and operate a widget or Live Activity. Only the listed deliberate foreground actions should vibrate. Haptics cannot be felt in the simulator; device behavior and full UI integration remain unverified here.

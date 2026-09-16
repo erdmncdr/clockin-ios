@@ -19,10 +19,12 @@ struct InsightsHeatmapView: View {
         return calendar
     }
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("WORK HEATMAP")
-            Picker("Heatmap grouping", selection: $grouping) {
+            Picker("Heatmap grouping", selection: $grouping.hapticSelection($selectionFeedback)) {
                 ForEach(InsightsGrouping.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
@@ -40,8 +42,8 @@ struct InsightsHeatmapView: View {
             .transition(.opacity)
             .animation(reduceMotion ? nil : .smooth(duration: 0.28), value: grouping)
         }
+        .hapticFeedback(selectionFeedback)
         .padding(16).card(palette)
-        .sensoryFeedback(.selection, trigger: grouping)
         .transaction { if reduceMotion { $0.animation = nil } }
     }
 
@@ -51,7 +53,7 @@ struct InsightsHeatmapView: View {
         let selected = selectedDay ?? today
 
         return VStack(alignment: .leading, spacing: 12) {
-            Picker("Heatmap range", selection: $range) {
+            Picker("Heatmap range", selection: $range.hapticSelection($selectionFeedback)) {
                 Text("4 weeks").tag(4)
                 Text("12 weeks").tag(12)
                 Text("All").tag(0)
@@ -141,7 +143,7 @@ struct InsightsHeatmapView: View {
             }
             .accessibilityElement(children: .combine)
         }
-        .sensoryFeedback(.selection, trigger: selectedDay)
+        .hapticFeedback(.selection, trigger: selectedDay) { _, new in new != nil }
     }
 
     private func dayCell(_ day: Date, today: Date, selected: Date) -> some View {
@@ -164,6 +166,7 @@ struct InsightsHeatmapView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
+        .buttonPressHaptic(false)
         .disabled(day > today)
         .opacity(day > today ? 0 : 1)
         .accessibilityHidden(day > today)

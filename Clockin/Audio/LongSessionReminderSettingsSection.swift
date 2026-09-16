@@ -6,10 +6,14 @@ struct LongSessionReminderSettingsSection: View {
     @ObservedObject private var chime = FocusChimeController.shared
     @ObservedObject private var reminder = LongSessionReminderController.shared
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         Section {
             Picker("Long session reminder", selection: Binding(get: { hours }, set: { value in
+                let changed = hours != value
                 hours = value
+                if changed { selectionFeedback.send(.selection) }
                 SessionMirror.shared.refresh()
                 if value > 0, !chime.canNotify { requestPermission() }
             })) {
@@ -39,6 +43,7 @@ struct LongSessionReminderSettingsSection: View {
                 if let error = chime.errorMessage { Text(error).foregroundStyle(.red) }
             }
         }
+        .hapticFeedback(selectionFeedback)
         .task { await chime.refreshPermission() }
     }
 

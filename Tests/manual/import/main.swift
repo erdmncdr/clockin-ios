@@ -47,7 +47,7 @@ do {
     let incoming = session(10, 0, 18, 05, source: "starfleet")
     check(s.compareImportedSessions([incoming]).items.first?.kind == .matched,
           "an updated timecard row is previewed as an update, not as new work")
-    s.importSessions([incoming])
+    check(s.importSessions([incoming]), "successful import reports success for feedback")
     check(s.sessions.count == 1, "re-importing a corrected row does not append a second copy")
     check(abs(hours(s) - 8.08) < 0.01, "the day keeps one session's worth of hours")
     check(s.sessions.first?.matchedExternalSource == "starfleet",

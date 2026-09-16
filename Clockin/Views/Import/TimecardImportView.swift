@@ -45,6 +45,8 @@ struct TimecardImportView: View {
 
     init() {}
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         NavigationStack {
             Form {
@@ -118,17 +120,11 @@ struct TimecardImportView: View {
                 }
             }
         }
+        .hapticFeedback(selectionFeedback)
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
-        .sensoryFeedback(.selection, trigger: excluded)
-        .sensoryFeedback(trigger: resultToken) { _, _ in .success }
-    }
-
-    /// Sonuc ekranina gecildiginde bir kez titresim.
-    private var resultToken: Bool {
-        if case .result = phase { return true }
-        return false
+        .hapticFeedback(.destructiveConfirmation, trigger: showsDeleteConfirmation) { _, new in new }
     }
 
     @ViewBuilder private var sourceSections: some View {
@@ -165,6 +161,7 @@ struct TimecardImportView: View {
                 Task { @MainActor in
                     if pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         errorMessage = "The clipboard does not contain text."
+                        Haptics.play(.validationFailed)
                     } else {
                         text = pasted
                         errorMessage = nil
@@ -246,6 +243,7 @@ struct TimecardImportView: View {
                 }
             }
             .buttonStyle(PrimaryActionButtonStyle(palette: palette))
+            .buttonPressHaptic(false)
             .disabled(!canImport(review))
             Button("Change source") {
                 phase = .source
@@ -262,7 +260,7 @@ struct TimecardImportView: View {
     /// kullanici burada secer.
     @ViewBuilder private func leftoverSections(_ review: TimecardImportReview) -> some View {
         Section {
-            Picker("Period", selection: $scope) {
+            Picker("Period", selection: $scope.hapticSelection($selectionFeedback)) {
                 ForEach(ImportScope.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
@@ -271,7 +269,7 @@ struct TimecardImportView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                Picker("These entries", selection: $leftoverAction) {
+                Picker("These entries", selection: $leftoverAction.hapticSelection($selectionFeedback)) {
                     ForEach(LeftoverAction.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
@@ -327,6 +325,7 @@ struct TimecardImportView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard leftoverAction == .choose else { return }
+            selectionFeedback.send(.selection)
             if chosenLeftovers.contains(session.id) {
                 chosenLeftovers.remove(session.id)
             } else {
@@ -382,6 +381,7 @@ struct TimecardImportView: View {
                         let allOn = ids.isDisjoint(with: excluded)
                         Button(allOn ? "None" : "All") {
                             if allOn { excluded.formUnion(ids) } else { excluded.subtract(ids) }
+                            selectionFeedback.send(.selection)
                         }
                         .font(.caption.weight(.semibold))
                         .textCase(nil)
@@ -396,6 +396,7 @@ struct TimecardImportView: View {
         let isOn = !excluded.contains(item.id)
         return Button {
             if isOn { excluded.insert(item.id) } else { excluded.remove(item.id) }
+            selectionFeedback.send(.selection)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
@@ -422,6 +423,7 @@ struct TimecardImportView: View {
                           approvedDuration: PastedTextImporter.approvedSummaryDuration(in: text))
         } catch {
             errorMessage = error.localizedDescription
+            Haptics.play(.validationFailed)
         }
     }
 
@@ -435,6 +437,7 @@ struct TimecardImportView: View {
             prepareReview(sessions, sourceTitle: url.lastPathComponent)
         } catch {
             errorMessage = error.localizedDescription
+            Haptics.play(.validationFailed)
         }
     }
 
@@ -455,7 +458,12 @@ struct TimecardImportView: View {
 
     private func confirm(_ review: TimecardImportReview) {
         guard case .review = phase else { return }
-        store.importSessions(selected(review), removing: removalIDs(review))
+        guard store.importSessions(selected(review), removing: removalIDs(review)) else {
+            Haptics.play(.validationFailed)
+            phase = .result(store.statusMessage ?? "Could not import entries.")
+            return
+        }
+        Haptics.play(.importFinished)
         chosenLeftovers = []
         excluded = []
         leftoverAction = .keep

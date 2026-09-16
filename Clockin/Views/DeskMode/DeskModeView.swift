@@ -13,6 +13,8 @@ struct DeskModeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
 
+    @State private var sessionFeedback = HapticSignal()
+
     var body: some View {
         ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
             let elapsed = store.running == nil ? 0 : store.elapsed(at: now)
@@ -27,21 +29,14 @@ struct DeskModeView: View {
                     HStack(alignment: .center) {
                         todaySummary(duration: todayDuration, earnings: todayEarnings)
                         Spacer(minLength: 16)
-                        controls
+                        controls.buttonPressHaptic(false)
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
         }
         .background { palette.background.ignoresSafeArea() }
-        .sensoryFeedback(trigger: store.running?.isPaused) { old, new in
-            guard contentActive, scenePhase == .active else { return nil }
-            switch (old, new) {
-            case (nil, .some): return .start
-            case (.some, nil): return .stop
-            default: return .impact(weight: .light)
-            }
-        }
+        .hapticFeedback(sessionFeedback)
     }
 
     private func timerBlock(elapsed: TimeInterval, earned: Double, day: Date?) -> some View {
@@ -131,14 +126,21 @@ struct DeskModeView: View {
                             label: running.isPaused ? "Resume" : "Pause",
                             foreground: .primary, background: palette.surfaceStroke) {
                     running.isPaused ? store.resume() : store.pause()
+                    sendSessionFeedback(running.isPaused ? .sessionResumed : .sessionPaused)
                 }
                 roundButton(systemImage: "stop.fill", label: "Clock out",
                             foreground: .red, background: .red.opacity(0.18)) {
-                    if let session = store.clockOut() { onClockOut(session) }
+                    if let session = store.clockOut() {
+                        sendSessionFeedback(.sessionEnded)
+                        onClockOut(session)
+                    }
                 }
             }
         } else {
-            Button { store.clockIn() } label: {
+            Button {
+                store.clockIn()
+                sendSessionFeedback(.sessionStarted)
+            } label: {
                 Label("Clock in", systemImage: "play.fill")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 16)
@@ -161,6 +163,11 @@ struct DeskModeView: View {
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(label)
+    }
+
+    private func sendSessionFeedback(_ event: HapticEvent) {
+        guard contentActive, scenePhase == .active else { return }
+        sessionFeedback.send(event)
     }
 
     private var statusColor: Color {

@@ -16,6 +16,8 @@ struct TimerCard: View {
 
     @State private var confirmCancel = false
 
+    @State private var sessionFeedback = HapticSignal()
+
     var body: some View {
         let elapsed = DurationText.clock(store.elapsed(at: now))
         let earned = store.currentEarnings(at: now)
@@ -53,22 +55,20 @@ struct TimerCard: View {
             VStack {
                 controls
             }
+            .buttonPressHaptic(false)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: store.running != nil)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
         .card(palette)
-        .sensoryFeedback(trigger: store.running?.isPaused) { old, new in
-            guard contentActive else { return nil }
-            switch (old, new) {
-            case (nil, .some): return .start
-            case (.some, nil): return .stop
-            default: return .impact(weight: .light)
-            }
-        }
+        .hapticFeedback(sessionFeedback)
+        .hapticFeedback(.destructiveConfirmation, trigger: confirmCancel) { _, new in new }
         .alert("Cancel active session?", isPresented: $confirmCancel) {
             Button("Keep working", role: .cancel) {}
-            Button("Cancel session", role: .destructive) { store.cancelRunning() }
+            Button("Cancel session", role: .destructive) {
+                store.cancelRunning()
+                sendSessionFeedback(.sessionEnded)
+            }
         } message: {
             Text("The active time will be discarded and no earnings will be added.")
         }
@@ -92,6 +92,7 @@ struct TimerCard: View {
                 HStack(spacing: 10) {
                     Button {
                         running.isPaused ? store.resume() : store.pause()
+                        sendSessionFeedback(running.isPaused ? .sessionResumed : .sessionPaused)
                     } label: {
                         Label(running.isPaused ? "Resume" : "Pause",
                               systemImage: running.isPaused ? "play.fill" : "pause.fill")
@@ -99,7 +100,10 @@ struct TimerCard: View {
                     .buttonStyle(SecondaryActionButtonStyle(palette: palette))
 
                     Button {
-                        if let session = store.clockOut() { onClockOut(session) }
+                        if let session = store.clockOut() {
+                            sendSessionFeedback(.sessionEnded)
+                            onClockOut(session)
+                        }
                     } label: {
                         Label("Clock out", systemImage: "stop.fill")
                     }
@@ -112,7 +116,10 @@ struct TimerCard: View {
             .transition(controlTransition)
         } else {
             VStack(spacing: 12) {
-                Button { store.clockIn() } label: {
+                Button {
+                    store.clockIn()
+                    sendSessionFeedback(.sessionStarted)
+                } label: {
                     Label("Clock in", systemImage: "play.fill")
                 }
                 .buttonStyle(PrimaryActionButtonStyle(palette: palette))
@@ -127,6 +134,11 @@ struct TimerCard: View {
 
     private var controlTransition: AnyTransition {
         reduceMotion ? .identity : .opacity.combined(with: .offset(y: 5))
+    }
+
+    private func sendSessionFeedback(_ event: HapticEvent) {
+        guard contentActive else { return }
+        sessionFeedback.send(event)
     }
 
     private var statusColor: Color {

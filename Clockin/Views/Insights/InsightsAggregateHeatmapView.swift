@@ -65,7 +65,7 @@ struct InsightsAggregateHeatmapView: View {
                 .accessibilityElement(children: .combine)
             }
         }
-        .sensoryFeedback(.selection, trigger: selectedStart)
+        .hapticFeedback(.selection, trigger: selectedStart) { _, new in new != nil }
     }
 
     private func title(_ period: InsightsPeriod) -> String {
@@ -94,6 +94,7 @@ struct InsightsAggregateHeatmapView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
+        .buttonPressHaptic(false)
         .accessibilityLabel(title(period))
         .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", selected" : "")")
         .accessibilityHint("Shows period hours, earnings and available conversion below the grid")

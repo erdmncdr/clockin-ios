@@ -55,7 +55,9 @@ private struct DeleteSessionAlert: ViewModifier {
     @Binding var pending: WorkSession?
 
     func body(content: Content) -> some View {
-        content.alert(
+        content
+            .hapticFeedback(.destructiveConfirmation, trigger: pending?.id) { _, new in new != nil }
+            .alert(
             "Delete this session?",
             isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
             presenting: pending

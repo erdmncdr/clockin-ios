@@ -82,8 +82,6 @@ struct InsightsView: View {
         }
         .padding(16).card(palette)
         .animation(.smooth(duration: 0.25), value: stats.goalEstimate)
-        .sensoryFeedback(.selection, trigger: dailyGoalHours)
-        .sensoryFeedback(.selection, trigger: monthlyGoalHours)
     }
 
     private func goalRow(_ title: String, duration: TimeInterval, hours: Double) -> some View {

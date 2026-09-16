@@ -97,7 +97,6 @@ struct ManualEntryView: View {
             }
             // Saatler degistikce cakisma bolumu aniden belirip kaybolmasin.
             .animation(.smooth(duration: 0.25), value: conflicts.map(\.id))
-            .sensoryFeedback(.warning, trigger: conflicts.isEmpty) { _, isEmpty in !isEmpty }
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle(editing == nil ? "Add past entry" : "Edit entry")
@@ -123,6 +122,7 @@ struct ManualEntryView: View {
         }
         // Mesaj mağazada ortak tutuluyor; yalnizca bu kayit basarisiz
         // olduysa gosterilir, onceki bir islemin mesaji degil.
+        Haptics.play(saved ? .entrySaved : .validationFailed)
         if saved { dismiss() } else { errorMessage = store.statusMessage }
     }
 }

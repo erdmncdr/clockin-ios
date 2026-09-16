@@ -14,14 +14,18 @@ struct FocusSettingsSection: View {
     @ObservedObject private var chime = FocusChimeController.shared
     @ObservedObject private var radio = FocusRadioController.shared
 
+    @State private var selectionFeedback = HapticSignal()
+
     var body: some View {
         Section {
             Toggle("Focus chime", isOn: Binding(get: { chimeEnabled }, set: { enabled in
+                let changed = chimeEnabled != enabled
                 chimeEnabled = enabled
+                if changed { selectionFeedback.send(.selection) }
                 if enabled { Task { await chime.requestPermission() } }
             }))
             if chimeEnabled {
-                Stepper(value: $interval, in: 1...120) {
+                Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
                     LabeledContent("Every", value: "\(interval) min of work")
                 }
                 .accessibilityValue("\(interval) minutes of work")
@@ -48,6 +52,7 @@ struct FocusSettingsSection: View {
             }
             .animation(.default, value: chimeEnabled)
         }
+        .hapticFeedback(selectionFeedback)
         .task {
             // Mac'ten gelen bir ses adi iOS'ta yok; desteklenen varsayilana don.
             if FocusChimeSound(rawValue: sound) == nil { sound = FocusChimeSound.notification.rawValue }

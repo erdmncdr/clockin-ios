@@ -83,6 +83,8 @@ struct ClockinMascotStage: View {
     }
 
     private func react() {
+        guard appeared, contentActive, scenePhase == .active else { return }
+        Haptics.play(.companionReaction)
         guard moving else { return }
         var random = SystemRandomNumberGenerator()
         let reaction = MascotReaction.pick(after: lastReaction, using: &random)
