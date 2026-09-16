@@ -47,3 +47,41 @@ struct GoalProgress: Equatable {
         return (value * 100).rounded() / 100
     }
 }
+
+struct MonthlyGoalPace {
+    let dailyAverage: TimeInterval
+    let daysLeft: Int
+
+    init(recentCompleted: TimeInterval, now: Date, calendar: Calendar) {
+        dailyAverage = max(0, recentCompleted) / 7
+        let today = calendar.startOfDay(for: now)
+        let end = calendar.dateInterval(of: .month, for: now)!.end
+        daysLeft = calendar.dateComponents([.day], from: today, to: end).day ?? 0
+    }
+
+    static func includes(start: Date, now: Date) -> Bool {
+        start >= now.addingTimeInterval(-7 * 86_400) && start <= now
+    }
+
+    func projection(worked: TimeInterval) -> TimeInterval? {
+        guard dailyAverage > 0 else { return nil }
+        // Bugun zaten toplamda; tahmin yarindan ay sonuna kalan gunleri ekler.
+        return worked + dailyAverage * Double(max(0, daysLeft - 1))
+    }
+}
+
+enum GoalPrompt {
+    static let dismissedKey = "Clockin.GoalPromptDismissedAt"
+    static let configuredKey = "Clockin.HasConfiguredGoal"
+
+    static func hasGoal(daily: Double, monthly: Double) -> Bool { daily > 0 || monthly > 0 }
+
+    static func isVisible(daily: Double, monthly: Double, everConfigured: Bool,
+                          completedSessions: Int, dismissedAt: Date?, now: Date,
+                          calendar: Calendar = .current) -> Bool {
+        guard !everConfigured, !hasGoal(daily: daily, monthly: monthly), completedSessions > 0 else { return false }
+        guard let dismissedAt else { return true }
+        let retry = calendar.date(byAdding: .day, value: 7, to: dismissedAt)!
+        return now >= retry
+    }
+}

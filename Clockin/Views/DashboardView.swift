@@ -35,6 +35,7 @@ struct DashboardView: View {
     let showHistory: () -> Void
     /// Hedef karti hedeflerin duzenlendigi Insights'i acar.
     let showInsights: () -> Void
+    let setGoals: () -> Void
     /// Seviye rozeti ve arkadas karti seriyi ve rozetleri acar.
     let showProgress: () -> Void
 
@@ -58,7 +59,7 @@ struct DashboardView: View {
                     ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
                         VStack(spacing: 14) {
                             TodayCard(now: now)
-                            TodayGoalsCard(now: now, showInsights: showInsights)
+                            TodayGoalsCard(now: now, showInsights: showInsights, setGoals: setGoals)
                         }
                     }
                     MoneyMomentumView()

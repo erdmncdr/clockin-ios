@@ -7,37 +7,46 @@ struct InsightsView: View {
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @State private var editingGoals = false
-    @FocusState private var focusedGoal: String?
+    @State private var pendingDailyFocus = false
 
     @State private var shareSnapshot: StatsShareSnapshot?
 
-    init() {}
+    @Binding private var openGoalEditor: Bool
+
+    init(openGoalEditor: Binding<Bool> = .constant(false)) {
+        _openGoalEditor = openGoalEditor
+    }
 
     var body: some View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 60)) { context in
                 let stats = InsightsSnapshot(store: store, now: context.date,
                                              dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        goalsCard(stats, now: context.date)
-                        InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
-                                            currencyCode: store.currencyCode, now: context.date)
-                        totalsCard(stats)
-                        reportsCard(stats)
+                ScrollViewReader { scroll in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            goalsCard(stats, now: context.date)
+                                .id("goals")
+                            InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
+                                                currencyCode: store.currencyCode, now: context.date)
+                            totalsCard(stats)
+                            reportsCard(stats)
+                        }
+                        .padding(16)
                     }
-                    .padding(16)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .task(id: openGoalEditor) {
+                        guard openGoalEditor else { return }
+                        editingGoals = true
+                        pendingDailyFocus = true
+                        scroll.scrollTo("goals", anchor: .top)
+                        openGoalEditor = false
+                    }
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
             .background(palette.background)
             .navigationTitle("Insights")
             .toolbar {
-                // Ondalik klavyede Return yok; alan buradan birakilir.
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { focusedGoal = nil }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
@@ -52,6 +61,13 @@ struct InsightsView: View {
         }
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
+        .onDisappear {
+            pendingDailyFocus = false
+            openGoalEditor = false
+        }
+        .onChange(of: editingGoals) { _, expanded in
+            if !expanded { pendingDailyFocus = false }
+        }
     }
 
     private func goalsCard(_ stats: InsightsSnapshot, now: Date) -> some View {
@@ -68,15 +84,17 @@ struct InsightsView: View {
             // girilince ustteki satirlar degisiyor ve bolum kendiliginden
             // kapaniyordu; ikinci dokunus baska bir yere denk geliyordu.
             DisclosureGroup("Edit goals", isExpanded: $editingGoals) {
-                VStack(alignment: .leading, spacing: 14) {
-                    GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
-                                   focus: $focusedGoal)
-                    GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
-                                   focus: $focusedGoal)
-                    Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
-                        .font(.caption).foregroundStyle(.secondary)
+                if editingGoals {
+                    VStack(alignment: .leading, spacing: 14) {
+                        GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
+                                       pendingFocus: $pendingDailyFocus)
+                        GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
+                                       pendingFocus: .constant(false))
+                        Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 12)
                 }
-                .padding(.top, 12)
             }
             .font(.subheadline)
         }
@@ -162,7 +180,7 @@ struct InsightsView: View {
                 Text(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them, the same days History's 30D shows.")
+            Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).card(palette)

@@ -65,10 +65,7 @@ struct InsightsSnapshot {
         var hours: [Int: TimeInterval] = [:]
         var weekends: Set<Date> = []
         var recentCompleted: TimeInterval = 0
-        // Takvim gunleri, bugun dahil. Mac burada simdiden geriye 30x24 saat
-        // sayiyor; gecmis ekranindaki 30D ise takvim gunu sayiyor. Gece 02:00'de
-        // bu, otuz bir gun onceki gunun buyuk kismini da katiyordu ve ayni
-        // uygulamada "30 gun" icin iki ayri sayi gorunuyordu.
+        // Ritim raporu History sayfasindan bagimsiz, bugun dahil 30 takvim gunudur.
         let recentCutoff = calendar.date(byAdding: .day, value: -29, to: today) ?? today
         let priorCutoff = calendar.date(byAdding: .day, value: -59, to: today) ?? today
 
@@ -86,7 +83,7 @@ struct InsightsSnapshot {
             if [1, 7].contains(weekday) { weekends.insert(day) }
             if session.start >= recentCutoff { recentMonth += session.duration }
             else if session.start >= priorCutoff { previousMonth += session.duration }
-            if session.start >= now.addingTimeInterval(-7 * 86_400) { recentCompleted += session.duration }
+            if MonthlyGoalPace.includes(start: session.start, now: now) { recentCompleted += session.duration }
             totalDuration += session.duration
             longestSession = max(longestSession, session.duration)
             sessionCount += 1
@@ -194,17 +191,15 @@ struct InsightsGoalEstimate: Equatable {
         }
         if monthlyGoal > 0 {
             let remaining = monthlyGoal * 3600 - monthDuration
-            let average = recentCompleted / 7
+            let pace = MonthlyGoalPace(recentCompleted: recentCompleted, now: now, calendar: calendar)
+            let average = pace.dailyAverage
             if remaining <= 0 {
                 estimate.monthly = .reached
             } else if average <= 0 {
                 estimate.monthly = .unavailable
             } else {
                 let days = Int(ceil(remaining / average))
-                let today = calendar.startOfDay(for: now)
-                let monthEnd = calendar.dateInterval(of: .month, for: now)?.end ?? today
-                let daysLeft = calendar.dateComponents([.day], from: today, to: monthEnd).day ?? 0
-                estimate.monthly = .workDays(days, fitsInMonth: days <= daysLeft)
+                estimate.monthly = .workDays(days, fitsInMonth: days <= pace.daysLeft)
             }
         }
         return estimate
