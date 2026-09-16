@@ -104,7 +104,7 @@ final class SessionMirror {
             running: running,
             enabled: defaults.bool(forKey: "Clockin.ChimeEnabled"),
             interval: defaults.integer(forKey: "Clockin.ChimeIntervalMinutes"),
-            sound: defaults.string(forKey: "Clockin.ChimeSound") ?? FocusChimeSound.notification.rawValue,
+            sound: FocusChimeSound.migrate(in: defaults).rawValue,
             force: force
         )
     }

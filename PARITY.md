@@ -27,7 +27,6 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 - Global keyboard shortcuts
 - Interface size setting
 - Update check against GitHub
-- Chime sound choice and volume (iOS plays notifications at the system volume)
 - History's collapsible day groups and flat session list
 
 ## Different on purpose
@@ -39,7 +38,7 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 | Failed save | Reported | Rolled back in memory as well | Nothing unsaved stays on screen |
 | Daily goal estimate | "N days away" | A clock time | For a daily goal the Mac's count can only be 1 |
 | 30-day trend | Last 30 × 24 hours | Last 30 calendar days | Insights keeps its rolling comparison independently of History |
-| Focus chime | Timer inside the running app | Local notifications scheduled from worked time | An iPhone app is usually suspended |
+| Focus chime | Timer inside the running app, macOS system sounds and volume | Original bundled sounds; local notifications scheduled from worked time; selected volume only while Clockin is open | Background notifications use the iOS system volume |
 | History ranges | This month (default), rolling 7D, 30D, 3M, ALL | Pageable calendar W, M (default), 6M; nonpageable All | iPhone remembers the range, reopens on the current period, and filters totals and sessions by page; 6M has monthly bars |
 | Chart selection | Drag to scrub, hover for details | Tap a day (month in 6M); horizontal swipe or chevrons to page | Direction-checked paging allows vertical History scrolling |
 | Month performance | This month totals and averages | Worked-day averages, cumulative hours, dashed current goal, same-point previous month comparison, current-month projection | Projection shares Insights' completed-work 7-day pace; past months show final numbers |

@@ -1,19 +1,11 @@
+import AVFoundation
+import UIKit
 import Combine
 import Foundation
 import UserNotifications
 
-// Kritik sesler ozel yetki ister; burada yalnizca normal sistem sesleri var.
-enum FocusChimeSound: String, CaseIterable, Identifiable {
-    case notification = "Default notification"
-    var id: String { rawValue }
-    // Ringtones are reserved for incoming-call notifications and play for
-    // 30 seconds. A work reminder (including legacy ringtone preferences)
-    // must use the short notification sound instead.
-    var sound: UNNotificationSound { .default }
-}
-
 @MainActor
-final class FocusChimeController: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
+final class FocusChimeController: NSObject, ObservableObject, UNUserNotificationCenterDelegate, AVAudioPlayerDelegate {
     static let shared = FocusChimeController()
     @Published private(set) var permissionText = "Checking notification permission"
     @Published private(set) var canNotify = false
@@ -26,8 +18,11 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     private var running: RunningSession?
     private var enabled = false
     private var interval = 10
-    private var sound = FocusChimeSound.notification
+    private var sound = FocusChimeSound.defaultSound
     private var lastInput: Input?
+    private var player: AVAudioPlayer?
+    private var ownsAudioSession = false
+    private var playbackObservers: [NSObjectProtocol] = []
 
     private struct Input: Equatable {
         let running: RunningSession?
@@ -40,6 +35,20 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         super.init()
         center.delegate = self
         LongSessionReminderNotification.register(on: center)
+        let notifications = NotificationCenter.default
+        for name in [AVAudioSession.interruptionNotification, AVAudioSession.mediaServicesWereResetNotification,
+                     UIApplication.didEnterBackgroundNotification] {
+            playbackObservers.append(notifications.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
+                Task { @MainActor in self?.stopPlayback() }
+            })
+        }
+        playbackObservers.append(notifications.addObserver(forName: AVAudioSession.routeChangeNotification,
+            object: nil, queue: nil) { [weak self] notification in
+            let reason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+            if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
+                Task { @MainActor in self?.stopPlayback() }
+            }
+        })
     }
 
     // Izin isteme yalnizca kullanicinin acma hareketinden cagrilir.
@@ -70,13 +79,14 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     /// duzenlemesinde cagirir; her seferinde yirmi bildirimi silip yeniden
     /// kurmak gereksiz. On plandaki dakikalik tamamlama `force` ile gelir.
     func update(running: RunningSession?, enabled: Bool, interval: Int, sound: String, force: Bool = false) {
-        let input = Input(running: running, enabled: enabled, interval: interval, sound: sound)
+        let selected = FocusChimeSound.selected(sound)
+        let input = Input(running: running, enabled: enabled, interval: interval, sound: selected.rawValue)
         guard force || input != lastInput else { return }
         lastInput = input
         self.running = running
         self.enabled = enabled
         self.interval = interval
-        self.sound = FocusChimeSound(rawValue: sound) ?? .notification
+        self.sound = selected
         enqueue()
     }
 
@@ -130,7 +140,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 let content = UNMutableNotificationContent()
                 content.title = "Focus chime"
                 content.body = "Another interval of focused work."
-                content.sound = sound.sound
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: sound.fileName))
                 content.userInfo = ["fireDate": date.timeIntervalSinceReferenceDate]
                 let delay = date.timeIntervalSinceNow
                 guard delay > 0 else { continue }
@@ -142,17 +152,68 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         }
     }
 
-    func preview(sound raw: String) async {
-        await refreshPermission()
-        guard canNotify else { return }
-        let content = UNMutableNotificationContent()
-        content.title = "Focus chime preview"
-        content.body = "Your selected system sound."
-        content.sound = (FocusChimeSound(rawValue: raw) ?? .notification).sound
+    func preview(sound raw: String) {
+        play(FocusChimeSound.selected(raw))
+    }
+
+    func updatePlaybackVolume() {
+        player?.volume = Float(FocusChimeVolume.selected())
+    }
+
+    private func play(_ sound: FocusChimeSound) {
+        stopPlayback()
+        guard let url = Bundle.main.url(forResource: sound.fileName, withExtension: nil) else {
+            errorMessage = "Could not find the selected chime sound."
+            return
+        }
         do {
-            try await center.add(UNNotificationRequest(identifier: "Clockin.FocusChimePreview",
-                content: content, trigger: nil))
-        } catch { errorMessage = "Could not preview chime: \(error.localizedDescription)" }
+            let session = AVAudioSession.sharedInstance()
+            // Radyo ortak oturumu kullaniyor; kategorisini degistirme.
+            if !FocusRadioController.shared.isStarted {
+                try session.setCategory(.ambient, mode: .default)
+                ownsAudioSession = true
+                try session.setActive(true)
+            }
+            let player = try AVAudioPlayer(contentsOf: url)
+            self.player = player
+            player.delegate = self
+            updatePlaybackVolume()
+            guard player.prepareToPlay(), player.play() else {
+                stopPlayback()
+                errorMessage = "Could not play the selected chime."
+                return
+            }
+            errorMessage = nil
+        } catch {
+            stopPlayback()
+            errorMessage = "Could not play chime: \(error.localizedDescription)"
+        }
+    }
+
+    func stopPlayback() {
+        player?.stop()
+        player = nil
+        // Can bittiginde radyo veya baska uygulamalarin sesi kesilmesin.
+        if ownsAudioSession && !FocusRadioController.shared.isStarted {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+        ownsAudioSession = false
+    }
+
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        finishPlayback(id: ObjectIdentifier(player), succeeded: flag)
+    }
+
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: (any Error)?) {
+        finishPlayback(id: ObjectIdentifier(player), succeeded: false)
+    }
+
+    nonisolated private func finishPlayback(id: ObjectIdentifier, succeeded: Bool) {
+        Task { @MainActor [weak self] in
+            guard let self, let player = self.player, ObjectIdentifier(player) == id else { return }
+            self.stopPlayback()
+            if !succeeded { self.errorMessage = "Could not finish playing the chime." }
+        }
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -165,11 +226,11 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 LongSessionReminderController.shared.shouldPresent(start: start) ? [.sound, .banner] : []
             }
         }
-        if id == "Clockin.FocusChimePreview" { return [.sound, .banner] }
         guard id.hasPrefix("Clockin.FocusChime.") else { return [] }
         return await MainActor.run {
             guard self.enabled, let running = SharedStore.clock.running, !running.isPaused else { return [] }
-            return [.sound, .banner]
+            self.play(FocusChimeSound.migrate())
+            return [.banner]
         }
     }
 

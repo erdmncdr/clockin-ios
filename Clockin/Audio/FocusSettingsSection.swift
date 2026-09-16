@@ -10,7 +10,8 @@ struct FocusSettingsSection: View {
     @Environment(\.openURL) private var openURL
     @AppStorage("Clockin.ChimeEnabled") private var chimeEnabled = false
     @AppStorage("Clockin.ChimeIntervalMinutes") private var interval = 10
-    @AppStorage("Clockin.ChimeSound") private var sound = FocusChimeSound.notification.rawValue
+    @AppStorage("Clockin.ChimeSound") private var sound = FocusChimeSound.defaultSound.rawValue
+    @AppStorage("Clockin.ChimeVolume") private var volume = FocusChimeVolume.defaultValue
     @ObservedObject private var chime = FocusChimeController.shared
     @ObservedObject private var radio = FocusRadioController.shared
 
@@ -29,11 +30,28 @@ struct FocusSettingsSection: View {
                     LabeledContent("Every", value: "\(interval) min of work")
                 }
                 .accessibilityValue("\(interval) minutes of work")
-                LabeledContent("Sound", value: "Default notification")
-                Button("Preview chime", systemImage: "speaker.wave.2") {
-                    Task { await chime.preview(sound: sound) }
+                Picker("Sound", selection: Binding(get: {
+                    FocusChimeSound.selected(sound).rawValue
+                }, set: { selection in
+                    sound = selection
+                    chime.preview(sound: selection)
+                })) {
+                    ForEach(FocusChimeSound.allCases) { sound in
+                        Text(sound.displayName).tag(sound.rawValue)
+                    }
                 }
-                .disabled(!chime.canNotify)
+                Button("Preview", systemImage: "speaker.wave.2") {
+                    chime.preview(sound: sound)
+                }
+                VStack(alignment: .leading) {
+                    LabeledContent("Volume", value: "\(Int((FocusChimeVolume.clamped(volume) * 100).rounded()))%")
+                    Slider(value: Binding(get: { FocusChimeVolume.clamped(volume) }, set: {
+                        volume = FocusChimeVolume.clamped($0)
+                        chime.updatePlaybackVolume()
+                    }), in: FocusChimeVolume.range, step: 0.01)
+                    .accessibilityLabel("Chime volume")
+                    .accessibilityValue("\(Int((FocusChimeVolume.clamped(volume) * 100).rounded())) percent")
+                }
                 if chime.needsSystemSettings {
                     Button("Open notification settings", systemImage: "gear") {
                         if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
@@ -48,14 +66,17 @@ struct FocusSettingsSection: View {
                     Text(chime.permissionText)
                     if let error = chime.errorMessage { Text(error).foregroundStyle(.red) }
                 }
-                Text("A notification sound after every interval of worked time; pauses do not count. iOS sets the volume and follows silent mode and Focus.")
+                Text("A chime after every interval of worked time; pauses do not count. Volume applies while Clockin is open. In the background, iOS plays notification sounds at the system volume and follows silent mode and Focus.")
+                if chimeEnabled && radio.isStarted {
+                    Text("While Focus radio is playing, chimes remain audible in silent mode.")
+                }
             }
             .animation(.default, value: chimeEnabled)
         }
         .hapticFeedback(selectionFeedback)
         .task {
-            // Mac'ten gelen bir ses adi iOS'ta yok; desteklenen varsayilana don.
-            if FocusChimeSound(rawValue: sound) == nil { sound = FocusChimeSound.notification.rawValue }
+            sound = FocusChimeSound.migrate().rawValue
+            volume = FocusChimeVolume.clamped(volume)
             interval = min(120, max(1, interval == 0 ? 10 : interval))
             await chime.refreshPermission()
         }
