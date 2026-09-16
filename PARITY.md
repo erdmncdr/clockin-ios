@@ -4,13 +4,16 @@ How the two apps compare. Both store sessions in the same `ClockinData` JSON for
 
 ## Shared
 
-Timer with pause, cancel and start with elapsed time; manual entries, editing and deleting; rate schedules; USD/TRY with historical rates; earnings history with 7D, 30D, 3M and ALL; CSV and pasted timecard import with row selection; automatic backups with restore; goals; day, week and month heatmaps; reports and records; level, streaks and 46 badges; shareable stats images; the focus companion and its default mode; focus chime and focus radio; eight themes; the usage guide.
+Timer with pause, cancel and start with elapsed time; manual entries, editing and deleting; rate schedules; USD/TRY with historical rates; earnings history with 7D, 30D, 3M and ALL; CSV and pasted timecard import with row selection; automatic backups with restore; goals; day, week and month heatmaps; reports and records; level, streaks and 46 badges; shareable stats images; the focus companion with drawn clips, smooth motion, tap reactions and default modes; focus chime and focus radio; eight themes; the usage guide.
 
 ## iPhone only
 
-- Home screen and lock screen widgets
+- Home screen and lock screen widgets, with a companion still in the medium Home screen widget
 - Live Activity and Dynamic Island, with pause and clock out
 - Shortcuts and Siri actions: Clock In, Clock Out, Pause or Resume
+- iOS 18 controls for clock in/out and pause/resume in Control Center, Lock Screen slots, and the Action Button on supported iPhones
+- Companion nudges with Grumpy or Friendly tone, companion moods, and at most two daytime notifications per day
+- Long session reminder with Clock out, Set end time, and Remind in 1 hour actions
 - Haptics on timer actions, a celebration on the clock-out summary
 - Overlap warnings in History and in the entry editor
 - Desk mode: a full-screen timer in landscape that keeps the screen on while a session runs
@@ -46,4 +49,10 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 
 ```bash
 diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
+```
+
+The companion motion engine is shared by copy. Keep both files identical:
+
+```bash
+diff ../Sources/Clockin/MascotMotion.swift Shared/Mascot/MascotMotion.swift
 ```

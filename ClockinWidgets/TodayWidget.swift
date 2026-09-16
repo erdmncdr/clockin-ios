@@ -84,7 +84,9 @@ private struct TodayWidgetView: View {
             // Olculer ve dugmeler ortali; durum satiri da onlarla hizali olsun.
             status
                 .frame(maxWidth: .infinity, alignment: .center)
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                ClockinMascotStill(mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood)
+                    .frame(width: 54, height: 54)
                 if let running {
                     sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
                                   money: .subheadline.weight(.semibold), alignment: .center)

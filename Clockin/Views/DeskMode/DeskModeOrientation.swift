@@ -30,10 +30,3 @@ enum DeskMode {
         }
     }
 }
-
-final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication,
-                     supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        DeskMode.orientations
-    }
-}

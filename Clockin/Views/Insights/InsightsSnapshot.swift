@@ -138,11 +138,7 @@ struct InsightsSnapshot {
         if daily[cursor] == nil {
             cursor = calendar.date(byAdding: .day, value: -1, to: cursor) ?? cursor
         }
-        while daily[cursor] != nil {
-            currentStreak += 1
-            guard let previous = calendar.date(byAdding: .day, value: -1, to: cursor), previous < cursor else { break }
-            cursor = previous
-        }
+        currentStreak = WorkedDayStreak.length(endingOn: cursor, days: Set(daily.keys), calendar: calendar)
         // Mac ile ayni yuvarlama ve biriken seri bonuslari korunur.
         baseXP = Int(totalDuration / 3600 * 100)
         for (threshold, bonus) in [(3, 100), (7, 250), (14, 500), (30, 1_000), (60, 2_000)] {

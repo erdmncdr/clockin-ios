@@ -42,6 +42,9 @@ struct SettingsView: View {
                     if mascotEnabled {
                         companionBehavior
                     }
+                }
+                NudgeSettingsSection()
+                Section {
                     Picker("Theme", selection: $themeRaw) {
                         ForEach(ClockinThemeChoice.allCases) { theme in
                             Text(theme.rawValue).tag(theme.rawValue)
@@ -55,6 +58,7 @@ struct SettingsView: View {
                     Text("Turn the phone sideways for a large timer that keeps the screen on while you work. Turn it off to keep Clockin upright.")
                 }
                 FocusSettingsSection()
+                LongSessionReminderSettingsSection()
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)

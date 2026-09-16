@@ -16,6 +16,7 @@ struct ClockinSnapshot: Codable, Equatable, Sendable {
     var hourlyRate: Double
     var currencyCode: String
     var theme: ClockinThemeChoice = .carbon
+    var isAngry = false
 
     static let empty = ClockinSnapshot(
         day: .distantPast, completedToday: 0, earnedToday: 0,
@@ -32,6 +33,7 @@ extension ClockinSnapshot {
         running = try container.decodeIfPresent(RunningSession.self, forKey: .running)
         hourlyRate = try container.decode(Double.self, forKey: .hourlyRate)
         currencyCode = try container.decode(String.self, forKey: .currencyCode)
+        isAngry = try container.decodeIfPresent(Bool.self, forKey: .isAngry) ?? false
         // Eski dosyalarda tema yok; kullanicinin widget verisi kaybolmasin.
         theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon
     }

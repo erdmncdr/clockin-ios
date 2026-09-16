@@ -3,11 +3,8 @@ import Foundation
 
 // `LiveActivityIntent`: widget ya da Live Activity dugmesinden cagrilsa bile
 // uygulamanin surecinde calisir, boylece ekrandaki magazayla ayni ornegi
-// degistirir. Her islemden sonra widget ozeti hemen yazilir: sistem widget'i
-// intent biter bitmez yeniler, magaza degisikligini izleyen senkron ise bir
-// sonraki turda calisir ve widget eski durumu okuyabilirdi. Tipler widget
-// uzantisinda da derlenmeli ki dugmeler onlara basvurabilsin; uzantidaki dal
-// hic calismaz.
+// degistirir. Tipler widget uzantisinda da derlenmeli ki dugmeler onlara
+// basvurabilsin; uzantidaki dal hic calismaz.
 
 struct ClockInIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Clock In"
@@ -26,10 +23,12 @@ struct ClockInIntent: LiveActivityIntent {
             }
             store.resume()
             SessionMirror.shared.refresh()
+            await SessionMirror.shared.finishPendingUpdates()
             return .result(dialog: "Resumed.")
         }
         store.clockIn()
         SessionMirror.shared.refresh()
+        await SessionMirror.shared.finishPendingUpdates()
         return .result(dialog: "Clocked in.")
         #endif
     }
@@ -49,6 +48,7 @@ struct ClockOutIntent: LiveActivityIntent {
             return .result(dialog: "No session is running.")
         }
         SessionMirror.shared.refresh()
+        await SessionMirror.shared.finishPendingUpdates()
         let duration = DurationText.compact(session.duration)
         let earned = store.earnings(for: session).money(code: store.currencyCode)
         return .result(dialog: "Clocked out after \(duration), earned \(earned).")
@@ -71,11 +71,14 @@ struct TogglePauseIntent: LiveActivityIntent {
         }
         if running.isPaused {
             store.resume()
-        } else {
-            store.pause()
+            SessionMirror.shared.refresh()
+            await SessionMirror.shared.finishPendingUpdates()
+            return .result(dialog: "Resumed.")
         }
+        store.pause()
         SessionMirror.shared.refresh()
-        return .result(dialog: running.isPaused ? "Resumed." : "Paused.")
+        await SessionMirror.shared.finishPendingUpdates()
+        return .result(dialog: "Paused.")
         #endif
     }
 }

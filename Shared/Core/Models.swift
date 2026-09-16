@@ -204,3 +204,17 @@ extension Double {
         return formatted(.currency(code: code).precision(.fractionLength(minimum...maximum)))
     }
 }
+
+// Hem Insights hem hatirlaticilar, sifir sureli kayit gununu da sayar.
+enum WorkedDayStreak {
+    static func length(endingOn day: Date, days: Set<Date>, calendar: Calendar) -> Int {
+        var cursor = calendar.startOfDay(for: day)
+        var count = 0
+        while days.contains(cursor) {
+            count += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: cursor), previous < cursor else { break }
+            cursor = previous
+        }
+        return count
+    }
+}

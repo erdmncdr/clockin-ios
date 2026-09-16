@@ -7,6 +7,7 @@ private enum DashboardSheet: Identifiable {
     case edit(WorkSession)
     case summary(WorkSession)
     case manualStart
+    case reminderEnd(RunningSession)
 
     var id: String {
         switch self {
@@ -15,6 +16,7 @@ private enum DashboardSheet: Identifiable {
         case .edit(let session): "edit-\(session.id)"
         case .summary(let session): "summary-\(session.id)"
         case .manualStart: "manual-start"
+        case .reminderEnd(let running): "reminder-\(running.start.timeIntervalSinceReferenceDate)"
         }
     }
 }
@@ -25,9 +27,11 @@ struct DashboardView: View {
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
 
+    let isSelected: Bool
     let showHistory: () -> Void
     /// Hedef karti hedeflerin duzenlendigi Insights'i acar.
     let showInsights: () -> Void
@@ -36,6 +40,7 @@ struct DashboardView: View {
 
     @State private var sheet: DashboardSheet?
     @State private var pendingDelete: WorkSession?
+    @ObservedObject private var reminder = LongSessionReminderController.shared
 
     var body: some View {
         NavigationStack {
@@ -72,7 +77,7 @@ struct DashboardView: View {
             .background(palette.background)
             .toolbar(.hidden, for: .navigationBar)
         }
-        .sheet(item: $sheet) { destination in
+        .sheet(item: $sheet, onDismiss: presentReminderEnd) { destination in
             Group {
                 switch destination {
                 case .settings: SettingsView()
@@ -80,11 +85,28 @@ struct DashboardView: View {
                 case .edit(let session): ManualEntryView(editing: session)
                 case .summary(let session): SessionSummaryView(session: session)
                 case .manualStart: ManualStartView()
+                case .reminderEnd(let running): ReminderEndTimeView(running: running)
                 }
             }
             .preferredColorScheme(palette.colorScheme)
         }
         .deleteSessionAlert($pendingDelete)
+        .onChange(of: reminder.pendingEndTime, initial: true) { _, _ in routeReminderEnd() }
+        .onChange(of: isSelected) { _, _ in routeReminderEnd() }
+        .onChange(of: scenePhase) { _, _ in routeReminderEnd() }
+    }
+
+    private func routeReminderEnd() {
+        guard isSelected, scenePhase == .active, reminder.pendingEndTime != nil else { return }
+        if sheet != nil { sheet = nil } else { presentReminderEnd() }
+    }
+
+    private func presentReminderEnd() {
+        guard isSelected, scenePhase == .active else { return }
+        guard let start = reminder.pendingEndTime else { return }
+        reminder.pendingEndTime = nil
+        guard let running = store.running, running.start == start else { return }
+        sheet = .reminderEnd(running)
     }
 
     // Baslik yerine kendi ust satirimiz: solda seviye, sagda ayarlar ve ekleme.
