@@ -11,10 +11,7 @@ struct MascotCard: View {
     let showInsights: () -> Void
 
     private var state: MascotAsset {
-        if store.running?.isPaused == false { return .working }
-        if nudges.mood?.isAngry == true { return .angry }
-        guard let running = store.running else { return .idle }
-        return running.isPaused ? .paused : .working
+        MascotAsset.session(running: store.running, angry: nudges.mood?.isAngry == true)
     }
 
     var body: some View {

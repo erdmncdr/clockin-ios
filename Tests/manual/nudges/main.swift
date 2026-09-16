@@ -166,7 +166,7 @@ friendly.tone = .friendly
 let grumpyPlan = NudgePlanner.plan(quiet)
 let friendlyPlan = NudgePlanner.plan(friendly)
 check(grumpyPlan.map(\.identifier) == friendlyPlan.map(\.identifier), "tone changes preserve identifiers and dates")
-check(zip(grumpyPlan, friendlyPlan).allSatisfy { $0.imageName == "angry1" && $1.imageName == "pose2" && $0.body != $1.body }, "tone changes text and image")
+check(zip(grumpyPlan, friendlyPlan).allSatisfy { $0.imageName == "a01" && $1.imageName == "h01" && $0.body != $1.body }, "tone changes text and image")
 for tone in NudgeTone.allCases {
     for kind in NudgeKind.allCases {
         let lines = (0..<4).map { NudgeCopy.text(kind: kind, tone: tone, day: date($0, 0), calendar: calendar, remaining: 7800).body }

@@ -13,13 +13,13 @@ import Foundation
 ///
 /// Kept free of SwiftUI so it can be checked on its own.
 enum MascotMood: String, CaseIterable, Sendable {
-    case hello, celebrate, coffee, working
+    case hello, celebrate, coffee, working, angry
 
     /// Where the feet are, as a share of the image height from the top. Hops
     /// squash around this point and the shadow sits on it (site: `--feet`).
     var feet: Double {
         switch self {
-        case .hello: 0.89
+        case .hello, .angry: 0.89
         case .celebrate: 0.82
         case .working: 0.86
         case .coffee: 0.88
@@ -67,11 +67,20 @@ struct MascotLibrary: Sendable {
     init(data: Data) throws {
         let raw = try JSONDecoder().decode([String: MascotMoodClips].self, from: data)
         var moods: [MascotMood: MascotMoodClips] = [:]
-        for mood in MascotMood.allCases {
+        for mood in MascotMood.allCases where mood != .angry {
             guard let clips = raw[mood.rawValue] else {
                 throw DecodingError.valueNotFound(MascotMoodClips.self, .init(codingPath: [], debugDescription: "Missing mood \(mood.rawValue)"))
             }
             moods[mood] = clips
+        }
+        // Ayni cizim zamanlamasi; yalnizca yuz ifadesinin kareleri degisir.
+        if let hello = moods[.hello] {
+            func angryID(_ id: String) -> String { "a" + id.dropFirst() }
+            moods[.angry] = MascotMoodClips(
+                rest: angryID(hello.rest), standing: hello.standing,
+                clips: hello.clips.mapValues { $0.map { MascotStep(angryID($0.frame), $0.milliseconds) } },
+                weights: hello.weights
+            )
         }
         self.moods = moods
     }
@@ -301,7 +310,7 @@ enum MascotMotion {
     /// Seconds the pop on a mood change lasts (site: 460 ms).
     static let popDuration = 0.46
 
-    /// The small pop that marks a change of pose: 0.9 → 1.035 → 1.
+    /// The small pop that marks a change of pose: 0.9 to 1.035 to 1.
     static func pop(progress: Double) -> Double {
         let progress = min(max(progress, 0), 1)
         if progress < 0.6 {

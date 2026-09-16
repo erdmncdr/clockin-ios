@@ -15,6 +15,7 @@ final class SessionMirror {
 
     private weak var store: ClockStore?
     private var subscription: AnyCancellable?
+    private var moodSubscription: AnyCancellable?
     private var lastSnapshot: ClockinSnapshot?
     private var lastState: ClockinActivityAttributes.ContentState?
     private var isRestartingActivity = false
@@ -27,6 +28,13 @@ final class SessionMirror {
         subscription = store.objectWillChange.sink { [weak self] _ in
             Task { @MainActor in self?.sync() }
         }
+        moodSubscription = NudgeController.shared.$mood
+            .map { $0?.isAngry == true }
+            .removeDuplicates()
+            .sink { [weak self] angry in
+                // Published yeni degeri once yollar; controller tekrar okunmaz.
+                self?.syncSnapshot(angry: angry)
+            }
         sync()
     }
 
@@ -48,21 +56,30 @@ final class SessionMirror {
         // ozete eklemek ikinci bir paylasim kanali gerektirmez; tema degisimi
         // de esitsizlik yaratarak timeline ve acik etkinligi yeniler.
         let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
-        let snapshot = ClockinSnapshot(store: store, theme: theme)
+        let snapshot = syncSnapshot(angry: NudgeController.shared.mood?.isAngry == true)
+        LongSessionReminderController.shared.update(running: store.running)
+        syncChimes(running: store.running)
+        NudgeController.shared.update(store: store)
+        syncActivity(running: store.running, hourlyRate: snapshot?.hourlyRate ?? 0,
+                     earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)
+    }
+
+    @discardableResult
+    private func syncSnapshot(angry: Bool) -> ClockinSnapshot? {
+        guard let store else { return nil }
+        let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
+        var snapshot = ClockinSnapshot(store: store, theme: theme)
+        snapshot.isAngry = angry && store.running?.isPaused != false
         if snapshot != lastSnapshot {
             do {
                 try snapshot.write()
                 lastSnapshot = snapshot
                 WidgetCenter.shared.reloadAllTimelines()
             } catch {
-                // Basarisiz yazimi onbellege alma; sonraki yenileme tekrar dener.
+                // Basarisiz yazim sonraki yenilemede tekrar denenir.
             }
         }
-        LongSessionReminderController.shared.update(running: store.running)
-        syncChimes(running: store.running)
-        NudgeController.shared.update(store: store)
-        syncActivity(running: store.running, hourlyRate: snapshot.hourlyRate,
-                     earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)
+        return snapshot
     }
 
     /// Odak cani burada yeniden kurulur, gorunumde degil.

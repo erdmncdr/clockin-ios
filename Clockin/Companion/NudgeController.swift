@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import UIKit
 import UserNotifications
 
 @MainActor
@@ -124,7 +123,7 @@ final class NudgeController: ObservableObject {
 
     private func matches(_ request: UNNotificationRequest, nudge: PlannedNudge, calendar: Calendar) -> Bool {
         guard let trigger = request.trigger as? UNCalendarNotificationTrigger else { return false }
-        let imageAvailable = UIImage(named: nudge.imageName) != nil
+        let imageAvailable = MascotResources.frameURL(nudge.imageName) != nil
         return request.content.title == nudge.title && request.content.body == nudge.body
             && request.content.threadIdentifier == "Clockin.Nudges"
             && request.content.userInfo["imageName"] as? String == nudge.imageName
@@ -135,13 +134,13 @@ final class NudgeController: ObservableObject {
     }
 
     private func attachment(for nudge: PlannedNudge) -> UNNotificationAttachment? {
-        guard let data = UIImage(named: nudge.imageName)?.pngData(),
+        guard let source = MascotResources.frameURL(nudge.imageName),
               let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
         let folder = cache.appendingPathComponent("NudgeAttachments", isDirectory: true)
         let file = folder.appendingPathComponent("\(nudge.identifier).\(UUID().uuidString).png")
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try data.write(to: file, options: .atomic)
+            try FileManager.default.copyItem(at: source, to: file)
             // Sistem dosyayi eklerken kendi deposuna tasir; eklemeden once silmek gorseli dusurur.
             return try UNNotificationAttachment(identifier: nudge.imageName, url: file)
         } catch {

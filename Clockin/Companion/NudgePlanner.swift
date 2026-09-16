@@ -2,7 +2,7 @@ import Foundation
 
 enum NudgeTone: String, CaseIterable, Sendable {
     case grumpy = "Grumpy", friendly = "Friendly"
-    var imageName: String { self == .grumpy ? "angry1" : "pose2" }
+    var imageName: String { self == .grumpy ? "a01" : "h01" }
 }
 
 enum NudgeKind: String, Codable, CaseIterable, Sendable {
