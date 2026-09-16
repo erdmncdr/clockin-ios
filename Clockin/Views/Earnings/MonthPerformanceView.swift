@@ -85,9 +85,13 @@ struct MonthPerformanceView: View {
                     .accessibilityValue(DurationText.compact(point.duration))
             }
         }
-        .chartXScale(domain: interval.start...interval.end)
+        .chartXScale(domain: EarningsChartAxis.dateDomain(interval))
         .chartYScale(domain: 0...max(1, max(performance.duration, performance.goal?.target ?? 0) / 3600))
-        .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisValueLabel(format: .dateTime.day()) } }
+        .chartXAxis {
+            AxisMarks(values: EarningsChartAxis.dayMarks(in: interval)) { _ in
+                AxisValueLabel(format: .dateTime.day())
+            }
+        }
         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
         .frame(height: 160)
         .accessibilityLabel("Monthly hours and goal pace")

@@ -76,6 +76,31 @@ struct EarningsPeriod: Equatable {
     }
 }
 
+enum EarningsChartAxis {
+    static func dateDomain(_ interval: DateInterval) -> ClosedRange<Date> {
+        // Bitis sonraki donemin baslangicidir.
+        interval.start...max(interval.start, interval.end.addingTimeInterval(-1))
+    }
+
+    static func dayMarks(in interval: DateInterval, calendar: Calendar = .current) -> [Date] {
+        let days = calendar.dateComponents([.day], from: interval.start, to: interval.end).day ?? 1
+        guard days > 2 else { return [interval.start] }
+        // Son etiket saga yakin olunca kesiliyordu; son isaret donemin son
+        // ceyreginden once kalir. Takvim adimlari DST'de de esit kalir.
+        let step = max(1, days / 4)
+        return (0..<min(4, days - 1)).compactMap {
+            calendar.date(byAdding: .day, value: $0 * step, to: interval.start)
+        }
+    }
+
+    static func earningsUpperBound(_ maximum: Double) -> Double {
+        guard maximum.isFinite, maximum > 0 else { return 1 }
+        let step = pow(10, floor(log10(maximum))) / 20
+        // Yuvarlama sonrasi yuzde 10-15 bosluk kalir.
+        return ceil(maximum * 1.1 / step - 1e-10) * step
+    }
+}
+
 enum EarningsSwipe {
     static func isHorizontal(x: Double, y: Double) -> Bool { abs(x) > abs(y) * 2 }
     static func page(x: Double, y: Double) -> Int? {

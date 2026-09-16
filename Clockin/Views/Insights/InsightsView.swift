@@ -7,7 +7,7 @@ struct InsightsView: View {
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @State private var editingGoals = false
-    @FocusState private var focusedGoal: String?
+    @State private var pendingDailyFocus = false
 
     @State private var shareSnapshot: StatsShareSnapshot?
 
@@ -38,11 +38,8 @@ struct InsightsView: View {
                     .task(id: openGoalEditor) {
                         guard openGoalEditor else { return }
                         editingGoals = true
+                        pendingDailyFocus = true
                         scroll.scrollTo("goals", anchor: .top)
-                        // Alan acildiktan sonra odaklanir; sekme kapanirsa gorev iptal olur.
-                        do { try await Task.sleep(for: .milliseconds(650)) }
-                        catch { return }
-                        focusedGoal = "Daily"
                         openGoalEditor = false
                     }
                 }
@@ -50,11 +47,6 @@ struct InsightsView: View {
             .background(palette.background)
             .navigationTitle("Insights")
             .toolbar {
-                // Ondalik klavyede Return yok; alan buradan birakilir.
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { focusedGoal = nil }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
@@ -69,6 +61,13 @@ struct InsightsView: View {
         }
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
+        .onDisappear {
+            pendingDailyFocus = false
+            openGoalEditor = false
+        }
+        .onChange(of: editingGoals) { _, expanded in
+            if !expanded { pendingDailyFocus = false }
+        }
     }
 
     private func goalsCard(_ stats: InsightsSnapshot, now: Date) -> some View {
@@ -85,15 +84,17 @@ struct InsightsView: View {
             // girilince ustteki satirlar degisiyor ve bolum kendiliginden
             // kapaniyordu; ikinci dokunus baska bir yere denk geliyordu.
             DisclosureGroup("Edit goals", isExpanded: $editingGoals) {
-                VStack(alignment: .leading, spacing: 14) {
-                    GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
-                                   focus: $focusedGoal)
-                    GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
-                                   focus: $focusedGoal)
-                    Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
-                        .font(.caption).foregroundStyle(.secondary)
+                if editingGoals {
+                    VStack(alignment: .leading, spacing: 14) {
+                        GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
+                                       pendingFocus: $pendingDailyFocus)
+                        GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
+                                       pendingFocus: .constant(false))
+                        Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 12)
                 }
-                .padding(.top, 12)
             }
             .font(.subheadline)
         }

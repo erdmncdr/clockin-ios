@@ -162,4 +162,50 @@ check(EarningsSwipe.page(x: 60, y: 5) == -1 && EarningsSwipe.page(x: -60, y: 5) 
 check(EarningsSwipe.page(x: 20, y: 0) == nil, "short movement does not page")
 check(EarningsSwipe.page(x: 60, y: 45) == nil && EarningsSwipe.page(x: 5, y: 80) == nil, "diagonal and vertical movement do not page")
 check(!EarningsSwipe.isHorizontal(x: 20, y: 10), "direction requires more than two-to-one ratio")
+// Eksenler ay disina tasmaz; son sutun etiket icin kullanilmaz.
+for (year, month, days) in [(2025, 2, 28), (2024, 2, 29), (2026, 4, 30), (2026, 8, 31), (2026, 9, 30), (2025, 12, 31), (2026, 3, 31), (2026, 11, 30)] {
+    let start = date(year, month, 1)
+    let end = calendar.date(byAdding: .month, value: 1, to: start)!
+    let interval = DateInterval(start: start, end: end)
+    let domain = EarningsChartAxis.dateDomain(interval)
+    let marks = EarningsChartAxis.dayMarks(in: interval, calendar: calendar)
+    check(domain.lowerBound == start && domain.upperBound < end,
+          "axis excludes next month: \(year)/\(month)")
+    check(calendar.isDate(domain.upperBound, inSameDayAs: date(year, month, days)),
+          "axis includes full last day: \(year)/\(month)")
+    check(marks.count == 4 && marks.first == start && Set(marks).count == 4,
+          "four distinct day marks: \(year)/\(month)")
+    check(marks.allSatisfy { domain.contains($0) && $0 < date(year, month, days) },
+          "labels stay before last column: \(year)/\(month)")
+    check(calendar.dateComponents([.day], from: marks.last!, to: end).day! >= 6,
+          "last label leaves room for its text: \(year)/\(month)")
+    let gaps = zip(marks, marks.dropFirst()).map { calendar.dateComponents([.day], from: $0, to: $1).day! }
+    check(Set(gaps).count == 1, "day marks evenly spaced across DST: \(year)/\(month)")
+}
+for interval in [week.interval, spring.interval, fall.interval] {
+    let marks = EarningsChartAxis.dayMarks(in: interval, calendar: calendar)
+    check(marks.count == 4 && marks.last! < calendar.date(byAdding: .day, value: -1, to: interval.end)!,
+          "weekly marks avoid last column")
+}
+let singleDay = DateInterval(start: date(2026, 9, 17), end: date(2026, 9, 18))
+check(EarningsChartAxis.dayMarks(in: singleDay, calendar: calendar) == [singleDay.start], "single-day All has one mark")
+let longArchive = DateInterval(start: date(2020, 1, 1), end: date(2026, 9, 18))
+check(EarningsChartAxis.dayMarks(in: longArchive, calendar: calendar).count == 4, "All marks stay bounded")
+for maximum in [0.01, 0.9, 1, 19, 185, 200, 999, 6500, 100_000] {
+    let upper = EarningsChartAxis.earningsUpperBound(maximum)
+    check(upper >= maximum * 1.1 - 0.000001 && upper <= maximum * 1.15 + 0.000001,
+          "earnings headroom for \(maximum)")
+}
+check(EarningsChartAxis.earningsUpperBound(200) == 220, "200 has rounded headroom")
+check(EarningsChartAxis.earningsUpperBound(0) == 1, "empty earnings have nonzero domain")
+check(EarningsChartAxis.earningsUpperBound(-20) == 1, "negative maximum has safe domain")
+let twoDays = DateInterval(start: date(2026, 9, 16), end: date(2026, 9, 18))
+check(EarningsChartAxis.dayMarks(in: twoDays, calendar: calendar) == [twoDays.start],
+      "two-day All avoids last column")
+let augustAxis = EarningsChartAxis.dateDomain(period(.month, date(2026, 8, 15)).interval)
+check(augustAxis.contains(date(2026, 8, 31, 23)) && !augustAxis.contains(date(2026, 9, 1)),
+      "August includes final bar but never September")
+check(EarningsChartAxis.earningsUpperBound(.nan) == 1 && EarningsChartAxis.earningsUpperBound(.infinity) == 1,
+      "invalid earnings have safe domain")
+
 print("\(checks) earnings checks passed")

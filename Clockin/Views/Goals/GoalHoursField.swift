@@ -8,9 +8,10 @@ struct GoalHoursField: View {
     @Binding var hours: Double
     let step: Double
     let maximum: Double
-    var focus: FocusState<String?>.Binding
+    @Binding var pendingFocus: Bool
 
     @State private var text = ""
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -24,9 +25,17 @@ struct GoalHoursField: View {
                 .padding(.vertical, 6)
                 .padding(.horizontal, 8)
                 .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .focused(focus, equals: title)
+                .focused($isFocused)
                 .accessibilityLabel("\(title) goal in hours")
                 .onSubmit(commit)
+                .task(id: pendingFocus) {
+                    guard pendingFocus else { return }
+                    // Odak alanin kendi yasam dongusunde, baglanti kurulduktan sonra istenir.
+                    await Task.yield()
+                    guard !Task.isCancelled, pendingFocus else { return }
+                    isFocused = true
+                    pendingFocus = false
+                }
             Text("h").foregroundStyle(.secondary)
             Stepper(title,
                     onIncrement: { hours = GoalProgress.stepped(hours, by: step, maximum: maximum) },
@@ -41,9 +50,21 @@ struct GoalHoursField: View {
                 text = Self.format(newValue)
             }
         }
-        .onChange(of: focus.wrappedValue) { oldValue, newValue in
-            guard oldValue == title, newValue != title else { return }
-            commit()
+        .onChange(of: isFocused) { _, focused in
+            if !focused { commit() }
+        }
+        .onDisappear {
+            if isFocused { commit() }
+            isFocused = false
+            pendingFocus = false
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if isFocused {
+                    Spacer()
+                    Button("Done") { isFocused = false }
+                }
+            }
         }
     }
 

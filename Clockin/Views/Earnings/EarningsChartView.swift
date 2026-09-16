@@ -13,6 +13,7 @@ struct EarningsChartView: View {
     let pageDirection: Int
     let onPage: (Int) -> Void
     @State private var selectedDate: Date?
+    @ScaledMetric(relativeTo: .caption) private var axisTopPadding = 10.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var converting: Bool { showTRY && currencyCode == "USD" }
@@ -21,10 +22,10 @@ struct EarningsChartView: View {
         guard let selectedDate else { return nil }
         return snapshot.points.first { Calendar.current.isDate($0.day, inSameDayAs: selectedDate) }
     }
-    private var domain: ClosedRange<Date> {
+    private var chartInterval: DateInterval {
         let interval = snapshot.interval
         let start = range == .all ? (snapshot.points.first?.day ?? Calendar.current.startOfDay(for: interval.end.addingTimeInterval(-1))) : interval.start
-        return start...interval.end
+        return DateInterval(start: start, end: interval.end)
     }
 
     var body: some View {
@@ -166,7 +167,7 @@ struct EarningsChartView: View {
         let values = range == .sixMonths
             ? snapshot.monthlyBars().compactMap { converting ? $0.converted : $0.earned }
             : snapshot.points.compactMap { converting ? $0.converted : $0.earned }
-        return max(1, values.max() ?? 1)
+        return EarningsChartAxis.earningsUpperBound(values.max() ?? 0)
     }
 
     private var chart: some View {
@@ -200,14 +201,17 @@ struct EarningsChartView: View {
                 }
             }
         }
-        .chartXScale(domain: domain)
+        .chartXScale(domain: EarningsChartAxis.dateDomain(chartInterval))
         .chartYScale(domain: 0...chartMaximum)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: range == .sixMonths ? 6 : 4)) { _ in
-                AxisGridLine()
-                if range == .sixMonths {
+            if range == .sixMonths {
+                AxisMarks(values: .automatic(desiredCount: 6)) { _ in
+                    AxisGridLine()
                     AxisValueLabel(format: .dateTime.month(.abbreviated))
-                } else {
+                }
+            } else {
+                AxisMarks(values: EarningsChartAxis.dayMarks(in: chartInterval)) { _ in
+                    AxisGridLine()
                     AxisValueLabel(format: .dateTime.day().month(.abbreviated))
                 }
             }
@@ -226,6 +230,8 @@ struct EarningsChartView: View {
             }
         }
         .frame(height: 190)
+        // Sayfa kirpmasi ust eksen etiketine degmesin.
+        .padding(.top, axisTopPadding)
     }
 
     private func detail(_ point: EarningsDay) -> some View {
