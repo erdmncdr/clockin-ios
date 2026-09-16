@@ -14,7 +14,7 @@ struct RootView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @AppStorage("Clockin.ChimeEnabled") private var chimeEnabled = false
     @AppStorage("Clockin.ChimeIntervalMinutes") private var chimeInterval = 10
-    @AppStorage("Clockin.ChimeSound") private var chimeSound = FocusChimeSound.notification.rawValue
+    @AppStorage("Clockin.ChimeSound") private var chimeSound = FocusChimeSound.defaultSound.rawValue
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     @AppStorage(NudgePlanner.enabledKey) private var nudgesEnabled = true
     @AppStorage(NudgePlanner.toneKey) private var nudgeTone = NudgeTone.grumpy.rawValue

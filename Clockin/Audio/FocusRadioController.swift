@@ -76,6 +76,7 @@ final class FocusRadioController: ObservableObject {
             return
         }
         errorMessage = nil
+        FocusChimeController.shared.stopPlayback()
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default)
@@ -118,6 +119,7 @@ final class FocusRadioController: ObservableObject {
     }
 
     func stop() {
+        FocusChimeController.shared.stopPlayback()
         monitor?.cancel()
         monitor = nil
         player?.pause()

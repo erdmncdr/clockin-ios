@@ -27,7 +27,6 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 - Global keyboard shortcuts
 - Interface size setting
 - Update check against GitHub
-- Chime sound choice and volume (iOS plays notifications at the system volume)
 - History's collapsible day groups and flat session list
 
 ## Different on purpose
@@ -39,7 +38,7 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 | Failed save | Reported | Rolled back in memory as well | Nothing unsaved stays on screen |
 | Daily goal estimate | "N days away" | A clock time | For a daily goal the Mac's count can only be 1 |
 | 30-day trend | Last 30 × 24 hours | Last 30 calendar days | Matches History's 30D |
-| Focus chime | Timer inside the running app | Local notifications scheduled from worked time | An iPhone app is usually suspended |
+| Focus chime | Timer inside the running app, macOS system sounds and volume | Original bundled sounds; local notifications scheduled from worked time; selected volume only while Clockin is open | Background notifications use the iOS system volume |
 | Chart selection | Drag to scrub, hover for details | Tap a day | Dragging over the chart blocked scrolling History |
 | Widget theme | Not applicable | Widgets and the Live Activity follow the app theme | |
 
