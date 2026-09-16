@@ -29,15 +29,13 @@ struct InsightsView: View {
                     .padding(16)
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                // Klavye araci sekmede ilk odakta cikmiyordu; Done kartta,
+                // asagi kaydirmak da klavyeyi kapatir.
+                .scrollDismissesKeyboard(.interactively)
             }
             .background(palette.background)
             .navigationTitle("Insights")
             .toolbar {
-                // Ondalik klavyede Return yok; alan buradan birakilir.
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { focusedGoal = nil }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
@@ -75,6 +73,12 @@ struct InsightsView: View {
                                    focus: $focusedGoal)
                     Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
                         .font(.caption).foregroundStyle(.secondary)
+                    if focusedGoal != nil {
+                        // Ondalik klavyede Return yok; alan her zaman buradan da birakilabilsin.
+                        Button("Done") { focusedGoal = nil }
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
                 .padding(.top, 12)
             }
