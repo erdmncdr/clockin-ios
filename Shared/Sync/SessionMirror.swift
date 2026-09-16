@@ -89,7 +89,7 @@ final class SessionMirror {
         // kapanmadan ikinci bir etkinlik istenebilirdi.
         guard !isRestartingActivity else { return }
         let activities = Activity<ClockinActivityAttributes>.activities
-        let content = ActivityContent(state: state, staleDate: nil)
+        let content = ActivityContent(state: state, staleDate: state.staleDate)
         // Para birimi yalnizca etkinlik baslatilirken sabit alanlara yaziliyor;
         // guncellemeler onu degistiremez. Birim degistiyse etkinlik kapatilip
         // yeni birimle yeniden baslatilir, yoksa kilit ekrani eski birimde kalir.

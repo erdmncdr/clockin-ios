@@ -60,6 +60,22 @@ extension ClockinSnapshot {
         return completed + active
     }
 
+    /// Calisan seans icin widget girdilerinin zamanlari, bir saatlik.
+    ///
+    /// Sure metni kendisi sayar, tutar sayamaz; her girdi o anin tutarini
+    /// yazar. Dakikada bir girdi, devam ettirmeden ya da clock in'den sonra
+    /// tutari tam bir dakika donuk birakiyordu ve widget bozuk gorunuyordu.
+    /// Bu yuzden ilk iki dakika bes saniyede bir, onuncu dakikaya kadar on
+    /// bes saniyede bir, sonra dakikada bir. Girdiler onceden uretildigi icin
+    /// sistemin yenileme butcesinden dusmez; saat dolunca bir kez yenilenir.
+    static func runningTimelineDates(from now: Date) -> [Date] {
+        var offsets: [TimeInterval] = []
+        offsets += stride(from: 0, to: 120, by: 5).map { $0 }
+        offsets += stride(from: 120, to: 600, by: 15).map { $0 }
+        offsets += stride(from: 600, to: 3600, by: 60).map { $0 }
+        return offsets.map { now.addingTimeInterval($0) }
+    }
+
     static func load(from url: URL = AppGroup.snapshotURL) -> ClockinSnapshot? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(ClockinSnapshot.self, from: data)

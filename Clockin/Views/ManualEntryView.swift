@@ -50,11 +50,17 @@ struct ManualEntryView: View {
     private var crossesMidnight: Bool { combine(endTime) < resolvedStart }
 
     private var resolvedEnd: Date {
-        let end = combine(endTime)
-        return crossesMidnight ? end.addingTimeInterval(86_400) : end
+        EntryTimes.end(start: resolvedStart, end: combine(endTime), calendar: .current)
     }
 
-    private var duration: TimeInterval { resolvedEnd.timeIntervalSince(resolvedStart) }
+    /// Kaydedilecek sure, magazanin kaydedecegiyle ayni hesap. Duraklatilmis
+    /// ya da ice aktarilmis bir kayitta saatler degisince mola korunur;
+    /// onizleme araligin tamamini gosterip kaydedilenden fazla goruyordu.
+    private var duration: TimeInterval {
+        guard let editing else { return resolvedEnd.timeIntervalSince(resolvedStart) }
+        let times = savedTimes(for: editing)
+        return EntryTimes.workedDuration(start: times.start, end: times.end, replacing: editing)
+    }
 
     /// Bu saatlerin uzerine bindigi kayitlar.
     ///
