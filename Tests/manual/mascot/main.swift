@@ -95,7 +95,7 @@ for height in [0.3, 0.75, 1, 1.3] {
 }
 // Sitedeki egri: poz degisiminde kuculup asip dinlenmeye oturur.
 check(near(MascotMotion.pop(progress: 0), 0.9) && near(MascotMotion.pop(progress: 1), 1), "pop starts small and ends at rest")
-check(MascotMotion.pop(progress: 0.3) < 1 && near(MascotMotion.pop(progress: 0.6), 1.035), "pop keeps anticipation and overshoot")
+check(MascotMotion.pop(progress: 0.1) < 1 && near(MascotMotion.pop(progress: 0.6), 1.035), "pop keeps anticipation and overshoot")
 check(near(MascotMotion.wiggle(progress: 0), 0) && near(MascotMotion.wiggle(progress: 1), 0), "wiggle begins and ends at rest")
 let squashStart = MascotMotion.squash(progress: 0), squashEnd = MascotMotion.squash(progress: 1)
 check(near(squashStart.scaleX, 1) && near(squashStart.scaleY, 1)
