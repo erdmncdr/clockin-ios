@@ -35,6 +35,7 @@ struct DashboardView: View {
     let showHistory: () -> Void
     /// Hedef karti hedeflerin duzenlendigi Insights'i acar.
     let showInsights: () -> Void
+    let setGoals: () -> Void
     /// Seviye rozeti ve arkadas karti seriyi ve rozetleri acar.
     let showProgress: () -> Void
 
@@ -59,7 +60,7 @@ struct DashboardView: View {
                             )
                             if mascotEnabled { MascotCard(showInsights: showProgress) }
                             TodayCard(now: context.date)
-                            TodayGoalsCard(now: context.date, showInsights: showInsights)
+                            TodayGoalsCard(now: context.date, showInsights: showInsights, setGoals: setGoals)
                         }
                     }
                     MoneyMomentumView()

@@ -1,8 +1,5 @@
 import SwiftUI
 
-/// Bugun ekraninda gunluk ve aylik hedefin cubuklari. Hedef yoksa hic
-/// gorunmez; bos bir kart ekranda yer tutmasin. Dokununca hedeflerin
-/// duzenlendigi Insights acilir.
 struct TodayGoalsCard: View {
     @EnvironmentObject private var store: ClockStore
     @Environment(\.palette) private var palette
@@ -10,36 +7,60 @@ struct TodayGoalsCard: View {
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
 
+    @AppStorage(GoalPrompt.dismissedKey) private var dismissedTimestamp = 0.0
+    @AppStorage(GoalPrompt.configuredKey) private var everConfigured = false
+
     let now: Date
     let showInsights: () -> Void
+    let setGoals: () -> Void
 
     var body: some View {
         let daily = GoalProgress(worked: store.todayDuration(at: now), hours: dailyGoalHours)
         let monthly = GoalProgress(worked: monthWorked, hours: monthlyGoalHours)
-        if daily != nil || monthly != nil {
-            Button(action: showInsights) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label("GOALS", systemImage: "target")
-                            .font(.caption2.weight(.bold))
-                            .tracking(1)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+        Group {
+            if daily != nil || monthly != nil {
+                Button(action: showInsights) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("GOALS", systemImage: "target")
+                                .font(.caption2.weight(.bold))
+                                .tracking(1)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        if let daily { row("Today", daily) }
+                        if let monthly { row("This month", monthly) }
                     }
-                    if let daily { row("Today", daily) }
-                    if let monthly { row("This month", monthly) }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable(scale: 0.98))
+                .card(palette)
+                .accessibilityHint("Opens Insights, where goals are edited")
+                .transition(.opacity)
+            } else if GoalPrompt.isVisible(daily: dailyGoalHours, monthly: monthlyGoalHours,
+                everConfigured: everConfigured, completedSessions: store.sessions.count,
+                dismissedAt: dismissedTimestamp == 0 ? nil : Date(timeIntervalSince1970: dismissedTimestamp), now: now) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Set a daily or monthly goal to track your progress")
+                        .font(.subheadline)
+                    HStack {
+                        Button("Set goals", action: setGoals)
+                            .buttonStyle(.borderedProminent)
+                        Spacer()
+                        Button("Not now") { dismissedTimestamp = now.timeIntervalSince1970 }
+                            .buttonStyle(.borderless)
+                            .accessibilityHint("Hides this reminder for 7 days")
+                    }
+                    .font(.subheadline.weight(.semibold))
                 }
                 .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+                .card(palette)
             }
-            .buttonStyle(.pressable(scale: 0.98))
-            .card(palette)
-            .accessibilityHint("Opens Insights, where goals are edited")
-            .transition(.opacity)
         }
     }
 

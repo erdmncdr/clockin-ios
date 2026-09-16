@@ -11,24 +11,41 @@ struct InsightsView: View {
 
     @State private var shareSnapshot: StatsShareSnapshot?
 
-    init() {}
+    @Binding private var openGoalEditor: Bool
+
+    init(openGoalEditor: Binding<Bool> = .constant(false)) {
+        _openGoalEditor = openGoalEditor
+    }
 
     var body: some View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 60)) { context in
                 let stats = InsightsSnapshot(store: store, now: context.date,
                                              dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        goalsCard(stats, now: context.date)
-                        InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
-                                            currencyCode: store.currencyCode, now: context.date)
-                        totalsCard(stats)
-                        reportsCard(stats)
+                ScrollViewReader { scroll in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            goalsCard(stats, now: context.date)
+                                .id("goals")
+                            InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
+                                                currencyCode: store.currencyCode, now: context.date)
+                            totalsCard(stats)
+                            reportsCard(stats)
+                        }
+                        .padding(16)
                     }
-                    .padding(16)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .task(id: openGoalEditor) {
+                        guard openGoalEditor else { return }
+                        editingGoals = true
+                        scroll.scrollTo("goals", anchor: .top)
+                        // Alan acildiktan sonra odaklanir; sekme kapanirsa gorev iptal olur.
+                        do { try await Task.sleep(for: .milliseconds(650)) }
+                        catch { return }
+                        focusedGoal = "Daily"
+                        openGoalEditor = false
+                    }
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
             .background(palette.background)
             .navigationTitle("Insights")
@@ -164,7 +181,7 @@ struct InsightsView: View {
                 Text(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them, the same days History's 30D shows.")
+            Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).card(palette)

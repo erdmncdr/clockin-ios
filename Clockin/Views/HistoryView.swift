@@ -3,7 +3,10 @@ import SwiftUI
 struct HistoryView: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
-    @State private var range: EarningsRange = .month
+    @AppStorage("Clockin.HistoryRange") private var range: EarningsRange = .month
+    @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
+    @State private var pageAnchor: Date?
+    @State private var pageDirection = -1
     @State private var showTRY = false
     @State private var now = Date.now
     private let refresh = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -14,8 +17,9 @@ struct HistoryView: View {
     @State private var pendingDelete: WorkSession?
 
     var body: some View {
+        let period = EarningsPeriod(range: range, anchor: pageAnchor ?? now, now: now)
         let snapshot = EarningsSnapshot(sessions: store.sessions, running: store.running,
-            range: range, now: now, earnings: { store.earnings(for: $0) },
+            range: range, now: now, period: period, earnings: { store.earnings(for: $0) },
             activeEarnings: store.currentEarnings(at: now), rate: { exchangeRates.rate(onCalendarDay: $0) })
         let days = groupedDays(snapshot.sessions)
         let conflicts = store.conflictingSessionIDs
@@ -28,9 +32,17 @@ struct HistoryView: View {
                     }
                     .pickerStyle(.segmented)
                     .sensoryFeedback(.selection, trigger: range)
+                    periodHeader(period)
                     EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
-                        now: now, latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
-                        hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY)
+                        latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
+                        hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY,
+                        pageDirection: pageDirection, onPage: { page($0, period: period) })
+                    if range == .month {
+                        MonthPerformanceView(performance: MonthPerformance(snapshot: snapshot, period: period,
+                            sessions: store.sessions, monthlyGoal: monthlyGoalHours, now: now),
+                            interval: period.interval, currencyCode: store.currencyCode,
+                            latestRate: exchangeRates.latestRate)
+                    }
                 }
                 .listRowBackground(palette.surface)
                 ForEach(days, id: \.day) { group in
@@ -83,6 +95,39 @@ struct HistoryView: View {
         .onReceive(store.objectWillChange) { now = .now }
         .sessionSheets($sheet)
         .deleteSessionAlert($pendingDelete)
+    }
+
+    private func periodHeader(_ period: EarningsPeriod) -> some View {
+        HStack(spacing: 8) {
+            if range != .all {
+                Button { page(-1, period: period) } label: {
+                    Image(systemName: "chevron.left").frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("Previous period")
+            }
+            Text(period.title())
+                .font(.subheadline.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
+            if range != .all {
+                Button { page(1, period: period) } label: {
+                    Image(systemName: "chevron.right").frame(width: 44, height: 44)
+                }
+                .disabled(!period.canGoForward)
+                .accessibilityLabel("Next period")
+            }
+        }
+        .buttonStyle(.borderless)
+    }
+
+    private func page(_ direction: Int, period: EarningsPeriod) {
+        let next = period.paged(by: direction, now: now)
+        guard next.interval != period.interval else { return }
+        pageDirection = direction
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+            pageAnchor = next.anchor
+        }
     }
 
     /// Gun basligi: solda gun, sagda o gunun toplami.

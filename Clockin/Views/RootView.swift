@@ -19,6 +19,9 @@ struct RootView: View {
     @AppStorage(NudgePlanner.enabledKey) private var nudgesEnabled = true
     @AppStorage(NudgePlanner.toneKey) private var nudgeTone = NudgeTone.grumpy.rawValue
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
+    @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
+    @AppStorage(GoalPrompt.configuredKey) private var everConfiguredGoal = false
+    @State private var goalEditorRequest = false
     @ObservedObject private var nudges = NudgeController.shared
     @ObservedObject private var reminder = LongSessionReminderController.shared
     @State private var tab: AppTab = .today
@@ -67,6 +70,9 @@ struct RootView: View {
         .onChange(of: nudgesEnabled) { _, _ in nudges.update(store: store) }
         .onChange(of: nudgeTone) { _, _ in nudges.update(store: store) }
         .onChange(of: dailyGoalHours) { _, _ in nudges.update(store: store) }
+        .onChange(of: GoalPrompt.hasGoal(daily: dailyGoalHours, monthly: monthlyGoalHours), initial: true) { _, hasGoal in
+            if hasGoal { everConfiguredGoal = true }
+        }
         .onChange(of: nudges.openToday, initial: true) { _, requested in
             if requested {
                 tab = .today
@@ -97,13 +103,16 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView(selection: $tab) {
-            DashboardView(isSelected: tab == .today, showHistory: { tab = .history }, showInsights: { tab = .insights }, showProgress: { tab = .badges })
+            DashboardView(isSelected: tab == .today, showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
+                goalEditorRequest = true
+                tab = .insights
+            }, showProgress: { tab = .badges })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(AppTab.history)
-            InsightsView()
+            InsightsView(openGoalEditor: $goalEditorRequest)
                 .tabItem { Label("Insights", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.insights)
             // Ayarlar alt sekmede degil, Bugun ekraninin ust cubugunda. Sik

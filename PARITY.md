@@ -4,7 +4,7 @@ How the two apps compare. Both store sessions in the same `ClockinData` JSON for
 
 ## Shared
 
-Timer with pause, cancel and start with elapsed time; manual entries, editing and deleting; rate schedules; USD/TRY with historical rates; earnings history with 7D, 30D, 3M and ALL; CSV and pasted timecard import with row selection; automatic backups with restore; goals; day, week and month heatmaps; reports and records; level, streaks and 46 badges; shareable stats images; the focus companion with drawn clips, smooth motion, tap reactions and default modes; focus chime and focus radio; eight themes; the usage guide.
+Timer with pause, cancel and start with elapsed time; manual entries, editing and deleting; rate schedules; USD/TRY with historical rates; earnings history with a calendar month starting on the 1st; CSV and pasted timecard import with row selection; automatic backups with restore; goals; day, week and month heatmaps; reports and records; level, streaks and 46 badges; shareable stats images; the focus companion with drawn clips, smooth motion, tap reactions and default modes; focus chime and focus radio; eight themes; the usage guide.
 
 ## iPhone only
 
@@ -38,9 +38,12 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 | Restore | Replaces the data | Saves the current data as a backup first, so a restore can be undone | |
 | Failed save | Reported | Rolled back in memory as well | Nothing unsaved stays on screen |
 | Daily goal estimate | "N days away" | A clock time | For a daily goal the Mac's count can only be 1 |
-| 30-day trend | Last 30 × 24 hours | Last 30 calendar days | Matches History's 30D |
+| 30-day trend | Last 30 × 24 hours | Last 30 calendar days | Insights keeps its rolling comparison independently of History |
 | Focus chime | Timer inside the running app | Local notifications scheduled from worked time | An iPhone app is usually suspended |
-| Chart selection | Drag to scrub, hover for details | Tap a day | Dragging over the chart blocked scrolling History |
+| History ranges | This month (default), rolling 7D, 30D, 3M, ALL | Pageable calendar W, M (default), 6M; nonpageable All | iPhone remembers the range, reopens on the current period, and filters totals and sessions by page; 6M has monthly bars |
+| Chart selection | Drag to scrub, hover for details | Tap a day (month in 6M); horizontal swipe or chevrons to page | Direction-checked paging allows vertical History scrolling |
+| Month performance | This month totals and averages | Worked-day averages, cumulative hours, dashed current goal, same-point previous month comparison, current-month projection | Projection shares Insights' completed-work 7-day pace; past months show final numbers |
+| Goal reminder | No matching onboarding card | After first completed session, Set goals opens and focuses the Insights editor; Not now snoozes 7 days | Permanently hidden once any goal has been configured, even if later turned off |
 | Widget theme | Not applicable | Widgets and the Live Activity follow the app theme | |
 
 ## Shared logic
