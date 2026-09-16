@@ -6,8 +6,10 @@ enum AppGroup {
 }
 
 var failures = 0
+var checks = 0
 @MainActor func check(_ condition: Bool, _ name: String) {
     print("\(condition ? "ok" : "FAILED"): \(name)")
+    checks += 1
     if !condition { failures += 1 }
 }
 
@@ -110,4 +112,5 @@ MainActor.assumeIsolated {
     check(equal.start == equal.end, "equal new times do not silently turn into 24 hours")
 
 }
+print("\(checks) feedback checks passed")
 exit(failures == 0 ? 0 : 1)
