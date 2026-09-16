@@ -118,7 +118,7 @@ do {
     check(store.sessions.count == 1, "a failed delete keeps the entry")
     check(store.statusMessage?.hasPrefix("Could not save") == true, "a failed delete is not reported as deleted")
 
-    store.importSessions([session(hours: 3, note: "imported").withSource("starfleet")])
+    store.importSessions([session(hours: 3, note: "imported").withSource("timeportal")])
     check(store.sessions.map(\.note) == ["original"], "a failed import is rolled back in memory")
 
     check(!store.restoreBackup(from: backup), "a restore whose write fails reports failure")
