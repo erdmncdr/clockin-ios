@@ -134,6 +134,7 @@ final class CelebrationMascotLayerView: UIView {
                 animation.keyTimes = times
                 animation.calculationMode = .discrete
                 animation.duration = total
+                MascotAnimationRate.reaction.apply(to: animation)
                 drawing.add(animation, forKey: "clip")
             }
         }
@@ -161,6 +162,7 @@ final class CelebrationMascotLayerView: UIView {
             }
         }
         motion.duration = duration
+        MascotAnimationRate.reaction.apply(to: motion)
         drawing.add(motion, forKey: "reaction")
     }
 }

@@ -378,6 +378,14 @@ independent drawn clips and hops preserve life. CA removes each finished sway;
 a cancellable task only wakes to start the next burst, not at every frame or at
 the end of a burst. The ordinary clip and hop rhythms are unchanged.
 
+Companion CA animations request 8-15 fps, preferred 12, for normal and tired
+sway; angry shakes, hops (including shadow transform and opacity), pop, wiggle
+and squash request 24-30 fps, preferred 30. Celebration reactions and their
+discrete contents animation use the same 24-30 range. Groups and their children
+receive the same range. Drawn clip durations and frame-swap key times are
+unchanged. These are Core Animation requests; actual pacing and the idle
+backboardd target below 3% still need measurement.
+
 All companion motion uses the rolling digits' power/thermal policy: Reduce
 Motion, Low Power Mode, serious/critical/unknown thermal state, inactive scenes
 and covered or unselected content stop the clip task and remove CA animations.
@@ -388,7 +396,8 @@ made for this change.
 The `companion2` check above covers the catalog, thresholds, saved fallback,
 rest-only drawing, progress strings, silent accessory seeding and queue lifecycle,
 all tone/anger/streak/quiet-day/pride/session combinations, date boundaries, pride
-triggers, shared widget fields, missing-frame fallback and the pure burst schedule.
+triggers, shared widget fields, missing-frame fallback, the pure burst schedule
+and animation frame rate ranges.
 The existing rolling suite checks every combination of visibility, power, thermal
 and Reduce Motion gates used by the companion.
 

@@ -165,6 +165,17 @@ check(!CelebrationEvent.accessory(.mug).startsPride, "accessory banner retains i
 check(!CelebrationEvent.reaction(.clockIn).startsPride, "ordinary session reaction is not pride")
 check(CelebrationRules.proudDuration == 4, "four second pride")
 
+check(MascotAnimationRate.sway.minimum == 8, "sway minimum 8 fps")
+check(MascotAnimationRate.sway.maximum == 15, "sway maximum 15 fps")
+check(MascotAnimationRate.sway.preferred == 12, "sway preferred 12 fps")
+check(MascotAnimationRate.reaction.minimum == 24, "reaction minimum 24 fps")
+check(MascotAnimationRate.reaction.maximum == 30, "reaction maximum 30 fps")
+check(MascotAnimationRate.reaction.preferred == 30, "reaction preferred 30 fps")
+for rate in MascotAnimationRate.allCases {
+    check(rate.minimum > 0 && rate.minimum <= rate.preferred && rate.preferred <= rate.maximum,
+          "\(rate) valid frame rate range")
+}
+
 for mood in [MascotMood.hello, .proud, .celebrate, .tired, .angry] {
     let schedule = MascotSwaySchedule.schedule(for: mood)
     check(schedule.active > 0 && schedule.rest > 0, "\(mood) finite burst")

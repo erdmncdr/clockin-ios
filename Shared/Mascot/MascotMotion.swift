@@ -369,6 +369,14 @@ enum MascotMotion {
     }
 }
 
+enum MascotAnimationRate: CaseIterable, Sendable {
+    case sway, reaction
+
+    var minimum: Float { self == .sway ? 8 : 24 }
+    var maximum: Float { self == .sway ? 15 : 30 }
+    var preferred: Float { self == .sway ? 12 : 30 }
+}
+
 struct MascotSwaySchedule: Equatable, Sendable {
     let active: TimeInterval
     let rest: TimeInterval

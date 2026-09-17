@@ -1,6 +1,17 @@
 import SwiftUI
 import UIKit
 
+extension MascotAnimationRate {
+    func apply(to animation: CAAnimation) {
+        animation.preferredFrameRateRange = CAFrameRateRange(
+            minimum: minimum, maximum: maximum, preferred: preferred)
+        // Grup ve alt animasyonlar ayni siniri kullanir.
+        if let group = animation as? CAAnimationGroup {
+            group.animations?.forEach { apply(to: $0) }
+        }
+    }
+}
+
 struct ClockinMascotImage: View {
     let asset: String
 
@@ -459,6 +470,7 @@ final class MascotLayerView: UIView {
         }
         animation.duration = schedule.active
         animation.calculationMode = .linear
+        (angry ? MascotAnimationRate.reaction : .sway).apply(to: animation)
         sway.add(animation, forKey: "sway")
     }
 
@@ -472,6 +484,7 @@ final class MascotLayerView: UIView {
             NSValue(caTransform3D: CATransform3DScale(CATransform3DMakeTranslation(0, pose.offsetY * side, 0), pose.scaleX, pose.scaleY, 1))
         }
         bodyAnimation.duration = duration
+        MascotAnimationRate.reaction.apply(to: bodyAnimation)
         body.add(bodyAnimation, forKey: "hop")
         let shadowAnimation = CAKeyframeAnimation(keyPath: "transform")
         shadowAnimation.values = poses.map { NSValue(caTransform3D: CATransform3DMakeScale($0.shadowScaleX, $0.shadowScaleY, 1)) }
@@ -479,6 +492,8 @@ final class MascotLayerView: UIView {
         let fade = CAKeyframeAnimation(keyPath: "opacity")
         fade.values = poses.map { NSNumber(value: $0.shadowOpacity) }
         fade.duration = duration
+        MascotAnimationRate.reaction.apply(to: shadowAnimation)
+        MascotAnimationRate.reaction.apply(to: fade)
         shadowLayer.add(shadowAnimation, forKey: "hop")
         shadowLayer.add(fade, forKey: "hopFade")
     }
@@ -487,6 +502,7 @@ final class MascotLayerView: UIView {
         let animation = CAKeyframeAnimation(keyPath: "transform")
         animation.values = MascotMotion.samples(count: max(2, Int(duration * 120))) { NSValue(caTransform3D: transform($0)) }
         animation.duration = duration
+        MascotAnimationRate.reaction.apply(to: animation)
         reactLayer.add(animation, forKey: "reaction")
     }
 
@@ -497,6 +513,7 @@ final class MascotLayerView: UIView {
             return NSValue(caTransform3D: CATransform3DMakeScale(scale, scale, 1))
         }
         animation.duration = MascotMotion.popDuration
+        MascotAnimationRate.reaction.apply(to: animation)
         popLayer.add(animation, forKey: "pop")
     }
 
