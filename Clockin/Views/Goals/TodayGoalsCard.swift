@@ -72,9 +72,8 @@ struct TodayGoalsCard: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                 Spacer()
-                Text(DurationText.compact(goal.worked))
-                    .font(.subheadline.weight(.bold))
-                    .monospacedDigit()
+                RollingNumberText(DurationText.compact(goal.worked), value: goal.worked,
+                                  font: .subheadline.weight(.bold))
                     .foregroundStyle(.primary)
                 Text("/ \(DurationText.compact(goal.target))")
                     .font(.caption)
@@ -89,9 +88,8 @@ struct TodayGoalsCard: View {
                 }
             }
             .frame(height: 6)
-            Text(goal.isReached ? "Goal reached" : "\(DurationText.compact(goal.remaining)) to go")
-                .font(.caption)
-                .monospacedDigit()
+            RollingNumberText(goal.isReached ? "Goal reached" : "\(DurationText.compact(goal.remaining)) to go",
+                              value: goal.remaining, font: .caption)
                 .foregroundStyle(goal.isReached ? palette.accent : .secondary)
         }
         .accessibilityElement(children: .ignore)

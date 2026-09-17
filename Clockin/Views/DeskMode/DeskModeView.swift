@@ -52,19 +52,16 @@ struct DeskModeView: View {
                     .tracking(1.3)
                     .foregroundStyle(.secondary)
             }
-            Text(clock)
-                .font(.system(size: 120, weight: .medium, design: palette.fontDesign))
-                .monospacedDigit()
+            RollingNumberText(clock, value: elapsed, font: .system(size: 120, weight: .medium),
+                              design: palette.fontDesign)
                 .lineLimit(1)
                 .minimumScaleFactor(0.4)
                 .foregroundStyle(store.running == nil ? Color.secondary : Color.primary)
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(earnings)
-                    .font(.title.weight(.semibold))
+                RollingNumberText(earnings, value: earned, font: .title.weight(.semibold))
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
-                    Text((earned * rate).money(code: "TRY"))
-                        .font(.title3)
+                    RollingNumberText((earned * rate).money(code: "TRY"), value: earned * rate, font: .title3)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -91,9 +88,9 @@ struct DeskModeView: View {
                     .font(.caption2.weight(.bold))
                     .tracking(1)
                     .foregroundStyle(.tertiary)
-                Text(DurationText.compact(duration))
+                RollingNumberText(DurationText.compact(duration), value: duration, font: .caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text(earnings.money(code: store.currencyCode))
+                RollingNumberText(earnings.money(code: store.currencyCode), value: earnings, font: .caption.weight(.semibold))
                     .foregroundStyle(palette.accent.opacity(0.8))
                 if let goal {
                     Text("/ \(DurationText.compact(goal.target))")

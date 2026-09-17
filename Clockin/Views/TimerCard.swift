@@ -25,20 +25,15 @@ struct TimerCard: View {
         VStack(spacing: 20) {
             VStack(spacing: 8) {
                 status
-                Text(elapsed)
-                    .font(.system(size: 60, weight: .medium, design: palette.fontDesign))
-                    .monospacedDigit()
+                RollingNumberText(elapsed, value: store.elapsed(at: now),
+                                  font: .system(size: 60, weight: .medium), design: palette.fontDesign)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                Text(earnings)
-                    .font(.title3.weight(.semibold))
-                    .monospacedDigit()
+                RollingNumberText(earnings, value: earned, font: .title3.weight(.semibold))
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
                     let converted = (earned * rate).money(code: "TRY")
-                    Text(converted)
-                        .font(.caption)
-                        .monospacedDigit()
+                    RollingNumberText(converted, value: earned * rate, font: .caption)
                         .foregroundStyle(.secondary)
                 }
                 if let day = store.runningDayIfNotToday(at: now) {
@@ -184,7 +179,7 @@ struct ActiveTimeline<Content: View>: View {
         TimelineView(VisibleTimelineSchedule(interval: interval, active: contentActive && scenePhase == .active)) { context in
             // Ayri kartlar ayni saniyeyi okur; kurus farki olusmaz.
             content(Date(timeIntervalSinceReferenceDate: floor(context.date.timeIntervalSinceReferenceDate)))
-                // Saniyelik rakam animasyonu CPU'da blur cizdirip telefonu isitiyor.
+                // numericText CPU'da blur cizer; yalnizca RollingNumberText hucreleri animasyon acar.
                 .transaction { $0.animation = nil; $0.disablesAnimations = true }
         }
     }

@@ -257,21 +257,22 @@ private struct TodayCard: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            metric("TODAY", DurationText.compact(store.todayDuration(at: now)), icon: "clock")
+            metric("TODAY", DurationText.compact(store.todayDuration(at: now)),
+                   number: store.todayDuration(at: now), icon: "clock")
             Divider().frame(height: 36)
             metric("EARNED", store.todayEarnings(at: now).money(code: store.currencyCode),
-                   icon: "chart.line.uptrend.xyaxis", detail: earnedTRY)
+                   number: store.todayEarnings(at: now), icon: "chart.line.uptrend.xyaxis", detail: earnedTRY)
         }
         .padding(.vertical, 14)
         .card(palette)
     }
 
-    private var earnedTRY: String? {
+    private var earnedTRY: Double? {
         guard store.currencyCode == "USD", let rate = exchangeRates.latestRate else { return nil }
-        return (store.todayEarnings(at: now) * rate).money(code: "TRY")
+        return store.todayEarnings(at: now) * rate
     }
 
-    private func metric(_ title: String, _ value: String, icon: String, detail: String? = nil) -> some View {
+    private func metric(_ title: String, _ value: String, number: Double, icon: String, detail: Double? = nil) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundStyle(palette.accent.opacity(0.8))
@@ -281,15 +282,11 @@ private struct TodayCard: View {
                     .font(.caption2.weight(.bold))
                     .tracking(1)
                     .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.headline)
-                    .monospacedDigit()
+                RollingNumberText(value, value: number, font: .headline)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if let detail {
-                    Text(detail)
-                        .font(.caption)
-                        .monospacedDigit()
+                    RollingNumberText(detail.money(code: "TRY"), value: detail, font: .caption)
                         .foregroundStyle(.secondary)
                 }
             }

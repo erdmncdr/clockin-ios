@@ -28,10 +28,12 @@ struct MoneyMomentumView: View {
                             .font(.caption2.weight(.bold))
                             .tracking(1)
                             .foregroundStyle(.secondary)
-                        Text("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec")
+                        RollingNumberText("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec",
+                                          value: momentum.perSecond, font: .subheadline.weight(.semibold))
                             .foregroundStyle(momentum.isEarning ? palette.accent : .secondary)
                         if let rate = momentum.tryPerSecond {
-                            Text("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec")
+                            RollingNumberText("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec",
+                                              value: rate, font: .subheadline.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -99,7 +101,9 @@ private struct MomentumRemainingLabel: View {
             .hidden()
             .overlay(alignment: alignment) {
                 ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
-                    Text("\(max(0, target - store.currentEarnings(at: now)).money(code: currencyCode)) to go")
+                    let remaining = max(0, target - store.currentEarnings(at: now))
+                    RollingNumberText("\(remaining.money(code: currencyCode)) to go",
+                                      value: remaining, font: .caption.weight(.semibold))
                 }
             }
             .font(.caption.weight(.semibold))
