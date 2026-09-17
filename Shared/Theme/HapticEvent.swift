@@ -2,7 +2,7 @@ enum HapticEvent: CaseIterable, Sendable {
     case buttonPress, selection
     case sessionStarted, sessionPaused, sessionResumed, sessionEnded
     case entrySaved, rateSaved, backupRestored, importFinished
-    case validationFailed, destructiveConfirmation, companionReaction
+    case validationFailed, destructiveConfirmation, companionReaction, levelUp
 }
 
 enum HapticFeedback: Equatable, Sendable {
@@ -25,7 +25,7 @@ enum HapticPolicy {
         case .selection: return .selection
         case .sessionStarted: return .start
         case .sessionEnded: return .stop
-        case .entrySaved, .rateSaved, .backupRestored, .importFinished: return .notification(.success)
+        case .levelUp, .entrySaved, .rateSaved, .backupRestored, .importFinished: return .notification(.success)
         case .validationFailed: return .notification(.error)
         case .destructiveConfirmation: return .notification(.warning)
         case .companionReaction: return .softImpact(intensity: 0.6)

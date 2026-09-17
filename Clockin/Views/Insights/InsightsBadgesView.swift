@@ -27,6 +27,7 @@ struct InsightsBadgesView: View {
         .padding(16).card(palette)
         .hapticFeedback(.selection, trigger: selectedBadge?.id) { _, new in new != nil }
         .transaction { if reduceMotion { $0.animation = nil } }
+        .celebrationBlocked(by: selectedBadge != nil)
         .sheet(item: $selectedBadge) { selected in
             InsightsBadgeDetail(badge: badges.first { $0.id == selected.id } ?? selected)
         }

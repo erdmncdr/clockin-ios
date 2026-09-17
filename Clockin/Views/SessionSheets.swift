@@ -34,7 +34,7 @@ private struct SessionSheetsModifier: ViewModifier {
     @Binding var sheet: SessionSheet?
 
     func body(content: Content) -> some View {
-        content.sheet(item: $sheet) { destination in
+        content.celebrationBlocked(by: sheet != nil).sheet(item: $sheet) { destination in
             Group {
                 switch destination {
                 case .newEntry: ManualEntryView()
@@ -57,6 +57,7 @@ private struct DeleteSessionAlert: ViewModifier {
     func body(content: Content) -> some View {
         content
             .hapticFeedback(.destructiveConfirmation, trigger: pending?.id) { _, new in new != nil }
+            .celebrationBlocked(by: pending != nil)
             .alert(
             "Delete this session?",
             isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),

@@ -26,11 +26,20 @@ struct RootView: View {
     @ObservedObject private var reminder = LongSessionReminderController.shared
     @State private var tab: AppTab = .today
     @State private var deskSummary: WorkSession?
+    @State private var celebrationShare: StatsShareSnapshot?
+    @State private var shareBlocker = UUID()
+    @State private var deskSuppressed = false
+    @State private var celebrationFading = false
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+
+    private var showsCelebration: Bool {
+        celebrations.event.map { !$0.isReaction } ?? false
+    }
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
 
     /// iPhone'da yatay tutulunca dikey boyut sinifi kucuk olur.
-    private var showsDeskMode: Bool { deskModeEnabled && verticalSizeClass == .compact }
+    private var showsDeskMode: Bool { deskModeEnabled && verticalSizeClass == .compact && !deskSuppressed }
 
     /// Masada duran telefon oturum surerken kararmasin. Duraklatilmis ya da
     /// bos oturumda ekran normal kapansin, pil bosuna gitmesin.
@@ -48,12 +57,35 @@ struct RootView: View {
                 .accessibilityHidden(showsDeskMode)
             if showsDeskMode {
                 DeskModeView(onClockOut: { deskSummary = $0 })
-                    .environment(\.clockinContentActive, deskSummary == nil)
+                    .environment(\.clockinContentActive, deskSummary == nil && celebrations.event == nil)
                     .statusBarHidden()
                     .persistentSystemOverlays(.hidden)
                     .transition(.opacity)
             }
         }
+        .allowsHitTesting(!showsCelebration && !celebrationFading)
+        .accessibilityHidden(showsCelebration || celebrationFading)
+        .task(id: showsCelebration) {
+            if showsCelebration {
+                celebrationFading = true
+            } else {
+                // Cikis solarken alttaki kontroller kapali kalir.
+                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+                celebrationFading = false
+            }
+        }
+        .overlay(alignment: .top) {
+            CelebrationOverlay(center: celebrations, share: {
+                celebrations.dismiss()
+                celebrations.setBlocked(shareBlocker, true)
+                celebrationShare = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
+            }, openBadges: {
+                deskSuppressed = true
+                tab = .badges
+            })
+        }
+        .background(CelebrationWindowProbe())
+        .onChange(of: verticalSizeClass) { _, _ in deskSuppressed = false }
         .hapticFeedback(selectionFeedback)
         .animation(.easeInOut(duration: 0.25), value: showsDeskMode)
         // Mac'te her gorunum temayi `@AppStorage`'dan kendisi okuyordu.
@@ -62,6 +94,13 @@ struct RootView: View {
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
+        .sheet(item: $celebrationShare, onDismiss: {
+            celebrations.setBlocked(shareBlocker, false, waitForDismissal: false)
+        }) { snapshot in
+            ShareStatsView(snapshot: snapshot)
+                .preferredColorScheme(palette.colorScheme)
+        }
+        .celebrationBlocked(by: deskSummary != nil)
         .sheet(item: $deskSummary) { session in
             SessionSummaryView(session: session)
                 .preferredColorScheme(palette.colorScheme)
@@ -73,7 +112,18 @@ struct RootView: View {
         // calisir. Burada yalnizca uygulama acikken degisen tercihler izlenir.
         .onChange(of: nudgesEnabled) { _, _ in nudges.update(store: store) }
         .onChange(of: nudgeTone) { _, _ in nudges.update(store: store) }
-        .onChange(of: dailyGoalHours) { _, _ in nudges.update(store: store) }
+        .onChange(of: dailyGoalHours) { _, _ in
+            nudges.update(store: store)
+            celebrations.refresh(store: store)
+        }
+        .onChange(of: monthlyGoalHours) { _, _ in celebrations.refresh(store: store) }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            celebrations.setActive(false)
+            if phase == .active {
+                celebrations.refresh(store: store)
+                celebrations.setActive(true)
+            }
+        }
         .onChange(of: GoalPrompt.hasGoal(daily: dailyGoalHours, monthly: monthlyGoalHours), initial: true) { _, hasGoal in
             if hasGoal { everConfiguredGoal = true }
         }
@@ -101,13 +151,14 @@ struct RootView: View {
                 catch { return }
                 updateChimes(force: true)
                 nudges.update(store: store)
+                celebrations.refresh(store: store)
             }
         }
     }
 
     private var tabs: some View {
         TabView(selection: $tab.hapticSelection($selectionFeedback)) {
-            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil, showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
+            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil && (celebrations.event == nil || celebrations.event?.isReaction == true), showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
                 goalEditorRequest = true
                 tab = .insights
             }, showProgress: { tab = .badges })

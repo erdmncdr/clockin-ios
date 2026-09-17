@@ -48,6 +48,7 @@ Each check prints `ok` lines and exits non-zero on the first failure. Run from t
 
 ```bash
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-radio-module-cache Clockin/Audio/RadioStation.swift Tests/manual/radio/main.swift -o /tmp/clockin-radio-tests && /tmp/clockin-radio-tests
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-celebrate-module-cache Clockin/Celebrations/CelebrationRules.swift Tests/manual/celebrations/main.swift -o /tmp/clockin-celebration-tests && /tmp/clockin-celebration-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-rolling-module-cache Clockin/Views/Components/RollingNumber.swift Tests/manual/rolling/main.swift -o /tmp/clockin-rolling-tests && /tmp/clockin-rolling-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-haptics-module-cache Shared/Theme/HapticEvent.swift Tests/manual/haptics/main.swift -o /tmp/clockin-haptics-tests && /tmp/clockin-haptics-tests
 swiftc -swift-version 6 -strict-concurrency=complete Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/snapshot/main.swift -o /tmp/clockin-snapshot-tests && /tmp/clockin-snapshot-tests
@@ -263,3 +264,42 @@ media UI. On an iPhone, verify the following with synthetic work sessions:
    restored radio metadata or remote commands. Repeat with other audio playing.
 6. Relaunch: the station remains selected, playback and the card stay off. Check
    large text, VoiceOver, Haptics on/off, and a selection tick only on station changes.
+## Companion celebrations (iPhone)
+
+`CelebrationCenter` owns one event queue, backed by the pure `CelebrationRules`
+and `CelebrationQueue`. `SessionMirror` feeds store changes; RootView's existing
+foreground minute refresh supplies live progress. The level badge, Insights and
+Badges read the shared snapshot instead of each computing it on a separate minute
+loop. No celebration trigger runs from Today or Money Momentum's second ticks.
+Live goal and money crossings can therefore appear at the next minute refresh.
+
+The first observation seeds the current level and unlocked badge IDs silently.
+Later launches compare against `Clockin.LastCelebratedLevel`; unseen badges use
+`Clockin.SeenBadgeIDs`. A batch shows at most three badge banners, then one count.
+RootView hosts the overlay above tabs and desk mode. Sheets, alerts and file pickers
+block delivery, with a UIKit presentation check before showing. Share opens the
+existing stats view. A badge banner opens Badges, leaving desk mode if needed.
+
+The 2.5-second surfaces use a 0.2-second opacity transition. Level celebrations
+sit in a centered, opaque themed card over a 45% black scrim that fades in over
+0.15 seconds; the card scales from 0.9 to 1 unless Reduce Motion is enabled.
+The card grows with Dynamic Type and scrolls when it exceeds the available height.
+Tapping the card or scrim dismisses it. Underlying controls and accessibility stay
+blocked through the exit fade. Badge banners retain their top placement with an
+opaque themed card and a subtle scrim. Confetti sits above the card background,
+below its content and buttons, and never receives touches. Confetti
+uses a CAEmitterLayer with a finite 0.8-second birth-rate animation; the layer is
+removed after its particles expire. Reactions submit the existing drawn clip and
+motion samples to CA once, with no frame callbacks. Reduce Motion uses a rest
+frame and text. Turning off the companion keeps the same card without its mascot.
+Live reactions have a shared 20-second gate, require a visible companion and active
+app, and never replay
+missed events. Tap reactions share the same gate.
+
+The celebration check covers seeding, persisted levels and badge IDs, batches,
+modal/background queueing, reaction crossings and cooldown, and presentation
+variants. On a simulator, use synthetic data to cross a level in each tab and desk
+mode, behind a sheet and alert, and across background/foreground and relaunch.
+Check Share, banner navigation, interrupted dismissal, large text, VoiceOver,
+Reduce Motion and companion off. On a phone, verify one success haptic for a level
+and measure Today with a running session against the approximately 3% CPU target.

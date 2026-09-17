@@ -98,6 +98,7 @@ struct TimecardImportView: View {
                     }
                 }
             }
+            .celebrationBlocked(by: showsFileImporter || showsDeleteConfirmation)
             .fileImporter(
                 isPresented: $showsFileImporter,
                 allowedContentTypes: [.commaSeparatedText, .plainText]

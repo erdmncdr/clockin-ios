@@ -108,6 +108,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .celebrationBlocked(by: pendingRate != nil || sheet != nil || confirmRemoveSplit || showImporter || showRestoreConfirmation)
             .sheet(item: $pendingRate, onDismiss: { syncRateText() }) { draft in
                 RateChangePrompt(value: draft.value)
                     .environmentObject(store)

@@ -13,6 +13,7 @@ check(HapticPolicy.isEnabled(storedValue: true), "explicit enabled")
 check(!HapticPolicy.isEnabled(storedValue: false), "explicit disabled")
 
 let expected: [(HapticEvent, HapticFeedback)] = [
+    (.levelUp, .notification(.success)),
     (.buttonPress, .lightImpact), (.selection, .selection),
     (.sessionStarted, .start), (.sessionPaused, .lightImpact),
     (.sessionResumed, .lightImpact), (.sessionEnded, .stop),

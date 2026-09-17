@@ -58,6 +58,7 @@ struct TimerCard: View {
         .card(palette)
         .hapticFeedback(sessionFeedback)
         .hapticFeedback(.destructiveConfirmation, trigger: confirmCancel) { _, new in new }
+        .celebrationBlocked(by: confirmCancel)
         .alert("Cancel active session?", isPresented: $confirmCancel) {
             Button("Keep working", role: .cancel) {}
             Button("Cancel session", role: .destructive) {

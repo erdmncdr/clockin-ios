@@ -81,6 +81,7 @@ struct RateScheduleView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .celebrationBlocked(by: editor != nil || pendingDelete != nil)
             .sheet(item: $editor) { destination in
                 RatePeriodEditor(editing: destination.rule)
                     // Ic ice sheet ayri bir sunum; renk semasi kendiliginden gecmiyor.
