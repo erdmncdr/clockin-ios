@@ -16,6 +16,9 @@ struct MonthTargetPoint: Identifiable {
 struct MonthPerformance {
     let duration: TimeInterval
     let earned: Double
+    let money: HistoryAmount
+    let projectedEarnings: Double?
+    let projectedConverted: Double?
     let workedDays: Int
     let averageDuration: TimeInterval
     let averageEarnings: Double
@@ -29,15 +32,34 @@ struct MonthPerformance {
     var difference: TimeInterval { duration - comparisonDuration }
 
     init(snapshot: EarningsSnapshot, period: EarningsPeriod, sessions: [WorkSession],
-         monthlyGoal: Double, now: Date, calendar: Calendar = .current) {
+         monthlyGoal: Double, now: Date, calendar: Calendar = .current,
+         earnings: (WorkSession) -> Double = { $0.earnings }, rate: (Date) -> Double? = { _ in nil }) {
         duration = snapshot.duration
         earned = snapshot.earned
+        money = snapshot.money
         workedDays = snapshot.activeDays
         averageDuration = snapshot.activeDayAverage
         averageEarnings = workedDays == 0 ? 0 : earned / Double(workedDays)
         goal = GoalProgress(worked: duration, hours: monthlyGoal)
         isCurrent = period.isCurrent
-        let recent = sessions.filter { MonthlyGoalPace.includes(start: $0.start, now: now) }.reduce(0) { $0 + $1.duration }
+        let recentSessions = sessions.filter { MonthlyGoalPace.includes(start: $0.start, now: now) }
+        let recent = recentSessions.reduce(0) { $0 + $1.duration }
+        let recentMoney = recentSessions.reduce(0) { $0 + earnings($1) }
+        var recentConverted: Double? = 0
+        for session in recentSessions {
+            guard let previous = recentConverted, let dayRate = rate(calendar.startOfDay(for: session.start)) else {
+                recentConverted = nil
+                break
+            }
+            recentConverted = previous + earnings(session) * dayRate
+        }
+        let remainingDays = Double(max(0, MonthlyGoalPace(recentCompleted: recent, now: now, calendar: calendar).daysLeft - 1))
+        projectedEarnings = isCurrent && recent > 0 ? earned + recentMoney / 7 * remainingDays : nil
+        if isCurrent, recent > 0, let total = snapshot.converted, let recentConverted {
+            projectedConverted = total + recentConverted / 7 * remainingDays
+        } else {
+            projectedConverted = nil
+        }
         projectedDuration = isCurrent ? MonthlyGoalPace(recentCompleted: recent, now: now, calendar: calendar)
             .projection(worked: duration) : nil
         let start = period.interval.start

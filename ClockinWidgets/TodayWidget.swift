@@ -53,7 +53,9 @@ struct TodayWidget: Widget {
 }
 
 private struct TodayWidgetView: View {
-    @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetFamily) private var widgetFamily
+    var previewFamily: WidgetFamily? = nil
+    private var family: WidgetFamily { previewFamily ?? widgetFamily }
     let entry: TodayEntry
 
     @Environment(\.palette) private var palette
@@ -82,35 +84,55 @@ private struct TodayWidgetView: View {
 
     private var mediumLayout: some View {
         VStack(spacing: 6) {
-            HStack(alignment: .center, spacing: 8) {
-                ClockinMascotStill(
-                    mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood,
-                    maxPixelSize: 240
-                )
-                .frame(width: 80, height: 80)
-                VStack(spacing: 2) {
-                    status
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    HStack(alignment: .top, spacing: 8) {
-                        if let running {
-                            sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
-                                          money: .caption.weight(.semibold), alignment: .center)
-                                .frame(minWidth: 0, maxWidth: .infinity)
+            Group {
+                if running == nil {
+                    ReadyWidgetLayout {
+                        mediumCompanion
+                        VStack(spacing: 2) {
+                            status
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
+                                        money: .caption.weight(.semibold), alignment: .center)
                         }
-                        todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
-                                    money: .caption.weight(.semibold), alignment: .center)
-                            .frame(minWidth: 0, maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: 8) {
+                        mediumCompanion
+                        VStack(spacing: 2) {
+                            status
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            HStack(alignment: .top, spacing: 8) {
+                                if let running {
+                                    sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
+                                                  money: .caption.weight(.semibold), alignment: .center)
+                                        .frame(minWidth: 0, maxWidth: .infinity)
+                                }
+                                todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
+                                            money: .caption.weight(.semibold), alignment: .center)
+                                    .frame(minWidth: 0, maxWidth: .infinity)
+                            }
+                        }
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
                     }
                 }
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .multilineTextAlignment(.center)
             }
             .frame(maxHeight: .infinity, alignment: .center)
             actionButtons
         }
         // SE boyunda 80 pt gorsel ve alt dugmeler icin dikey alan sinirli.
         .dynamicTypeSize(...DynamicTypeSize.xLarge)
+    }
+
+    private var mediumCompanion: some View {
+        ClockinMascotStill(
+            mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood,
+            maxPixelSize: 240
+        )
+        .frame(width: ReadyWidgetPlacement.companionWidth, height: 80)
     }
 
     /// Kucuk boy: yan yana sigmiyor, dugme de yok; olculer ust uste.
@@ -287,6 +309,25 @@ private struct TodayWidgetView: View {
     }
 }
 
+private struct ReadyWidgetLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let ideal = subviews[1].sizeThatFits(.unspecified)
+        let width = proposal.width ?? (ReadyWidgetPlacement.companionWidth + ReadyWidgetPlacement.spacing + ideal.width)
+        let placement = ReadyWidgetPlacement(contentWidth: width, textWidth: ideal.width)
+        let text = subviews[1].sizeThatFits(ProposedViewSize(width: placement.textWidth, height: nil))
+        return CGSize(width: width, height: max(80, text.height))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let ideal = subviews[1].sizeThatFits(.unspecified)
+        let placement = ReadyWidgetPlacement(contentWidth: bounds.width, textWidth: ideal.width)
+        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading,
+                          proposal: ProposedViewSize(width: ReadyWidgetPlacement.companionWidth, height: 80))
+        subviews[1].place(at: CGPoint(x: bounds.minX + placement.centerX, y: bounds.midY), anchor: .center,
+                          proposal: ProposedViewSize(width: placement.textWidth, height: bounds.height))
+    }
+}
+
 extension ClockinSnapshot {
     /// Widget galerisinde gosterilen ornek.
     static let placeholder = ClockinSnapshot(
@@ -340,5 +381,20 @@ private enum TodayWidgetPreview {
     TodayWidget()
 } timeline: {
     TodayWidgetPreview.entry(angry: true)
+}
+#Preview("Ready · 321 x 152 · largest text", traits: .fixedLayout(width: 321, height: 152)) {
+    TodayWidgetView(previewFamily: .systemMedium, entry: TodayWidgetPreview.entry())
+        .environment(\.palette, TodayWidgetPreview.entry().snapshot.theme.palette)
+        .dynamicTypeSize(.accessibility5)
+        .padding(16)
+}
+
+#Preview("Ready · long amount", traits: .fixedLayout(width: 321, height: 152)) {
+    TodayWidgetView(previewFamily: .systemMedium, entry: TodayEntry(date: TodayWidgetPreview.date, snapshot: ClockinSnapshot(
+        day: Calendar.current.startOfDay(for: TodayWidgetPreview.date),
+        completedToday: 12 * 3600 + 45 * 60, earnedToday: 123456.78,
+        running: nil, hourlyRate: 40, currencyCode: "USD")))
+        .dynamicTypeSize(.xLarge)
+        .padding(16)
 }
 #endif

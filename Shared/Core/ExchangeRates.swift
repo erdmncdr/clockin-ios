@@ -7,7 +7,15 @@ private struct SingleRateResponse: Decodable, Sendable {
 
 @MainActor
 final class ExchangeRateStore: ObservableObject {
-    @Published private(set) var ratesByDay: [String: Double] = [:]
+    @Published private(set) var ratesByDay: [String: Double] = [:] {
+        didSet {
+            lookup = nil
+            calendarRates.removeAll(keepingCapacity: true)
+        }
+    }
+    private var lookup: HistoricalRateLookup?
+    private var calendarRates: [Date: Double?] = [:]
+    private var calendarTimeZone = TimeZone.current.identifier
     @Published private(set) var latestDate: String?
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
@@ -41,8 +49,8 @@ final class ExchangeRateStore: ObservableObject {
 
     func rate(on date: Date) -> Double? {
         let key = formatter.string(from: date)
-        if let exact = ratesByDay[key] { return exact }
-        return ratesByDay.keys.filter { $0 <= key }.max().flatMap { ratesByDay[$0] }
+        if lookup == nil { lookup = HistoricalRateLookup(rates: ratesByDay) }
+        return lookup?.rate(on: key)
     }
 
     /// Grafikteki kutular yerel takvim gunune gore. Yerel gece yarisini
@@ -60,7 +68,15 @@ final class ExchangeRateStore: ObservableObject {
     }
 
     func rate(onCalendarDay date: Date) -> Double? {
-        rate(on: Self.calendarRateDate(date))
+        if calendarTimeZone != TimeZone.current.identifier {
+            calendarRates.removeAll(keepingCapacity: true)
+            calendarTimeZone = TimeZone.current.identifier
+        }
+        let day = Calendar.current.startOfDay(for: date)
+        if let cached = calendarRates[day] { return cached }
+        let result = rate(on: Self.calendarRateDate(day))
+        calendarRates[day] = .some(result)
+        return result
     }
 
     func refresh(sessionDates: [Date]) async {
@@ -148,5 +164,29 @@ final class ExchangeRateStore: ObservableObject {
         } catch {
             return nil
         }
+    }
+}
+
+struct HistoricalRateLookup {
+    private let rates: [String: Double]
+    private let days: [String]
+    private var cached: [String: Double?] = [:]
+
+    init(rates: [String: Double]) {
+        self.rates = rates
+        days = rates.keys.sorted()
+    }
+
+    mutating func rate(on day: String) -> Double? {
+        if let result = cached[day] { return result }
+        var lower = 0
+        var upper = days.count
+        while lower < upper {
+            let middle = (lower + upper) / 2
+            if days[middle] <= day { lower = middle + 1 } else { upper = middle }
+        }
+        let result = lower > 0 ? rates[days[lower - 1]] : nil
+        cached[day] = .some(result)
+        return result
     }
 }

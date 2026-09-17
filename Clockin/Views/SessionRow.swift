@@ -16,6 +16,8 @@ struct SessionRow: View {
     /// USD hesaplarda o gunun kuruyla TL karsiligi. Yalnizca gecmiste; kucuk
     /// listelerde (cakisma uyarisi gibi) satiri gereksiz uzatmasin.
     var showsTRY = false
+    var historyAmount: HistoryAmount?
+    var historyShowsTRY = false
 
     private var isTimer: Bool { SessionDisplay.isClockin(session) }
 
@@ -63,10 +65,16 @@ struct SessionRow: View {
                 Text(DurationText.compact(session.duration))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
-                Text(store.earnings(for: session).money(code: store.currencyCode))
+                Text((historyAmount?.value(showTRY: historyShowsTRY) ?? store.earnings(for: session))
+                    .money(code: historyAmount?.code(currency: store.currencyCode, showTRY: historyShowsTRY) ?? store.currencyCode))
                     .font(.caption)
                     .foregroundStyle(palette.accent)
-                if showsTRY, store.currencyCode == "USD",
+                if let amount = historyAmount, store.currencyCode == "USD", let converted = amount.converted {
+                    Text((historyShowsTRY ? amount.earned : converted).money(code: historyShowsTRY ? "USD" : "TRY"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                } else if historyAmount == nil, showsTRY, store.currencyCode == "USD",
                    let rate = exchangeRates.rate(onCalendarDay: session.start) {
                     Text((store.earnings(for: session) * rate).money(code: "TRY"))
                         .font(.caption2)

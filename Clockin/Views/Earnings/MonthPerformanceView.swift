@@ -6,21 +6,26 @@ struct MonthPerformanceView: View {
     let performance: MonthPerformance
     let interval: DateInterval
     let currencyCode: String
-    let latestRate: Double?
+    let showTRY: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(performance.isCurrent ? "THIS MONTH SO FAR" : "MONTH SUMMARY")
                 .font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             metric("Worked", DurationText.compact(performance.duration))
-            metric("Earned", performance.earned.money(code: currencyCode))
-            if currencyCode == "USD", let latestRate {
-                Text("\((performance.earned * latestRate).money(code: "TRY")) · current rate")
+            metric("Earned", money(performance.money))
+            if currencyCode == "USD", let converted = performance.money.converted {
+                Text((showTRY ? performance.earned : converted).money(code: showTRY ? "USD" : "TRY"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             metric("Worked days", "\(performance.workedDays)")
             metric("Per worked day", DurationText.compact(performance.averageDuration))
-            metric("Earnings / worked day", performance.averageEarnings.money(code: currencyCode))
+            metric("Earnings / worked day", money(performance.money.divided(by: Double(max(1, performance.workedDays)))))
+            if let projected = performance.projectedEarnings {
+                metric("Projected earnings", money(HistoryAmount(earned: projected, converted: performance.projectedConverted)))
+                Text("Uses the last 7 days of completed earnings at their historical rates for the days after today.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
             if let goal = performance.goal {
                 Divider()
                 metric("Monthly goal", (goal.worked / goal.target).formatted(.percent.precision(.fractionLength(0))))
@@ -57,6 +62,10 @@ struct MonthPerformanceView: View {
             }
         }
         .padding(.vertical, 8)
+    }
+
+    private func money(_ amount: HistoryAmount) -> String {
+        amount.value(showTRY: showTRY).money(code: amount.code(currency: currencyCode, showTRY: showTRY))
     }
 
     private var comparison: String {

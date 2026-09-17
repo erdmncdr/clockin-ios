@@ -4,10 +4,9 @@ import SwiftUI
 struct EarningsChartView: View {
     @Environment(\.palette) private var palette
     let snapshot: EarningsSnapshot
+    let months: [EarningsMonthBar]
     let range: EarningsRange
     let currencyCode: String
-    let latestRate: Double?
-    let loadingRates: Bool
     let hasAnySessions: Bool
     @Binding var showTRY: Bool
     let onPage: (Int) -> Void
@@ -16,7 +15,8 @@ struct EarningsChartView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var converting: Bool { showTRY && currencyCode == "USD" }
-    private var displayCode: String { converting ? "TRY" : currencyCode }
+    private var chartConverting: Bool { converting && snapshot.hasConvertedDays }
+    private var displayCode: String { chartConverting ? "TRY" : currencyCode }
     private var selected: EarningsDay? {
         guard let selectedDate else { return nil }
         return snapshot.points.first { Calendar.current.isDate($0.day, inSameDayAs: selectedDate) }
@@ -34,11 +34,11 @@ struct EarningsChartView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("PERIOD EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
-                    Text(snapshot.earned.money(code: currencyCode))
+                    Text(money(snapshot.money))
                         .font(.title2.bold()).monospacedDigit()
                         .contentTransition(.numericText())
-                    if currencyCode == "USD", let latestRate {
-                        Text((snapshot.earned * latestRate).money(code: "TRY") + " · current rate")
+                    if currencyCode == "USD", let converted = snapshot.converted {
+                        Text((converting ? snapshot.earned : converted).money(code: converting ? "USD" : "TRY"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -56,7 +56,7 @@ struct EarningsChartView: View {
                 Text(range == .sixMonths ? "MONTHLY EARNINGS" : "DAILY EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                 Spacer()
                 if currencyCode == "USD" {
-                    Picker("Chart currency", selection: $showTRY.hapticSelection($selectionFeedback)) {
+                    Picker("History currency", selection: $showTRY.hapticSelection($selectionFeedback)) {
                         Text("USD").tag(false)
                         Text("TRY").tag(true)
                     }
@@ -86,22 +86,14 @@ struct EarningsChartView: View {
             .clipped()
             if !snapshot.points.isEmpty {
                 if converting {
-                    if let total = snapshot.converted {
-                        Text("Historical total: \(total.money(code: "TRY"))").font(.caption.weight(.semibold))
-                    } else {
-                        Text(loadingRates ? "Fetching historical rates…" : (range == .sixMonths
-                            ? "Some historical rates are unavailable. Months with missing rates are not plotted in TRY."
-                            : "Some historical rates are unavailable. Missing days are not plotted in TRY."))
-                            .font(.caption).foregroundStyle(.orange)
-                    }
                     Text("Uses each calendar day's USD/TRY rate, or the nearest earlier available rate.")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
                 if range == .sixMonths, let bar = selectedMonth {
-                    Text("\(bar.day.formatted(.dateTime.month(.wide).year())) · \(DurationText.compact(bar.duration)) · \(bar.earned.money(code: currencyCode))")
+                    Text("\(bar.day.formatted(.dateTime.month(.wide).year())) · \(DurationText.compact(bar.duration)) · \(money(HistoryAmount(earned: bar.earned, converted: bar.converted)))")
                         .font(.caption).monospacedDigit()
                     if currencyCode == "USD", let converted = bar.converted {
-                        Text("Historical total: \(converted.money(code: "TRY"))").font(.caption)
+                        Text((converting ? bar.earned : converted).money(code: converting ? "USD" : "TRY")).font(.caption)
                     }
                 } else if let point = selected {
                     detail(point)
@@ -140,20 +132,28 @@ struct EarningsChartView: View {
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                averageChip("Daily", DurationText.compact(snapshot.dailyAverage))
-                averageChip("Weekly", DurationText.compact(snapshot.weeklyAverage))
-                averageChip("Monthly", DurationText.compact(snapshot.monthlyAverage))
+                averageChip("Daily", DurationText.compact(snapshot.dailyAverage), money: money(snapshot.money.divided(by: Double(snapshot.calendarDays))))
+                averageChip("Weekly", DurationText.compact(snapshot.weeklyAverage), money: money(snapshot.money.divided(by: Double(snapshot.calendarDays) / 7)))
+                averageChip("Monthly", DurationText.compact(snapshot.monthlyAverage), money: money(snapshot.money.divided(by: Double(snapshot.calendarDays) / 30.44)))
                 averageChip("Active days", "\(snapshot.activeDays)")
-                averageChip("Per active day", DurationText.compact(snapshot.activeDayAverage))
+                averageChip("Per active day", DurationText.compact(snapshot.activeDayAverage), money: money(snapshot.money.divided(by: Double(max(1, snapshot.activeDays)))))
             }
         }
     }
 
-    private func averageChip(_ title: String, _ value: String) -> some View {
+    private func money(_ amount: HistoryAmount) -> String {
+        amount.value(showTRY: converting).money(code: amount.code(currency: currencyCode, showTRY: converting))
+    }
+
+    private func averageChip(_ title: String, _ value: String, money: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption2).foregroundStyle(.secondary)
             Text(value).font(.subheadline.weight(.semibold)).monospacedDigit()
                 .contentTransition(.numericText())
+            if let money {
+                Text(money).font(.caption).monospacedDigit()
+                    .contentTransition(.numericText())
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 7).padding(.horizontal, 9)
@@ -163,21 +163,21 @@ struct EarningsChartView: View {
 
     private var selectedMonth: EarningsMonthBar? {
         guard let selectedDate else { return nil }
-        return snapshot.monthlyBars().first { Calendar.current.isDate($0.day, equalTo: selectedDate, toGranularity: .month) }
+        return months.first { Calendar.current.isDate($0.day, equalTo: selectedDate, toGranularity: .month) }
     }
 
     private var chartMaximum: Double {
         let values = range == .sixMonths
-            ? snapshot.monthlyBars().compactMap { converting ? $0.converted : $0.earned }
-            : snapshot.points.compactMap { converting ? $0.converted : $0.earned }
+            ? months.compactMap { chartConverting ? $0.converted : $0.earned }
+            : snapshot.points.compactMap { chartConverting ? $0.converted : $0.earned }
         return EarningsChartAxis.earningsUpperBound(values.max() ?? 0)
     }
 
     private var chart: some View {
         Chart {
             if range == .sixMonths {
-                ForEach(snapshot.monthlyBars()) { bar in
-                    if let value = converting ? bar.converted : bar.earned {
+                ForEach(months) { bar in
+                    if let value = chartConverting ? bar.converted : bar.earned {
                         BarMark(x: .value("Month", bar.day, unit: .month), y: .value(displayCode, value))
                             .foregroundStyle(palette.accent.gradient)
                             .cornerRadius(3)
@@ -188,7 +188,7 @@ struct EarningsChartView: View {
                 }
             } else {
                 ForEach(snapshot.points) { point in
-                    if let value = converting ? point.converted : point.earned {
+                    if let value = chartConverting ? point.converted : point.earned {
                         BarMark(x: .value("Day", point.day, unit: .day), y: .value(displayCode, value))
                             .foregroundStyle(palette.accent.gradient)
                             .cornerRadius(3)
@@ -240,15 +240,11 @@ struct EarningsChartView: View {
     private func detail(_ point: EarningsDay) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(point.day.formatted(date: .complete, time: .omitted)).font(.subheadline.bold())
-            Text("\(DurationText.compact(point.duration)) · \(point.earned.money(code: currencyCode))")
+            Text("\(DurationText.compact(point.duration)) · \(money(HistoryAmount(earned: point.earned, converted: point.converted)))")
                 .font(.subheadline).monospacedDigit()
-            if currencyCode == "USD" {
-                if let rate = point.rate, let converted = point.converted {
-                    Text("\(converted.money(code: "TRY")) · 1 USD = \(rate.formatted(.number.precision(.fractionLength(3)))) TRY")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    Text("Historical rate unavailable").font(.caption).foregroundStyle(.orange)
-                }
+            if currencyCode == "USD", let converted = point.converted {
+                Text((converting ? point.earned : converted).money(code: converting ? "USD" : "TRY"))
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

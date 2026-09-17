@@ -6,7 +6,8 @@ struct HistoryView: View {
     @AppStorage("Clockin.HistoryRange") private var range: EarningsRange = .month
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @State private var pageAnchor = Date.now
-    @State private var showTRY = false
+    @AppStorage("Clockin.HistoryShowsTRY") private var showTRY = false
+    @State private var pageCache = HistoryPageCache()
     @State private var now = Date.now
     private let refresh = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     @Environment(\.palette) private var palette
@@ -17,10 +18,11 @@ struct HistoryView: View {
 
     var body: some View {
         let period = EarningsPeriod(range: range, anchor: pageAnchor, now: now)
-        let snapshot = EarningsSnapshot(sessions: store.sessions, running: store.running,
-            range: range, now: now, period: period, earnings: { store.earnings(for: $0) },
-            activeEarnings: store.currentEarnings(at: now), rate: { exchangeRates.rate(onCalendarDay: $0) })
-        let days = groupedDays(snapshot.sessions)
+        let history = pageCache.value(store: store, rates: exchangeRates, period: period,
+                                   monthlyGoal: monthlyGoalHours, now: now)
+        let snapshot = history.snapshot
+        let days = history.days
+        let converting = showTRY && store.currencyCode == "USD"
         let conflicts = store.conflictingSessionIDs
 
         NavigationStack {
@@ -34,15 +36,16 @@ struct HistoryView: View {
                     periodHeader(period)
                         // Sayfa degisimi elle yapilir; kaydirma ya da ok ayni tiki verir.
                         .hapticFeedback(.selection, trigger: pageAnchor)
-                    EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
-                        latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
+                    EarningsChartView(snapshot: snapshot, months: history.months, range: range, currencyCode: store.currencyCode,
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY,
                         onPage: { page($0, period: period) })
-                    if range == .month {
-                        MonthPerformanceView(performance: MonthPerformance(snapshot: snapshot, period: period,
-                            sessions: store.sessions, monthlyGoal: monthlyGoalHours, now: now),
-                            interval: period.interval, currencyCode: store.currencyCode,
-                            latestRate: exchangeRates.latestRate)
+                    if let performance = history.performance {
+                        MonthPerformanceView(performance: performance,
+                            interval: period.interval, currencyCode: store.currencyCode, showTRY: converting)
+                    }
+                    if converting && history.hasMissingRates {
+                        Text("Some rates are unavailable")
+                            .font(.caption).foregroundStyle(.orange)
                     }
                 }
                 .listRowBackground(palette.surface)
@@ -51,7 +54,8 @@ struct HistoryView: View {
                         ForEach(group.sessions) { session in
                             Button { sheet = .edit(session) } label: {
                                 SessionRow(session: session, showsDay: false,
-                                           conflicts: conflicts.contains(session.id), showsTRY: true)
+                                           conflicts: conflicts.contains(session.id),
+                                           historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
                             }
                             .buttonStyle(.plain)
                             .listRowBackground(palette.surface)
@@ -73,13 +77,14 @@ struct HistoryView: View {
                             }
                         }
                     } header: {
-                        dayHeader(group, conflicts: conflicts)
+                        dayHeader(group, conflicts: conflicts, showTRY: converting)
                     }
                 }
                 // Sayfa degisince kayitlar yer degistirme animasyonu yapmasin.
                 .animation(nil, value: period.pageID)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(palette.background)
@@ -142,7 +147,7 @@ struct HistoryView: View {
     /// oldugu icin iki sutun da tirtikli gorunuyor, basliklar da "Today" ile
     /// "Cum, 11 Eyl" arasinda gidip geliyordu. Simdi her gun ayni iskelet:
     /// ad, tarih, tek satir toplam.
-    private func dayHeader(_ group: DayGroup, conflicts: Set<UUID>) -> some View {
+    private func dayHeader(_ group: HistoryDayGroup, conflicts: Set<UUID>, showTRY: Bool) -> some View {
         let clashing = group.sessions.filter { conflicts.contains($0.id) }.count
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -168,7 +173,7 @@ struct HistoryView: View {
                     .foregroundStyle(.secondary)
                 Text("·")
                     .foregroundStyle(.quaternary)
-                Text(group.earnings.money(code: store.currencyCode))
+                Text(group.money.value(showTRY: showTRY).money(code: group.money.code(currency: store.currencyCode, showTRY: showTRY)))
                     .foregroundStyle(palette.accent)
             }
             .font(.caption.weight(.semibold))
@@ -199,28 +204,36 @@ struct HistoryView: View {
                 day.formatted(.dateTime.weekday(.wide)))
     }
 
-    private func groupedDays(_ sessions: [WorkSession]) -> [DayGroup] {
-        let calendar = Calendar.current
-        var groups: [DayGroup] = []
-
-        // Kayitlar zaten sirali; gruplama ve toplamlar tek geciste hesaplanir.
-        for session in sessions {
-            let day = calendar.startOfDay(for: session.start)
-            if groups.last?.day != day {
-                groups.append(DayGroup(day: day))
-            }
-            let index = groups.count - 1
-            groups[index].sessions.append(session)
-            groups[index].duration += session.duration
-            groups[index].earnings += store.earnings(for: session)
-        }
-        return groups
-    }
 }
 
-private struct DayGroup {
-    let day: Date
-    var sessions: [WorkSession] = []
-    var duration: TimeInterval = 0
-    var earnings: Double = 0
+@MainActor
+private final class HistoryPageCache {
+    private struct Key: Equatable {
+        let sessions: [WorkSession]
+        let running: RunningSession?
+        let rules: [RateRule]
+        let hourlyRate: Double
+        let currency: String
+        let rates: [String: Double]
+        let period: EarningsPeriod
+        let monthlyGoal: Double
+        let now: Date
+        let calendar: Calendar
+    }
+    private var key: Key?
+    private var page: HistoryPage?
+
+    func value(store: ClockStore, rates: ExchangeRateStore, period: EarningsPeriod,
+               monthlyGoal: Double, now: Date) -> HistoryPage {
+        let next = Key(sessions: store.sessions, running: store.running, rules: store.rateRules,
+            hourlyRate: store.hourlyRate, currency: store.currencyCode, rates: rates.ratesByDay,
+            period: period, monthlyGoal: monthlyGoal, now: now, calendar: .current)
+        if next == key, let page { return page }
+        let result = HistoryPage(sessions: next.sessions, running: next.running, period: period,
+            monthlyGoal: monthlyGoal, now: now, earnings: { store.earnings(for: $0) },
+            activeEarnings: store.currentEarnings(at: now), rate: { rates.rate(onCalendarDay: $0) })
+        key = next
+        page = result
+        return result
+    }
 }

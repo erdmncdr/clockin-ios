@@ -55,6 +55,7 @@ swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Sh
 swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/SessionOverlap.swift Tests/manual/overlap/main.swift -o /tmp/clockin-overlap-tests && /tmp/clockin-overlap-tests
 swiftc -swift-version 6 Shared/Core/ExchangeRates.swift Tests/manual/raterange/main.swift -o /tmp/clockin-ratedate-tests && TZ=Europe/Istanbul /tmp/clockin-ratedate-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Earnings/EarningsPeriod.swift Clockin/Views/Earnings/EarningsSnapshot.swift Clockin/Views/Earnings/MonthPerformance.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Tests/manual/earnings/main.swift -o /tmp/clockin-earnings-tests && /tmp/clockin-earnings-tests
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-historytry-module-cache Shared/Core/Models.swift Shared/Core/ExchangeRates.swift Clockin/Views/Earnings/EarningsPeriod.swift Clockin/Views/Earnings/EarningsSnapshot.swift Clockin/Views/Earnings/MonthPerformance.swift Clockin/Views/Goals/GoalProgress.swift ClockinWidgets/ReadyWidgetPlacement.swift Tests/manual/historytry/main.swift -o /tmp/clockin-historytry-tests && /tmp/clockin-historytry-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Insights/InsightsPeriods.swift Tests/manual/insights/main.swift -o /tmp/clockin-insights-tests && /tmp/clockin-insights-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-mascot-module-cache Shared/Core/Models.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Shared/Mascot/MascotMotion.swift Shared/Mascot/MascotState.swift Tests/manual/mascot/main.swift -o /tmp/clockin-mascot-tests && /tmp/clockin-mascot-tests
 swiftc -swift-version 6 Clockin/Views/Mascot/CompanionMode.swift Tests/manual/companion/main.swift -o /tmp/clockin-companion-tests && /tmp/clockin-companion-tests
@@ -79,6 +80,27 @@ all combinations of the motion/power/thermal/visibility policy, and the UIKit re
 update lifecycle, interruption, restyling, detachment, intrinsic sizing and baseline
 alignment. Device CPU and
 visual checks for the rolling digits are described in `PERFORMANCE.md`.
+
+USD accounts can select TRY in History to change all money values on that page.
+The choice is saved as `Clockin.HistoryShowsTRY` (USD by default). Each session
+uses its start calendar day's rate, falling back to the nearest earlier rate.
+Totals, averages and projections sum those historical amounts. Missing rates
+keep the affected rows, days, totals or projections in USD, with one
+"Some rates are unavailable" note. TRY charts omit days without rates, or months containing such days; when no
+day has a rate, the chart falls back to USD. A compact secondary line shows the other
+currency where available. No stored earnings or app currency setting changes.
+
+The historytry check uses synthetic sessions and rates to cover exact and missing
+days, nearest-earlier fallback, no rates, mixed availability, rows/day/month sums,
+active sessions, averages and projections, and the widget's collision clamp.
+Page calculations and rate lookups are cached, including missing lookup results.
+Currency selection reuses both cached amounts and animates totals once.
+
+For the medium widget, compare Ready at 321 by 152 pt, normal and maximum honored
+text size (xLarge), and a long amount. Its text shares the full-width button's
+center unless the 80 pt companion plus 8 pt gap requires a minimal right shift.
+The two-column Working and Paused layouts remain unchanged. Previews include
+these states and the narrow Ready cases. Widget updates have no transitions.
 
 History opens on the current calendar month by default. The last range is saved,
 but its page is not. W uses the calendar's first weekday; M starts on the 1st.
