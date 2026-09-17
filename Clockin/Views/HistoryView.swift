@@ -76,6 +76,8 @@ struct HistoryView: View {
                         dayHeader(group, conflicts: conflicts)
                     }
                 }
+                // Sayfa degisince kayitlar yer degistirme animasyonu yapmasin.
+                .animation(nil, value: period.pageID)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .listStyle(.insetGrouped)
@@ -127,7 +129,11 @@ struct HistoryView: View {
     private func page(_ direction: Int, period: EarningsPeriod) {
         let next = period.paged(by: direction, now: now)
         guard next.interval != period.interval else { return }
-        pageAnchor = next.anchor
+        // Ust bolumun kimligi sabit; yalniz satirdaki animasyon List'e ulasmaz.
+        // Gun bolumleri yenilenirken List ve metinler ayni transaction'i kullanmali.
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) {
+            pageAnchor = next.anchor
+        }
     }
 
     /// Gun basligi: solda gun, sagda o gunun toplami.

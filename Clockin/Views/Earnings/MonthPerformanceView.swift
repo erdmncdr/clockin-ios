@@ -47,7 +47,11 @@ struct MonthPerformanceView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(performance.difference >= 0 ? palette.accent : .secondary)
             if performance.duration > 0 || performance.goal != nil {
-                cumulativeChart
+                ZStack {
+                    cumulativeChart
+                        .id(interval)
+                        .transition(.opacity)
+                }
                 Text("Hours: daily bars, cumulative solid line\(performance.goal == nil ? "." : ", monthly goal dashed line.")")
                     .font(.caption2).foregroundStyle(.secondary)
             }
@@ -103,10 +107,12 @@ struct MonthPerformanceView: View {
                 Text(title).foregroundStyle(.secondary)
                 Spacer(minLength: 12)
                 Text(value).fontWeight(.semibold).monospacedDigit()
+                    .contentTransition(.numericText())
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).foregroundStyle(.secondary)
                 Text(value).fontWeight(.semibold).monospacedDigit()
+                    .contentTransition(.numericText())
             }
         }
         .font(.subheadline)

@@ -105,6 +105,17 @@ the next swipe, and both chevrons with populated and empty pages in W, M and
 numeric transitions. Repeat after selecting a bar, changing range, and enabling
 Reduce Motion. A minute refresh must not trigger the page transition.
 
+History roll regression: use synthetic sessions on two adjacent pages with
+different totals and different day-section counts, followed by an empty page.
+On a fresh launch, check populated to populated, populated to empty, empty to
+populated and the return to the initial page, using swipes and both chevrons.
+The title, earnings, duration and completed count must roll together; monthly
+summary metrics also roll. Charts cross-fade without sliding, and session rows
+update without moving into place. Repeat in W, M and 6M, after a chart selection,
+and with Reduce Motion. Verify Edit and Delete swipe actions after paging.
+The earnings check covers this populated/empty round trip's titles, page IDs,
+session counts and totals; it does not verify SwiftUI animation frames.
+
 In Insights, edit each goal, tap between cards, tap a heatmap cell or picker,
 and drag the keyboard down. Controls must still respond, and each edit must
 commit once. Done stays below the focused field; opening the keyboard scrolls
