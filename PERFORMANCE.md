@@ -372,3 +372,94 @@ Simulator visuals, interaction and device CPU remain unverified. Run the README
 celebration scenarios with synthetic data and measure Today with a running session
 against the approximately 3% CPU target. No project, signing, or version settings
 were changed, and no commit or push was made.
+
+## Companion idle acceptance measurement
+
+No CPU, energy or rendering measurements were taken in this checkout. The supplied
+baseline is approximately 0.3% Clockin CPU and 10% backboardd CPU with Today idle.
+
+The companion now submits finite sway bursts: hello/proud/celebrate use 5.2 seconds
+of motion and 7.8 seconds of rest; tired uses 7.8 seconds at 45% amplitude and 12
+seconds of rest. Angry's 0.66-second shake has a 7.8-second rest. Core Animation
+removes the finished animation; the rest is not a constant segment inside an
+infinite animation. One cancellation-aware task wakes once per full cycle to
+submit the next burst. Drawn clips and hops retain their separate rhythm; tired
+removes automatic hops and extends clip pauses to 3.5-6.5 seconds.
+
+The existing shared rolling animation policy stops both clip tasks and every
+companion layer animation for hidden content, sheets/alerts, inactive scenes,
+Reduce Motion, Low Power Mode and serious/critical/unknown thermal state. Fair
+is allowed just as it is for rolling digits. The existing modal blocker also
+covers rotating into desk mode while another tab's sheet remains open. Desk
+companion state is outside the second-ticking timer view. Accessories and mood
+inputs use store events and the existing minute refresh. Pride expiry uses a
+single cancellable four-second sleep, with an absolute expiry in the widget
+snapshot and a precomputed timeline entry for returning to normal.
+
+Compare the two builds as follows:
+
+1. Use the same simulator device/OS, Mac, build configuration, app data, theme,
+   window size, screen refresh rate and Today scroll position. Disable Low Power
+   Mode and Reduce Motion, confirm nominal thermal state, stop the radio and any
+   session, and leave the companion visible in Auto. Dismiss all banners and let
+   launch work settle for 30 seconds. Use synthetic data with no drift for hello.
+2. Capture **120 seconds, three times per build** in Instruments Time Profiler,
+   recording Clockin and backboardd separately. Record average CPU, peak CPU,
+   device/OS, thermal state, build and trace filename. The longer trace covers
+   multiple 13-second cycles and avoids comparing only a sway to only a rest.
+   Compare backboardd average to the supplied roughly 10% baseline and check
+   that Clockin remains close to its roughly 0.3% baseline.
+3. Capture Core Animation/Animation Hitches alongside it or in a separate matching
+   run. Check rendering between drawn events during each 7.8-second rest. There
+   must be no continuously interpolated sway; brief blink/hop rendering remains
+   expected. In Clockin's call tree, look for display-link-driven SwiftUI updates
+   and unexpected repeating work. Burst scheduling should wake only once per
+   cycle; existing clip steps still wake at their drawn frame boundaries.
+4. Repeat 120 seconds with tired (two quiet days, Friendly), then Grumpy angry
+   with an applicable nudge, and hello with an unlocked accessory. Compare the
+   19.8-second tired cycle and 8.46-second angry cycle. Separately capture a
+   running session to verify typing and rolling digits have not regressed; do
+   not mix that result into the idle comparison.
+5. While a burst or hop is in progress, switch to History, open Settings, rotate
+   with Settings open, enter/leave desk mode and background the app. Each hidden
+   companion must immediately stop all layer animations and its clip/burst tasks.
+   Only the visible desk companion should animate after rotation. Repeat with
+   Low Power Mode and Reduce Motion toggled mid-animation. Check serious/critical
+   thermal gating only if naturally available; the rolling manual suite covers
+   all policy states without heating a phone intentionally.
+6. Visually check that the companion settles at rest without a jump, starts the
+   next sway smoothly, retains the existing clip/hop rhythm and has no automatic
+   tired hops. These observations and the CPU comparison are pending your run.
+
+### Companion phase 2 checkout verification
+
+- All 29 README manual check commands passed on the final source, with 2,531
+  `ok` lines. The new suite reports `686 companion phase 2 checks passed`;
+  the mood suite reports `60 mascot checks passed`. Commands without a module
+  cache argument used `/tmp/clockin-mascot2-module-cache` inside the writable area.
+- All app and Shared sources, and separately all widget and Shared sources,
+  passed iOS 17 Simulator Swift 6 strict-concurrency type checking. The diagnostic
+  invocation used `-Xfrontend -disable-sandbox` for compiler macro subprocesses;
+  it did not modify sources or build settings. Existing HistoryView Combine
+  import warnings remain. All 18 changed/new production Swift files parsed,
+  and `git diff --check` passed.
+- The exact requested build was attempted on the final production source:
+
+```sh
+cd iOS && xcodebuild -project Clockin.xcodeproj -scheme Clockin -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/clockin-mascot2-dd build CODE_SIGNING_ALLOWED=NO
+```
+
+It exited 65 with `BUILD FAILED`. `sandbox-exec: sandbox_apply: Operation not
+permitted` prevented the existing SwiftUI Entry and widget Preview macro processes
+from loading. CoreSimulator services were also unavailable. The separate type
+checks do not establish a successful full app build. Simulator visuals and the
+before/after render-server comparison remain pending; no measurements were made.
+
+Logs: `/tmp/clockin-mascot2-build.log`,
+`/tmp/clockin-mascot2-checks/summary.txt`,
+`/tmp/clockin-mascot2-checks/companion2.log`,
+`/tmp/clockin-mascot2-app-typecheck.log`,
+`/tmp/clockin-mascot2-widget-typecheck.log`, and
+`/tmp/clockin-mascot2-parse.log`.
+
+No project file, signing setting, version number, commit or push was changed.

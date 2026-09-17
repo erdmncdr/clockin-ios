@@ -10,9 +10,8 @@ enum MascotResources {
     }
 
     static func frameURL(_ id: String, bundle: Bundle = .main) -> URL? {
-        url(id, bundle: bundle)
-            ?? (id.hasPrefix("a") ? url("h" + id.dropFirst(), bundle: bundle) : nil)
-            ?? url("h01", bundle: bundle)
+        MascotFrameFallback.resolve(id) { url($0, bundle: bundle) != nil }
+            .flatMap { url($0, bundle: bundle) }
     }
 
     static func decode(_ id: String, maxPixelSize: Int = 314) -> CGImage? {
@@ -34,9 +33,10 @@ enum MascotResources {
 struct ClockinMascotStill: View {
     private let image: CGImage?
 
-    init(mood: MascotMood, maxPixelSize: Int = 192) {
+    init(mood: MascotMood, accessory: CompanionAccessory? = nil, maxPixelSize: Int = 192) {
         let rest = MascotResources.library?[mood].rest ?? "h01"
-        image = MascotResources.decode(rest, maxPixelSize: maxPixelSize)
+        let frame = CompanionAccessory.displayFrame(rest, helloRest: mood == .hello, performingEvent: false, accessory: accessory)
+        image = MascotResources.decode(frame, maxPixelSize: maxPixelSize)
     }
 
     var body: some View {
@@ -64,7 +64,8 @@ final class MascotFrames {
     func preload(_ mood: MascotMood) async {
         guard let library else { return }
         if let task = loading[mood] { return await task.value }
-        let missing = library[mood].frames.filter { images[$0] == nil }
+        let frames = library[mood].frames.union(mood == .hello ? Set(CompanionAccessory.allCases.map(\.frame)) : [])
+        let missing = frames.filter { images[$0] == nil }
         // Paylasilan isin omru tek gorunumun iptalinden bagimsizdir.
         let task = Task {
             let decoded = await Task.detached(priority: .utility) {

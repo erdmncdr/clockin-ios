@@ -48,7 +48,7 @@ Each check prints `ok` lines and exits non-zero on the first failure. Run from t
 
 ```bash
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-radio-module-cache Clockin/Audio/RadioStation.swift Tests/manual/radio/main.swift -o /tmp/clockin-radio-tests && /tmp/clockin-radio-tests
-swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-celebrate-module-cache Clockin/Celebrations/CelebrationRules.swift Tests/manual/celebrations/main.swift -o /tmp/clockin-celebration-tests && /tmp/clockin-celebration-tests
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-celebrate-module-cache Shared/Mascot/CompanionAccessory.swift Clockin/Celebrations/CelebrationRules.swift Tests/manual/celebrations/main.swift -o /tmp/clockin-celebration-tests && /tmp/clockin-celebration-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-rolling-module-cache Clockin/Views/Components/RollingNumber.swift Tests/manual/rolling/main.swift -o /tmp/clockin-rolling-tests && /tmp/clockin-rolling-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-haptics-module-cache Shared/Theme/HapticEvent.swift Tests/manual/haptics/main.swift -o /tmp/clockin-haptics-tests && /tmp/clockin-haptics-tests
 swiftc -swift-version 6 -strict-concurrency=complete Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/snapshot/main.swift -o /tmp/clockin-snapshot-tests && /tmp/clockin-snapshot-tests
@@ -60,6 +60,7 @@ swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Earnings/Earnings
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-historytry-module-cache Shared/Core/Models.swift Shared/Core/ExchangeRates.swift Clockin/Views/Earnings/EarningsPeriod.swift Clockin/Views/Earnings/EarningsSnapshot.swift Clockin/Views/Earnings/MonthPerformance.swift Clockin/Views/Goals/GoalProgress.swift ClockinWidgets/ReadyWidgetPlacement.swift Tests/manual/historytry/main.swift -o /tmp/clockin-historytry-tests && /tmp/clockin-historytry-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Insights/InsightsPeriods.swift Tests/manual/insights/main.swift -o /tmp/clockin-insights-tests && /tmp/clockin-insights-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-mascot-module-cache Shared/Core/Models.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Shared/Mascot/MascotMotion.swift Shared/Mascot/MascotState.swift Tests/manual/mascot/main.swift -o /tmp/clockin-mascot-tests && /tmp/clockin-mascot-tests
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-mascot2-module-cache Shared/Core/Models.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Shared/Mascot/MascotMotion.swift Shared/Mascot/MascotState.swift Shared/Mascot/CompanionAccessory.swift Clockin/Celebrations/CelebrationRules.swift Tests/manual/companion2/main.swift -o /tmp/clockin-companion2-tests && /tmp/clockin-companion2-tests
 swiftc -swift-version 6 Clockin/Views/Mascot/CompanionMode.swift Tests/manual/companion/main.swift -o /tmp/clockin-companion-tests && /tmp/clockin-companion-tests
 swiftc -swift-version 6 Clockin/Views/Momentum/MoneyMomentum.swift Tests/manual/momentum/main.swift -o /tmp/clockin-momentum-tests && /tmp/clockin-momentum-tests
 swiftc -swift-version 6 Clockin/Views/Share/ShareStatsFields.swift Tests/manual/share/main.swift -o /tmp/clockin-share-tests && /tmp/clockin-share-tests
@@ -328,3 +329,89 @@ swift Tests/manual/moodart/main.swift
 
 Both commands accept `-module-cache-path /tmp/clockin-art-module-cache` immediately
 after `swift` when the default compiler cache is unavailable in a sandbox.
+
+## Companion moods, accessories and idle motion
+
+Today, desk mode and the medium widget use the same session mood decision.
+A four-second proud window takes priority, then working, then an existing Grumpy
+angry nudge. Otherwise an idle companion is tired after at least two quiet calendar
+days, which also covers a streak broken yesterday. Friendly ignores stale anger
+and uses tired for that drift. Paused sessions keep coffee unless Grumpy applies;
+a fresh account with no worked days stays hello. Tired and proud reuse hello's
+clip IDs with `z`/`p` prefixes and its feet anchor. Missing frames fall back to the
+matching hello drawing, then hello rest. Tired has no automatic hops and waits
+3.5-6.5 seconds between drawn clips.
+
+Pride follows a level celebration, badge unlock, daily goal crossing, or saving a
+session with more than two hours of worked time (pauses excluded). It does not
+follow cancellation, exactly two hours, an already reached goal or goal editing.
+It is independent of the playful reaction cooldown. New achievements also write
+the window to the widget snapshot; a covered app companion gets its window when
+the sheet/alert closes. A level card uses proud. The widget precomputes a still
+entry at pride expiry so it can return to its normal mood without an app timer.
+WidgetKit controls reload delivery: a four-second expression can be skipped if
+iOS delivers the reload after its deadline. The timestamp prevents stale pride.
+
+Settings > Appearance > Accessory stores `Clockin.CompanionAccessory`.
+Auto chooses the highest unlocked item, None hides accessories, and explicit
+choices retain the selected item. Unknown or currently locked values resolve to
+Auto. Headphones unlock at 25h, Mug at 50h, Cape at 100h and Gold antenna at 250h,
+using completed work plus the active session, as companion modes do. The four
+accessory images are complete hello rest drawings. They replace that rest frame
+only; all drawn clips and hops use the plain frames. The medium widget can wear
+the same selected accessory in hello. Badges > Companion lists the requirements,
+unlocked states and remaining time, rounding a partial minute up.
+
+Accessory celebration history is separate from badges in
+`Clockin.SeenAccessoryIDs`. The first refresh in this version silently seeds
+all currently unlocked items, including an empty set. Later unlocks queue one
+"New accessory" banner per item with its name and worn still. Banners wait behind
+sheets and survive interruption like badges; seen items do not celebrate again
+after a restore and re-unlock. Active-session thresholds use the existing minute
+refresh; no accessory timer was added.
+
+Standing motion uses a finite 5.2-second sway followed by 7.8 seconds with no sway
+animation, one cycle every 13 seconds. Tired uses a 7.8-second sway at 45% amplitude
+and a 12-second rest. Angry uses its existing short 0.66-second shake followed by
+7.8 seconds of rest. The longer rests reduce continuous render-server work while
+independent drawn clips and hops preserve life. CA removes each finished sway;
+a cancellable task only wakes to start the next burst, not at every frame or at
+the end of a burst. The ordinary clip and hop rhythms are unchanged.
+
+All companion motion uses the rolling digits' power/thermal policy: Reduce
+Motion, Low Power Mode, serious/critical/unknown thermal state, inactive scenes
+and covered or unselected content stop the clip task and remove CA animations.
+Nominal and fair thermal states are allowed, matching the digits. Desk mode's
+companion lives outside its second-ticking timer subtree. No measurements were
+made for this change.
+
+The `companion2` check above covers the catalog, thresholds, saved fallback,
+rest-only drawing, progress strings, silent accessory seeding and queue lifecycle,
+all tone/anger/streak/quiet-day/pride/session combinations, date boundaries, pride
+triggers, shared widget fields, missing-frame fallback and the pure burst schedule.
+The existing rolling suite checks every combination of visibility, power, thermal
+and Reduce Motion gates used by the companion.
+
+Manual visual acceptance with synthetic sessions:
+
+1. On Today and in desk mode, check no-history hello, working, paused, two quiet
+   days and a three-day streak broken yesterday. Switch Friendly/Grumpy with
+   notifications allowed and denied. Existing angry nudges should still win for
+   Grumpy; Friendly drift should be tired. Repeat in the medium widget.
+2. Cross a level, unlock a badge, reach a daily goal, and save 2h 1m of work.
+   Check proud for about four seconds, then normal behavior. Repeat with a sheet
+   or alert open, a running session, custom default mode, Reduce Motion, and
+   companion off. Exactly 2h and cancellation must not trigger session pride.
+   Verify the level card uses proud and widget pride never remains after expiry.
+3. Start just below 25/50/100/250h and cross each threshold with an active session.
+   Check the next minute refresh, one banner, its accessory art and Badges link.
+   Test Auto, None, every unlocked choice, grey locked choices, an unknown saved
+   value, and a stored item locked by restoring a smaller synthetic archive.
+   At 12.5h, Headphones must show "12h 30m to go". On first launch with 100h of
+   synthetic history, the first three accessories must be unlocked without banners.
+4. Watch hello's blink, glow, antenna dip and hop with an accessory selected.
+   The accessory is present at rest, absent throughout each event, then returns.
+   Tired never hops automatically. Check desk layout on a small landscape phone,
+   large text, VoiceOver, theme changes and rotation while Settings is presented.
+5. For the before/after CPU and rendering comparison, follow the exact capture
+   matrix in `PERFORMANCE.md` under Companion idle acceptance measurement.

@@ -8,7 +8,12 @@ final class CelebrationCenter: ObservableObject {
     @Published private(set) var event: CelebrationEvent?
     @Published private(set) var presentationID = 0
     @Published private(set) var snapshot: InsightsSnapshot?
+    @Published private(set) var hasBlockingPresentation = false
+    @Published private(set) var proudUntil: Date?
+    private var prideExpiry: Task<Void, Never>?
+    private var pendingPride = false
     @Published private(set) var snapshotDate = Date.now
+    private(set) var lastWorkedDay: Date?
 
     private let defaults: UserDefaults
     private var queue: CelebrationQueue
@@ -30,12 +35,14 @@ final class CelebrationCenter: ObservableObject {
         self.defaults = defaults
         queue = CelebrationQueue(
             lastLevel: defaults.object(forKey: CelebrationRules.levelKey) as? Int,
-            seenBadgeIDs: defaults.stringArray(forKey: CelebrationRules.badgesKey).map(Set.init)
+            seenBadgeIDs: defaults.stringArray(forKey: CelebrationRules.badgesKey).map(Set.init),
+            seenAccessoryIDs: defaults.stringArray(forKey: CompanionAccessory.seenKey).map(Set.init)
         )
     }
 
     deinit {
         dismissal?.cancel()
+        prideExpiry?.cancel()
         releaseTasks.values.forEach { $0.cancel() }
     }
 
@@ -45,6 +52,7 @@ final class CelebrationCenter: ObservableObject {
         let stats = InsightsSnapshot(store: store, now: now, dailyGoal: dailyGoal,
                                      monthlyGoal: defaults.double(forKey: "Clockin.GoalMonthlyHours"))
         snapshot = stats
+        lastWorkedDay = stats.daily.filter { $0.value > 0 && $0.key <= now }.keys.max()
         snapshotDate = now
         let running = store.running
         let earnings = store.currentEarnings(at: now)
@@ -53,6 +61,7 @@ final class CelebrationCenter: ObservableObject {
                                      currencyCode: store.currencyCode, usdTryRate: nil)
         var state = CelebrationState()
         state.level = stats.level
+        state.totalHours = stats.totalDuration / 3600
         state.focusHours = Int(max(0, stats.totalDuration / 3600))
         state.badges = stats.badges.filter(\.unlocked).map { CelebrationBadge(id: $0.id, title: $0.title, icon: $0.icon) }
         state.day = Calendar.current.startOfDay(for: now)
@@ -65,12 +74,38 @@ final class CelebrationCenter: ObservableObject {
         state.nextMoneyTarget = momentum.nextTarget
         state.currency = store.currencyCode
         if let previousStart = queue.previous?.sessionStart, running == nil {
-            state.savedPreviousSession = store.sessions.contains { $0.start == previousStart }
+            let saved = store.sessions.first { $0.start == previousStart }
+            state.savedPreviousSession = saved != nil
+            state.savedPreviousDuration = saved?.duration ?? 0
         }
+        let earnedPride = CelebrationRules.earnsPride(from: queue.previous, to: state)
+        let oldPending = queue.pending
         queue.ingest(state, now: ProcessInfo.processInfo.systemUptime,
                      canReact: active && UIApplication.shared.applicationState == .active && blockers.isEmpty && !visibleCompanions.isEmpty)
+        if earnedPride || queue.pending.contains(where: { $0.startsPride && !oldPending.contains($0) }) {
+            // Widget olayi hemen alir; kapali kart sheet sonrasi kendi penceresini acar.
+            showPride()
+            pendingPride = true
+        }
         persist()
         requestPresentation()
+    }
+
+    func companionState(running: RunningSession?, angry: Bool, friendly: Bool) -> MascotAsset {
+        MascotAsset.session(running: running, angry: angry, friendly: friendly,
+                            quietDays: MascotAsset.quietDays(since: lastWorkedDay, now: snapshotDate),
+                            proudUntil: proudUntil)
+    }
+
+    private func showPride() {
+        pendingPride = false
+        prideExpiry?.cancel()
+        proudUntil = Date.now.addingTimeInterval(CelebrationRules.proudDuration)
+        prideExpiry = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(CelebrationRules.proudDuration)) } catch { return }
+            self?.proudUntil = nil
+            self?.prideExpiry = nil
+        }
     }
 
     func setActive(_ value: Bool) {
@@ -97,6 +132,7 @@ final class CelebrationCenter: ObservableObject {
         releaseTasks[id] = nil
         if blocked {
             blockers.insert(id)
+            hasBlockingPresentation = true
             suspend()
         } else if waitForDismissal, blockers.contains(id) {
             // Alert kapanisinin son karesiyle kutlama cakismasin.
@@ -105,10 +141,12 @@ final class CelebrationCenter: ObservableObject {
                 guard let self else { return }
                 self.releaseTasks[id] = nil
                 self.blockers.remove(id)
+                self.hasBlockingPresentation = !self.blockers.isEmpty
                 self.requestPresentation()
             }
         } else {
             blockers.remove(id)
+            hasBlockingPresentation = !blockers.isEmpty
             requestPresentation()
         }
     }
@@ -138,7 +176,9 @@ final class CelebrationCenter: ObservableObject {
             guard self.screenIsFree() else { self.queue.suspend(); return }
             self.queue.presentNext(active: true, blocked: false, companionVisible: !self.visibleCompanions.isEmpty,
                                    now: ProcessInfo.processInfo.systemUptime)
+            if self.pendingPride { self.showPride() }
             guard let event = self.queue.current else { self.dismissal = nil; return }
+            if event.startsPride { self.showPride() }
             self.reactionOwner = event.isReaction ? self.visibleCompanions.first : nil
             self.presentationID &+= 1
             self.event = event
@@ -170,6 +210,10 @@ final class CelebrationCenter: ObservableObject {
     func screenAttached() { requestPresentation() }
 
     private func persist() {
+        if let ids = queue.seenAccessoryIDs,
+           defaults.stringArray(forKey: CompanionAccessory.seenKey).map(Set.init) != ids {
+            defaults.set(ids.sorted(), forKey: CompanionAccessory.seenKey)
+        }
         if let level = queue.lastLevel, defaults.object(forKey: CelebrationRules.levelKey) as? Int != level {
             defaults.set(level, forKey: CelebrationRules.levelKey)
         }

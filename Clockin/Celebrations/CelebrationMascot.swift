@@ -26,9 +26,15 @@ struct CelebrationMascot: View {
     let reaction: MascotReaction
     let moving: Bool
     @State private var loaded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.clockinContentActive) private var contentActive
+    @ObservedObject private var animationPolicy = RollingAnimationPolicy.shared
 
     var body: some View {
-        CelebrationMascotRenderer(mood: mood, reaction: reaction, moving: moving && loaded, loaded: loaded)
+        CelebrationMascotRenderer(mood: mood, reaction: reaction, moving: moving && loaded && animationPolicy.allowsAnimation(
+            reduceMotion: reduceMotion, contentActive: contentActive, sceneActive: scenePhase == .active, visible: true),
+            loaded: loaded)
             .accessibilityHidden(true)
             .task(id: mood) {
                 loaded = false

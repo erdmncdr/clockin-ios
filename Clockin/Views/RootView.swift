@@ -18,6 +18,7 @@ struct RootView: View {
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     @AppStorage(NudgePlanner.enabledKey) private var nudgesEnabled = true
     @AppStorage(NudgePlanner.toneKey) private var nudgeTone = NudgeTone.grumpy.rawValue
+    @AppStorage(CompanionAccessory.storageKey) private var accessory = "Auto"
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @AppStorage(GoalPrompt.configuredKey) private var everConfiguredGoal = false
@@ -57,7 +58,7 @@ struct RootView: View {
                 .accessibilityHidden(showsDeskMode)
             if showsDeskMode {
                 DeskModeView(onClockOut: { deskSummary = $0 })
-                    .environment(\.clockinContentActive, deskSummary == nil && celebrations.event == nil)
+                    .environment(\.clockinContentActive, deskSummary == nil && !celebrations.hasBlockingPresentation && (celebrations.event == nil || celebrations.event?.isReaction == true))
                     .statusBarHidden()
                     .persistentSystemOverlays(.hidden)
                     .transition(.opacity)
@@ -111,7 +112,11 @@ struct RootView: View {
         // Oturum degisiklikleri `SessionMirror`'dan gelir; o ekran yokken de
         // calisir. Burada yalnizca uygulama acikken degisen tercihler izlenir.
         .onChange(of: nudgesEnabled) { _, _ in nudges.update(store: store) }
-        .onChange(of: nudgeTone) { _, _ in nudges.update(store: store) }
+        .onChange(of: nudgeTone) { _, _ in
+            nudges.update(store: store)
+            SessionMirror.shared.refreshCompanion()
+        }
+        .onChange(of: accessory) { _, _ in SessionMirror.shared.refreshCompanion() }
         .onChange(of: dailyGoalHours) { _, _ in
             nudges.update(store: store)
             celebrations.refresh(store: store)
@@ -158,7 +163,7 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView(selection: $tab.hapticSelection($selectionFeedback)) {
-            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil && (celebrations.event == nil || celebrations.event?.isReaction == true), showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
+            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil && !celebrations.hasBlockingPresentation && (celebrations.event == nil || celebrations.event?.isReaction == true), showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
                 goalEditorRequest = true
                 tab = .insights
             }, showProgress: { tab = .badges })

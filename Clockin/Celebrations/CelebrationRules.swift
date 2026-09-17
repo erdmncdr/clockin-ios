@@ -13,8 +13,16 @@ enum CelebrationReaction: String, CaseIterable, Sendable {
 enum CelebrationEvent: Equatable, Sendable {
     case levelUp(level: Int, hours: Int)
     case badge(CelebrationBadge)
+    case accessory(CompanionAccessory)
     case moreBadges([String])
     case reaction(CelebrationReaction)
+
+    var startsPride: Bool {
+        switch self {
+        case .levelUp, .badge, .moreBadges: true
+        case .accessory, .reaction: false
+        }
+    }
 
     var badgeIDs: Set<String> {
         switch self {
@@ -29,6 +37,8 @@ struct CelebrationState: Equatable, Sendable {
     var level = 1
     var focusHours = 0
     var badges: [CelebrationBadge] = []
+    var totalHours = 0.0
+    var savedPreviousDuration = 0.0
     var day = Date.distantPast
     var dailyHours = 0.0
     var dailyGoal = 0.0
@@ -56,6 +66,7 @@ struct CelebrationPresentation: Equatable {
 enum CelebrationRules {
     static let levelKey = "Clockin.LastCelebratedLevel"
     static let badgesKey = "Clockin.SeenBadgeIDs"
+    static let proudDuration: TimeInterval = 4
     static let reactionInterval: TimeInterval = 20
 
     static func levelUp(from shownOrQueuedLevel: Int, to state: CelebrationState) -> CelebrationEvent? {
@@ -64,6 +75,13 @@ enum CelebrationRules {
 
     static func unseenBadges(in state: CelebrationState, seen: Set<String>, reserved: Set<String>) -> [CelebrationBadge] {
         state.badges.filter { !seen.contains($0.id) && !reserved.contains($0.id) }
+    }
+
+    static func earnsPride(from old: CelebrationState?, to new: CelebrationState) -> Bool {
+        guard let old else { return false }
+        let longSession = old.sessionStart != nil && new.sessionStart == nil
+            && new.savedPreviousSession && new.savedPreviousDuration > 2 * 3600
+        return longSession || reactions(from: old, to: new).contains(.dailyGoal)
     }
 
     static func reactions(from old: CelebrationState?, to new: CelebrationState) -> [CelebrationReaction] {
@@ -91,21 +109,31 @@ enum CelebrationRules {
 struct CelebrationQueue {
     private(set) var lastLevel: Int?
     private(set) var seenBadgeIDs: Set<String>?
+    private(set) var seenAccessoryIDs: Set<String>?
     private(set) var pending: [CelebrationEvent] = []
     private(set) var current: CelebrationEvent?
     private(set) var previous: CelebrationState?
     private(set) var lastReactionAt: TimeInterval?
     private var badgesPresented = 0
 
-    init(lastLevel: Int? = nil, seenBadgeIDs: Set<String>? = nil) {
+    init(lastLevel: Int? = nil, seenBadgeIDs: Set<String>? = nil, seenAccessoryIDs: Set<String>? = nil) {
         self.lastLevel = lastLevel
         self.seenBadgeIDs = seenBadgeIDs
+        self.seenAccessoryIDs = seenAccessoryIDs
     }
 
     mutating func ingest(_ state: CelebrationState, now: TimeInterval, canReact: Bool) {
         defer { previous = state }
         if lastLevel == nil { lastLevel = state.level }
         if seenBadgeIDs == nil { seenBadgeIDs = Set(state.badges.map(\.id)) }
+        let unlockedAccessories = CompanionAccessory.allCases.filter { $0.isUnlocked(totalHours: state.totalHours) }
+        if seenAccessoryIDs == nil { seenAccessoryIDs = Set(unlockedAccessories.map(\.id)) }
+        let reservedAccessories = Set((pending + (current.map { [$0] } ?? [])).compactMap { event -> String? in
+            if case .accessory(let accessory) = event { return accessory.id }; return nil
+        })
+        pending += unlockedAccessories.filter {
+            !(seenAccessoryIDs ?? []).contains($0.id) && !reservedAccessories.contains($0.id)
+        }.map(CelebrationEvent.accessory)
         let queuedLevel = pending.compactMap { event -> Int? in
             if case .levelUp(let level, _) = event { return level }; return nil
         }.max() ?? 0
@@ -153,6 +181,7 @@ struct CelebrationQueue {
                 if !(seenBadgeIDs ?? []).isSuperset(of: event.badgeIDs) { badgesPresented += 1 }
                 seenBadgeIDs?.formUnion(event.badgeIDs)
             case .moreBadges: seenBadgeIDs?.formUnion(event.badgeIDs)
+            case .accessory(let accessory): seenAccessoryIDs?.insert(accessory.id)
             case .reaction: break
             }
             return

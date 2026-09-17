@@ -20,6 +20,7 @@ struct BadgesView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             levelCard(stats)
                             InsightsBadgesView(badges: stats.badges)
+                            companionSection(totalHours: stats.totalDuration / 3600)
                         }
                         .padding(16)
                     }
@@ -31,6 +32,38 @@ struct BadgesView: View {
         }
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
+    }
+
+    private func companionSection(totalHours: Double) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionTitle("COMPANION")
+            ForEach(CompanionAccessory.allCases) { accessory in
+                let unlocked = accessory.isUnlocked(totalHours: totalHours)
+                HStack(spacing: 12) {
+                    Image(systemName: accessory.symbol)
+                        .font(.title3)
+                        .frame(width: 32)
+                        .foregroundStyle(unlocked ? palette.accent : Color.secondary)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(accessory.name).font(.subheadline.weight(.semibold))
+                        Text("\(Int(accessory.requiredHours))h of total work")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text(accessory.progressText(totalHours: totalHours))
+                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: unlocked ? "checkmark.seal.fill" : "lock.fill")
+                        .foregroundStyle(unlocked ? palette.accent : Color.secondary)
+                }
+                .padding(10)
+                .background(unlocked ? palette.accent.opacity(0.12) : palette.surface,
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .opacity(unlocked ? 1 : 0.6)
+                .accessibilityElement(children: .combine)
+                .accessibilityValue(unlocked ? "Unlocked" : "Locked")
+            }
+        }
+        .padding(16).card(palette)
     }
 
     private func levelCard(_ stats: InsightsSnapshot) -> some View {

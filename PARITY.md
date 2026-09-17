@@ -15,7 +15,11 @@ with matching station ids and names.
 - Live Activity and Dynamic Island, with pause and clock out
 - Shortcuts and Siri actions: Clock In, Clock Out, Pause or Resume
 - iOS 18 controls for clock in/out and pause/resume in Control Center, Lock Screen slots, and the Action Button on supported iPhones
-- Companion nudges with Grumpy or Friendly tone, companion moods, and at most two daytime notifications per day
+- Companion nudges with Grumpy or Friendly tone and at most two daytime notifications per day
+- Tired idle mood after two quiet calendar days (including a streak broken yesterday), with existing Grumpy anger taking priority; four-second proud mood for levels, badges, daily goals and saved sessions longer than two hours
+- Earned companion accessories at 25/50/100/250 total hours, including the active session; Auto/None/manual selection, unlock banners, silent upgrade seeding and progress in Badges > Companion
+- Companion in desk mode and matching medium-widget mood/accessory stills; accessory art replaces only hello at rest
+- Finite standing sway bursts with animation-free rests, slower tired motion, and shared Reduce Motion, visibility, power and thermal gates
 - Long session reminder with Clock out, Set end time, and Remind in 1 hour actions
 - Haptics on timer actions, a celebration on the clock-out summary
 - Companion level-up overlays with Share and finite confetti, queued badge-unlock banners, and brief goal, money, streak and session reactions; persisted progress, Reduce Motion and companion-off variants
@@ -58,7 +62,9 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
 ```
 
-The companion motion engine is shared by copy. Keep both files identical:
+The companion motion engine started as a copy. iPhone now adds tired/proud moods,
+frame fallbacks and a finite sway schedule. Port relevant common fixes deliberately;
+do not overwrite the platform-specific behavior:
 
 ```bash
 diff ../Sources/Clockin/MascotMotion.swift Shared/Mascot/MascotMotion.swift

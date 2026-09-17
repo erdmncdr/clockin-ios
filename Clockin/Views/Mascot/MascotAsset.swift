@@ -16,6 +16,7 @@ struct ClockinMascotStage: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var store: ClockStore
     @AppStorage("Clockin.MascotDefault") private var defaultMode = "Auto"
+    @AppStorage(CompanionAccessory.storageKey) private var accessoryChoice = "Auto"
     let state: MascotAsset
     @State private var tap: MascotTap?
     @ObservedObject private var celebrations = CelebrationCenter.shared
@@ -24,13 +25,21 @@ struct ClockinMascotStage: View {
 
     @Environment(\.clockinContentActive) private var contentActive
     @State private var appeared = false
-    private var moving: Bool { appeared && contentActive && !reduceMotion && scenePhase == .active }
+    @ObservedObject private var animationPolicy = RollingAnimationPolicy.shared
+    private var moving: Bool {
+        animationPolicy.allowsAnimation(reduceMotion: reduceMotion, contentActive: contentActive,
+                                        sceneActive: scenePhase == .active, visible: appeared)
+    }
 
     var body: some View {
         let mode = CompanionMode.resolve(defaultMode, totalHours: (store.totalDuration + store.elapsed()) / 3600)
         let current = mood(for: mode)
+        let accessory = CompanionAccessory.resolve(accessoryChoice,
+            totalHours: (celebrations.snapshot?.totalDuration ?? (store.totalDuration + store.elapsed())) / 3600)
         Group {
-            if moving, let reaction = celebrations.reaction(for: companionID) {
+            if current == .proud {
+                ClockinMotionMascot(mood: .proud)
+            } else if moving, let reaction = celebrations.reaction(for: companionID) {
                 CelebrationMascot(mood: reaction.mood, reaction: reaction.mascotReaction, moving: true)
                     .id(celebrations.presentationID)
             } else if moving, let tap {
@@ -38,7 +47,7 @@ struct ClockinMascotStage: View {
                                   reaction: tap.reaction, moving: true)
                     .id(tap.id)
             } else if let mood = current {
-                ClockinMotionMascot(mood: mood, tap: tap)
+                ClockinMotionMascot(mood: mood, accessory: accessory, tap: tap)
             } else if let fixed = mode.fixedPoseIndex {
                 ClockinMascotImage(asset: "pose\(fixed)")
             }
@@ -63,7 +72,7 @@ struct ClockinMascotStage: View {
     }
 
     private func mood(for mode: CompanionMode) -> MascotMood? {
-        if state == .celebrate || state == .angry { return state.mood }
+        if [.celebrate, .angry, .tired, .proud].contains(state) { return state.mood }
         switch mode {
         case .auto: return state.mood
         case .typing: return .working
@@ -92,11 +101,13 @@ struct MascotTap: Equatable {
 @MainActor
 struct ClockinMotionMascot: View {
     let mood: MascotMood
+    var accessory: CompanionAccessory?
     var tap: MascotTap?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @State private var frame: String?
+    @State private var performingEvent = false
     @State private var hop = MascotLayerView.HopRequest(id: 0, height: 1)
     @State private var hopUntil = Date.distantPast
     @State private var pop = 0
@@ -126,17 +137,20 @@ struct ClockinMotionMascot: View {
 
     @Environment(\.clockinContentActive) private var contentActive
     @State private var appeared = false
-    private var moving: Bool { appeared && contentActive && !reduceMotion && scenePhase == .active }
+    @ObservedObject private var animationPolicy = RollingAnimationPolicy.shared
+    private var moving: Bool {
+        animationPolicy.allowsAnimation(reduceMotion: reduceMotion, contentActive: contentActive,
+                                        sceneActive: scenePhase == .active, visible: appeared)
+    }
     private var clips: MascotMoodClips? { MascotFrames.shared.library?[mood] }
 
     var body: some View {
         MascotLayerRepresentable(
-            image: loadedMood == mood ? ((moving && frameMood == mood ? frame : nil) ?? clips?.rest)
-                .flatMap { MascotFrames.shared.image($0) } : nil,
+            image: displayedFrame.flatMap { MascotFrames.shared.image($0) },
             feet: mood.feet,
             moving: moving,
             swaying: moving && mood != .angry && clips?.standing == true,
-            angry: mood == .angry,
+            angry: mood == .angry, tired: mood == .tired,
             hop: hop, pop: pop, wiggle: wiggle, squash: squash,
             dark: colorScheme == .dark
         )
@@ -173,6 +187,13 @@ struct ClockinMotionMascot: View {
         }
     }
 
+    private var displayedFrame: String? {
+        guard loadedMood == mood, let rest = clips?.rest else { return nil }
+        let current = (moving && frameMood == mood ? frame : nil) ?? rest
+        return CompanionAccessory.displayFrame(current, helloRest: mood == .hello && current == rest,
+                                               performingEvent: moving && performingEvent, accessory: accessory)
+    }
+
     private func queueClip(for tap: MascotTap, in mood: MascotMood) {
         guard moving, let clips = MascotFrames.shared.library?[mood] else { return }
         var random = SystemRandomNumberGenerator()
@@ -188,13 +209,14 @@ struct ClockinMotionMascot: View {
 
     private func run() async {
         guard let clips else { return }
+        performingEvent = false
         frame = clips.rest
         frameMood = mood
         await MascotFrames.shared.preload(mood)
         guard !Task.isCancelled else { return }
         loadedMood = mood
         guard moving else { return }
-        var director = MascotDirector(clips)
+        var director = MascotDirector(clips, tired: mood == .tired)
         var random = SystemRandomNumberGenerator()
         if let lead = leadClip, let steps = clips.clips[lead.name] {
             await play(steps)
@@ -209,8 +231,10 @@ struct ClockinMotionMascot: View {
             if Task.isCancelled || director.skipsEvent(using: &random) { continue }
             switch director.next(using: &random) {
             case .hop(let height):
+                performingEvent = true
                 startHop(height: mood == .angry ? 0.3 : height)
                 do { try await Task.sleep(for: .seconds(MascotMotion.hopDuration(height: height))) } catch { return }
+                performingEvent = false
             case .clip(let name):
                 if let steps = clips.clips[name] { await play(steps) }
             case nil:
@@ -220,6 +244,8 @@ struct ClockinMotionMascot: View {
     }
 
     private func play(_ steps: [MascotStep]) async {
+        performingEvent = true
+        defer { performingEvent = false }
         for step in steps {
             guard !Task.isCancelled else { return }
             frame = step.frame
@@ -235,6 +261,7 @@ private struct MascotLayerRepresentable: UIViewRepresentable {
     let moving: Bool
     let swaying: Bool
     let angry: Bool
+    let tired: Bool
     let hop: MascotLayerView.HopRequest
     let pop: Int
     let wiggle: Int
@@ -248,7 +275,7 @@ private struct MascotLayerRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: MascotLayerView, context: Context) {
-        view.update(image: image, feet: feet, moving: moving, swaying: swaying, angry: angry,
+        view.update(image: image, feet: feet, moving: moving, swaying: swaying, angry: angry, tired: tired,
                     hop: hop, pop: pop, wiggle: wiggle, squash: squash, dark: dark)
     }
 
@@ -277,6 +304,8 @@ final class MascotLayerView: UIView {
     private var lastWiggle = 0
     private var lastSquash = 0
     private var angry = false
+    private var tired = false
+    private var swayTask: Task<Void, Never>?
     private var dark: Bool?
     private var swaySide: CGFloat = 0
 
@@ -303,7 +332,7 @@ final class MascotLayerView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    func update(image: CGImage?, feet: Double, moving: Bool, swaying: Bool, angry: Bool, hop: HopRequest, pop: Int, wiggle: Int, squash: Int, dark: Bool) {
+    func update(image: CGImage?, feet: Double, moving: Bool, swaying: Bool, angry: Bool, tired: Bool, hop: HopRequest, pop: Int, wiggle: Int, squash: Int, dark: Bool) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         if (body.contents as! CGImage?) !== image { body.contents = image }
@@ -326,14 +355,12 @@ final class MascotLayerView: UIView {
             lastSquash = squash
             return
         }
-        if self.angry != angry {
+        let wantsSway = swaying || angry
+        if self.angry != angry || self.tired != tired || self.swaying != wantsSway {
             self.angry = angry
-            sway.removeAllAnimations()
-        }
-        if angry, sway.animation(forKey: "angry") == nil { startAngry() }
-        if self.swaying != swaying {
-            self.swaying = swaying
-            if swaying { startSway() } else { sway.removeAnimation(forKey: "sway") }
+            self.tired = tired
+            self.swaying = wantsSway
+            restartSwayBursts()
         }
         if lastHop == nil {
             lastHop = hop
@@ -360,7 +387,11 @@ final class MascotLayerView: UIView {
         }
     }
 
+    deinit { swayTask?.cancel() }
+
     func stopMotion() {
+        swayTask?.cancel()
+        swayTask = nil
         swaying = false
         angry = false
         [rig, shadowLayer, sway, popLayer, reactLayer, body].forEach { $0.removeAllAnimations() }
@@ -386,7 +417,7 @@ final class MascotLayerView: UIView {
         shadowLayer.bounds = CGRect(x: 0, y: 0, width: side * 0.38, height: side * 0.04)
         shadowLayer.position = CGPoint(x: square.width / 2, y: square.height * anchor.y)
         CATransaction.commit()
-        if swaying, side != swaySide { startSway() }
+        if swaying, side != swaySide { restartSwayBursts() }
     }
 
     override func didMoveToWindow() {
@@ -396,32 +427,38 @@ final class MascotLayerView: UIView {
         if window == nil { stopMotion() }
     }
 
-    private func startAngry() {
-        // Kisa titreme ve bekleme render sunucusunda tekrar eder.
-        let animation = CAKeyframeAnimation(keyPath: "transform")
-        animation.values = MascotMotion.samples(count: 121) { progress in
-            let shake = progress < 0.3 ? MascotMotion.wiggle(progress: progress / 0.3) * 0.45 : 0
-            return NSValue(caTransform3D: CATransform3DMakeRotation(shake * .pi / 180, 0, 0, 1))
+    private func restartSwayBursts() {
+        swayTask?.cancel()
+        swayTask = nil
+        sway.removeAllAnimations()
+        swaySide = min(bounds.width, bounds.height)
+        guard swaying, swaySide > 0 else { return }
+        let schedule = MascotSwaySchedule.schedule(for: angry ? .angry : (tired ? .tired : .hello))
+        // Sonlu CA kendiliginden biter; dinlenmede katmanda animasyon kalmaz.
+        swayTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                guard self != nil else { return }
+                self?.playSwayBurst(schedule)
+                do { try await Task.sleep(for: .seconds(schedule.cycle)) } catch { return }
+            }
         }
-        animation.duration = 2.2
-        animation.repeatCount = .infinity
-        sway.add(animation, forKey: "angry")
     }
 
-    private func startSway() {
-        let side = min(bounds.width, bounds.height)
-        swaySide = side
-        guard side > 0 else { return }
+    private func playSwayBurst(_ schedule: MascotSwaySchedule) {
+        guard window != nil, swaying else { return }
         let animation = CAKeyframeAnimation(keyPath: "transform")
         animation.values = MascotMotion.samples(count: 61) { progress in
+            if angry {
+                let shake = MascotMotion.wiggle(progress: progress) * schedule.amplitude
+                return NSValue(caTransform3D: CATransform3DMakeRotation(shake * .pi / 180, 0, 0, 1))
+            }
             let pose = MascotMotion.sway(time: progress * MascotMotion.swayPeriod)
-            return NSValue(caTransform3D: CATransform3DRotate(CATransform3DMakeTranslation(0, pose.offsetY * side, 0),
-                                                              pose.rotationDegrees * .pi / 180, 0, 0, 1))
+            return NSValue(caTransform3D: CATransform3DRotate(
+                CATransform3DMakeTranslation(0, pose.offsetY * swaySide * schedule.amplitude, 0),
+                pose.rotationDegrees * schedule.amplitude * .pi / 180, 0, 0, 1))
         }
-        animation.duration = MascotMotion.swayPeriod
-        animation.repeatCount = .infinity
+        animation.duration = schedule.active
         animation.calculationMode = .linear
-        animation.beginTime = CACurrentMediaTime()
         sway.add(animation, forKey: "sway")
     }
 

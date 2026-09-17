@@ -25,7 +25,7 @@ func atRest(_ pose: MascotPose) -> Bool {
 let frames = URL(fileURLWithPath: "Shared/Mascot/Frames", isDirectory: true)
 let data = try Data(contentsOf: frames.appendingPathComponent("mascot-clips.json"))
 let library = try MascotLibrary(data: data)
-check(library.moods.count == 5, "JSON decodes all five moods including derived angry")
+check(library.moods.count == 7, "JSON decodes all seven moods including derived faces")
 for mood in MascotMood.allCases {
     let clips = library[mood]
     check(!clips.rest.isEmpty && !clips.clips.isEmpty && clips.frames.contains(clips.rest), "\(mood) has rest and clips")

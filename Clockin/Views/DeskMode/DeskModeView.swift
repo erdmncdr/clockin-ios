@@ -35,6 +35,12 @@ struct DeskModeView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
         }
+        .overlay(alignment: .topLeading) {
+            DeskCompanion()
+                .frame(width: 72, height: 72)
+                .padding(.leading, 24)
+                .padding(.top, 8)
+        }
         .background { palette.background.ignoresSafeArea() }
         .hapticFeedback(sessionFeedback)
     }
@@ -203,5 +209,21 @@ struct DeskModeView: View {
             label += goal.isReached ? ", goal reached" : ", \(DurationText.compact(goal.remaining)) to go"
         }
         return label
+    }
+}
+
+private struct DeskCompanion: View {
+    @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    @ObservedObject private var nudges = NudgeController.shared
+    @AppStorage("Clockin.MascotEnabled") private var enabled = true
+    @AppStorage(NudgePlanner.toneKey) private var tone = NudgeTone.grumpy.rawValue
+
+    var body: some View {
+        if enabled {
+            ClockinMascotStage(state: celebrations.companionState(
+                running: store.running, angry: nudges.mood?.isAngry == true,
+                friendly: tone == NudgeTone.friendly.rawValue))
+        }
     }
 }

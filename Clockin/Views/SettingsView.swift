@@ -13,11 +13,13 @@ private enum SettingsSheet: String, Identifiable {
 
 struct SettingsView: View {
     @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
+    @AppStorage(CompanionAccessory.storageKey) private var accessoryChoice = "Auto"
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     @AppStorage(HapticPolicy.enabledKey) private var hapticsEnabled = true
     @FocusState private var rateIsFocused: Bool
@@ -50,6 +52,7 @@ struct SettingsView: View {
                     Toggle("Focus companion", isOn: $mascotEnabled.hapticSelection($selectionFeedback))
                     if mascotEnabled {
                         companionBehavior
+                        companionAccessory
                     }
                 } header: {
                     Text("Appearance")
@@ -245,6 +248,23 @@ struct SettingsView: View {
                 Text("Auto follows your session. Unlock Victory at 10h, Stretch at 25h, Dance at 50h, and Music at 100h of total work, including your active session.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var companionAccessory: some View {
+        let hours = (celebrations.snapshot?.totalDuration ?? (store.totalDuration + store.elapsed())) / 3600
+        return Picker("Accessory", selection: Binding(
+            get: { CompanionAccessory.selection(accessoryChoice, totalHours: hours) },
+            set: { accessoryChoice = CompanionAccessory.selection($0, totalHours: hours) }
+        ).hapticSelection($selectionFeedback)) {
+            Text("Auto").tag("Auto")
+            Text("None").tag("None")
+            ForEach(CompanionAccessory.allCases) { accessory in
+                Label(accessory.menuLabel(totalHours: hours), systemImage: accessory.symbol)
+                    .foregroundStyle(accessory.isUnlocked(totalHours: hours) ? Color.primary : Color.secondary)
+                    .tag(accessory.id)
+                    .disabled(!accessory.isUnlocked(totalHours: hours))
             }
         }
     }

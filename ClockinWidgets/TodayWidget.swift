@@ -24,13 +24,17 @@ struct TodayProvider: TimelineProvider {
         // girdide donup kaliyordu: kilit ekraninda saat ilerlerken para duruyor,
         // hatta gunun toplami oturumun altinda kaliyordu. Bir saatlik girdiyi
         // pesin uretiyoruz; ilk dakikalar sik, sonrasi dakikada bir.
+        func datesWithPrideExpiry(_ dates: [Date]) -> [Date] {
+            guard let expiry = snapshot.companionProudUntil, expiry > now else { return dates }
+            return Array(Set(dates + [expiry])).sorted()
+        }
         guard snapshot.running?.isPaused == false else {
             let next = now.addingTimeInterval(15 * 60)
-            completion(Timeline(entries: [TodayEntry(date: now, snapshot: snapshot)],
+            completion(Timeline(entries: datesWithPrideExpiry([now]).map { TodayEntry(date: $0, snapshot: snapshot) },
                                 policy: .after(next)))
             return
         }
-        let entries = ClockinSnapshot.runningTimelineDates(from: now).map { date in
+        let entries = datesWithPrideExpiry(ClockinSnapshot.runningTimelineDates(from: now)).map { date in
             TodayEntry(date: date, snapshot: snapshot)
         }
         completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
@@ -129,7 +133,8 @@ private struct TodayWidgetView: View {
 
     private var mediumCompanion: some View {
         ClockinMascotStill(
-            mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood,
+            mood: snapshot.companionState(at: entry.date).mood,
+            accessory: snapshot.companionAccessoryID.flatMap(CompanionAccessory.init(rawValue:)),
             maxPixelSize: 240
         )
         .frame(width: ReadyWidgetPlacement.companionWidth, height: 80)

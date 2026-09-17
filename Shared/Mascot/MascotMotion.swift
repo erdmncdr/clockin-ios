@@ -13,13 +13,13 @@ import Foundation
 ///
 /// Kept free of SwiftUI so it can be checked on its own.
 enum MascotMood: String, CaseIterable, Sendable {
-    case hello, celebrate, coffee, working, angry
+    case hello, celebrate, coffee, working, angry, tired, proud
 
     /// Where the feet are, as a share of the image height from the top. Hops
     /// squash around this point and the shadow sits on it (site: `--feet`).
     var feet: Double {
         switch self {
-        case .hello, .angry: 0.89
+        case .hello, .angry, .tired, .proud: 0.89
         case .celebrate: 0.82
         case .working: 0.86
         case .coffee: 0.88
@@ -67,20 +67,23 @@ struct MascotLibrary: Sendable {
     init(data: Data) throws {
         let raw = try JSONDecoder().decode([String: MascotMoodClips].self, from: data)
         var moods: [MascotMood: MascotMoodClips] = [:]
-        for mood in MascotMood.allCases where mood != .angry {
+        for mood in [MascotMood.hello, .celebrate, .coffee, .working] {
             guard let clips = raw[mood.rawValue] else {
                 throw DecodingError.valueNotFound(MascotMoodClips.self, .init(codingPath: [], debugDescription: "Missing mood \(mood.rawValue)"))
             }
             moods[mood] = clips
         }
-        // Ayni cizim zamanlamasi; yalnizca yuz ifadesinin kareleri degisir.
         if let hello = moods[.hello] {
-            func angryID(_ id: String) -> String { "a" + id.dropFirst() }
-            moods[.angry] = MascotMoodClips(
-                rest: angryID(hello.rest), standing: hello.standing,
-                clips: hello.clips.mapValues { $0.map { MascotStep(angryID($0.frame), $0.milliseconds) } },
-                weights: hello.weights
-            )
+            for (mood, prefix) in [(MascotMood.angry, "a"), (.tired, "z"), (.proud, "p")] {
+                func frameID(_ id: String) -> String { prefix + id.dropFirst() }
+                var weights = hello.weights
+                if mood == .tired { weights["hop"] = 0 }
+                moods[mood] = MascotMoodClips(
+                    rest: frameID(hello.rest), standing: hello.standing,
+                    clips: hello.clips.mapValues { $0.map { MascotStep(frameID($0.frame), $0.milliseconds) } },
+                    weights: weights
+                )
+            }
         }
         self.moods = moods
     }
@@ -97,14 +100,16 @@ enum MascotEvent: Equatable, Sendable {
 struct MascotDirector {
     let clips: MascotMoodClips
     private(set) var last: String?
+    let tired: Bool
 
-    init(_ clips: MascotMoodClips) {
+    init(_ clips: MascotMoodClips, tired: Bool = false) {
+        self.tired = tired
         self.clips = clips
     }
 
     /// A pause between events for moods without a drawn base cycle.
     func restDelay(using random: inout some RandomNumberGenerator) -> Double {
-        Double.random(in: 0.7...2.1, using: &random)
+        Double.random(in: tired ? 3.5...6.5 : 0.7...2.1, using: &random)
     }
 
     /// Base moods keep their cycle and add an event only now and then.
@@ -361,5 +366,40 @@ enum MascotMotion {
             pose.scaleY *= scale
         }
         return pose
+    }
+}
+
+struct MascotSwaySchedule: Equatable, Sendable {
+    let active: TimeInterval
+    let rest: TimeInterval
+    let amplitude: Double
+    var cycle: TimeInterval { active + rest }
+
+    static func schedule(for mood: MascotMood) -> Self {
+        switch mood {
+        case .tired: Self(active: 7.8, rest: 12, amplitude: 0.45)
+        case .angry: Self(active: 0.66, rest: 7.8, amplitude: 0.45)
+        default: Self(active: MascotMotion.swayPeriod, rest: 7.8, amplitude: 1)
+        }
+    }
+
+    func isMoving(at elapsed: TimeInterval) -> Bool {
+        elapsed >= 0 && elapsed.truncatingRemainder(dividingBy: cycle) < active
+    }
+}
+
+enum MascotFrameFallback {
+    static func candidates(for id: String) -> [String] {
+        var ids = [id]
+        if let prefix = id.first, ["a", "z", "p"].contains(String(prefix)),
+           id.dropFirst().allSatisfy(\.isNumber) {
+            ids.append("h" + id.dropFirst())
+        }
+        if !ids.contains("h01") { ids.append("h01") }
+        return ids
+    }
+
+    static func resolve(_ id: String, exists: (String) -> Bool) -> String? {
+        candidates(for: id).first(where: exists)
     }
 }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MascotCard: View {
     @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    @AppStorage(NudgePlanner.toneKey) private var tone = NudgeTone.grumpy.rawValue
     @ObservedObject private var nudges = NudgeController.shared
     @Environment(\.palette) private var palette
 
@@ -11,7 +13,8 @@ struct MascotCard: View {
     let showInsights: () -> Void
 
     private var state: MascotAsset {
-        MascotAsset.session(running: store.running, angry: nudges.mood?.isAngry == true)
+        celebrations.companionState(running: store.running, angry: nudges.mood?.isAngry == true,
+                                   friendly: tone == NudgeTone.friendly.rawValue)
     }
 
     var body: some View {
@@ -27,7 +30,7 @@ struct MascotCard: View {
                             .font(.caption2.weight(.black))
                             .foregroundStyle(.secondary)
                             .tracking(1)
-                        Text(store.running?.isPaused == false ? state.message : (nudges.mood?.line ?? state.message))
+                        Text(state == .proud || state == .tired || store.running?.isPaused == false ? state.message : (nudges.mood?.line ?? state.message))
                             .font(.subheadline.weight(.semibold))
                             .fixedSize(horizontal: false, vertical: true)
                         Text("See your streak and progress")

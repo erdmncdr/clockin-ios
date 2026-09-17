@@ -4,13 +4,17 @@ struct CelebrationOverlay: View {
     @ObservedObject var center: CelebrationCenter
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var animationPolicy = RollingAnimationPolicy.shared
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.MascotEnabled") private var companionEnabled = true
     @ScaledMetric(relativeTo: .largeTitle) private var levelFontSize = 44
     let share: () -> Void
     let openBadges: () -> Void
 
     private var policy: CelebrationPresentation {
-        CelebrationPresentation(reduceMotion: reduceMotion, companionEnabled: companionEnabled)
+        CelebrationPresentation(reduceMotion: !animationPolicy.allowsAnimation(
+            reduceMotion: reduceMotion, contentActive: true, sceneActive: scenePhase == .active, visible: true),
+            companionEnabled: companionEnabled)
     }
 
     private var cardTransition: AnyTransition {
@@ -33,6 +37,8 @@ struct CelebrationOverlay: View {
                         levelMoment(level: level, hours: hours)
                     case .badge(let badge):
                         banner(title: badge.title, icon: badge.icon)
+                    case .accessory(let accessory):
+                        banner(title: accessory.name, icon: accessory.symbol, accessory: accessory)
                     case .moreBadges(let ids):
                         banner(title: "and \(ids.count) more", icon: "rosette")
                     case .reaction: EmptyView()
@@ -79,7 +85,7 @@ struct CelebrationOverlay: View {
     private func levelContent(level: Int, hours: Int) -> some View {
         VStack(spacing: 20) {
             if policy.companion {
-                CelebrationMascot(mood: .celebrate, reaction: .cheer, moving: policy.motion)
+                CelebrationMascot(mood: .proud, reaction: .wave, moving: policy.motion)
                     .frame(width: 120, height: 120)
                     // Ziplama da kartin icinde kalir.
                     .padding(.top, policy.motion ? 72 : 0)
@@ -115,7 +121,7 @@ struct CelebrationOverlay: View {
             .frame(maxWidth: .infinity, minHeight: 44)
     }
 
-    private func banner(title: String, icon: String) -> some View {
+    private func banner(title: String, icon: String, accessory: CompanionAccessory? = nil) -> some View {
         Button {
             center.dismiss()
             openBadges()
@@ -123,14 +129,19 @@ struct CelebrationOverlay: View {
             HStack(spacing: 12) {
                 Image(systemName: icon).font(.title2).foregroundStyle(palette.accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Badge unlocked").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text(accessory == nil ? "Badge unlocked" : "New accessory").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                     Text(title).font(.subheadline.bold()).foregroundStyle(.primary)
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if policy.companion {
-                    CelebrationMascot(mood: .hello, reaction: .wiggle, moving: policy.motion)
-                        .frame(width: 48, height: 48)
+                    if let accessory {
+                        ClockinMascotStill(mood: .hello, accessory: accessory)
+                            .frame(width: 48, height: 48)
+                    } else {
+                        CelebrationMascot(mood: .proud, reaction: .wiggle, moving: policy.motion)
+                            .frame(width: 48, height: 48)
+                    }
                 }
             }
             .padding(16)

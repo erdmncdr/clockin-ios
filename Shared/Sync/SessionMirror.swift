@@ -15,6 +15,7 @@ final class SessionMirror {
 
     private weak var store: ClockStore?
     private var subscription: AnyCancellable?
+    private var companionSubscriptions: Set<AnyCancellable> = []
     private var moodSubscription: AnyCancellable?
     private var lastSnapshot: ClockinSnapshot?
     private var lastState: ClockinActivityAttributes.ContentState?
@@ -35,7 +36,18 @@ final class SessionMirror {
                 // Published yeni degeri once yollar; controller tekrar okunmaz.
                 self?.syncSnapshot(angry: angry)
             }
+        companionSubscriptions.removeAll()
+        CelebrationCenter.shared.$snapshotDate.sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompanion() }
+        }.store(in: &companionSubscriptions)
+        CelebrationCenter.shared.$proudUntil.removeDuplicates().sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompanion() }
+        }.store(in: &companionSubscriptions)
         sync()
+    }
+
+    func refreshCompanion() {
+        syncSnapshot(angry: NudgeController.shared.mood?.isAngry == true)
     }
 
     func refresh() {
@@ -78,6 +90,12 @@ final class SessionMirror {
         let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
         var snapshot = ClockinSnapshot(store: store, theme: theme)
         snapshot.isAngry = angry && store.running?.isPaused != false
+        snapshot.companionFriendly = UserDefaults.standard.string(forKey: NudgePlanner.toneKey) == NudgeTone.friendly.rawValue
+        snapshot.companionLastWorkedDay = CelebrationCenter.shared.lastWorkedDay
+        snapshot.companionProudUntil = CelebrationCenter.shared.proudUntil
+        snapshot.companionAccessoryID = CompanionAccessory.resolve(
+            UserDefaults.standard.string(forKey: CompanionAccessory.storageKey) ?? "Auto",
+            totalHours: (store.totalDuration + store.elapsed()) / 3600)?.id
         if snapshot != lastSnapshot {
             do {
                 try snapshot.write()
