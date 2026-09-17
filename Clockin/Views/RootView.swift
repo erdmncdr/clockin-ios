@@ -29,7 +29,12 @@ struct RootView: View {
     @State private var celebrationShare: StatsShareSnapshot?
     @State private var shareBlocker = UUID()
     @State private var deskSuppressed = false
+    @State private var celebrationFading = false
     @ObservedObject private var celebrations = CelebrationCenter.shared
+
+    private var showsCelebration: Bool {
+        celebrations.event.map { !$0.isReaction } ?? false
+    }
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
 
@@ -56,6 +61,17 @@ struct RootView: View {
                     .statusBarHidden()
                     .persistentSystemOverlays(.hidden)
                     .transition(.opacity)
+            }
+        }
+        .allowsHitTesting(!showsCelebration && !celebrationFading)
+        .accessibilityHidden(showsCelebration || celebrationFading)
+        .task(id: showsCelebration) {
+            if showsCelebration {
+                celebrationFading = true
+            } else {
+                // Cikis solarken alttaki kontroller kapali kalir.
+                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+                celebrationFading = false
             }
         }
         .overlay(alignment: .top) {

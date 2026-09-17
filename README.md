@@ -217,12 +217,20 @@ RootView hosts the overlay above tabs and desk mode. Sheets, alerts and file pic
 block delivery, with a UIKit presentation check before showing. Share opens the
 existing stats view. A badge banner opens Badges, leaving desk mode if needed.
 
-The 2.5-second surfaces fade using a Core Animation opacity animation. Confetti
+The 2.5-second surfaces use a 0.2-second opacity transition. Level celebrations
+sit in a centered, opaque themed card over a 45% black scrim that fades in over
+0.15 seconds; the card scales from 0.9 to 1 unless Reduce Motion is enabled.
+The card grows with Dynamic Type and scrolls when it exceeds the available height.
+Tapping the card or scrim dismisses it. Underlying controls and accessibility stay
+blocked through the exit fade. Badge banners retain their top placement with an
+opaque themed card and a subtle scrim. Confetti sits above the card background,
+below its content and buttons, and never receives touches. Confetti
 uses a CAEmitterLayer with a finite 0.8-second birth-rate animation; the layer is
 removed after its particles expire. Reactions submit the existing drawn clip and
 motion samples to CA once, with no frame callbacks. Reduce Motion uses a rest
-frame and text. Turning off the companion leaves text only. Live reactions have a
-shared 20-second gate, require a visible companion and active app, and never replay
+frame and text. Turning off the companion keeps the same card without its mascot.
+Live reactions have a shared 20-second gate, require a visible companion and active
+app, and never replay
 missed events. Tap reactions share the same gate.
 
 The celebration check covers seeding, persisted levels and badge IDs, batches,
