@@ -225,7 +225,7 @@ let clips = hello["clips"] as! [String: [[Any]]]
 let required = Set(clips.values.flatMap { $0 }.map { $0[0] as! String } + [hello["rest"] as! String])
 precondition(required == Set(files.map { $0.deletingPathExtension().lastPathComponent }))
 let sleepy = rgb(105, 146, 168), bright = rgb(73, 235, 255), glint = rgb(219, 255, 255)
-let outline = rgb(25, 29, 36), shadow = rgb(65, 72, 87), steel = rgb(117, 131, 150)
+let outline = rgb(25, 29, 36), shadow = rgb(65, 72, 87)
 let orange = rgb(255, 119, 26), amber = rgb(195, 75, 20)
 var previews = [(String, Bitmap)]()
 var blinks = [(String, Bitmap)]()
@@ -332,27 +332,53 @@ precondition(headRight - headLeft < 2 * v.width, "Head detection includes arms")
 let head = Bounds(x0: headLeft, y0: headTop, x1: headRight, y1: v.y1 + 4 * u)
 print("Accessory head: \(head)")
 
-// Kulaklik yayi, bas sinirindan turetilen basamakli bir konturdur.
+// Kalin bas bandi ve kulak kaplari, sanat pikseliyle tek bir siluet olusturur.
 do {
     var d = Drawing(source)
-    let left = head.x0 - 3 * u, right = head.x1 + 3 * u
-    let top = head.y0 - 3 * u, bottom = f.eyes[0].midY + 6 * u
-    let region = Bounds(x0: left - 2 * u, y0: top, x1: right + 2 * u, y1: bottom)
-    for x in stride(from: head.x0, through: head.x1, by: u) {
-        let sampleX = min(x + u / 2, head.x1)
-        guard let shellY = (head.y0...f.eyes[0].midY).first(where: { source[sampleX, $0].a > 200 })
-        else { fatalError("Missing head contour") }
-        let y = head.y0 + ((shellY - head.y0) / u) * u
-        d.rect(Bounds(x0: x, y0: y - 3 * u, x1: x + u - 1, y1: y + u - 1), outline)
-        d.rect(Bounds(x0: x, y0: y - 2 * u, x1: x + u - 1, y1: y - 1), steel)
+    let left = v.x0 - 10 * u, top = head.y0
+    let columns = 53, rows = 33
+    let region = Bounds(x0: left, y0: top,
+                        x1: left + columns * u - 1, y1: top + rows * u - 1)
+    var silhouette = Set<Int>()
+    for row in 0..<rows {
+        let inset: Int
+        switch row {
+        case 0..<2: inset = 16
+        case 2..<4: inset = 11
+        case 4..<6: inset = 8
+        case 6..<10: inset = 6
+        case 10..<15: inset = 4
+        default: inset = 3
+        }
+        for col in inset..<(columns - inset) {
+            if row < 6 || col < inset + 6 || col >= columns - inset - 6 {
+                silhouette.insert(row * columns + col)
+            }
+        }
+        if row >= 15 {
+            let corner = row == 15 || row == rows - 1 ? 1 : 0
+            for col in corner..<(10 - corner) {
+                silhouette.insert(row * columns + col)
+                silhouette.insert(row * columns + columns - 1 - col)
+            }
+        }
     }
-    for x in [left, right - 3 * u] {
-        d.rect(Bounds(x0: x, y0: top + 11 * u, x1: x + 3 * u - 1, y1: bottom - 4 * u), outline)
-        d.pattern([".####.", "######", "#soos#", "#soos#", "#soos#", "#soos#", "#soos#", "#saas#", "######", ".####."],
-                  x: x - u, y: bottom - 10 * u, unit: u,
-                  palette: ["#": outline, "s": shadow, "o": orange, "a": amber])
+    for cell in silhouette {
+        let col = cell % columns, row = cell / columns
+        let edge = [(col - 1, row), (col + 1, row), (col, row - 1), (col, row + 1)]
+            .contains { x, y in
+                x < 0 || x >= columns || y < 0 || y >= rows || !silhouette.contains(y * columns + x)
+            }
+        let accent = (row >= 18 && row < 30 && (3...5 ~= col || 47...49 ~= col)) ||
+            (row == 2 && (17...35).contains(col))
+        d.rect(Bounds(x0: left + col * u, y0: top + row * u,
+                      x1: left + (col + 1) * u - 1, y1: top + (row + 1) * u - 1),
+               edge ? outline : (accent ? orange : shadow))
     }
-    let result = d.save("acc-headphones", to: directory, unit: u, regions: [region]) { x, y in region.contains(x, y) }
+    let result = d.save("acc-headphones", to: directory, unit: u, regions: [region]) { x, y in
+        precondition(!v.contains(x, y) && y >= head.y0, "Headphones cover visor or antenna")
+        return region.contains(x, y)
+    }
     previews.append(("HEADPHONES", result))
 }
 
@@ -408,19 +434,20 @@ do {
     previews.append(("MUG", result))
 }
 
-// Kisa pelerin omuzlarin arkasinda, bel hizasinda biter.
+// Tek parca pelerin omuzlardan diz altina iner; robotun tum pikselleri onde kalir.
 do {
     var d = Drawing(source)
-    let top = v.y1 + 4 * u, rows = 29
+    let top = v.y1 + 4 * u, rows = 60
     let center = f.core.midX, half = (head.width / u) / 2 - 5
+    let capeOrange = rgb(218, 91, 23)
     let region = Bounds(x0: center - (half + 12) * u, y0: top,
-                        x1: center + (half + 12) * u, y1: top + rows * u - 1)
+                        x1: center + (half + 13) * u - 1, y1: top + rows * u - 1)
     for row in 0..<rows {
-        let spread = half + row * 12 / rows
+        let spread = half + min(row, rows - 5) * 12 / (rows - 5)
         for col in -spread...spread {
-            let edge = abs(col) >= spread - 1 || row >= rows - 2
-            let fold = abs(col) < half || (abs(col) + row / 4) % 9 < 2
-            let color = edge ? outline : (fold ? amber : orange)
+            let edge = abs(col) == spread || row == 0 || row == rows - 1
+            let fold = abs(col) == half + row * 6 / rows
+            let color = edge ? outline : (fold ? amber : capeOrange)
             d.rect(Bounds(x0: center + col * u, y0: top + row * u,
                           x1: center + (col + 1) * u - 1, y1: top + (row + 1) * u - 1), color, behind: true)
         }
