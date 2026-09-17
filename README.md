@@ -65,10 +65,11 @@ swiftc -swift-version 6 -strict-concurrency=complete Clockin/Audio/FocusChimeSou
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-controls-module-cache Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift ClockinWidgets/ClockinControlState.swift Tests/manual/controls/main.swift -o /tmp/clockin-controls-tests && /tmp/clockin-controls-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-reminder-module-cache Shared/Core/Models.swift Clockin/Audio/LongSessionReminderSchedule.swift Tests/manual/reminder/main.swift -o /tmp/clockin-reminder-tests && /tmp/clockin-reminder-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-nudges-module-cache Shared/Core/Models.swift Clockin/Companion/NudgePlanner.swift Clockin/Companion/NudgeCopy.swift Tests/manual/nudges/main.swift -o /tmp/clockin-nudges-tests && /tmp/clockin-nudges-tests
-swiftc -swift-version 6 Clockin/Views/Goals/GoalProgress.swift Tests/manual/goals/main.swift -o /tmp/clockin-goals-tests && /tmp/clockin-goals-tests
+swiftc -swift-version 6 Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Goals/DecimalEditing.swift Tests/manual/goals/main.swift -o /tmp/clockin-goals-tests && /tmp/clockin-goals-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift Tests/manual/sessions/main.swift -o /tmp/clockin-sessions-tests && /tmp/clockin-sessions-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/ClockinSnapshot.swift Shared/Sync/ClockinSnapshot+Store.swift Tests/manual/rates/main.swift -o /tmp/clockin-rates-tests && /tmp/clockin-rates-tests
 swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/ClockStore.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/ClockinSnapshot.swift Shared/Sync/ClockinSnapshot+Store.swift Tests/manual/feedback/main.swift -o /tmp/clockin-feedback-tests && /tmp/clockin-feedback-tests
+swiftc -swift-version 6 -strict-concurrency=complete Shared/Core/Models.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Tests/manual/sessiondisplay/main.swift -o /tmp/clockin-sessiondisplay-tests && /tmp/clockin-sessiondisplay-tests
 ```
 
 History opens on the current calendar month by default. The last range is saved,
@@ -89,6 +90,22 @@ USD/TRY, large text, VoiceOver and Reduce Motion. Verify that Set goals opens
 Insights with Edit goals expanded and Daily focused, including when Insights was
 previously scrolled down. With no completed sessions, check both idle and running
 states; the reminder should appear only after the first completed session.
+
+Build 7 feedback checks: on a fresh History launch, compare the first swipe,
+the next swipe, and both chevrons with populated and empty pages in W, M and
+6M. Bars cross-fade for 0.22 seconds; the period header and totals keep their
+numeric transitions. Repeat after selecting a bar, changing range, and enabling
+Reduce Motion. A minute refresh must not trigger the page transition.
+
+In Insights, edit each goal, tap between cards, tap a heatmap cell or picker,
+and drag the keyboard down. Controls must still respond, and each edit must
+commit once. Done stays below the focused field; opening the keyboard scrolls
+that row into view. Also try switching fields, collapsing Edit goals, leaving
+the tab, large text, and the Today > Set goals shortcut while scrolled down.
+Repeat outside taps on Settings > Pay's two rates and the rate period sheet.
+The goals check covers focus hit regions and the single-commit guard. The
+session display check uses synthetic sources and verifies neutral labels,
+notes, corrections, and unchanged source metadata after a Codable round trip.
 
 `PARITY.md` compares the two apps: what is shared, what only one of them has,
 and what differs on purpose.

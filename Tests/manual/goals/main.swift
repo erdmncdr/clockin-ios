@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 var checks = 0
@@ -60,5 +61,35 @@ check(GoalProgress.stepped(23.8, by: 0.5, maximum: 24) == 24, "stepping up stops
 check(GoalProgress.stepped(162, by: 5, maximum: 744) == 165 && GoalProgress.stepped(162, by: -5, maximum: 744) == 160,
       "monthly steps snap to five hours")
 check(GoalProgress.stepped(.nan, by: 0.5, maximum: 24) == 0.5, "an invalid stored goal steps from zero")
+
+var editing = DecimalEditingSession()
+check(!editing.end(), "an unfocused field cannot commit")
+editing.begin()
+check(editing.end(), "focus loss commits the edit")
+check(!editing.end(), "disappearance after focus loss cannot commit twice")
+editing.begin()
+check(editing.end(), "a second editing session commits once too")
+check(!editing.end(), "submit and Done cannot repeat a finished commit")
+let dailyField = CGRect(x: 20, y: 200, width: 80, height: 80)
+let monthlyField = CGRect(x: 20, y: 294, width: 80, height: 80)
+let stepper = CGRect(x: 210, y: 200, width: 100, height: 80)
+let fields = [dailyField, monthlyField, stepper]
+check(!DecimalEditingSession.shouldDismiss(isEditing: false, at: .zero, fieldFrames: []),
+      "outside taps do no work while unfocused")
+check(!DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 50, y: 230), fieldFrames: fields),
+      "tapping the focused goal keeps editing")
+check(!DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 50, y: 330), fieldFrames: fields),
+      "switching goal fields does not dismiss the new focus")
+check(DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 50, y: 287), fieldFrames: fields),
+      "empty space between goal rows dismisses editing")
+check(DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 50, y: 500), fieldFrames: fields),
+      "another card or control dismisses editing")
+check(!DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 250, y: 230), fieldFrames: fields),
+      "stepper handles its own edit without a second focus commit")
+check(DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 150, y: 230), fieldFrames: fields),
+      "empty space inside a goal row also dismisses editing")
+let scrolledFields = fields.map { $0.offsetBy(dx: 0, dy: -100) }
+check(!DecimalEditingSession.shouldDismiss(isEditing: true, at: CGPoint(x: 50, y: 130), fieldFrames: scrolledFields),
+      "field hit regions follow scrolling and keyboard layout")
 
 print("\(checks) goal checks passed")

@@ -135,6 +135,7 @@ private struct RatePeriodEditor: View {
     @State private var effectiveUntil: Date
     @State private var hasEndDate: Bool
     @State private var rateText: String
+    @FocusState private var rateIsFocused: Bool
     @State private var errorMessage: String?
 
     init(editing: RateRule?) {
@@ -171,6 +172,12 @@ private struct RatePeriodEditor: View {
                 Section {
                     TextField("Hourly rate (\(store.currencyCode))", text: $rateText)
                         .keyboardType(.decimalPad)
+                        .focused($rateIsFocused)
+                        .decimalInputRegion(active: rateIsFocused)
+                        .onSubmit { rateIsFocused = false }
+                    if rateIsFocused {
+                        Button("Done") { rateIsFocused = false }
+                    }
                 } header: {
                     Text("Hourly rate")
                 } footer: {
@@ -183,6 +190,7 @@ private struct RatePeriodEditor: View {
                 .listRowBackground(palette.surface)
             }
             .hapticFeedback(selectionFeedback)
+            .dismissDecimalKeyboard(isEditing: rateIsFocused) { rateIsFocused = false }
             .scrollDismissesKeyboard(.interactively)
             .scrollContentBackground(.hidden)
             .background(palette.background)

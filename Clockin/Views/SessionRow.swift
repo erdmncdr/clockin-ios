@@ -17,19 +17,7 @@ struct SessionRow: View {
     /// listelerde (cakisma uyarisi gibi) satiri gereksiz uzatmasin.
     var showsTRY = false
 
-    /// Resmi dokumle duzeltilmis bir sayac kaydi.
-    ///
-    /// Mac her `matchedExternalSource` tasiyan satira "Matched" yaziyor. Yeni
-    /// ice aktarilan kayitlar da kendi kaynaklariyla isaretlendigi icin bu,
-    /// her dokum satirinda ayni etiketi tekrarlamak olurdu; ikon zaten ice
-    /// aktarildigini soyluyor. Bilgi tasiyan durum, sayacin dokume gore
-    /// duzeltilmis olmasi.
-    private var matchedSource: String? {
-        guard let source = session.matchedExternalSource, source != session.source else { return nil }
-        return source
-    }
-
-    private var isTimer: Bool { session.source == "Clockin" }
+    private var isTimer: Bool { SessionDisplay.isClockin(session) }
 
     private var title: String {
         if showsDay {
@@ -58,13 +46,13 @@ struct SessionRow: View {
                             .accessibilityLabel("Overlaps another entry")
                     }
                 }
-                if let matchedSource {
-                    Label("Matched \(matchedSource)", systemImage: "checkmark.seal.fill")
+                if SessionDisplay.isMatched(session) {
+                    Label(SessionDisplay.subtitle(session), systemImage: "checkmark.seal.fill")
                         .font(.caption)
                         .foregroundStyle(palette.secondary)
                         .lineLimit(1)
                 } else {
-                    Text(session.note.isEmpty ? session.source : session.note)
+                    Text(SessionDisplay.subtitle(session))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

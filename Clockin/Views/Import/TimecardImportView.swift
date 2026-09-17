@@ -310,7 +310,7 @@ struct TimecardImportView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.start.formatted(date: .abbreviated, time: .shortened))
                     .font(.subheadline.weight(.medium))
-                Text("\(DurationText.compact(session.duration)) · \(session.note.isEmpty ? "No note" : session.note)")
+                Text("\(DurationText.compact(session.duration)) · \(SessionDisplay.note(session).isEmpty ? "No note" : SessionDisplay.note(session))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -507,7 +507,7 @@ private struct TimecardImportItemRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(item.session.source.isEmpty ? "Imported timecard" : item.session.source)
+            Text(SessionDisplay.timecardEntry)
                 .font(.headline)
             if let old = item.localMatch {
                 times("Existing Clockin entry", session: old)
@@ -515,8 +515,8 @@ private struct TimecardImportItemRow: View {
             } else {
                 times(item.kind == .duplicate ? "Skipped duplicate" : "New entry", session: item.session)
             }
-            if !item.session.note.isEmpty {
-                Text(item.session.note)
+            if !SessionDisplay.note(item.session).isEmpty {
+                Text(SessionDisplay.note(item.session))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

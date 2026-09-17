@@ -56,6 +56,25 @@ for range in [EarningsRange.week, .month, .sixMonths] {
     check(current.switching(to: .all, now: now, calendar: calendar).switching(to: range, now: now, calendar: calendar).interval == current.interval,
           "\(range) anchor survives All")
 }
+for range in [EarningsRange.week, .month, .sixMonths] {
+    let first = period(range)
+    let previous = first.paged(by: -1, now: now, calendar: calendar)
+    let older = previous.paged(by: -1, now: now, calendar: calendar)
+    check(first.pageID != previous.pageID && previous.pageID != older.pageID,
+          "\(range) first and subsequent pages change transition identity")
+    let swipe = first.paged(by: EarningsSwipe.page(x: 60, y: 0)!, now: now, calendar: calendar)
+    check(swipe.pageID == previous.pageID, "\(range) swipe and chevron use identical page identity")
+    check(previous.paged(by: 1, now: now, calendar: calendar).pageID == first.pageID,
+          "\(range) returning to the initial page restores its identity")
+    check(first.paged(by: 1, now: now, calendar: calendar).pageID == first.pageID,
+          "\(range) blocked forward paging does not animate")
+    check(period(range, at: now.addingTimeInterval(60)).pageID == first.pageID,
+          "\(range) minute refresh does not trigger page animation")
+}
+let sameInterval = period(.month).interval
+check(EarningsPeriod.PageID(range: .month, interval: sameInterval)
+      != EarningsPeriod.PageID(range: .all, interval: sameInterval),
+      "range is part of transition identity even with equal bounds")
 check(period(.all).paged(by: -1, now: now, calendar: calendar) == period(.all), "All never pages")
 let boundaryWeek = period(.week, date(2026, 9, 1))
 bounds(boundaryWeek.switching(to: .month, now: now, calendar: calendar), date(2026, 9, 1), date(2026, 10, 1), "cross-month week retains September anchor")

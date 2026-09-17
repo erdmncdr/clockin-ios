@@ -19,6 +19,41 @@ struct WorkSession: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+enum SessionDisplay {
+    static let timecardEntry = "Timecard entry"
+
+    static func isClockin(_ session: WorkSession) -> Bool { session.source == "Clockin" }
+
+    static func isMatched(_ session: WorkSession) -> Bool {
+        guard let matched = session.matchedExternalSource, !matched.isEmpty else { return false }
+        return matched != session.source
+    }
+
+    static func note(_ session: WorkSession) -> String {
+        // Yapistirici kaynak adini nota da ekler; diskteki metin korunur.
+        for source in [session.source, session.matchedExternalSource].compactMap({ $0 }) where !source.isEmpty {
+            let suffix = " • \(source)"
+            guard session.note.hasSuffix(suffix) else { continue }
+            let status = String(session.note.dropLast(suffix.count))
+            if ["approved", "submitted", "draft", "unapproved", "imported"].contains(status.lowercased()) {
+                return status
+            }
+        }
+        return session.note
+    }
+
+    static func storedNote(_ editedNote: String, for session: WorkSession) -> String {
+        editedNote == note(session) ? session.note : editedNote
+    }
+
+    static func subtitle(_ session: WorkSession) -> String {
+        if isMatched(session) { return "Matched timecard" }
+        let note = note(session)
+        if !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return note }
+        return isClockin(session) ? "Clockin" : "Imported timecard"
+    }
+}
+
 enum RateHistorySummary: Equatable {
     case single(Double)
     case changed(earlier: Double, current: Double, on: Date)

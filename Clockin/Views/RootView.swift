@@ -114,10 +114,10 @@ struct RootView: View {
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()
-                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+                .tabItem { Label("History", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.history)
             InsightsView(openGoalEditor: $goalEditorRequest)
-                .tabItem { Label("Insights", systemImage: "chart.bar.xaxis") }
+                .tabItem { Label("Insights", systemImage: "target") }
                 .tag(AppTab.insights)
             // Ayarlar alt sekmede degil, Bugun ekraninin ust cubugunda. Sik
             // acilan bir yer degil; sekmeyi ilerleme icin kullanmak sayfalari

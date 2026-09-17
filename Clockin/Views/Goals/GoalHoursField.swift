@@ -9,46 +9,53 @@ struct GoalHoursField: View {
     let step: Double
     let maximum: Double
     @Binding var pendingFocus: Bool
+    let field: GoalField
+    @FocusState.Binding var focusedField: GoalField?
 
     @State private var text = ""
     @State private var selectionFeedback = HapticSignal()
-    @FocusState private var isFocused: Bool
+    @State private var editingSession = DecimalEditingSession()
+
+    private var isFocused: Bool { focusedField == field }
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 8) {
-        HStack(spacing: 10) {
-            Text(title)
-            Spacer(minLength: 8)
-            TextField("0", text: $text)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .monospacedDigit()
-                .frame(width: 64)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 8)
-                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .focused($isFocused)
-                .accessibilityLabel("\(title) goal in hours")
-                .onSubmit(commit)
-                .task(id: pendingFocus) {
-                    guard pendingFocus else { return }
-                    // Odak alanin kendi yasam dongusunde, baglanti kurulduktan sonra istenir.
-                    await Task.yield()
-                    guard !Task.isCancelled, pendingFocus else { return }
-                    isFocused = true
-                    pendingFocus = false
-                }
-            Text("h").foregroundStyle(.secondary)
-            Stepper(title,
-                    onIncrement: { setHours(GoalProgress.stepped(hours, by: step, maximum: maximum)) },
-                    onDecrement: { setHours(GoalProgress.stepped(hours, by: -step, maximum: maximum)) })
-                .labelsHidden()
-        }
-        if isFocused {
-            // Klavye araci sekmede ilk odakta cikmiyordu; Done alanin altinda durur.
-            Button("Done") { isFocused = false }
-                .font(.subheadline.weight(.semibold))
-        }
+            HStack(spacing: 10) {
+                Text(title)
+                Spacer(minLength: 8)
+                TextField("0", text: $text)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
+                    .frame(width: 64)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
+                    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .focused($focusedField, equals: field)
+                    .decimalInputRegion(active: focusedField != nil)
+                    .accessibilityLabel("\(title) goal in hours")
+                    .onSubmit { focusedField = nil }
+                    .task(id: pendingFocus) {
+                        guard pendingFocus else { return }
+                        // Odak, sekme gecisi ve bolumun acilmasi bittikten sonra istenir;
+                        // ust gorunumdeki FocusState daha erken atamayi yok sayiyor.
+                        try? await Task.sleep(for: .milliseconds(450))
+                        guard !Task.isCancelled, pendingFocus else { return }
+                        focusedField = field
+                        pendingFocus = false
+                    }
+                Text("h").foregroundStyle(.secondary)
+                Stepper(title,
+                        onIncrement: { setHours(GoalProgress.stepped(hours, by: step, maximum: maximum)) },
+                        onDecrement: { setHours(GoalProgress.stepped(hours, by: -step, maximum: maximum)) })
+                    .labelsHidden()
+                    .decimalInputRegion(active: focusedField != nil)
+            }
+            if isFocused {
+                // Klavye araci sekmede ilk odakta cikmiyordu; Done alanin altinda durur.
+                Button("Done") { focusedField = nil }
+                    .font(.subheadline.weight(.semibold))
+            }
         }
         .hapticFeedback(selectionFeedback)
         .onAppear { text = Self.format(hours) }
@@ -60,11 +67,11 @@ struct GoalHoursField: View {
             }
         }
         .onChange(of: isFocused) { _, focused in
-            if !focused { commit() }
+            if focused { editingSession.begin() } else { finishEditing() }
         }
         .onDisappear {
-            if isFocused { commit() }
-            isFocused = false
+            finishEditing()
+            if isFocused { focusedField = nil }
             pendingFocus = false
         }
     }
@@ -73,6 +80,12 @@ struct GoalHoursField: View {
     /// "30" yazarken once "3" kaydediliyor, sinir disi "30" reddedilince
     /// hedef sessizce 3 saat kaliyordu. Bos alan hedefi kapatir; gecersiz ya
     /// da sinir disi girdi kayitli degere doner.
+    private func finishEditing() {
+        // Odak kaybi ve kapanis ayni duzenlemeyi iki kez kaydetmesin.
+        guard editingSession.end() else { return }
+        commit()
+    }
+
     private func commit() {
         if text.trimmingCharacters(in: .whitespaces).isEmpty {
             setHours(0)

@@ -29,7 +29,7 @@ struct ManualEntryView: View {
             ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today) ?? today)
         _endTime = State(initialValue: editing?.end
             ?? calendar.date(bySettingHour: 17, minute: 0, second: 0, of: today) ?? today)
-        _note = State(initialValue: editing?.note ?? "")
+        _note = State(initialValue: editing.map(SessionDisplay.note) ?? "")
     }
 
     private var resolvedTimes: (start: Date, end: Date) {
@@ -116,7 +116,8 @@ struct ManualEntryView: View {
     private func save() {
         let saved: Bool
         if let editing {
-            saved = store.updateSession(id: editing.id, start: resolvedStart, end: resolvedEnd, note: note)
+            saved = store.updateSession(id: editing.id, start: resolvedStart, end: resolvedEnd,
+                                        note: SessionDisplay.storedNote(note, for: editing))
         } else {
             saved = store.addManualSession(start: resolvedStart, end: resolvedEnd, note: note)
         }

@@ -5,8 +5,7 @@ struct HistoryView: View {
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @AppStorage("Clockin.HistoryRange") private var range: EarningsRange = .month
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
-    @State private var pageAnchor: Date?
-    @State private var pageDirection = -1
+    @State private var pageAnchor = Date.now
     @State private var showTRY = false
     @State private var now = Date.now
     private let refresh = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -17,7 +16,7 @@ struct HistoryView: View {
     @State private var pendingDelete: WorkSession?
 
     var body: some View {
-        let period = EarningsPeriod(range: range, anchor: pageAnchor ?? now, now: now)
+        let period = EarningsPeriod(range: range, anchor: pageAnchor, now: now)
         let snapshot = EarningsSnapshot(sessions: store.sessions, running: store.running,
             range: range, now: now, period: period, earnings: { store.earnings(for: $0) },
             activeEarnings: store.currentEarnings(at: now), rate: { exchangeRates.rate(onCalendarDay: $0) })
@@ -38,7 +37,7 @@ struct HistoryView: View {
                     EarningsChartView(snapshot: snapshot, range: range, currencyCode: store.currencyCode,
                         latestRate: exchangeRates.latestRate, loadingRates: exchangeRates.isLoading,
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY,
-                        pageDirection: pageDirection, onPage: { page($0, period: period) })
+                        onPage: { page($0, period: period) })
                     if range == .month {
                         MonthPerformanceView(performance: MonthPerformance(snapshot: snapshot, period: period,
                             sessions: store.sessions, monthlyGoal: monthlyGoalHours, now: now),
@@ -109,6 +108,7 @@ struct HistoryView: View {
             }
             Text(period.title())
                 .font(.subheadline.weight(.semibold))
+                .contentTransition(.numericText())
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
@@ -121,15 +121,13 @@ struct HistoryView: View {
             }
         }
         .buttonStyle(.borderless)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: period.pageID)
     }
 
     private func page(_ direction: Int, period: EarningsPeriod) {
         let next = period.paged(by: direction, now: now)
         guard next.interval != period.interval else { return }
-        pageDirection = direction
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
-            pageAnchor = next.anchor
-        }
+        pageAnchor = next.anchor
     }
 
     /// Gun basligi: solda gun, sagda o gunun toplami.

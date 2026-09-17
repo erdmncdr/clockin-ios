@@ -8,6 +8,7 @@ struct InsightsView: View {
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @State private var editingGoals = false
     @State private var pendingDailyFocus = false
+    @FocusState private var focusedGoal: GoalField?
 
     @State private var shareSnapshot: StatsShareSnapshot?
 
@@ -33,6 +34,13 @@ struct InsightsView: View {
                             reportsCard(stats)
                         }
                         .padding(16)
+                    }
+                    .dismissDecimalKeyboard(isEditing: focusedGoal != nil) { focusedGoal = nil }
+                    .onChange(of: focusedGoal) { _, field in
+                        if let field { scroll.scrollTo(field, anchor: .center) }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                        if let field = focusedGoal { scroll.scrollTo(field, anchor: .center) }
                     }
                     .scrollBounceBehavior(.basedOnSize)
                     // Asagi kaydirmak da klavyeyi kapatir.
@@ -64,11 +72,15 @@ struct InsightsView: View {
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .onDisappear {
+            focusedGoal = nil
             pendingDailyFocus = false
             openGoalEditor = false
         }
         .onChange(of: editingGoals) { _, expanded in
-            if !expanded { pendingDailyFocus = false }
+            if !expanded {
+                focusedGoal = nil
+                pendingDailyFocus = false
+            }
         }
     }
 
@@ -89,9 +101,11 @@ struct InsightsView: View {
                 if editingGoals {
                     VStack(alignment: .leading, spacing: 14) {
                         GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
-                                       pendingFocus: $pendingDailyFocus)
+                                       pendingFocus: $pendingDailyFocus, field: .daily, focusedField: $focusedGoal)
+                            .id(GoalField.daily)
                         GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
-                                       pendingFocus: .constant(false))
+                                       pendingFocus: .constant(false), field: .monthly, focusedField: $focusedGoal)
+                            .id(GoalField.monthly)
                         Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
                             .font(.caption).foregroundStyle(.secondary)
                     }

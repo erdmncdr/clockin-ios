@@ -10,7 +10,6 @@ struct EarningsChartView: View {
     let loadingRates: Bool
     let hasAnySessions: Bool
     @Binding var showTRY: Bool
-    let pageDirection: Int
     let onPage: (Int) -> Void
     @State private var selectedDate: Date?
     @ScaledMetric(relativeTo: .caption) private var axisTopPadding = 10.0
@@ -81,9 +80,8 @@ struct EarningsChartView: View {
                         chart
                     }
                 }
-                .id(snapshot.interval.start)
-                .transition(.asymmetric(insertion: .move(edge: pageDirection < 0 ? .leading : .trailing),
-                                        removal: .move(edge: pageDirection < 0 ? .trailing : .leading)))
+                .id(EarningsPeriod.PageID(range: range, interval: snapshot.interval))
+                .transition(.opacity)
             }
             .clipped()
             if !snapshot.points.isEmpty {
@@ -122,7 +120,9 @@ struct EarningsChartView: View {
             }
         }
         .hapticFeedback(selectionFeedback)
-        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: range)
+        // Ilk sayfa dahil animasyon satirin kendi kimligine baglidir.
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22),
+                   value: EarningsPeriod.PageID(range: range, interval: snapshot.interval))
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: showTRY)
         .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: selectedDate)
         .hapticFeedback(.selection, trigger: selectedDate) { _, new in new != nil }

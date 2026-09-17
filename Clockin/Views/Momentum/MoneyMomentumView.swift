@@ -19,7 +19,7 @@ struct MoneyMomentumView: View {
             )
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: momentum.isEarning ? "flame.fill" : "sparkles")
+                    Image(systemName: momentum.isEarning ? "flame.fill" : "gauge.with.dots.needle.67percent")
                         .foregroundStyle(momentum.isEarning ? .orange : palette.accent)
                         .frame(width: 22)
                         .accessibilityHidden(true)

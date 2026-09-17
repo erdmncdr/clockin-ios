@@ -43,6 +43,13 @@ struct EarningsPeriod: Equatable {
         isCurrent = interval == bounds(now)
     }
 
+    struct PageID: Hashable {
+        let range: EarningsRange
+        let interval: DateInterval
+    }
+
+    var pageID: PageID { PageID(range: range, interval: interval) }
+
     var canGoForward: Bool { range != .all && !isCurrent }
 
     func paged(by direction: Int, now: Date, calendar: Calendar = .current) -> Self {

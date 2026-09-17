@@ -78,6 +78,11 @@ struct SettingsView: View {
                 }
             }
             .hapticFeedback(selectionFeedback)
+            .dismissDecimalKeyboard(isEditing: rateIsFocused || earlierRateIsFocused) {
+                rateIsFocused = false
+                earlierRateIsFocused = false
+            }
+            .scrollDismissesKeyboard(.interactively)
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("Settings")
@@ -131,7 +136,10 @@ struct SettingsView: View {
             .onChange(of: rateIsFocused) { _, focused in
                 if !focused { commitRate() }
             }
-            .onDisappear { rateIsFocused = false }
+            .onDisappear {
+                rateIsFocused = false
+                earlierRateIsFocused = false
+            }
             .sheet(item: $sheet) { destination in
                 Group {
                     switch destination {
@@ -175,7 +183,8 @@ struct SettingsView: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .focused($rateIsFocused)
-                    .onSubmit { commitRate() }
+                    .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)
+                    .onSubmit { rateIsFocused = false }
                     .disabled(store.rateHistorySummary == .custom)
             }
             if store.rateHistorySummary != .custom {
@@ -189,7 +198,8 @@ struct SettingsView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .focused($earlierRateIsFocused)
-                            .onSubmit { commitEarlierRate() }
+                            .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)
+                            .onSubmit { earlierRateIsFocused = false }
                     }
                 }
             }

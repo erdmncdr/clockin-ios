@@ -23,7 +23,7 @@ struct SessionSummaryView: View {
                         .foregroundStyle(.secondary)
                     Text("Nice work!")
                         .font(.largeTitle.weight(.black))
-                    Text(session.note.isEmpty ? "Focus session" : session.note)
+                    Text(SessionDisplay.note(session).isEmpty ? "Focus session" : SessionDisplay.note(session))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
