@@ -6,6 +6,9 @@ How the two apps compare. Both store sessions in the same `ClockinData` JSON for
 
 Timer with pause, cancel and start with elapsed time; manual entries, editing and deleting; rate schedules; USD/TRY with historical rates; earnings history with a calendar month starting on the 1st; CSV and pasted timecard import with row selection; automatic backups with restore; goals; day, week and month heatmaps; reports and records; level, streaks and 46 badges; shareable stats images; the focus companion with drawn clips, smooth motion, tap reactions and default modes; focus chime and focus radio; eight themes; the usage guide.
 
+Both apps offer Radio Paradise (Main Mix), Mellow Mix, Global Mix and Serenity
+with matching station ids and names.
+
 ## iPhone only
 
 - Home screen and lock screen widgets, with a companion still in the medium Home screen widget
@@ -38,6 +41,7 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 | Failed save | Reported | Rolled back in memory as well | Nothing unsaved stays on screen |
 | Daily goal estimate | "N days away" | A clock time | For a daily goal the Mac's count can only be 1 |
 | 30-day trend | Last 30 × 24 hours | Last 30 calendar days | Insights keeps its rolling comparison independently of History |
+| Focus radio controls | Play/stop and station picker in Settings; stop before playing a different station; selection lasts while Settings stays open | Remembers the station and switches immediately while playing; Today card with station menu, play/pause and stop; Lock Screen resume while paused; stop clears Now Playing | Volume stays in Settings on both apps |
 | Focus chime | Timer inside the running app, macOS system sounds and volume | Original bundled sounds; local notifications scheduled from worked time; selected volume only while Clockin is open | Background notifications use the iOS system volume |
 | History ranges | This month (default), rolling 7D, 30D, 3M, ALL | Pageable calendar W, M (default), 6M; nonpageable All | iPhone remembers the range, reopens on the current period, and filters totals and sessions by page; 6M has monthly bars |
 | Chart selection | Drag to scrub, hover for details | Tap a day (month in 6M); horizontal swipe or chevrons to page | Direction-checked paging allows vertical History scrolling |

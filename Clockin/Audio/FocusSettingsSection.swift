@@ -89,32 +89,16 @@ struct FocusSettingsSection: View {
                     .frame(width: 28)
                     .contentTransition(.symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Radio Paradise")
+                    Text(radio.station.name)
                     Text(radioStatus)
                         .font(.caption)
                         .foregroundStyle(radio.errorMessage == nil ? Color.secondary : Color.red)
                         .contentTransition(.opacity)
                 }
                 Spacer()
-                if radio.isLoading {
-                    ProgressView()
-                } else {
-                    Button {
-                        if radio.isStarted { radio.stop() } else { radio.play() }
-                    } label: {
-                        Image(systemName: radio.isStarted ? "stop.fill" : "play.fill")
-                            .font(.body.weight(.semibold))
-                            .frame(width: 36, height: 36)
-                            .background(palette.accent.opacity(0.15), in: Circle())
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                    .buttonStyle(.pressable)
-                    .foregroundStyle(palette.accent)
-                    .accessibilityLabel(radio.isStarted ? "Stop Radio Paradise" : "Play Radio Paradise")
-                }
+                FocusRadioButtons(radio: radio)
             }
-            .animation(.snappy, value: radio.isPlaying)
-            .animation(.snappy, value: radio.isLoading)
+            FocusRadioStationPicker(radio: radio)
             HStack(spacing: 10) {
                 Image(systemName: "speaker.fill").foregroundStyle(.secondary)
                 Slider(value: $radio.volume, in: 0...1)
@@ -125,13 +109,15 @@ struct FocusSettingsSection: View {
         } header: {
             Text("Focus radio")
         } footer: {
-            Text("Eclectic, listener-supported, commercial-free. Streams over the internet and keeps playing with the screen locked.")
+            Text("\(radio.station.description). Streams over the internet and keeps playing with the screen locked. Pause or stop from Today; volume stays here.")
         }
     }
 
     private var radioStatus: String {
         if let error = radio.errorMessage { return error }
         if radio.isLoading { return "Connecting…" }
+        if radio.state == .failed { return "Could not connect. Tap play to retry." }
+        if radio.state == .paused { return "Paused" }
         return radio.isPlaying ? "Playing" : "Stopped"
     }
 }

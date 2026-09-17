@@ -16,7 +16,7 @@
 - Focus Chime: the foreground minute loop previously removed and re-added up to 20 requests. It now reconciles absolute fire dates, keeps matching requests and only adds/removes changed slots. Pause/stop still cancels immediately; revision checks reconcile requests added during an in-flight operation. Local notification delivery works while the app is suspended.
 - Nudge: already compared pending requests by identifier, content, date, time zone and attachment before adding them. That behavior remains. It now reuses cached daily totals and avoids publishing an unchanged mood or rewriting unchanged persisted state.
 - The foreground minute task exits whenever `scenePhase != .active`. Long-session reminders refresh on state changes and activation, not every second.
-- Audio: Focus Chime uses local notification sounds and owns no audio session. Focus Radio starts audio only from Play. Its 500 ms monitor exists while radio playback is requested, including intentional background playback. Stop, failure, interruption and route loss cancel the monitor, discard the player and deactivate the audio session with `notifyOthersOnDeactivation`. No timer-driven audio activation was found.
+- Audio: Focus Chime uses local notifications in the background and a short ambient audio session for in-app sounds. It borrows the radio session when active. Focus Radio starts audio only from Play. Its 500 ms monitor exists while radio playback is requested, including intentional background playback. Pause cancels the monitor but retains resumable Now Playing. Stop, failure, interruption and route loss cancel the monitor, remove remote commands, clear Now Playing and discard the player. They deactivate the audio session with `notifyOthersOnDeactivation`, or let an in-progress chime finish and deactivate it. The Today radio card observes published state outside the ticking subtree and adds no timer or animation loop. No timer-driven audio activation was found.
 - These findings do not establish the cause of the reported 6 to 7 second delay in other apps. That requires the new device trace.
 
 ## Complete haptic inventory
@@ -294,3 +294,36 @@ Logs: `/tmp/clockin-ca-build.log`, `/tmp/clockin-ca-checks/summary.txt`,
 `/tmp/clockin-ca-uikit-typecheck.log`, `/tmp/clockin-ca-view-typecheck.log`,
 `/tmp/clockin-ca-expanded-typecheck.log` and `/tmp/clockin-ca-parse.log`.
 No project file or signing setting was edited. No real data, commit or push was used.
+
+
+### Focus radio controls checkout verification
+
+- All 25 iOS README suites passed, including `109 radio checks passed`. The
+  sound generator also verified all eight CAF files in a temporary directory.
+- The four Mac and iPhone station ids, names and stream URLs match in a compiled
+  catalog comparison. The Mac main mix retains its existing Radio Paradise name.
+- All iPhone app and Shared sources passed iOS 17 Simulator Swift 6 strict
+  concurrency type checking. This diagnostic command used `-disable-sandbox`
+  for compiler macro processes and made no project or signing changes.
+- The requested unmodified Xcode build exited 65. The environment denied the
+  existing SwiftUI macro plugin with `sandbox_apply: Operation not permitted`;
+  CoreSimulator services were also unavailable. Full app build, visible layout,
+  streaming, haptics and Lock Screen/Control Center behavior remain unverified.
+- All 15 root README check commands were attempted: 11 reported passing. The
+  menu bar panel host exited zero without its completion marker. An unbuffered
+  rerun printed six partial checks and an OS service failure, so its full runtime
+  result is inconclusive. The panel render
+  and mascot view commands could not fetch Sparkle because
+  `github.com` could not resolve, and rolling text failed with
+  `three changed characters roll: three in, three out (got 0)`. The same failure
+  reproduced using unchanged HEAD sources and tests. Both additional Carbon and
+  Daylight screen capture commands also stopped at the Sparkle fetch.
+- `swift build` was attempted. A writable module cache exposed the nested sandbox
+  restriction; `swift build --disable-sandbox` then reached the same Sparkle DNS
+  blocker. No successful Mac build is claimed.
+
+Logs: `/tmp/clockin-radio-checks/summary.txt`,
+`/tmp/clockin-radio-ios-build.log`, `/tmp/clockin-radio-typecheck/app.log`,
+`/tmp/clockin-radio-mac-build-fallback.log`, and
+`/tmp/clockin-radio-baseline/run.log`. Device acceptance steps are in the Focus
+radio section of `README.md`.

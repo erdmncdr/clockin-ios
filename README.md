@@ -47,6 +47,7 @@ diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
 Each check prints `ok` lines and exits non-zero on the first failure. Run from this folder.
 
 ```bash
+swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-radio-module-cache Clockin/Audio/RadioStation.swift Tests/manual/radio/main.swift -o /tmp/clockin-radio-tests && /tmp/clockin-radio-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-rolling-module-cache Clockin/Views/Components/RollingNumber.swift Tests/manual/rolling/main.swift -o /tmp/clockin-rolling-tests && /tmp/clockin-rolling-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-haptics-module-cache Shared/Theme/HapticEvent.swift Tests/manual/haptics/main.swift -o /tmp/clockin-haptics-tests && /tmp/clockin-haptics-tests
 swiftc -swift-version 6 -strict-concurrency=complete Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/snapshot/main.swift -o /tmp/clockin-snapshot-tests && /tmp/clockin-snapshot-tests
@@ -211,9 +212,10 @@ banner but suppresses notification audio so there is only one sound. Standalone
 chimes use an ambient session and respect the silent switch. Focus radio owns
 the shared playback session while running, so chimes borrow that session without
 changing its category or deactivating it; during radio playback they can sound in
-silent mode. Starting or stopping the radio ends an in-progress chime before the
-radio changes session ownership. Background notifications use the bundled sound
-at the system volume. Reminder/nudge reservations and worked-time refresh stay
+silent mode. Starting the radio ends an in-progress chime before taking session
+ownership. Stopping the radio lets an in-progress chime finish using the ambient
+category without reactivating the session; the chime then deactivates it.
+Background notifications use the bundled sound at the system volume. Reminder/nudge reservations and worked-time refresh stay
 unchanged.
 
 On a real iPhone, verify Preview with notifications denied, selection auto-preview,
@@ -221,3 +223,43 @@ On a real iPhone, verify Preview with notifications denied, selection auto-previ
 preview, interruption/headphone removal, and one foreground/background interval.
 Confirm one sound with a banner in the foreground, selected sound in the
 background, and no pending chimes after pausing or ending from a widget/Shortcut.
+
+## Focus radio
+
+Settings > Focus radio offers Radio Paradise (Main Mix), Mellow Mix, Global Mix
+and Serenity (ambient). Both apps use the same station ids and names. The last
+choice is saved in `Clockin.RadioStation`; missing or unknown ids use `rp`, the
+main mix. Playback never starts automatically on launch or on a stopped station
+selection. A switch while playing or connecting starts the new stream immediately;
+a switch while paused stays paused until Play.
+
+After Play, Today shows the station menu, play/pause and Stop below the timer
+and companion. Connecting and failed attempts stay visible for cancellation or
+retry. Stop removes the card. Volume stays in Settings. The card observes radio
+state outside the Today timelines, with no timer or repeating animation.
+
+Pause retains Now Playing at rate zero and keeps remote resume available.
+Stop, failure, interruption and route loss clear Now Playing, mark it stopped,
+remove and disable remote commands, detach the player item and release the player.
+The existing stream monitor runs only while playback is requested and stops on
+pause or any terminal path. Queued commands from an ended radio session are ignored.
+
+The radio check covers the catalog, saved-id fallback, card visibility and cleanup
+policy, including session ownership during a chime. It does not exercise system
+media UI. On an iPhone, verify the following with synthetic work sessions:
+
+1. Start each station in Settings, return to Today, switch stations and confirm
+   the audio and Lock Screen title change. Repeat while connecting and paused.
+2. Pause/resume from Today, Lock Screen and Control Center; verify the paused
+   card persists and Now Playing stays resumable. Stop from Today and Settings;
+   verify the card and radio Now Playing entry disappear and headset Play cannot
+   restart it. Start again and verify each remote action runs once.
+3. Disable the network, try Play, wait for the connection failure, and confirm
+   system controls clear while Today offers retry. Restore the network and retry.
+4. Try a call/interruption, headphone removal and stop while connecting. Confirm
+   cleanup and no automatic restart after the interruption ends.
+5. Preview a chime during radio playback, stop the radio during the sound, then
+   preview again. Confirm completion, ambient/silent-switch behavior, and no
+   restored radio metadata or remote commands. Repeat with other audio playing.
+6. Relaunch: the station remains selected, playback and the card stay off. Check
+   large text, VoiceOver, Haptics on/off, and a selection tick only on station changes.
