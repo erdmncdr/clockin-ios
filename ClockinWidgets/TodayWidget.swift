@@ -80,28 +80,37 @@ private struct TodayWidgetView: View {
         }
     }
 
-    /// Orta boy: olculer yan yana, dugmeler altta. Olculer ust uste ve
-    /// dugmeler saga dizildiginde ortada bos bir sutun kaliyordu.
     private var mediumLayout: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Olculer ve dugmeler ortali; durum satiri da onlarla hizali olsun.
-            status
-                .frame(maxWidth: .infinity, alignment: .center)
+        VStack(spacing: 6) {
             HStack(alignment: .center, spacing: 8) {
-                ClockinMascotStill(mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood)
-                    .frame(width: 54, height: 54)
-                if let running {
-                    sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
-                                  money: .subheadline.weight(.semibold), alignment: .center)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                ClockinMascotStill(
+                    mood: MascotAsset.session(running: running, angry: snapshot.isAngry).mood,
+                    maxPixelSize: 240
+                )
+                .frame(width: 80, height: 80)
+                VStack(spacing: 2) {
+                    status
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    HStack(alignment: .top, spacing: 8) {
+                        if let running {
+                            sessionMetric(running, value: .system(.title3, design: palette.fontDesign).weight(.semibold),
+                                          money: .caption.weight(.semibold), alignment: .center)
+                                .frame(minWidth: 0, maxWidth: .infinity)
+                        }
+                        todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
+                                    money: .caption.weight(.semibold), alignment: .center)
+                            .frame(minWidth: 0, maxWidth: .infinity)
+                    }
                 }
-                todayMetric(value: .system(.title3, design: palette.fontDesign).weight(.semibold),
-                            money: .subheadline.weight(.semibold), alignment: .center)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .multilineTextAlignment(.center)
             }
-            Spacer(minLength: 0)
+            .frame(maxHeight: .infinity, alignment: .center)
             actionButtons
         }
+        // SE boyunda 80 pt gorsel ve alt dugmeler icin dikey alan sinirli.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
     }
 
     /// Kucuk boy: yan yana sigmiyor, dugme de yok; olculer ust uste.
@@ -270,9 +279,10 @@ private struct TodayWidgetView: View {
         Label(title, systemImage: systemImage)
             .font(.subheadline.weight(.bold))
             .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
             .background(background, in: Capsule())
     }
 }
@@ -284,3 +294,51 @@ extension ClockinSnapshot {
         earnedToday: 136.67, running: nil, hourlyRate: 40, currencyCode: "USD"
     )
 }
+
+#if DEBUG
+private enum TodayWidgetPreview {
+    static let date = Date.now
+
+    static func entry(running: Bool = false, paused: Bool = false, angry: Bool = false) -> TodayEntry {
+        let session = running ? RunningSession(
+            start: date.addingTimeInterval(-2 * 3600 - 15 * 60),
+            accumulated: 2 * 3600 + 15 * 60,
+            resumedAt: paused ? nil : date,
+            note: ""
+        ) : nil
+        return TodayEntry(date: date, snapshot: ClockinSnapshot(
+            day: Calendar.current.startOfDay(for: date),
+            completedToday: 3 * 3600 + 25 * 60,
+            earnedToday: 136.67,
+            running: session,
+            hourlyRate: 40,
+            currencyCode: "USD",
+            isAngry: angry
+        ))
+    }
+}
+
+#Preview("Ready", as: .systemMedium) {
+    TodayWidget()
+} timeline: {
+    TodayWidgetPreview.entry()
+}
+
+#Preview("Working", as: .systemMedium) {
+    TodayWidget()
+} timeline: {
+    TodayWidgetPreview.entry(running: true)
+}
+
+#Preview("Paused", as: .systemMedium) {
+    TodayWidget()
+} timeline: {
+    TodayWidgetPreview.entry(running: true, paused: true)
+}
+
+#Preview("Angry", as: .systemMedium) {
+    TodayWidget()
+} timeline: {
+    TodayWidgetPreview.entry(angry: true)
+}
+#endif
