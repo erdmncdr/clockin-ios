@@ -95,6 +95,33 @@ let sessions = [session(date(2026, 9, 1, 9), 2), session(date(2026, 9, 1, 14), 1
         calendar: calendar, period: page, earnings: { $0.earnings }, activeEarnings: 20,
         rate: { day in missing && calendar.component(.day, from: day) == 17 ? nil : (calendar.component(.day, from: day) == 1 ? 30 : 40) })
 }
+for range in [EarningsRange.week, .month, .sixMonths] {
+    let first = period(range)
+    let previous = first.paged(by: -1, now: now, calendar: calendar)
+    let emptyPage = previous.paged(by: -1, now: now, calendar: calendar)
+    let items = [session(first.interval.start.addingTimeInterval(9 * 3600), 1),
+                 session(previous.interval.start.addingTimeInterval(9 * 3600), 2),
+                 session(calendar.date(byAdding: .day, value: 1, to: previous.interval.start)!, 3)]
+    let pages = [first, previous, emptyPage, previous, first]
+    let expectedCounts = [1, 2, 0, 2, 1]
+    let expectedHours = [1.0, 5, 0, 5, 1]
+    for (index, page) in pages.enumerated() {
+        let value = snapshot(page, items: items)
+        check(value.sessions.count == expectedCounts[index]
+              && value.duration == expectedHours[index] * 3600
+              && value.earned == expectedHours[index] * 40,
+              "\(range) populated/empty round trip step \(index) keeps list and totals together")
+        check(EarningsPeriod.PageID(range: range, interval: value.interval) == page.pageID,
+              "\(range) populated/empty step \(index) shares header and chart page identity")
+        if index > 0 {
+            check(page.title(calendar: calendar, locale: Locale(identifier: "en_US"))
+                  != pages[index - 1].title(calendar: calendar, locale: Locale(identifier: "en_US")),
+                  "\(range) populated/empty step \(index) changes the title")
+        }
+    }
+    check(snapshot(first, items: []).interval == snapshot(first, items: items).interval,
+          "\(range) removing all day sections does not change page identity")
+}
 let month = snapshot(period(.month))
 check(month.sessions.count == 4 && month.duration == 14 * 3600 && month.earned == 560, "current month session list and totals")
 check(month.calendarDays == 17 && month.activeDays == 3, "current calendar days and unique worked days")

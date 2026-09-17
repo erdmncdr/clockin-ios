@@ -120,7 +120,7 @@ struct EarningsChartView: View {
             }
         }
         .hapticFeedback(selectionFeedback)
-        // Ilk sayfa dahil animasyon satirin kendi kimligine baglidir.
+        // Aralik secimi de animasyonlu; sayfalama transaction'i History'den gelir.
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.22),
                    value: EarningsPeriod.PageID(range: range, interval: snapshot.interval))
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: showTRY)
