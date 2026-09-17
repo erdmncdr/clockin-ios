@@ -199,3 +199,29 @@ On a real iPhone, verify Preview with notifications denied, selection auto-previ
 preview, interruption/headphone removal, and one foreground/background interval.
 Confirm one sound with a banner in the foreground, selected sound in the
 background, and no pending chimes after pausing or ending from a widget/Shortcut.
+
+## Companion mood artwork
+
+Generate the tired (`z*`), proud (`p*`) and four `acc-*` full-frame accessories
+from the repository root, without building the app:
+
+```bash
+swift iOS/Tools/make-mood-frames.swift
+```
+
+The generator detects the source art's pixel unit, eyes, visor and core, preserves
+blink silhouettes, and verifies decoded RGBA and alpha outside the edited regions.
+It prints changed image pixels and touched art-grid cells for each output. The
+labeled preview is `/tmp/clockin-mood-frames.png`, with native, 62/32 pixel and
+62/32 point @2x samples, plus blink frames. All scaling uses nearest neighbor.
+The clip manifest is left for the separate app integration task.
+
+Run the dependency-free file, dimensions, alpha and frame-number check from
+this `iOS` folder:
+
+```bash
+swift Tests/manual/moodart/main.swift
+```
+
+Both commands accept `-module-cache-path /tmp/clockin-art-module-cache` immediately
+after `swift` when the default compiler cache is unavailable in a sandbox.
