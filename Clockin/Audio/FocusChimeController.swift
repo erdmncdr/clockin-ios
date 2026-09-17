@@ -169,7 +169,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         do {
             let session = AVAudioSession.sharedInstance()
             // Radyo ortak oturumu kullaniyor; kategorisini degistirme.
-            if !FocusRadioController.shared.isStarted {
+            if !FocusRadioController.shared.ownsAudioSession {
                 try session.setCategory(.ambient, mode: .default)
                 ownsAudioSession = true
                 try session.setActive(true)
@@ -194,10 +194,23 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         player?.stop()
         player = nil
         // Can bittiginde radyo veya baska uygulamalarin sesi kesilmesin.
-        if ownsAudioSession && !FocusRadioController.shared.isStarted {
+        if ownsAudioSession && !FocusRadioController.shared.ownsAudioSession {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
         ownsAudioSession = false
+    }
+
+    func retainSessionForChime() -> Bool {
+        guard player != nil else { return false }
+        do {
+            // Radyo biterken can tamamlanir; oturum yeniden etkinlestirilmez.
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            ownsAudioSession = true
+            return true
+        } catch {
+            stopPlayback()
+            return false
+        }
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {

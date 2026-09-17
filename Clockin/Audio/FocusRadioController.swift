@@ -5,38 +5,26 @@ import MediaPlayer
 @MainActor
 final class FocusRadioController: ObservableObject {
     static let shared = FocusRadioController()
-    @Published private(set) var isPlaying = false
-    @Published private(set) var isLoading = false
+    @Published private(set) var state: RadioPlaybackState = .stopped
+    @Published private(set) var station: RadioStation
     @Published private(set) var errorMessage: String?
     @Published var volume: Double = 0.7 {
         didSet { player?.volume = Float(min(1, max(0, volume))) }
     }
-    var isStarted: Bool { player != nil }
+    var isPlaying: Bool { state == .playing }
+    var isLoading: Bool { state == .connecting }
+    var isStarted: Bool { state.keepsNowPlaying }
+    private(set) var ownsAudioSession = false
     private var isInterrupted = false
     private var player: AVPlayer?
+    private var itemObservation: NSKeyValueObservation?
     private var monitor: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
     private var commandTargets: [(MPRemoteCommand, Any)] = []
+    private var commandSession: UUID?
 
     private init() {
-        let commands = MPRemoteCommandCenter.shared()
-        commandTargets = [
-            (commands.playCommand, commands.playCommand.addTarget { [weak self] _ in
-                Task { @MainActor in self?.play() }
-                return .success
-            }),
-            (commands.pauseCommand, commands.pauseCommand.addTarget { [weak self] _ in
-                Task { @MainActor in self?.stop() }
-                return .success
-            }),
-            (commands.togglePlayPauseCommand, commands.togglePlayPauseCommand.addTarget { [weak self] _ in
-                Task { @MainActor in
-                    guard let self else { return }
-                    if self.isStarted { self.stop() } else { self.play() }
-                }
-                return .success
-            })
-        ]
+        station = RadioStation.selected(UserDefaults.standard.string(forKey: RadioStation.storageKey))
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification,
             object: nil, queue: nil) { [weak self] notification in
@@ -46,7 +34,7 @@ final class FocusRadioController: ObservableObject {
                 if kind == AVAudioSession.InterruptionType.began.rawValue {
                     self.isInterrupted = true
                     if self.isStarted {
-                        self.stop()
+                        self.endPlayback(.interruption)
                         self.errorMessage = "Audio was interrupted. Press Play after the interruption ends."
                     }
                 } else if kind == AVAudioSession.InterruptionType.ended.rawValue {
@@ -65,51 +53,96 @@ final class FocusRadioController: ObservableObject {
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification,
             object: nil, queue: nil) { [weak self] _ in
-            Task { @MainActor in self?.stop() }
+            Task { @MainActor in
+                self?.stop()
+                self?.isInterrupted = false
+            }
         })
     }
 
+    func selectStation(id: String) {
+        let selected = RadioStation.selected(id)
+        guard selected != station else { return }
+        station = selected
+        UserDefaults.standard.set(selected.id, forKey: RadioStation.storageKey)
+        errorMessage = nil
+        guard let player else { return }
+        let resume = state.requestsPlayback
+        monitor?.cancel()
+        monitor = nil
+        player.pause()
+        let item = AVPlayerItem(url: selected.url)
+        player.replaceCurrentItem(with: item)
+        observeFailure(of: item)
+        state = resume ? .connecting : .paused
+        updateNowPlaying()
+        if resume {
+            player.play()
+            startMonitoring()
+        }
+    }
+
     func play() {
-        guard player == nil else { return }
+        guard !state.requestsPlayback else { return }
         guard !isInterrupted else {
-            errorMessage = "Audio is interrupted. Try Play after the interruption ends."
+            fail("Audio is interrupted. Try Play after the interruption ends.")
             return
         }
         errorMessage = nil
-        FocusChimeController.shared.stopPlayback()
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default)
-            try session.setActive(true)
-        } catch {
-            errorMessage = "Could not start audio: \(error.localizedDescription)"
-            return
+        if player == nil {
+            FocusChimeController.shared.stopPlayback()
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default)
+                // Aktivasyon yarida kalsa da hata yolu oturumu temizler.
+                ownsAudioSession = true
+                try session.setActive(true)
+            } catch {
+                fail("Could not start audio: \(error.localizedDescription)")
+                return
+            }
+            let item = AVPlayerItem(url: station.url)
+            player = AVPlayer(playerItem: item)
+            observeFailure(of: item)
+            player?.volume = Float(min(1, max(0, volume)))
+            installRemoteCommands()
         }
-        let item = AVPlayerItem(url: URL(string: "https://stream.radioparadise.com/aac-320")!)
-        let player = AVPlayer(playerItem: item)
-        player.volume = Float(volume)
-        self.player = player
-        isLoading = true
+        state = .connecting
         updateNowPlaying()
-        player.play()
-        // Durum okumasi ana aktorde kalir; KVO nesneleri aktorler arasinda tasinmaz.
+        player?.play()
+        startMonitoring()
+    }
+
+    func pause() {
+        guard state.requestsPlayback else { return }
+        endPlayback(.pause)
+    }
+
+    func stop() {
+        endPlayback(.stop)
+        errorMessage = nil
+    }
+
+    private func startMonitoring() {
+        monitor?.cancel()
+        // Var olan akis kontrolu; duraklatilinca Today icin calismaz.
         monitor = Task { [weak self] in
             var waitingSince = ContinuousClock.now
             while !Task.isCancelled {
-                guard let self, let player = self.player else { return }
+                guard let self, self.state.requestsPlayback, let player = self.player else { return }
                 if player.currentItem?.status == .failed || player.error != nil {
-                    self.fail("Radio Paradise is unreachable. Check your connection and try again.")
+                    self.fail("\(self.station.name) is unreachable. Check your connection and try again.")
                     return
                 }
                 let playing = player.timeControlStatus == .playing
-                if self.isPlaying != playing {
-                    self.isPlaying = playing
+                let state: RadioPlaybackState = playing ? .playing : .connecting
+                if self.state != state {
+                    self.state = state
                     self.updateNowPlaying()
                 }
-                if self.isLoading == playing { self.isLoading = !playing }
                 if playing { waitingSince = .now }
                 else if waitingSince.duration(to: .now) >= .seconds(30) {
-                    self.fail("Radio Paradise did not respond. Check your connection and try again.")
+                    self.fail("\(self.station.name) did not respond. Check your connection and try again.")
                     return
                 }
                 do { try await Task.sleep(for: .milliseconds(500)) }
@@ -118,30 +151,98 @@ final class FocusRadioController: ObservableObject {
         }
     }
 
-    func stop() {
-        FocusChimeController.shared.stopPlayback()
+    private func observeFailure(of item: AVPlayerItem) {
+        itemObservation?.invalidate()
+        let id = ObjectIdentifier(item)
+        // Duraklatilmis akisin hatasi da temizlenir; yeni yoklama dongusu yok.
+        itemObservation = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
+            guard item.status == .failed else { return }
+            Task { @MainActor in
+                guard let self, let current = self.player?.currentItem,
+                      ObjectIdentifier(current) == id else { return }
+                self.fail("\(self.station.name) is unreachable. Check your connection and try again.")
+            }
+        }
+    }
+
+    private func endPlayback(_ reason: RadioPlaybackEnd) {
         monitor?.cancel()
         monitor = nil
         player?.pause()
-        player = nil
-        isPlaying = false
-        isLoading = false
-        // Istasyon bilgisi kalir; kilit ekranindaki Play bilincli olarak yeniden baslatir.
-        updateNowPlaying()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        // Kisa can bitene kadar oturumu devralir; radyo yeniden etkinlesmez.
+        let chimeNeedsSession = reason != .pause && ownsAudioSession
+            && FocusChimeController.shared.retainSessionForChime()
+        let cleanup = RadioCleanupDecision(reason, radioOwnsAudioSession: ownsAudioSession,
+                                           chimeNeedsAudioSession: chimeNeedsSession)
+        state = cleanup.state
+        if cleanup.releasePlayer {
+            itemObservation?.invalidate()
+            itemObservation = nil
+            player?.replaceCurrentItem(with: nil)
+            player = nil
+            ownsAudioSession = false
+        }
+        if cleanup.removeRemoteCommands {
+            commandSession = nil
+            for (command, target) in commandTargets {
+                command.removeTarget(target)
+                command.isEnabled = false
+            }
+            commandTargets.removeAll()
+        }
+        if cleanup.clearNowPlaying {
+            let center = MPNowPlayingInfoCenter.default()
+            center.nowPlayingInfo = nil
+            center.playbackState = .stopped
+        } else {
+            updateNowPlaying()
+        }
+        if cleanup.deactivateAudioSession {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
 
     private func fail(_ message: String) {
-        stop()
+        endPlayback(.failure)
         errorMessage = message
     }
 
+    private func installRemoteCommands() {
+        guard commandTargets.isEmpty else { return }
+        let session = UUID()
+        commandSession = session
+        let commands = MPRemoteCommandCenter.shared()
+        addCommand(commands.playCommand, session: session) { $0.play() }
+        addCommand(commands.pauseCommand, session: session) { $0.pause() }
+        addCommand(commands.stopCommand, session: session) { $0.stop() }
+        addCommand(commands.togglePlayPauseCommand, session: session) {
+            if $0.state.requestsPlayback { $0.pause() } else { $0.play() }
+        }
+    }
+
+    private func addCommand(_ command: MPRemoteCommand, session: UUID,
+                            action: @escaping @MainActor @Sendable (FocusRadioController) -> Void) {
+        command.isEnabled = true
+        let target = command.addTarget { [weak self] _ in
+            Task { @MainActor in
+                // Stop oncesi kuyruga giren komut yeni bir yayin baslatmasin.
+                guard let self, self.commandSession == session else { return }
+                action(self)
+            }
+            return .success
+        }
+        commandTargets.append((command, target))
+    }
+
     private func updateNowPlaying() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
-            MPMediaItemPropertyTitle: "Radio Paradise",
-            MPMediaItemPropertyArtist: "Focus radio",
+        guard state.keepsNowPlaying else { return }
+        let center = MPNowPlayingInfoCenter.default()
+        center.nowPlayingInfo = [
+            MPMediaItemPropertyTitle: station.name,
+            MPMediaItemPropertyArtist: "Radio Paradise • Focus radio",
             MPNowPlayingInfoPropertyIsLiveStream: true,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]
+        center.playbackState = isPlaying ? .playing : .paused
     }
 }

@@ -56,6 +56,7 @@ struct DashboardView: View {
                         )
                     }
                     if mascotEnabled { MascotCard(showInsights: showProgress) }
+                    FocusRadioCard()
                     ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
                         VStack(spacing: 14) {
                             TodayCard(now: now)
