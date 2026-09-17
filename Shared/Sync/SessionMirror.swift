@@ -62,6 +62,7 @@ final class SessionMirror {
         // Standart UserDefaults uzantidan okunamaz. Temayi mevcut atomik
         // ozete eklemek ikinci bir paylasim kanali gerektirmez; tema degisimi
         // de esitsizlik yaratarak timeline ve acik etkinligi yeniler.
+        CelebrationCenter.shared.refresh(store: store)
         let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
         let snapshot = syncSnapshot(angry: NudgeController.shared.mood?.isAngry == true)
         LongSessionReminderController.shared.update(running: store.running)

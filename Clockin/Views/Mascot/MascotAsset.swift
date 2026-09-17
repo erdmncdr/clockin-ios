@@ -18,30 +18,32 @@ struct ClockinMascotStage: View {
     @AppStorage("Clockin.MascotDefault") private var defaultMode = "Auto"
     let state: MascotAsset
     @State private var tap: MascotTap?
-    @State private var reactionMood: MascotMood?
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    @State private var companionID = UUID()
     @State private var lastReaction: MascotReaction?
 
     @Environment(\.clockinContentActive) private var contentActive
     @State private var appeared = false
     private var moving: Bool { appeared && contentActive && !reduceMotion && scenePhase == .active }
 
-    private struct ReactionKey: Equatable {
-        let tap: MascotTap?
-        let moving: Bool
-        let state: MascotAsset
-        let mode: CompanionMode
-    }
-
     var body: some View {
         let mode = CompanionMode.resolve(defaultMode, totalHours: (store.totalDuration + store.elapsed()) / 3600)
         let current = mood(for: mode)
         Group {
-            if let mood = (moving ? reactionMood : nil) ?? current {
+            if moving, let reaction = celebrations.reaction(for: companionID) {
+                CelebrationMascot(mood: reaction.mood, reaction: reaction.mascotReaction, moving: true)
+                    .id(celebrations.presentationID)
+            } else if moving, let tap {
+                CelebrationMascot(mood: tap.reaction.mood(from: current ?? .hello) ?? current ?? .hello,
+                                  reaction: tap.reaction, moving: true)
+                    .id(tap.id)
+            } else if let mood = current {
                 ClockinMotionMascot(mood: mood, tap: tap)
             } else if let fixed = mode.fixedPoseIndex {
                 ClockinMascotImage(asset: "pose\(fixed)")
             }
         }
+        .background(CelebrationVisibilityProbe(id: companionID, enabled: moving))
         .contentShape(Rectangle())
         .onAppear { appeared = true }
         .onDisappear { appeared = false }
@@ -50,25 +52,14 @@ struct ClockinMascotStage: View {
         .accessibilityLabel(state == .celebrate ? "Celebrating focus companion" : "Focus companion")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { react() }
-        .task(id: ReactionKey(tap: tap, moving: moving, state: state, mode: mode)) {
-            guard moving, let tap else { reactionMood = nil; return }
-            if current == nil && reactionMood == nil { reactionMood = .hello }
-            do {
-                if let next = tap.reaction.mood(from: reactionMood ?? current ?? .hello) {
-                    try await Task.sleep(for: .milliseconds(330))
-                    reactionMood = next
-                    try await Task.sleep(for: .seconds(3.2))
-                } else {
-                    try await Task.sleep(for: .seconds(1.6))
-                }
-            } catch { return }
-            reactionMood = nil
+        .task(id: tap) {
+            guard tap != nil else { return }
+            do { try await Task.sleep(for: .seconds(1.6)) } catch { return }
+            tap = nil
         }
-        .onChange(of: moving) { _, active in
-            if !active { tap = nil; reactionMood = nil }
-        }
-        .onChange(of: state) { _, _ in tap = nil; reactionMood = nil }
-        .onChange(of: mode) { _, _ in tap = nil; reactionMood = nil }
+        .onChange(of: moving) { _, active in if !active { tap = nil } }
+        .onChange(of: state) { _, _ in tap = nil }
+        .onChange(of: mode) { _, _ in tap = nil }
     }
 
     private func mood(for mode: CompanionMode) -> MascotMood? {
@@ -85,7 +76,7 @@ struct ClockinMascotStage: View {
     private func react() {
         guard appeared, contentActive, scenePhase == .active else { return }
         Haptics.play(.companionReaction)
-        guard moving else { return }
+        guard moving, celebrations.reserveTap() else { return }
         var random = SystemRandomNumberGenerator()
         let reaction = MascotReaction.pick(after: lastReaction, using: &random)
         lastReaction = reaction

@@ -80,6 +80,7 @@ struct DashboardView: View {
         .environment(\.clockinContentActive, appeared && isSelected && sheet == nil && pendingDelete == nil && scenePhase == .active)
         .onAppear { appeared = true }
         .onDisappear { appeared = false }
+        .celebrationBlocked(by: sheet != nil)
         .sheet(item: $sheet, onDismiss: presentReminderEnd) { destination in
             Group {
                 switch destination {

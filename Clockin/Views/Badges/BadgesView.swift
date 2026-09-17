@@ -9,23 +9,22 @@ import SwiftUI
 @MainActor
 struct BadgesView: View {
     @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.palette) private var palette
-    @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
-    @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 60)) { context in
-                let stats = InsightsSnapshot(store: store, now: context.date,
-                                             dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        levelCard(stats)
-                        InsightsBadgesView(badges: stats.badges)
+            Group {
+                if let stats = celebrations.snapshot {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            levelCard(stats)
+                            InsightsBadgesView(badges: stats.badges)
+                        }
+                        .padding(16)
                     }
-                    .padding(16)
+                    .scrollBounceBehavior(.basedOnSize)
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
             .background(palette.background)
             .navigationTitle("Badges")

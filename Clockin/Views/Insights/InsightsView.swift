@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 struct InsightsView: View {
     @EnvironmentObject private var store: ClockStore
+    @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
@@ -20,37 +21,37 @@ struct InsightsView: View {
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 60)) { context in
-                let stats = InsightsSnapshot(store: store, now: context.date,
-                                             dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
-                ScrollViewReader { scroll in
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            goalsCard(stats, now: context.date)
-                                .id("goals")
-                            InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
-                                                currencyCode: store.currencyCode, now: context.date)
-                            totalsCard(stats)
-                            reportsCard(stats)
+            Group {
+                if let stats = celebrations.snapshot {
+                    ScrollViewReader { scroll in
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                goalsCard(stats, now: celebrations.snapshotDate)
+                                    .id("goals")
+                                InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
+                                                    currencyCode: store.currencyCode, now: celebrations.snapshotDate)
+                                totalsCard(stats)
+                                reportsCard(stats)
+                            }
+                            .padding(16)
                         }
-                        .padding(16)
-                    }
-                    .dismissDecimalKeyboard(isEditing: focusedGoal != nil) { focusedGoal = nil }
-                    .onChange(of: focusedGoal) { _, field in
-                        if let field { scroll.scrollTo(field, anchor: .center) }
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                        if let field = focusedGoal { scroll.scrollTo(field, anchor: .center) }
-                    }
-                    .scrollBounceBehavior(.basedOnSize)
-                    // Asagi kaydirmak da klavyeyi kapatir.
-                    .scrollDismissesKeyboard(.interactively)
-                    .task(id: openGoalEditor) {
-                        guard openGoalEditor else { return }
-                        editingGoals = true
-                        pendingDailyFocus = true
-                        scroll.scrollTo("goals", anchor: .top)
-                        openGoalEditor = false
+                        .dismissDecimalKeyboard(isEditing: focusedGoal != nil) { focusedGoal = nil }
+                        .onChange(of: focusedGoal) { _, field in
+                            if let field { scroll.scrollTo(field, anchor: .center) }
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                            if let field = focusedGoal { scroll.scrollTo(field, anchor: .center) }
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                        // Asagi kaydirmak da klavyeyi kapatir.
+                        .scrollDismissesKeyboard(.interactively)
+                        .task(id: openGoalEditor) {
+                            guard openGoalEditor else { return }
+                            editingGoals = true
+                            pendingDailyFocus = true
+                            scroll.scrollTo("goals", anchor: .top)
+                            openGoalEditor = false
+                        }
                     }
                 }
             }
@@ -65,6 +66,7 @@ struct InsightsView: View {
                     .accessibilityLabel("Share stats")
                 }
             }
+            .celebrationBlocked(by: shareSnapshot != nil)
             .sheet(item: $shareSnapshot) { snapshot in
                 ShareStatsView(snapshot: snapshot)
             }

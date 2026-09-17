@@ -63,6 +63,7 @@ struct BackupsView: View {
             .animation(.smooth(duration: 0.3), value: message)
             .hapticFeedback(.destructiveConfirmation, trigger: pending?.id) { _, new in new != nil }
             .task { await reload() }
+            .celebrationBlocked(by: pending != nil)
             .confirmationDialog(pending.map(title) ?? "", isPresented: Binding(
                 get: { pending != nil }, set: { if !$0 { pending = nil } }
             ), titleVisibility: .visible, presenting: pending) { backup in

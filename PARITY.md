@@ -15,6 +15,7 @@ Timer with pause, cancel and start with elapsed time; manual entries, editing an
 - Companion nudges with Grumpy or Friendly tone, companion moods, and at most two daytime notifications per day
 - Long session reminder with Clock out, Set end time, and Remind in 1 hour actions
 - Haptics on timer actions, a celebration on the clock-out summary
+- Companion level-up overlays with Share and finite confetti, queued badge-unlock banners, and brief goal, money, streak and session reactions; persisted progress, Reduce Motion and companion-off variants
 - Overlap warnings in History and in the entry editor
 - Desk mode: a full-screen timer in landscape that keeps the screen on while a session runs
 

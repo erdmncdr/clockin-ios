@@ -3,27 +3,18 @@ import UIKit
 
 @MainActor
 struct DashboardLevelBadge: View {
-    @EnvironmentObject private var store: ClockStore
     @Environment(\.clockinContentActive) private var contentActive
     @Environment(\.scenePhase) private var scenePhase
     @State private var appeared = false
     private var active: Bool { appeared && contentActive && scenePhase == .active }
-    private struct RefreshKey: Equatable {
-        let version: Int
-        let active: Bool
-    }
     let showInsights: () -> Void
-    @State private var level = 1
-    @State private var xp = 0
-    @State private var didLoad = false
-    /// Yalnizca seviye yukseldiginde artar; parlama buna bagli.
-    @State private var levelUps = 0
-    /// Veri her degistiginde artar ve hesaplamayi yeniden baslatir.
-    @State private var dataVersion = 0
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    private var level: Int { celebrations.snapshot?.level ?? 1 }
+    private var xp: Int { celebrations.snapshot?.xp ?? 0 }
 
     var body: some View {
         Button(action: showInsights) {
-            LevelBadge(level: level, xp: xp, levelUps: levelUps, active: active)
+            LevelBadge(level: level, xp: xp, active: active)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -33,27 +24,6 @@ struct DashboardLevelBadge: View {
         .accessibilityHint("Opens your level and badges")
         .onAppear { appeared = true }
         .onDisappear { appeared = false }
-        .onReceive(store.objectWillChange) { _ in dataVersion &+= 1 }
-        .task(id: RefreshKey(version: dataVersion, active: active)) {
-            guard active else { return }
-            // `objectWillChange` deger yazilmadan once gelir; gorev bir sonraki
-            // turda basladigi icin burada okunan veri yenisidir.
-            refresh()
-            while store.running?.isPaused == false {
-                do { try await Task.sleep(for: .seconds(60)) }
-                catch { return }
-                refresh()
-            }
-        }
-    }
-
-    private func refresh() {
-        let stats = InsightsSnapshot(store: store, now: .now, dailyGoal: 0, monthlyGoal: 0)
-        // Ilk yuklemede ve seviye duserken kutlama yok; yalnizca gercek yukselis.
-        if didLoad, stats.level > level { levelUps &+= 1 }
-        level = stats.level
-        xp = stats.xp
-        didLoad = true
     }
 }
 
@@ -62,7 +32,6 @@ private struct LevelBadge: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let level: Int
     let xp: Int
-    let levelUps: Int
     let active: Bool
 
     private var progress: Double { min(max(Double(xp % 500) / 500, 0), 1) }
@@ -104,16 +73,6 @@ private struct LevelBadge: View {
             .overlay {
                 Capsule(style: .continuous).stroke(palette.accent.opacity(0.26), lineWidth: 1)
             }
-        }
-        .phaseAnimator([false, true, false], trigger: levelUps) { content, highlighted in
-            content.overlay {
-                Capsule(style: .continuous)
-                    .stroke(palette.accent.opacity(active && !reduceMotion && highlighted ? 0.85 : 0), lineWidth: 1.5)
-                    .allowsHitTesting(false)
-            }
-            .brightness(active && !reduceMotion && highlighted ? 0.12 : 0)
-        } animation: { highlighted in
-            !active || reduceMotion ? nil : .easeOut(duration: highlighted ? 0.2 : 0.7)
         }
         .transaction { if reduceMotion { $0.animation = nil; $0.disablesAnimations = true } }
     }
