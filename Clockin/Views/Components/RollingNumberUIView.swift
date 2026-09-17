@@ -176,7 +176,9 @@ private final class RollingDigitUIView: UIView {
         let fade = CABasicAnimation(keyPath: "opacity")
         fade.fromValue = fromOpacity
         fade.toValue = toOpacity
-        let range = CAFrameRateRange(minimum: 24, maximum: 30, preferred: 30)
+        // 30 fps kisa kaymada kademeli gorunuyordu; ara kareleri ekran sunucusu
+        // cizdigi icin 60 fps uygulamaya yuk getirmez.
+        let range = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
         for animation in [move, fade] {
             animation.duration = 0.25
             animation.preferredFrameRateRange = range

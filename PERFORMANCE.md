@@ -129,8 +129,10 @@ digit reuses two UILabel layers inside a rectangular clipped cell. Final model
 transforms and opacities are written with implicit actions disabled, then explicit
 `CABasicAnimation`s for `transform.translation.y` and `opacity` are submitted in
 0.25-second ease-out groups. Both the groups and their children request
-`CAFrameRateRange(minimum: 24, maximum: 30, preferred: 30)`. This is a system timing
-preference, not a guaranteed display-wide 30 Hz limit.
+`CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)`. At 30 fps the quarter
+second roll looked stepped on ProMotion displays; the extra frames are drawn by the
+render server, not the app. This is a system timing preference, not a guaranteed
+display-wide limit.
 
 The render server interpolates the cached glyph layers. There is no SwiftUI
 animatable value, frame callback, timer, display link, animation delegate or
