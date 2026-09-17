@@ -113,43 +113,69 @@ Time Profiler findings, about a third of samples were in `vSepConvolveARGB8bgf_v
 below `RBInterpolatedDisplayListContents renderInContext`. These numbers are the
 reported device baseline, not measurements made in this checkout.
 
-`RollingNumberText` lays out individual characters in `HStack(spacing: 0)`, with
-monospaced digits and cell identity counted from the right. Each changed digit
-has two glyphs: the old glyph moves out and fades, the new glyph moves in and
-appears. The only animated properties are `offset` and `opacity`, with a 0.25 s
-ease-out curve. A rectangular `.clipped()` bounds each digit. There is no blur,
-content transition, drawing group, alpha mask, per-frame timeline, custom
-animatable drawing or repeating task. This removes the numeric-text interpolated
-content effect that triggered the observed CPU blur path; transform/alpha
-animation can be composited by the render server. It does not establish zero CPU
-cost: formatting, diffing, layout and SwiftUI updates still need device profiling.
+### Core Animation follow-up
 
-Direction comes from the underlying numeric value supplied beside the formatted
-string. Thus all changed digits roll up in `00:59` to `01:00`, while remaining
-amounts roll down as they decrease. Symbols, punctuation, spaces and letters change
-instantly. Any character-count change makes that whole update instant, including
-new hours or thousands separators. Initial appearance and safety-switch changes
-also snap to the current value. Unchanged formatted strings do not change render
-state. A fresh changed pair replaces an interrupted pair, so old layers do not
-accumulate. Each pair retains at most two glyphs, with the outgoing glyph fully
-transparent after 0.25 s.
+The supplied simulator comparison measured Clockin/backboardd at 2.5%/3.5% with
+plain text and 9.3%/9.1% with the first rolling pass. In its 12-second trace,
+687 of 1009 samples were below `ViewGraphRootValueUpdater.render`, with display
+link dispatch and AttributeGraph updates dominating. Removing blur was not enough:
+SwiftUI still interpolated each cell's `offset` and `opacity` every display frame.
+Those modifiers did not automatically become independent render-server animations.
+These are tester measurements, not results from this checkout.
 
-The timeline's disabled animation transaction remains intact. Only a changed
-pair locally enables its own offset/opacity animation. Progress bars and the rest
-of the ticking subtree do not acquire an animation. Haptics, widget and Live
-Activity code are unchanged.
+Each `RollingNumberText` now owns one `UIViewRepresentable`. Its UIKit view keeps
+right-indexed cells and the existing pure `RollingNumberUpdate` diff. A changed
+digit reuses two UILabel layers inside a rectangular clipped cell. Final model
+transforms and opacities are written with implicit actions disabled, then explicit
+`CABasicAnimation`s for `transform.translation.y` and `opacity` are submitted in
+0.25-second ease-out groups. Both the groups and their children request
+`CAFrameRateRange(minimum: 24, maximum: 30, preferred: 30)`. This is a system timing
+preference, not a guaranteed display-wide 30 Hz limit.
 
-Call sites: TimerCard's timer, earnings and TRY; TodayCard's TODAY, EARNED and TRY;
-goal worked/remaining values; Money Momentum's amounts and fixed-slot remaining
-label; desk mode's timer, earnings, TRY and today summary. Existing semantic fonts,
-explicit timer sizes, scale limits and palette font design remain available.
-The component accepts `Font` and an optional design, inheriting the theme when
-omitted. It deliberately skips the modifier in that case because
-[Apple documents that `fontDesign(nil)` removes inherited design](https://developer.apple.com/documentation/swiftui/view/fontdesign(_:)).
-Glyph height comes from SwiftUI layout rather than a fixed pixel estimate, so
-semantic fonts follow Dynamic Type. VoiceOver gets the full formatted value as
-one label; individual cells are hidden. Existing goal/desk accessibility summaries
-continue to override their child labels.
+The render server interpolates the cached glyph layers. There is no SwiftUI
+animatable value, frame callback, timer, display link, animation delegate or
+completion task in this component. Once submitted, a roll needs no application
+per-frame interpolation. Formatting, diffing, glyph rasterization, layout and the
+CA commit still cost work when a value or environment changes. This follows
+[Apple's layer-based animation model](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreAnimation_guide/CoreAnimationBasics/CoreAnimationBasics.html).
+It does not establish the under-5% CPU target without a new trace.
+
+CA removes finished animation groups automatically. The outgoing label stays
+fully transparent in the model and becomes the incoming label on the next roll,
+so each cell retains exactly two labels. An interrupted roll discards both old
+animations and starts from the latest logical glyph. Removed cells are released;
+length changes, restyling, safety-gate changes and detachment cancel motion.
+Unchanged formatted text does no glyph work, but the latest numeric value is
+retained for the next direction comparison. Symbols, punctuation, spaces and
+letters still change instantly. The timeline's disabled SwiftUI transaction and
+the shared safety policy are unchanged.
+
+`RollingNumberFont` explicitly maps every existing call-site Font, weight and
+text style to UIFont, preserving the palette design and monospaced digit feature.
+Semantic styles scale through UIFontMetrics with the SwiftUI content size category.
+The explicit 60/120 pt system timers stay fixed-size, matching the previous Text;
+existing minimumScaleFactor values handle constrained widths. New font recipes
+must be added explicitly; an unmapped Font fails a precondition instead of silently
+substituting a font. No reflection or private font API is used.
+
+The initializer keeps its existing arguments and adds an optional
+`foregroundColor: Color = .primary`. All existing rolling call sites remain;
+colored ones pass their current color explicitly because iOS 17 has no public
+bridge from an inherited arbitrary foregroundStyle to UIColor. The resolved
+UIColor reaches both glyph layers, including opacity and light/dark theme changes.
+The prior foregroundStyle modifiers remain in place. UIKit reports an intrinsic
+single-line size through sizeThatFits, using the sum of individual glyph advances
+and the font's line height, matching the previous zero-spacing cell layout.
+The wrapper supplies text baseline guides, and UIKit applies the inherited scale
+limit when constrained. The whole UIKit view is one accessibility element;
+its labels are hidden from accessibility. Parent goal/desk summaries remain.
+
+No SwiftUI animation fallback exists. Visual layout could not be inspected because
+CoreSimulator is unavailable in the sandbox. In particular, TimerCard's 0.6 scale
+limit, Today metric columns, Money Momentum's fixed overlay slot, and desk mode's
+0.4/0.5 scale limits and first-baseline row need comparison with the first pass,
+including all palette designs and accessibility text sizes. No visible mismatch
+has been confirmed or ruled out here.
 
 ### Shared safety switch
 
@@ -167,8 +193,8 @@ Mode off, thermal state nominal or fair, `clockinContentActive`, an active scene
 and an appeared view. Serious, critical and unknown thermal states disable motion.
 The environment supplies tab/sheet/desk visibility from the existing performance
 fix; appearance/disappearance and scene phase add local lifecycle gates. Re-enabling
-motion does not replay an update made while disabled. In-flight pairs are removed
-immediately when a gate closes.
+motion does not replay an update made while disabled. In-flight CA animations are removed
+immediately when a gate closes; the current glyph is shown at its final position.
 
 ### Device acceptance measurement
 
@@ -182,7 +208,8 @@ immediately when a gate closes.
    average CPU and peaks. The target is **under 5% Clockin CPU**, compared with the
    reported 2.5% plain-text baseline. Inspect the call tree for
    `vSepConvolveARGB8bgf_vec` and `RBInterpolatedDisplayListContents renderInContext`.
-   The per-second rolling effect must no longer produce the old blur stack.
+   The per-second rolling effect must no longer produce the old blur stack or
+   display-frame-driven `ViewGraphRootValueUpdater.render` / AttributeGraph work.
    Check Animation Hitches/Core Animation too, so work moved to the render server
    does not hide poor frame pacing or excessive rendering cost.
 3. Exercise `09` to `10`, minute/hour carries, decreasing remaining money and
@@ -202,7 +229,7 @@ immediately when a gate closes.
    trace duration and trace filename. CPU, energy and visible behavior remain
    unverified until these device results are supplied. No simulator was run here.
 
-### Checkout verification
+### First-pass checkout verification
 
 - All 24 README check suites passed, with 1414 `ok` lines. The new suite reports
   `176 rolling checks passed`, including all 128 combinations of the six policy
@@ -233,3 +260,35 @@ Logs: `/tmp/clockin-digits-build.log`,
 No project file, signing setting, version number, haptic behavior, widget or Live
 Activity source was changed. No commit or push was made. The under-5% CPU target
 is pending the device measurement above.
+
+### Core Animation checkout verification
+
+- All 24 iOS README suites passed: 1435 `ok` lines, including
+  `197 rolling checks passed`. Twenty-one new pure checks cover renderer
+  lifecycle, unchanged text with updated numeric values, interruption, gate
+  changes, restyling, length changes, detachment, intrinsic size, scale limits
+  and baseline alignment. The digit diff, direction and policy checks remain intact.
+- The actual UIKit renderer, font bridge and pure helper passed isolated iOS 17
+  Simulator Swift 6 strict-concurrency type checking. The actual SwiftUI wrapper
+  hit the sandbox's State macro restriction. A diagnostic copy with only that
+  State declaration expanded to its property-wrapper spelling, plus stand-in
+  environment keys, also passed type checking. That is partial integration
+  evidence, not a successful app build or a runtime layout test.
+- All nine changed/new production Swift files passed parsing; `git diff --check`
+  and source checks for per-frame animation paths passed.
+- The full build command was attempted on the final production source:
+
+```sh
+cd iOS && xcodebuild -project Clockin.xcodeproj -scheme Clockin -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/clockin-ca-digits-dd build CODE_SIGNING_ALLOWED=NO
+```
+
+It exited 65. `sandbox-exec: sandbox_apply: Operation not permitted` prevented
+the existing `PaletteEnvironment.swift` `@Entry` macro from loading in
+ClockinWidgets. `simctl list devices booted` also failed with a CoreSimulatorService
+connection refusal. App CPU, backboardd CPU, actual frame pacing, VoiceOver and
+visible layout remain unverified for this follow-up.
+
+Logs: `/tmp/clockin-ca-build.log`, `/tmp/clockin-ca-checks/summary.txt`,
+`/tmp/clockin-ca-uikit-typecheck.log`, `/tmp/clockin-ca-view-typecheck.log`,
+`/tmp/clockin-ca-expanded-typecheck.log` and `/tmp/clockin-ca-parse.log`.
+No project file or signing setting was edited. No real data, commit or push was used.

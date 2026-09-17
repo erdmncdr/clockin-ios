@@ -53,15 +53,16 @@ struct DeskModeView: View {
                     .foregroundStyle(.secondary)
             }
             RollingNumberText(clock, value: elapsed, font: .system(size: 120, weight: .medium),
-                              design: palette.fontDesign)
+                              design: palette.fontDesign,
+                              foregroundColor: store.running == nil ? .secondary : .primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.4)
                 .foregroundStyle(store.running == nil ? Color.secondary : Color.primary)
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                RollingNumberText(earnings, value: earned, font: .title.weight(.semibold))
+                RollingNumberText(earnings, value: earned, font: .title.weight(.semibold), foregroundColor: palette.accent)
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
-                    RollingNumberText((earned * rate).money(code: "TRY"), value: earned * rate, font: .title3)
+                    RollingNumberText((earned * rate).money(code: "TRY"), value: earned * rate, font: .title3, foregroundColor: .secondary)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -88,9 +89,11 @@ struct DeskModeView: View {
                     .font(.caption2.weight(.bold))
                     .tracking(1)
                     .foregroundStyle(.tertiary)
-                RollingNumberText(DurationText.compact(duration), value: duration, font: .caption.weight(.semibold))
+                RollingNumberText(DurationText.compact(duration), value: duration, font: .caption.weight(.semibold),
+                                  foregroundColor: .secondary)
                     .foregroundStyle(.secondary)
-                RollingNumberText(earnings.money(code: store.currencyCode), value: earnings, font: .caption.weight(.semibold))
+                RollingNumberText(earnings.money(code: store.currencyCode), value: earnings, font: .caption.weight(.semibold),
+                                  foregroundColor: palette.accent.opacity(0.8))
                     .foregroundStyle(palette.accent.opacity(0.8))
                 if let goal {
                     Text("/ \(DurationText.compact(goal.target))")

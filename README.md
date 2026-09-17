@@ -75,7 +75,9 @@ swiftc -swift-version 6 -strict-concurrency=complete Shared/Core/Models.swift Sh
 
 The rolling check covers right-indexed glyph diffs, length changes, timer carries,
 increasing/decreasing semantic values, prefix/suffix currencies, Turkish formatting,
-and all combinations of the motion/power/thermal/visibility policy. Device CPU and
+all combinations of the motion/power/thermal/visibility policy, and the UIKit renderer's
+update lifecycle, interruption, restyling, detachment, intrinsic sizing and baseline
+alignment. Device CPU and
 visual checks for the rolling digits are described in `PERFORMANCE.md`.
 
 History opens on the current calendar month by default. The last range is saved,

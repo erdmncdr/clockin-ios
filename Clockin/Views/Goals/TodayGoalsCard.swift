@@ -89,7 +89,8 @@ struct TodayGoalsCard: View {
             }
             .frame(height: 6)
             RollingNumberText(goal.isReached ? "Goal reached" : "\(DurationText.compact(goal.remaining)) to go",
-                              value: goal.remaining, font: .caption)
+                              value: goal.remaining, font: .caption,
+                              foregroundColor: goal.isReached ? palette.accent : .secondary)
                 .foregroundStyle(goal.isReached ? palette.accent : .secondary)
         }
         .accessibilityElement(children: .ignore)

@@ -29,11 +29,11 @@ struct TimerCard: View {
                                   font: .system(size: 60, weight: .medium), design: palette.fontDesign)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                RollingNumberText(earnings, value: earned, font: .title3.weight(.semibold))
+                RollingNumberText(earnings, value: earned, font: .title3.weight(.semibold), foregroundColor: palette.accent)
                     .foregroundStyle(palette.accent)
                 if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
                     let converted = (earned * rate).money(code: "TRY")
-                    RollingNumberText(converted, value: earned * rate, font: .caption)
+                    RollingNumberText(converted, value: earned * rate, font: .caption, foregroundColor: .secondary)
                         .foregroundStyle(.secondary)
                 }
                 if let day = store.runningDayIfNotToday(at: now) {

@@ -67,6 +67,53 @@ check(RollDirection.between(1, -1) == .down, "crossing zero downward compares nu
 check(RollDirection.between(.nan, 1) == .none, "NaN disables rolling")
 check(RollDirection.between(1, .infinity) == .none, "nonfinite new value disables rolling")
 
+var render = RollingNumberRenderState()
+let first = render.update(to: .init(text: "09", value: 9), allowsAnimation: true)
+check(first?.cells.allSatisfy { !$0.rolls } == true, "first UIKit render snaps")
+check(render.update(to: .init(text: "09", value: 9), allowsAnimation: true) == nil,
+      "identical UIKit update does no glyph work")
+check(render.update(to: .init(text: "09", value: 9.4), allowsAnimation: true) == nil,
+      "unrounded update does no glyph work")
+check(render.sample?.value == 9.4, "unrounded update retains latest semantic value")
+let next = render.update(to: .init(text: "10", value: 10), allowsAnimation: true)!
+check(changed(next) == [1, 0] && next.direction == .up, "UIKit update uses the existing digit diff")
+let interrupted = render.update(to: .init(text: "09", value: 9), allowsAnimation: true)!
+check(interrupted.cells.first?.previous == "1" && interrupted.direction == .down,
+      "interruption replaces the pair using the latest model value")
+let disabled = render.update(to: .init(text: "09", value: 9), allowsAnimation: false)!
+check(changed(disabled).isEmpty, "closing a gate cancels even an unchanged value")
+let disabledTick = render.update(to: .init(text: "10", value: 10), allowsAnimation: false)!
+check(changed(disabledTick).isEmpty, "disabled ticks replace glyphs instantly")
+let enabled = render.update(to: .init(text: "11", value: 11), allowsAnimation: true)!
+check(changed(enabled).isEmpty, "enabling alongside a tick does not replay motion")
+let resumed = render.update(to: .init(text: "12", value: 12), allowsAnimation: true)!
+check(changed(resumed) == [0], "a later enabled tick rolls again")
+let restyled = render.update(to: .init(text: "12", value: 12), allowsAnimation: true, reset: true)!
+check(changed(restyled).isEmpty, "font or color changes stop an in-flight roll")
+let lengthDuringRoll = render.update(to: .init(text: "100", value: 100), allowsAnimation: true)!
+check(lengthDuringRoll.lengthChanged && changed(lengthDuringRoll).isEmpty,
+      "length changes snap the entire UIKit value")
+let cleared = render.update(to: .init(text: "", value: 0), allowsAnimation: true)!
+check(cleared.cells.isEmpty, "empty update releases every cell")
+render = RollingNumberRenderState()
+check(render.update(to: .init(text: "13", value: 13), allowsAnimation: true)?.direction == RollDirection.none,
+      "reattaching a detached UIKit view starts settled")
+
+let layout = RollingNumberLayout(widths: [10.25, 4.25, 10.25], lineHeight: 20.5, ascender: 16)
+check(layout.naturalSize.width == 25 && layout.naturalSize.height == 21,
+      "intrinsic size sums advances and rounds outward")
+check(layout.scale(width: 50, minimum: 0.4) == 1, "extra width does not enlarge glyphs")
+check(layout.scale(width: 12.5, minimum: 0.4) == 0.5, "narrow width scales the entire value uniformly")
+check(layout.scale(width: 1, minimum: 0.4) == 0.4, "desk scale floor is respected")
+check(layout.baseline(in: CGSize(width: 25, height: 21), minimum: 0.4) == 16.25,
+      "baseline includes the label's centered line box")
+check(layout.baseline(in: CGSize(width: 12.5, height: 21), minimum: 0.4) == 13.375,
+      "compressed baseline follows the rendered glyphs")
+let emptyLayout = RollingNumberLayout(widths: [], lineHeight: 20, ascender: 16)
+check(emptyLayout.naturalSize.width == 0 && emptyLayout.naturalSize.height == 0
+      && emptyLayout.baseline(in: CGSize(width: 0, height: 0), minimum: 1) == 0,
+      "empty text has no intrinsic size or baseline")
+
 func allowed(reduce: Bool = false, lowPower: Bool = false,
              thermal: ProcessInfo.ThermalState = .nominal,
              content: Bool = true, scene: Bool = true, visible: Bool = true) -> Bool {

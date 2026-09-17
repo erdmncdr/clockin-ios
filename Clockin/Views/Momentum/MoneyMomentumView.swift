@@ -29,11 +29,12 @@ struct MoneyMomentumView: View {
                             .tracking(1)
                             .foregroundStyle(.secondary)
                         RollingNumberText("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec",
-                                          value: momentum.perSecond, font: .subheadline.weight(.semibold))
+                                          value: momentum.perSecond, font: .subheadline.weight(.semibold),
+                                          foregroundColor: momentum.isEarning ? palette.accent : .secondary)
                             .foregroundStyle(momentum.isEarning ? palette.accent : .secondary)
                         if let rate = momentum.tryPerSecond {
                             RollingNumberText("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec",
-                                              value: rate, font: .subheadline.weight(.semibold))
+                                              value: rate, font: .subheadline.weight(.semibold), foregroundColor: .secondary)
                                 .foregroundStyle(.secondary)
                         }
                     }

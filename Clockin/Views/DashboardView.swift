@@ -286,7 +286,7 @@ private struct TodayCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if let detail {
-                    RollingNumberText(detail.money(code: "TRY"), value: detail, font: .caption)
+                    RollingNumberText(detail.money(code: "TRY"), value: detail, font: .caption, foregroundColor: .secondary)
                         .foregroundStyle(.secondary)
                 }
             }
