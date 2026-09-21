@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSSupportsLiveActivitiesFrequentUpdates</key>
+    <true/>
+    <key>ClockinLiveActivityEndpoint</key>
+    <string>https://getclockin.netlify.app/api/v1/live-activity</string>
     <!-- iPhone'da ozel animasyonlar bu anahtar olmadan 60 Hz'de kalir.
          Kaydirma zaten 120 Hz; dokunma geri bildirimi, sayilar ve gecisler
          de ProMotion ekranda ayni akicilikta olsun. -->
