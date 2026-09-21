@@ -12,14 +12,17 @@ struct BadgesView: View {
     @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.palette) private var palette
 
+    @State private var showCompanion = false
+    @State private var showRanks = false
+
     var body: some View {
-        NavigationStack {
+        Group {
             Group {
                 if let stats = celebrations.snapshot {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
-                            levelCard(stats)
                             InsightsBadgesView(badges: stats.badges)
+                            DisclosureGroup("Level & XP") { levelCard(stats) }
                             companionSection(totalHours: stats.totalDuration / 3600)
                         }
                         .padding(16)
@@ -28,8 +31,12 @@ struct BadgesView: View {
                 }
             }
             .background(palette.background)
-            .navigationTitle("Badges")
         }
+        .sheet(isPresented: $showCompanion) { CompanionView() }
+        .sheet(isPresented: $showRanks) {
+            LevelBadgeGallery(currentLevel: celebrations.snapshot?.level ?? 1, xp: celebrations.snapshot?.xp ?? 0)
+        }
+        .celebrationBlocked(by: showCompanion || showRanks)
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
     }
@@ -37,31 +44,11 @@ struct BadgesView: View {
     private func companionSection(totalHours: Double) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionTitle("COMPANION")
-            ForEach(CompanionAccessory.allCases) { accessory in
-                let unlocked = accessory.isUnlocked(totalHours: totalHours)
-                HStack(spacing: 12) {
-                    Image(systemName: accessory.symbol)
-                        .font(.title3)
-                        .frame(width: 32)
-                        .foregroundStyle(unlocked ? palette.accent : Color.secondary)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(accessory.name).font(.subheadline.weight(.semibold))
-                        Text("\(Int(accessory.requiredHours))h of total work")
-                            .font(.caption).foregroundStyle(.secondary)
-                        Text(accessory.progressText(totalHours: totalHours))
-                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: unlocked ? "checkmark.seal.fill" : "lock.fill")
-                        .foregroundStyle(unlocked ? palette.accent : Color.secondary)
-                }
-                .padding(10)
-                .background(unlocked ? palette.accent.opacity(0.12) : palette.surface,
-                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .opacity(unlocked ? 1 : 0.6)
-                .accessibilityElement(children: .combine)
-                .accessibilityValue(unlocked ? "Unlocked" : "Locked")
+            Button { showCompanion = true } label: {
+                Label("Outfits, coins and home", systemImage: "tshirt.fill")
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
+
         }
         .padding(16).card(palette)
     }
@@ -77,10 +64,20 @@ struct BadgesView: View {
             Text("\(stats.xp.formatted()) XP")
                 .font(.headline).monospacedDigit()
                 .contentTransition(.numericText())
-            SwiftUI.ProgressView(value: Double(stats.xp % 500) / 500)
+            PrestigeProgressBar(level: stats.level, progress: LevelPrestige.progress(xp: stats.xp), active: !showCompanion && !showRanks)
                 .accessibilityLabel("Progress to next level")
             Text("\(500 - stats.xp % 500) XP to level \(stats.level + 1)")
                 .font(.subheadline).foregroundStyle(.secondary)
+            Text("\(LevelPrestige(level: stats.level).name) · Next rank at level \(LevelPrestige(level: stats.level).nextUnlock)")
+                .font(.caption).foregroundStyle(.secondary)
+            Button { showRanks = true } label: {
+                HStack {
+                    Label("Level badges", systemImage: "square.grid.2x2")
+                    Spacer()
+                    Text("View all").font(.caption)
+                    Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                }.frame(minHeight: 44)
+            }.accessibilityIdentifier("badges.levelGallery")
             Divider()
             metric("Current streak", value: "\(stats.currentStreak) days")
             metric("Longest streak", value: "\(stats.longestStreak) days")
@@ -89,7 +86,7 @@ struct BadgesView: View {
                     Text("100 XP per hour: \(stats.baseXP.formatted()) XP")
                     Text("Streaks: +\(stats.streakXP.formatted()) XP")
                     Text("Streak bonuses add up: 3 days +100, 7 +250, 14 +500, 30 +1,000 and 60 +2,000 XP.")
-                    Text("Goals do not add XP. They are yours to set, so a level built on them would not mean the same thing for everyone.")
+                    Text("Personal goals do not add XP.")
                 }
                 .font(.footnote).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
