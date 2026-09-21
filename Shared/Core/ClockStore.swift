@@ -15,6 +15,7 @@ final class ClockStore: ObservableObject {
         }
     }
     @Published var statusMessage: String?
+    @Published var timerPersistenceError: String?
 
     private let fileURL: URL
     private let calendar: Calendar
@@ -214,14 +215,16 @@ final class ClockStore: ObservableObject {
             statusMessage = "Invalid elapsed time or date."
             return
         }
+        let previous = data
         data.running = running
-        save()
+        guard persistTimerChange(previous: previous) else { return }
     }
 
     func cancelRunning() {
         guard data.running != nil else { return }
+        let previous = data
         data.running = nil
-        save()
+        guard persistTimerChange(previous: previous) else { return }
         statusMessage = "Active session cancelled. No earnings were added."
     }
 
@@ -233,8 +236,9 @@ final class ClockStore: ObservableObject {
         }
         running.accumulated = running.elapsed(at: date)
         running.resumedAt = nil
+        let previous = data
         data.running = running
-        save()
+        guard persistTimerChange(previous: previous) else { return }
     }
 
     func resume(at date: Date = .now) {
@@ -244,8 +248,9 @@ final class ClockStore: ObservableObject {
             statusMessage = "Invalid elapsed time or date."
             return
         }
+        let previous = data
         data.running = running
-        save()
+        guard persistTimerChange(previous: previous) else { return }
     }
 
     @discardableResult
@@ -259,9 +264,10 @@ final class ClockStore: ObservableObject {
             id: UUID(), start: running.start, end: date, duration: running.elapsed(at: date),
             note: running.note, hourlyRate: hourlyRate, source: "Clockin"
         )
+        let previous = data
         data.sessions.append(session)
         data.running = nil
-        save()
+        guard persistTimerChange(previous: previous) else { return nil }
         return session
     }
 
@@ -525,7 +531,7 @@ final class ClockStore: ObservableObject {
 
     func exportBackup(to url: URL) {
         do {
-            let encoded = try JSONEncoder().encode(data)
+            let encoded = try WardrobeBackupSection(defaults: .standard).adding(to: JSONEncoder().encode(data))
             try encoded.write(to: url, options: .atomic)
             statusMessage = "Backup exported."
         } catch {
@@ -559,8 +565,11 @@ final class ClockStore: ObservableObject {
     @discardableResult
     func restoreBackup(from url: URL) -> Bool {
         let decoded: ClockinData
+        let wardrobe: WardrobeBackupSection?
         do {
-            decoded = try JSONDecoder().decode(ClockinData.self, from: Data(contentsOf: url))
+            let bytes = try Data(contentsOf: url)
+            decoded = try JSONDecoder().decode(ClockinData.self, from: bytes)
+            wardrobe = try WardrobeBackupSection.read(from: bytes)
         } catch {
             statusMessage = "Could not restore backup: \(error.localizedDescription)"
             return false
@@ -570,7 +579,9 @@ final class ClockStore: ObservableObject {
                 try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
                 let stamp = Int(Date().timeIntervalSince1970 * 1000)
                 let copy = backupDirectory.appending(path: "\(Self.safetyCopyPrefix)\(stamp)-\(UUID().uuidString).json")
-                try FileManager.default.copyItem(at: fileURL, to: copy)
+                let original = try Data(contentsOf: fileURL)
+                let backup = (try? WardrobeBackupSection(defaults: .standard).adding(to: original)) ?? original
+                try backup.write(to: copy, options: .atomic)
                 // Kopya dosyanin eski degistirme tarihini tasir; listede en ustte,
                 // "simdi alinmis" olarak gorunmesi icin tarihi guncellenir.
                 try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: copy.path)
@@ -583,6 +594,7 @@ final class ClockStore: ObservableObject {
         let previous = data
         data = decoded
         guard save() else { data = previous; return false }
+        wardrobe?.restore(to: .standard)
         cachedBackupStats = nil
         statusMessage = "Backup restored. Your previous data was kept as a backup."
         return true
@@ -980,6 +992,17 @@ final class ClockStore: ObservableObject {
     /// ardindan "Entry updated." yazip hatanin uzerini ortuyordu. Kullanici
     /// kaydedildi saniyor, disk eski halde kaliyordu. Mac'te ayni hata PR #9 ile
     /// kapandi, bu kopyaya tasinmamisti.
+    /// Keep the visible timer and the persisted timer in agreement on write failure.
+    private func persistTimerChange(previous: ClockinData) -> Bool {
+        guard save() else {
+            data = previous
+            timerPersistenceError = "Your timer change could not be saved. The previous timer state has been kept. Check available storage and try again."
+            return false
+        }
+        timerPersistenceError = nil
+        return true
+    }
+
     @discardableResult
     private func save() -> Bool {
         do {
@@ -1004,7 +1027,7 @@ final class ClockStore: ObservableObject {
             try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
             let stamp = Int(now.timeIntervalSince1970 * 1000)
             let destination = backupDirectory.appending(path: "clockin-\(stamp)-\(UUID().uuidString).json")
-            try FileManager.default.copyItem(at: fileURL, to: destination)
+            try WardrobeBackupSection(defaults: .standard).adding(to: Data(contentsOf: fileURL)).write(to: destination, options: .atomic)
             let backups = try FileManager.default.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles])
                 .sorted {
                     let left = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast

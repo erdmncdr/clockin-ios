@@ -22,11 +22,17 @@ struct ClockInIntent: LiveActivityIntent {
                 return .result(dialog: "A session is already running.")
             }
             store.resume()
+            guard store.running?.isPaused == false else {
+                return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+            }
             SessionMirror.shared.refresh()
             await SessionMirror.shared.finishPendingUpdates()
             return .result(dialog: "Resumed.")
         }
         store.clockIn()
+        guard store.running != nil else {
+            return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+        }
         SessionMirror.shared.refresh()
         await SessionMirror.shared.finishPendingUpdates()
         return .result(dialog: "Clocked in.")
@@ -44,8 +50,9 @@ struct ClockOutIntent: LiveActivityIntent {
         return .result(dialog: "Open Clockin to continue.")
         #else
         let store = SharedStore.clock
+        guard store.running != nil else { return .result(dialog: "No session is running.") }
         guard let session = store.clockOut() else {
-            return .result(dialog: "No session is running.")
+            return .result(dialog: "Could not save the session. Your timer has not been stopped. Open Clockin and try again.")
         }
         SessionMirror.shared.refresh()
         await SessionMirror.shared.finishPendingUpdates()
@@ -71,11 +78,17 @@ struct TogglePauseIntent: LiveActivityIntent {
         }
         if running.isPaused {
             store.resume()
+            guard store.running?.isPaused == false else {
+                return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+            }
             SessionMirror.shared.refresh()
             await SessionMirror.shared.finishPendingUpdates()
             return .result(dialog: "Resumed.")
         }
         store.pause()
+        guard store.running?.isPaused == true else {
+            return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+        }
         SessionMirror.shared.refresh()
         await SessionMirror.shared.finishPendingUpdates()
         return .result(dialog: "Paused.")

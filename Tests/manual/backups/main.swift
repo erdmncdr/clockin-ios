@@ -126,6 +126,41 @@ do {
     check(store.sessions.map(\.note) == ["original"], "a restore whose write fails keeps the current data")
 }
 
+// Timer transitions must not claim success when persistence fails.
+do {
+    let (store, dir, url) = makeStore([])
+    defer {
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+        try? FileManager.default.removeItem(at: dir)
+    }
+    let start = Date(timeIntervalSince1970: 1_790_000_000)
+    store.clockIn(at: start)
+    let running = store.running
+    try! FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: dir.path)
+    check(store.clockOut(at: start.addingTimeInterval(60)) == nil,
+          "failed clock out must not report a completed session")
+    check(store.running == running && store.sessions.isEmpty,
+          "failed clock out preserves the running session without phantom history")
+    check(ClockStore(fileURL: url).running == store.running,
+          "relaunch cannot resurrect a session that the screen claimed was stopped")
+    store.pause(at: start.addingTimeInterval(90))
+    check(store.running == running, "failed pause does not claim the timer is paused")
+    store.cancelRunning()
+    check(store.running == running, "failed cancellation does not hide a persisted timer")
+    try! FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+    store.pause(at: start.addingTimeInterval(100))
+    let paused = store.running
+    try! FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: dir.path)
+    store.resume(at: start.addingTimeInterval(110))
+    check(store.running == paused, "failed resume keeps the persisted paused state")
+    try! FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+    check(store.clockOut(at: start.addingTimeInterval(120)) != nil, "clock out succeeds once storage recovers")
+    check(ClockStore(fileURL: url).running == nil, "successful clock out stays stopped after relaunch")
+    try! FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: dir.path)
+    store.clockIn(at: start.addingTimeInterval(130))
+    check(store.running == nil, "failed start does not create a memory-only timer")
+}
+
 print("\(checks) backup checks passed")
 
 extension WorkSession {

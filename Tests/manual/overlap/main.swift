@@ -78,4 +78,37 @@ do {
 check(SessionOverlap.conflicting(in: []).isEmpty, "no records, no conflicts")
 check(SessionOverlap.conflicting(in: [s(11, 9, 0, 12, 0)]).isEmpty, "a lone record does not clash with itself")
 
+// The UI edits/displays minutes, but recorded sessions retain seconds.
+do {
+    var first = s(11, 1, 0, 1, 41)
+    first.end = first.end.addingTimeInterval(35)
+    first.duration = first.end.timeIntervalSince(first.start)
+    let next = s(11, 1, 41, 2, 10)
+    check(!SessionOverlap.intersects(first, next), "same displayed end/start minute is a handoff, not overlap")
+    check(!SessionOverlap.intersects(next, first), "minute handoff is symmetric")
+    check(SessionOverlap.touching(start: next.start, end: next.end, in: [first]).isEmpty,
+          "entry editor accepts a same-minute handoff")
+    check(SessionOverlap.conflicting(in: [next, first]).isEmpty,
+          "history does not flag same-minute handoffs")
+    var earlier = next
+    earlier.start = next.start.addingTimeInterval(-1)
+    check(SessionOverlap.intersects(first, earlier), "starting in an earlier minute still overlaps")
+    var duplicate = first
+    duplicate.id = UUID()
+    check(SessionOverlap.conflicting(in: [first, duplicate]).count == 2,
+          "duplicate sessions are still flagged")
+    var short = next
+    short.end = next.start.addingTimeInterval(20)
+    short.duration = 20
+    check(SessionOverlap.intersects(first, short), "a short entry contained in another is still a conflict")
+    let covering = s(11, 0, 30, 3, 0)
+    check(SessionOverlap.conflicting(in: [first, next, covering]) == [first.id, next.id, covering.id],
+          "a tolerated handoff cannot hide overlaps with a third session")
+    check(SessionOverlap.conflicting(in: [first, next]) == SessionOverlap.conflicting(in: [next, first]),
+          "minute handoff preserves input order independence")
+    var midnight = s(11, 23, 0, 0, 0)
+    midnight.end = midnight.end.addingTimeInterval(40)
+    check(!SessionOverlap.intersects(midnight, s(12, 0, 0, 1, 0)), "same-minute handoff works across midnight")
+}
+
 print("\(checks) overlap checks passed")
