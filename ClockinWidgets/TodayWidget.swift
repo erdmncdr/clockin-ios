@@ -5,19 +5,22 @@ import WidgetKit
 struct TodayEntry: TimelineEntry {
     let date: Date
     let snapshot: ClockinSnapshot
+    var companionImage: CGImage? = nil
 }
 
 struct TodayProvider: TimelineProvider {
     func placeholder(in context: Context) -> TodayEntry {
-        TodayEntry(date: .now, snapshot: .placeholder)
+        TodayEntry(date: .now, snapshot: .placeholder, companionImage: MascotResources.decode("h01", maxPixelSize: 240))
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (TodayEntry) -> Void) {
+    func getSnapshot(in context: Context, completion: @escaping @Sendable (TodayEntry) -> Void) {
         let snapshot = context.isPreview ? .placeholder : (ClockinSnapshot.load() ?? .empty)
-        completion(TodayEntry(date: .now, snapshot: snapshot))
+        Task {
+            completion(await entry(date: .now, snapshot: snapshot))
+        }
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<TodayEntry>) -> Void) {
+    func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<TodayEntry>) -> Void) {
         let now = Date.now
         let snapshot = ClockinSnapshot.load() ?? .empty
         // Sure metni kendisi sayar, tutar sayamaz. Sayac islerken tutar tek bir
@@ -30,14 +33,28 @@ struct TodayProvider: TimelineProvider {
         }
         guard snapshot.running?.isPaused == false else {
             let next = now.addingTimeInterval(15 * 60)
-            completion(Timeline(entries: datesWithPrideExpiry([now]).map { TodayEntry(date: $0, snapshot: snapshot) },
-                                policy: .after(next)))
+            let dates = datesWithPrideExpiry([now])
+            Task {
+                var entries: [TodayEntry] = []
+                for date in dates { entries.append(await entry(date: date, snapshot: snapshot)) }
+                completion(Timeline(entries: entries, policy: .after(next)))
+            }
             return
         }
-        let entries = datesWithPrideExpiry(ClockinSnapshot.runningTimelineDates(from: now)).map { date in
-            TodayEntry(date: date, snapshot: snapshot)
+        let dates = datesWithPrideExpiry(ClockinSnapshot.runningTimelineDates(from: now))
+        Task {
+            var entries: [TodayEntry] = []
+            for date in dates { entries.append(await entry(date: date, snapshot: snapshot)) }
+            completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
         }
-        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
+    }
+
+    private func entry(date: Date, snapshot: ClockinSnapshot) async -> TodayEntry {
+        let mood = snapshot.companionState(at: date).mood
+        let frame = MascotResources.library?[mood].rest ?? "h01"
+        let image = await WardrobeFrameCache.shared.composite(frame: frame,
+            outfit: WardrobeState.decode(snapshot.wardrobeJSON), size: 240)
+        return TodayEntry(date: date, snapshot: snapshot, companionImage: image)
     }
 }
 
@@ -132,11 +149,7 @@ private struct TodayWidgetView: View {
     }
 
     private var mediumCompanion: some View {
-        ClockinMascotStill(
-            mood: snapshot.companionState(at: entry.date).mood,
-            accessory: snapshot.companionAccessoryID.flatMap(CompanionAccessory.init(rawValue:)),
-            maxPixelSize: 240
-        )
+        ClockinMascotStill(image: entry.companionImage)
         .frame(width: ReadyWidgetPlacement.companionWidth, height: 80)
     }
 
@@ -360,7 +373,7 @@ private enum TodayWidgetPreview {
             hourlyRate: 40,
             currencyCode: "USD",
             isAngry: angry
-        ))
+        ), companionImage: MascotResources.decode(angry ? "a01" : (running ? (paused ? "c01" : "t01") : "h01"), maxPixelSize: 240))
     }
 }
 
@@ -398,7 +411,7 @@ private enum TodayWidgetPreview {
     TodayWidgetView(previewFamily: .systemMedium, entry: TodayEntry(date: TodayWidgetPreview.date, snapshot: ClockinSnapshot(
         day: Calendar.current.startOfDay(for: TodayWidgetPreview.date),
         completedToday: 12 * 3600 + 45 * 60, earnedToday: 123456.78,
-        running: nil, hourlyRate: 40, currencyCode: "USD")))
+        running: nil, hourlyRate: 40, currencyCode: "USD"), companionImage: MascotResources.decode("h01", maxPixelSize: 240)))
         .dynamicTypeSize(.xLarge)
         .padding(16)
 }

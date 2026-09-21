@@ -463,3 +463,47 @@ Logs: `/tmp/clockin-mascot2-build.log`,
 `/tmp/clockin-mascot2-parse.log`.
 
 No project file, signing setting, version number, commit or push was changed.
+
+## Wardrobe composition
+
+The existing MascotLayerView owns a 314-pixel canvas underneath its body transform.
+Robot and wardrobe sublayers share hop, sway, squash and pop. A frame/outfit/image
+identity guard updates overlays only on a drawn-frame or outfit change; implicit
+layer actions are disabled. Each overlay uses the manifest pivot rotated onto the
+frame anchor. Missing handR hides hand items. Resizing scales the same canvas with
+nearest-neighbor filters. No display link, per-second observer or new motion loop
+was added. CelebrationMascot reuses this host and its existing reaction machinery.
+
+Frames decode/recolor off the main actor and cache by colorway/mood. Sprite images
+are reused. Widget stills use the same geometry and back/robot/front ordering,
+rendered once at the widget's requested pixel size. Home uses static decoded images
+and the same live companion. The desk home is outside ActiveTimeline and dimmed.
+Companion header geometry gates motion when it scrolls outside the viewport;
+dismissal, scene phase and the existing power/thermal/Reduce Motion policy also
+stop the host. Coin/unlock calculations use archive/goal/day changes on the existing
+refresh path. Equipping performs no archive calculation; buying rechecks current
+progress before committing the purchase.
+
+Manual fixtures and synthetic archive checks cover coins, ownership, migration,
+seeding, geometry, real tiny PNG recoloring, composite ordering/transparency,
+widget sizing, room placement, backup sections and banner queue limits. Device
+CPU and visible screens still require the acceptance run after merging art.
+
+Wardrobe checkout verification:
+
+- All 30 README manual suites passed with 2,637 `ok` lines, including
+  `98 wardrobe checks passed`. Fixtures use only synthetic sessions and tiny PNGs.
+- App + Shared and Widget + Shared each passed iOS 17 Simulator Swift 6 strict
+  concurrency type checking. These diagnostic invocations used
+  `-Xfrontend -disable-sandbox` for compiler macro subprocesses. Existing
+  HistoryView Combine-import warnings remain; no wardrobe warnings were emitted.
+- The exact requested xcodebuild command exited 65 with `BUILD FAILED`.
+  `sandbox-exec: sandbox_apply: Operation not permitted` blocked existing SwiftUI
+  Entry/Preview macro processes. CoreSimulator services were unavailable.
+- `git diff --check` passed. No project, signing or version settings changed.
+  No commit or push was made. Simulator interaction, the merged artwork and CPU
+  remain unverified.
+
+Logs: `/tmp/clockin-wardrobe-checks/summary.txt`,
+`/tmp/clockin-wardrobe-checks/wardrobe.log`, `/tmp/clockin-wardrobe-typecheck.log`,
+`/tmp/clockin-wardrobe-widget-typecheck.log`, `/tmp/clockin-wardrobe-build.log`.

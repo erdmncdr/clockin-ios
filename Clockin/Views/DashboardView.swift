@@ -2,6 +2,10 @@ import SwiftUI
 
 // Ayarlar ve oturum ekranlari ayni sunum secimini paylasir; iki sheet yarismaz.
 private enum DashboardSheet: Identifiable {
+    case companion
+    case customize
+    case liveActivitySetup
+    case shortcut(DashboardShortcut)
     case settings
     case newEntry
     case edit(WorkSession)
@@ -11,6 +15,10 @@ private enum DashboardSheet: Identifiable {
 
     var id: String {
         switch self {
+        case .companion: "companion"
+        case .customize: "customize"
+        case .liveActivitySetup: "live-activity-setup"
+        case .shortcut(let feature): "shortcut-\(feature.rawValue)"
         case .settings: "settings"
         case .newEntry: "new"
         case .edit(let session): "edit-\(session.id)"
@@ -30,6 +38,13 @@ struct DashboardView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
+
+    @AppStorage("Clockin.Today.Show.summary") private var showSummary = true
+    @AppStorage("Clockin.Today.Show.companion") private var showCompanionCard = true
+    @AppStorage("Clockin.Today.Show.goals") private var showGoals = true
+    @AppStorage("Clockin.Today.Show.momentum") private var showMomentum = true
+    @AppStorage("Clockin.Today.Show.recent") private var showRecent = true
+    @AppStorage("Clockin.Today.Show.exchange") private var showExchange = true
 
     let isSelected: Bool
     let showHistory: () -> Void
@@ -55,19 +70,18 @@ struct DashboardView: View {
                             onStartWithElapsed: { sheet = .manualStart }
                         )
                     }
-                    if mascotEnabled { MascotCard(showInsights: showProgress) }
-                    FocusRadioCard()
+                    DashboardPinnedTools(open: { sheet = .shortcut($0) })
+                    TodayQuickLinks(open: openQuickLink)
+                    if mascotEnabled && showCompanionCard { MascotCard(showInsights: showInsights, showCompanion: { sheet = .companion }) }
                     ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
                         VStack(spacing: 14) {
-                            TodayCard(now: now)
-                            TodayGoalsCard(now: now, showInsights: showInsights, setGoals: setGoals)
+                            if showSummary { TodayTotalsCard(now: now) }
+                            if showGoals { TodayGoalsCard(now: now, showInsights: showInsights, setGoals: setGoals) }
                         }
                     }
-                    MoneyMomentumView()
-                    if store.currencyCode == "USD" {
-                        exchangeCard
-                    }
-                    recentSection
+                    if showMomentum { MoneyMomentumView() }
+                    if showRecent { recentSection }
+                    if store.currencyCode == "USD" && showExchange { exchangeCard }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
@@ -85,7 +99,11 @@ struct DashboardView: View {
         .sheet(item: $sheet, onDismiss: presentReminderEnd) { destination in
             Group {
                 switch destination {
+                case .companion: CompanionView()
                 case .settings: SettingsView()
+                case .customize: DashboardCustomizationView()
+                case .liveActivitySetup: LiveActivitySetupView()
+                case .shortcut(let feature): DashboardShortcutSheet(feature: feature)
                 case .newEntry: ManualEntryView()
                 case .edit(let session): ManualEntryView(editing: session)
                 case .summary(let session): SessionSummaryView(session: session)
@@ -99,6 +117,15 @@ struct DashboardView: View {
         .onChange(of: reminder.pendingEndTime, initial: true) { _, _ in routeReminderEnd() }
         .onChange(of: isSelected) { _, _ in routeReminderEnd() }
         .onChange(of: scenePhase) { _, _ in routeReminderEnd() }
+    }
+
+    private func openQuickLink(_ link: TodayQuickLink) {
+        switch link {
+        case .goals: showInsights()
+        case .history: showHistory()
+        case .newEntry: sheet = .newEntry
+        case .liveUpdates: sheet = .liveActivitySetup
+        }
     }
 
     private func routeReminderEnd() {
@@ -122,6 +149,19 @@ struct DashboardView: View {
         HStack {
             DashboardLevelBadge(showInsights: showProgress)
             Spacer(minLength: 8)
+            Button { sheet = .customize } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.headline)
+                    .frame(width: 36, height: 36)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.surfaceStroke) }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .foregroundStyle(palette.accent)
+            .accessibilityLabel("Customize Today")
+            .accessibilityIdentifier("dashboard.customize")
             Button { sheet = .settings } label: {
                 Image(systemName: "gearshape")
                     .font(.headline)
@@ -148,70 +188,13 @@ struct DashboardView: View {
         .padding(.bottom, 8)
     }
 
-    private var exchangeCard: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "dollarsign.arrow.circlepath")
-                .foregroundStyle(palette.secondary)
-                .frame(width: 28, height: 28)
-                .background(palette.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
-            VStack(alignment: .leading, spacing: 3) {
-                Text("USD / TRY")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .tracking(1)
-                if let rate = exchangeRates.latestRate {
-                    Text(String(format: "1 USD = %.3f TRY", rate))
-                        .font(.subheadline.weight(.semibold))
-                        .monospacedDigit()
-                    Text(rateStatusText)
-                        .font(.caption)
-                        .foregroundStyle(rateStatusColor)
-                } else {
-                    Text(exchangeRates.isLoading ? "Fetching live rate…" : "RATE UNAVAILABLE")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(exchangeRates.isLoading ? Color.secondary : Color.red)
-                    if !exchangeRates.isLoading, let error = exchangeRates.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
-                }
-                if let day = exchangeRates.latestDate {
-                    Text(day)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            Spacer(minLength: 0)
-            if exchangeRates.isLoading {
-                ProgressView()
-                    .accessibilityLabel("Checking exchange rate")
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card(palette)
-    }
-
-    private var rateStatusText: String {
-        if exchangeRates.isLoading { return "Checking API…" }
-        if let error = exchangeRates.errorMessage { return error }
-        if let checked = exchangeRates.lastSuccessfulCheck {
-            return "API OK • checked \(checked.formatted(date: .omitted, time: .shortened))"
-        }
-        return "Cached rate"
-    }
-
-    private var rateStatusColor: Color {
-        if exchangeRates.errorMessage != nil { return .orange }
-        return exchangeRates.isLoading ? .secondary : palette.accent
-    }
+    private var exchangeCard: some View { TodayExchangeRateStrip() }
 
     @ViewBuilder private var recentSection: some View {
-        let recent = store.sessions.prefix(5)
+        let recent = store.sessions.prefix(3)
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                SectionTitle("RECENT SESSIONS")
+                SectionTitle("LAST 3 SESSIONS")
                 Spacer()
                 if !recent.isEmpty {
                     Button("See all", action: showHistory)
@@ -248,55 +231,6 @@ struct DashboardView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: recent.map(\.id))
-    }
-}
-
-private struct TodayCard: View {
-    @EnvironmentObject private var store: ClockStore
-    @EnvironmentObject private var exchangeRates: ExchangeRateStore
-    @Environment(\.palette) private var palette
-    let now: Date
-
-    var body: some View {
-        HStack(spacing: 0) {
-            metric("TODAY", DurationText.compact(store.todayDuration(at: now)),
-                   number: store.todayDuration(at: now), icon: "clock")
-            Divider().frame(height: 36)
-            metric("EARNED", store.todayEarnings(at: now).money(code: store.currencyCode),
-                   number: store.todayEarnings(at: now), icon: "chart.line.uptrend.xyaxis", detail: earnedTRY)
-        }
-        .padding(.vertical, 14)
-        .card(palette)
-    }
-
-    private var earnedTRY: Double? {
-        guard store.currencyCode == "USD", let rate = exchangeRates.latestRate else { return nil }
-        return store.todayEarnings(at: now) * rate
-    }
-
-    private func metric(_ title: String, _ value: String, number: Double, icon: String, detail: Double? = nil) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .foregroundStyle(palette.accent.opacity(0.8))
-                .frame(width: 22)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.caption2.weight(.bold))
-                    .tracking(1)
-                    .foregroundStyle(.secondary)
-                RollingNumberText(value, value: number, font: .headline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if let detail {
-                    RollingNumberText(detail.money(code: "TRY"), value: detail, font: .caption, foregroundColor: .secondary)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
     }
 }
 

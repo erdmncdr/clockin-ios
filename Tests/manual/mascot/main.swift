@@ -122,4 +122,20 @@ var legacy = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
 legacy.removeValue(forKey: "isAngry")
 let legacyData = try JSONSerialization.data(withJSONObject: legacy)
 check(try !JSONDecoder().decode(ClockinSnapshot.self, from: legacyData).isAngry, "old snapshot without angry flag still decodes")
+for progress in [0.0, 0.5, 1.0, -1.0, 2.0] {
+    let pose = MascotWingMotion.pose(progress: progress)
+    check(near(pose.scaleX, 1) && near(pose.radians, 0), "wings settle without a jump at \(progress)")
+}
+for progress in [0.25, 0.75] {
+    let pose = MascotWingMotion.pose(progress: progress)
+    check(near(pose.scaleX, 0.78) && near(pose.radians, 0.14), "two equally sized wing beats")
+}
+for step in 0...100 {
+    let p = Double(step) / 100
+    let pose = MascotWingMotion.pose(progress: p)
+    check((0.78...1).contains(pose.scaleX) && (0...0.14).contains(pose.radians), "wing folding stays gentle and never inverts")
+    let reverse = MascotWingMotion.pose(progress: 1 - p)
+    check(near(pose.scaleX, reverse.scaleX) && near(pose.radians, reverse.radians), "wing motion returns symmetrically")
+}
+check(MascotWingMotion.rest >= 3 * MascotWingMotion.duration, "wing bursts spend most time still")
 print("\(checks) mascot checks passed")

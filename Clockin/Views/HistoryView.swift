@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct HistoryView: View {
     @EnvironmentObject private var store: ClockStore

@@ -28,15 +28,13 @@ struct MoneyMomentumView: View {
                             .font(.caption2.weight(.bold))
                             .tracking(1)
                             .foregroundStyle(.secondary)
-                        RollingNumberText("+\(momentum.perSecond.money(code: store.currencyCode, maxFractionDigits: 4))/sec",
-                                          value: momentum.perSecond, font: .subheadline.weight(.semibold),
-                                          foregroundColor: momentum.isEarning ? palette.accent : .secondary)
+                        Text(rateLine(momentum))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(momentum.isEarning ? palette.accent : .secondary)
-                        if let rate = momentum.tryPerSecond {
-                            RollingNumberText("+\(rate.money(code: "TRY", maxFractionDigits: 4))/sec",
-                                              value: rate, font: .subheadline.weight(.semibold), foregroundColor: .secondary)
-                                .foregroundStyle(.secondary)
-                        }
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .accessibilityLabel("Earning rate per second")
+                            .accessibilityValue(rateLine(momentum))
                     }
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
@@ -61,6 +59,23 @@ struct MoneyMomentumView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(palette)
+    }
+
+    private func rateLine(_ momentum: MoneyMomentum) -> String {
+        let primary = roundedRate(momentum.perSecond, currency: store.currencyCode, digits: 3)
+        if let converted = momentum.tryPerSecond {
+            return "\(primary) = \(roundedRate(converted, currency: "TRY", digits: 2)) /sec"
+        }
+        return "\(primary) /sec"
+    }
+
+    private func roundedRate(_ value: Double, currency: String, digits: Int) -> String {
+        let unit = pow(10.0, -Double(digits))
+        // A small positive earning rate must not look like zero after rounding.
+        if value > 0 && value < unit / 2 {
+            return "<\(unit.money(code: currency, maxFractionDigits: digits))"
+        }
+        return value.money(code: currency, maxFractionDigits: digits)
     }
 
 }

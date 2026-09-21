@@ -19,11 +19,11 @@ final class SessionMirror {
     private var moodSubscription: AnyCancellable?
     private var lastSnapshot: ClockinSnapshot?
     private var lastState: ClockinActivityAttributes.ContentState?
-    private var isRestartingActivity = false
     private var activityTask: Task<Void, Never>?
 
     func start(observing store: ClockStore) {
         self.store = store
+        LiveActivityPush.shared.retryPendingDeletions()
         // `objectWillChange` deger yazilmadan once gelir; yeni degeri okumak
         // icin bir sonraki turda senkronlanir.
         subscription = store.objectWillChange.sink { [weak self] _ in
@@ -51,6 +51,7 @@ final class SessionMirror {
     }
 
     func refresh() {
+        LiveActivityPush.shared.retryPendingDeletions()
         sync()
     }
 
@@ -67,6 +68,7 @@ final class SessionMirror {
         await FocusChimeController.shared.finishPendingUpdates()
         await NudgeController.shared.finishPendingUpdates()
         await activityTask?.value
+        await LiveActivityPush.shared.finishPendingUploads()
     }
 
     private func sync() {
@@ -93,6 +95,7 @@ final class SessionMirror {
         snapshot.companionFriendly = UserDefaults.standard.string(forKey: NudgePlanner.toneKey) == NudgeTone.friendly.rawValue
         snapshot.companionLastWorkedDay = CelebrationCenter.shared.lastWorkedDay
         snapshot.companionProudUntil = CelebrationCenter.shared.proudUntil
+        snapshot.wardrobeJSON = WardrobeStore.shared.state.json
         snapshot.companionAccessoryID = CompanionAccessory.resolve(
             UserDefaults.standard.string(forKey: CompanionAccessory.storageKey) ?? "Auto",
             totalHours: (store.totalDuration + store.elapsed()) / 3600)?.id
@@ -139,38 +142,29 @@ final class SessionMirror {
             usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil,
             theme: theme
         )
-        // Yeniden kurulum surerken gelen senkronlar atlanir; yoksa eski etkinlik
-        // kapanmadan ikinci bir etkinlik istenebilirdi.
-        guard !isRestartingActivity else { return }
-        let activities = Activity<ClockinActivityAttributes>.activities
-        let content = ActivityContent(state: state, staleDate: state.staleDate)
-        // Para birimi yalnizca etkinlik baslatilirken sabit alanlara yaziliyor;
-        // guncellemeler onu degistiremez. Birim degistiyse etkinlik kapatilip
-        // yeni birimle yeniden baslatilir, yoksa kilit ekrani eski birimde kalir.
-        if activities.contains(where: { $0.attributes.currencyCode != currencyCode }) {
-            isRestartingActivity = true
-            lastState = state
-            enqueueActivityOperation { [weak self] in
-                await Self.endAll()
-                Self.request(currencyCode: currencyCode, content: content)
-                self?.isRestartingActivity = false
-                // Bekleme sirasinda tema degismisse en son secimi de aktar.
-                self?.sync()
-            }
-            return
-        }
-        guard state != lastState || activities.isEmpty else { return }
         lastState = state
-        if activities.isEmpty {
-            enqueueActivityOperation {
-                if Activity<ClockinActivityAttributes>.activities.isEmpty {
-                    Self.request(currencyCode: currencyCode, content: content)
-                } else {
-                    await Self.updateAll(content)
+        enqueueActivityOperation { [weak self] in
+            guard self?.lastState == state else { return }
+            let activities = Activity<ClockinActivityAttributes>.activities
+            let content = ActivityContent(state: state, staleDate: state.staleDate)
+            let remote = LiveActivityPrivacy.enabled && LiveActivityPush.endpoint != nil && !state.isPaused
+            let replace = activities.contains {
+                $0.attributes.currencyCode != currencyCode
+                    || ((remote || $0.attributes.remoteUpdatesUntil != nil)
+                        && !$0.attributes.displayState($0.content.state).hasSameCalculation(as: state))
+                    || (remote && ($0.attributes.remoteUpdatesUntil == nil || $0.attributes.localState == nil))
+                    || (!remote && $0.attributes.remoteUpdatesUntil != nil)
+            }
+            if replace { await Self.endAll() }
+            guard self?.lastState == state else { return }
+            if Activity<ClockinActivityAttributes>.activities.isEmpty {
+                Self.request(currencyCode: currencyCode, content: content)
+            } else {
+                await Self.updateAll(content)
+                for activity in Activity<ClockinActivityAttributes>.activities {
+                    LiveActivityPush.shared.observe(activity)
                 }
             }
-        } else {
-            enqueueActivityOperation { await Self.updateAll(content) }
         }
     }
 
@@ -184,18 +178,32 @@ final class SessionMirror {
     }
 
     private static func request(currencyCode: String, content: ActivityContent<ClockinActivityAttributes.ContentState>) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        _ = try? Activity.request(
-            attributes: ClockinActivityAttributes(currencyCode: currencyCode),
-            content: content
-        )
+        let remote = LiveActivityPrivacy.enabled && LiveActivityPush.endpoint != nil && !content.state.isPaused
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            if remote { LiveActivityPush.shared.activityCouldNotStart() }
+            return
+        }
+        if let activity = try? Activity.request(
+            attributes: ClockinActivityAttributes(currencyCode: currencyCode,
+                remoteUpdatesUntil: remote ? .now.addingTimeInterval(8 * 3600) : nil,
+                localState: remote ? content.state : nil),
+            content: content, pushType: remote ? .token : nil
+        ) {
+            LiveActivityPush.shared.observe(activity)
+        } else if remote {
+            LiveActivityPush.shared.activityCouldNotStart()
+        }
     }
 
     // `Activity` Sendable degil; ana aktorden bir goreve gecirilemiyor. Bu
     // yuzden etkinlikler ana aktor disinda, kullanildiklari yerde alinir.
     nonisolated private static func endAll() async {
         for activity in Activity<ClockinActivityAttributes>.activities {
+            let id = activity.id
+            let token = activity.pushToken
+            let expiry = activity.attributes.remoteUpdatesUntil
             await activity.end(nil, dismissalPolicy: .immediate)
+            await LiveActivityPush.shared.stop(id: id, token: token, expiresAt: expiry)
         }
     }
 

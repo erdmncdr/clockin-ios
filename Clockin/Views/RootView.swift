@@ -3,8 +3,7 @@ import SwiftUI
 enum AppTab: Hashable {
     case today
     case history
-    case insights
-    case badges
+    case progress
 }
 
 struct RootView: View {
@@ -23,8 +22,10 @@ struct RootView: View {
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @AppStorage(GoalPrompt.configuredKey) private var everConfiguredGoal = false
     @State private var goalEditorRequest = false
+    @State private var progressSection: ProgressSection = .goals
     @ObservedObject private var nudges = NudgeController.shared
     @ObservedObject private var reminder = LongSessionReminderController.shared
+    @State private var showCompanion = false
     @State private var tab: AppTab = .today
     @State private var deskSummary: WorkSession?
     @State private var celebrationShare: StatsShareSnapshot?
@@ -82,9 +83,15 @@ struct RootView: View {
                 celebrationShare = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
             }, openBadges: {
                 deskSuppressed = true
-                tab = .badges
+                progressSection = .badges
+                tab = .progress
+            }, openCompanion: {
+                deskSuppressed = true
+                showCompanion = true
             })
         }
+        .sheet(isPresented: $showCompanion) { CompanionView() }
+        .celebrationBlocked(by: showCompanion)
         .background(CelebrationWindowProbe())
         .onChange(of: verticalSizeClass) { _, _ in deskSuppressed = false }
         .hapticFeedback(selectionFeedback)
@@ -163,24 +170,26 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView(selection: $tab.hapticSelection($selectionFeedback)) {
-            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil && !celebrations.hasBlockingPresentation && (celebrations.event == nil || celebrations.event?.isReaction == true), showHistory: { tab = .history }, showInsights: { tab = .insights }, setGoals: {
+            DashboardView(isSelected: tab == .today && !showsDeskMode && deskSummary == nil && !celebrations.hasBlockingPresentation && (celebrations.event == nil || celebrations.event?.isReaction == true), showHistory: { tab = .history }, showInsights: {
+                progressSection = .goals
+                tab = .progress
+            }, setGoals: {
                 goalEditorRequest = true
-                tab = .insights
-            }, showProgress: { tab = .badges })
+                progressSection = .goals
+                tab = .progress
+            }, showProgress: {
+                progressSection = .badges
+                tab = .progress
+            })
                 .tabItem { Label("Today", systemImage: "timer") }
                 .tag(AppTab.today)
             HistoryView()
                 .tabItem { Label("History", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.history)
-            InsightsView(openGoalEditor: $goalEditorRequest)
-                .tabItem { Label("Insights", systemImage: "target") }
-                .tag(AppTab.insights)
-            // Ayarlar alt sekmede degil, Bugun ekraninin ust cubugunda. Sik
-            // acilan bir yer degil; sekmeyi ilerleme icin kullanmak sayfalari
-            // daha anlasilir boluyor.
-            BadgesView()
-                .tabItem { Label("Badges", systemImage: "rosette") }
-                .tag(AppTab.badges)
+            ProgressHubView(section: $progressSection, openGoalEditor: $goalEditorRequest)
+                .environment(\.clockinContentActive, tab == .progress && !showsDeskMode && !celebrations.hasBlockingPresentation && !showsCelebration)
+                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
+                .tag(AppTab.progress)
         }
     }
 
