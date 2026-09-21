@@ -3,71 +3,126 @@ import SwiftUI
 @MainActor
 struct InsightsBadgesView: View {
     @Environment(\.palette) private var palette
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let badges: [InsightsBadge]
+    @State private var tier: BadgeTier = .launch
     @State private var selectedBadge: InsightsBadge?
+    @State private var reveal = 0.0
 
+    private var items: [InsightsBadge] { badges.filter { $0.tier == tier } }
     var body: some View {
-        let unlocked = badges.filter(\.unlocked)
-        let locked = badges.filter { !$0.unlocked }
-        VStack(alignment: .leading, spacing: 14) {
-            SectionTitle("BADGES")
-            Text("\(unlocked.count) of \(badges.count) unlocked")
-                .font(.subheadline).foregroundStyle(.secondary)
-            ProgressView(value: Double(unlocked.count), total: Double(max(badges.count, 1)))
-                .tint(palette.accent)
-            // Kendi sekmesinde oldugu icin rozetler adlariyla gorunur; acilanlar
-            // ve kilitliler ayri gruplarda, boylece hangisinin sirada oldugu
-            // karisik bir izgarada aranmaz.
-            if !unlocked.isEmpty { group("Unlocked", unlocked) }
-            if !locked.isEmpty { group("Still to unlock", locked) }
-            Text("Tap a badge for its requirement and progress. Current-streak badges lock again when a streak ends.")
-                .font(.caption).foregroundStyle(.secondary)
-        }
-        .padding(16).card(palette)
-        .hapticFeedback(.selection, trigger: selectedBadge?.id) { _, new in new != nil }
-        .transaction { if reduceMotion { $0.animation = nil } }
-        .celebrationBlocked(by: selectedBadge != nil)
-        .sheet(item: $selectedBadge) { selected in
-            InsightsBadgeDetail(badge: badges.first { $0.id == selected.id } ?? selected)
-        }
-    }
-    private func group(_ title: String, _ items: [InsightsBadge]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(title) · \(items.count)")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(items) { badge in
-                    Button { selectedBadge = badge } label: {
-                        VStack(spacing: 6) {
-                            Image(systemName: badge.icon)
-                                .font(.title3)
-                                .frame(height: 26)
-                            Text(badge.title)
-                                .font(.caption2.weight(.semibold))
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.85)
-                        }
-                        .foregroundStyle(badge.unlocked ? palette.accent : Color.secondary)
-                        .frame(maxWidth: .infinity, minHeight: 72)
-                        .padding(.horizontal, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(badge.unlocked ? palette.accent.opacity(0.12) : palette.surface)
-                        )
-                        .opacity(badge.unlocked ? 1 : 0.6)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.pressable)
-                    .buttonPressHaptic(false)
-                    .accessibilityLabel(badge.title)
-                    .accessibilityValue(badge.unlocked ? "Unlocked" : "Locked")
-                    .accessibilityHint("Opens requirement and current progress")
+        VStack(alignment:.leading,spacing:16) {
+            HStack {
+                Text("Missions").font(.title3.bold())
+                Spacer()
+                Text("\(badges.filter(\.unlocked).count)/\(badges.count)")
+                    .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            Group {
+                if typeSize.isAccessibilitySize {
+                    LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:4),count:3),spacing:8) { tabs }
+                } else {
+                    HStack(spacing:4) { tabs }
                 }
             }
+            .accessibilityElement(children:.contain).accessibilityLabel("Mission tiers")
+            tierHeader
+            if let next = items.first(where:{ !$0.unlocked }) {
+                Button { selectedBadge = next } label: {
+                    HStack(spacing:10) {
+                        SpaceBadgeSeal(badge:next,size:46,preview:true)
+                        VStack(alignment:.leading,spacing:3) {
+                            Text("Next: \(next.title)").font(.subheadline.weight(.semibold))
+                            Text(next.requirement).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength:0)
+                        Image(systemName:"chevron.right").font(.caption.weight(.semibold))
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityHint("Opens this mission")
+            }
+            LazyVGrid(columns:[GridItem(.adaptive(minimum:90),spacing:8)],spacing:8) {
+                ForEach(items) { badge in
+                    Button { selectedBadge = badge } label: {
+                        VStack(spacing:3) {
+                            SpaceBadgeSeal(badge:badge,size:76,phase:badge.unlocked ? reveal : 0)
+                            Text(badge.title).font(.caption.weight(.semibold))
+                                .multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
+                            Text(badge.unlocked ? "Earned" : "Locked")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth:.infinity,minHeight:124).padding(.horizontal,4).padding(.vertical,6)
+                        .background(badge.unlocked ? tier.tint.opacity(0.08) : palette.surface,
+                                    in:RoundedRectangle(cornerRadius:14))
+                        .overlay(RoundedRectangle(cornerRadius:14).strokeBorder(tier.tint.opacity(badge.unlocked ? 0.25 : 0.08)))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.pressable).buttonPressHaptic(false)
+                    .accessibilityLabel("\(badge.title), \(tier.title)")
+                    .accessibilityValue(badge.unlocked ? "Earned" : badge.requirement)
+                }
+            }
+            .id(tier)
         }
+        .padding(14).card(palette)
+        .hapticFeedback(.selection,trigger:tier)
+        .hapticFeedback(.selection,trigger:selectedBadge?.id) { _,new in new != nil }
+        .celebrationBlocked(by: selectedBadge != nil)
+        .sheet(item:$selectedBadge) { selected in
+            InsightsBadgeDetail(badge:badges.first { $0.id == selected.id } ?? selected)
+        }
+        .task(id:tier) {
+            reveal = 0
+            guard !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
+            withAnimation(.easeOut(duration:1.8)) { reveal = 1 }
+        }
+    }
+
+    private var tabs: some View {
+        ForEach(BadgeTier.allCases) { item in
+            Button { tier = item } label: {
+                VStack(spacing:5) {
+                    ZStack {
+                        BadgeEffectField(tier:item,mission:BadgeMission(rawValue:(item.rawValue-1)%6)!,phase:item == tier ? reveal : 0.3)
+                            .opacity(item == tier ? 0.8 : 0.3)
+                        SpaceInsignia(stage:item.rawValue)
+                            .stroke(item.tint,style:StrokeStyle(lineWidth:1.6,lineCap:.round,lineJoin:.round))
+                            .padding(6)
+                    }.frame(width:44,height:44)
+                    Text(item.title).font(.system(size:11,weight:.semibold))
+                        .lineLimit(1).minimumScaleFactor(0.75)
+                    Capsule().fill(item == tier ? item.tint : .clear).frame(height:2)
+                }
+                .frame(maxWidth:.infinity).padding(.vertical,4)
+                .background(item == tier ? item.tint.opacity(0.09) : .clear,in:RoundedRectangle(cornerRadius:10))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).accessibilityLabel("\(item.title), tier \(item.rawValue)")
+            .accessibilityAddTraits(item == tier ? .isSelected : [])
+            .accessibilityIdentifier("badges.tier.\(item.rawValue)")
+        }
+    }
+
+    private var tierHeader: some View {
+        HStack(spacing:14) {
+            ZStack {
+                BadgeEffectField(tier:tier,mission:BadgeMission(rawValue:(tier.rawValue-1)%6)!,phase:reveal)
+                SpaceInsignia(stage:tier.rawValue)
+                    .stroke(LinearGradient(colors:[.white,tier.tint],startPoint:.topLeading,endPoint:.bottomTrailing),
+                            style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round)).padding(19)
+            }.frame(width:94,height:94)
+            VStack(alignment:.leading,spacing:7) {
+                Text(tier.title).font(.title2.bold()).foregroundStyle(tier.tint)
+                Text(tier.caption).font(.caption).foregroundStyle(.white.opacity(0.75))
+                ProgressView(value:Double(items.filter(\.unlocked).count),total:Double(max(1,items.count))).tint(tier.tint)
+                Text("\(items.filter(\.unlocked).count) of \(items.count) earned")
+                    .font(.caption2.monospacedDigit()).foregroundStyle(.white.opacity(0.65))
+            }
+            Spacer(minLength:0)
+        }
+        .padding(12).frame(maxWidth:.infinity,alignment:.leading)
+        .background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:18))
+        .overlay(RoundedRectangle(cornerRadius:18).strokeBorder(tier.tint.opacity(0.3)))
     }
 }
 
@@ -75,39 +130,43 @@ struct InsightsBadgesView: View {
 private struct InsightsBadgeDetail: View {
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
-    let badge: InsightsBadge
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var appeared = false
-
+    let badge: InsightsBadge
+    @State private var reveal = 0.0
+    @State private var replay = 0
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Label(badge.title, systemImage: badge.icon).font(.title2.bold())
-                        .foregroundStyle(badge.unlocked ? palette.accent : Color.secondary)
-                        // Acilmis rozet sayfa acilinca bir kez sekip dikkat ceker;
-                        // kilitli olan hareketsiz kalir, kutlanacak bir sey yok.
-                        .symbolEffect(.bounce, value: appeared && badge.unlocked && !reduceMotion)
-                    Label(badge.unlocked ? "Unlocked" : "Locked",
-                          systemImage: badge.unlocked ? "checkmark.seal.fill" : "lock.fill")
-                        .font(.headline)
-                        .foregroundStyle(badge.unlocked ? palette.accent : Color.secondary)
-                    SectionTitle("REQUIREMENT")
-                    Text(badge.requirement)
-                    SectionTitle("CURRENT PROGRESS")
-                    Text(badge.progress).monospacedDigit()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
+                VStack(alignment:.center,spacing:12) {
+                    SpaceBadgeSeal(badge:badge,size:184,phase:reveal,preview:true)
+                        .frame(maxWidth:.infinity).background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:22))
+                    Text("\(badge.tier.title) / \(badge.mission.title)")
+                        .font(.caption.weight(.semibold)).foregroundStyle(badge.tier.tint)
+                    Text(badge.title).font(.title2.bold()).multilineTextAlignment(.center)
+                    Text(badge.requirement).multilineTextAlignment(.center)
+                    Text(badge.progress).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                    Label(badge.unlocked ? "Mission complete" : "Earn it through your real-world progress",
+                          systemImage:badge.unlocked ? "checkmark.circle" : "lock")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if !reduceMotion {
+                        Button("Replay effect") { replay += 1 }.font(.subheadline.weight(.semibold)).frame(minHeight:44)
+                    }
+                    if badge.id.hasPrefix("collection") || badge.id.hasPrefix("home") || badge.id.hasPrefix("outfits") {
+                        Text("Different purchases count. Free gifts don’t. No extra coins or XP.")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    } else if ["streak","weekstreak","monthstreak"].contains(badge.id) {
+                        Text("Locks again when your current streak ends.").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }.padding(20)
             }
-            .background(palette.background)
-            .navigationTitle("Badge details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .background(palette.background).navigationTitle("Mission").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement:.confirmationAction) { Button("Done") { dismiss() } } }
         }
-        .tint(palette.accent)
-        .fontDesign(palette.fontDesign)
-        .presentationDetents([.medium, .large])
-        .task { appeared = true }
+        .tint(badge.tier.tint).fontDesign(palette.fontDesign).presentationDetents([.large])
+        .task(id:replay) {
+            reveal = 0
+            guard !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
+            withAnimation(.easeInOut(duration:2.4)) { reveal = 1 }
+        }
     }
 }

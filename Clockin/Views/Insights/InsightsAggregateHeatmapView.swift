@@ -12,7 +12,7 @@ struct InsightsAggregateHeatmapView: View {
     var body: some View {
         let selected = periods.first { $0.start == selectedStart } ?? periods.last
         VStack(alignment: .leading, spacing: 12) {
-            Text("Each cell is a whole calendar \(grouping == .week ? "week, starting Monday" : "month"). Color shows relative earnings across your archive.")
+            Text("Each cell shows \(grouping == .week ? "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month" : "a calendar month"). Color shows relative earnings across your archive.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollViewReader { proxy in
                 VStack(spacing: 8) {
@@ -70,7 +70,8 @@ struct InsightsAggregateHeatmapView: View {
 
     private func title(_ period: InsightsPeriod) -> String {
         if grouping == .month { return period.start.formatted(.dateTime.month(.wide).year()) }
-        return "Week of \(period.start.formatted(.dateTime.month(.abbreviated).day().year()))"
+        let last = Calendar.current.date(byAdding: .day, value: -1, to: period.end)!
+        return "\(period.start.formatted(.dateTime.month(.abbreviated).day())) – \(last.formatted(.dateTime.month(.abbreviated).day().year()))"
     }
 
     private func periodCell(_ period: InsightsPeriod, selected: Bool) -> some View {

@@ -21,10 +21,7 @@ struct EarningsPeriod: Equatable {
         func bounds(_ date: Date) -> DateInterval {
             switch range {
             case .week:
-                let day = calendar.startOfDay(for: date)
-                let offset = (calendar.component(.weekday, from: day) - calendar.firstWeekday + 7) % 7
-                let start = calendar.date(byAdding: .day, value: -offset, to: day)!
-                return DateInterval(start: start, end: calendar.date(byAdding: .day, value: 7, to: start)!)
+                return MonthWeek.interval(containing: date, calendar: calendar)
             case .month:
                 return calendar.dateInterval(of: .month, for: date)!
             case .sixMonths:
@@ -55,9 +52,13 @@ struct EarningsPeriod: Equatable {
     func paged(by direction: Int, now: Date, calendar: Calendar = .current) -> Self {
         guard range != .all, direction != 0, direction < 0 || canGoForward else { return self }
         let step = direction < 0 ? -1 : 1
-        let component: Calendar.Component = range == .week ? .day : .month
-        let amount = range == .week ? 7 : (range == .sixMonths ? 6 : 1)
-        let next = calendar.date(byAdding: component, value: step * amount, to: anchor)!
+        if range == .week {
+            let next = step < 0
+                ? calendar.date(byAdding: .day, value: -1, to: interval.start)!
+                : interval.end
+            return Self(range: range, anchor: next, now: now, calendar: calendar)
+        }
+        let next = calendar.date(byAdding: .month, value: step * (range == .sixMonths ? 6 : 1), to: anchor)!
         return Self(range: range, anchor: next, now: now, calendar: calendar)
     }
 

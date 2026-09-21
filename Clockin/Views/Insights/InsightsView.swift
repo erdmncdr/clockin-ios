@@ -7,133 +7,41 @@ struct InsightsView: View {
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
-    @State private var editingGoals = false
-    @State private var pendingDailyFocus = false
-    @FocusState private var focusedGoal: GoalField?
-
     @State private var shareSnapshot: StatsShareSnapshot?
 
-    @Binding private var openGoalEditor: Bool
-
-    init(openGoalEditor: Binding<Bool> = .constant(false)) {
-        _openGoalEditor = openGoalEditor
-    }
-
     var body: some View {
-        NavigationStack {
-            Group {
-                if let stats = celebrations.snapshot {
-                    ScrollViewReader { scroll in
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 16) {
-                                goalsCard(stats, now: celebrations.snapshotDate)
-                                    .id("goals")
-                                InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
-                                                    currencyCode: store.currencyCode, now: celebrations.snapshotDate)
-                                totalsCard(stats)
-                                reportsCard(stats)
-                            }
-                            .padding(16)
-                        }
-                        .dismissDecimalKeyboard(isEditing: focusedGoal != nil) { focusedGoal = nil }
-                        .onChange(of: focusedGoal) { _, field in
-                            if let field { scroll.scrollTo(field, anchor: .center) }
-                        }
-                        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                            if let field = focusedGoal { scroll.scrollTo(field, anchor: .center) }
-                        }
-                        .scrollBounceBehavior(.basedOnSize)
-                        // Asagi kaydirmak da klavyeyi kapatir.
-                        .scrollDismissesKeyboard(.interactively)
-                        .task(id: openGoalEditor) {
-                            guard openGoalEditor else { return }
-                            editingGoals = true
-                            pendingDailyFocus = true
-                            scroll.scrollTo("goals", anchor: .top)
-                            openGoalEditor = false
-                        }
-                    }
-                }
-            }
-            .background(palette.background)
-            .navigationTitle("Insights")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
-                                                           monthlyGoal: monthlyGoalHours)
-                    } label: { Image(systemName: "square.and.arrow.up") }
-                    .accessibilityLabel("Share stats")
-                }
-            }
-            .celebrationBlocked(by: shareSnapshot != nil)
-            .sheet(item: $shareSnapshot) { snapshot in
-                ShareStatsView(snapshot: snapshot)
+        Group {
+            if let stats = celebrations.snapshot {
+                reportsContent(stats, now: celebrations.snapshotDate)
             }
         }
-        .tint(palette.accent)
-        .fontDesign(palette.fontDesign)
-        .onDisappear {
-            focusedGoal = nil
-            pendingDailyFocus = false
-            openGoalEditor = false
-        }
-        .onChange(of: editingGoals) { _, expanded in
-            if !expanded {
-                focusedGoal = nil
-                pendingDailyFocus = false
+        .background(palette.background)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
+                                                       monthlyGoal: monthlyGoalHours)
+                } label: { Image(systemName: "square.and.arrow.up") }
+                .accessibilityLabel("Share stats")
             }
+        }
+        .celebrationBlocked(by: shareSnapshot != nil)
+        .sheet(item: $shareSnapshot) { snapshot in
+            ShareStatsView(snapshot: snapshot)
         }
     }
 
-    private func goalsCard(_ stats: InsightsSnapshot, now: Date) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            SectionTitle("GOALS")
-            goalRow("Today", duration: stats.daily[Calendar.current.startOfDay(for: now), default: 0],
-                    hours: dailyGoalHours)
-            goalRow("This month", duration: stats.monthDuration, hours: monthlyGoalHours)
-            ForEach(estimateLines(stats.goalEstimate), id: \.self) { line in
-                Text(line).font(.caption).foregroundStyle(.secondary)
-                    .transition(.opacity)
+    private func reportsContent(_ stats: InsightsSnapshot, now: Date) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                InsightsHeatmapView(daily: stats.daily, earnings: stats.dailyEarnings,
+                                    currencyCode: store.currencyCode, now: now)
+                totalsCard(stats)
+                reportsCard(stats)
             }
-            // Acik/kapali durumu burada tutulur. Tutulmadiginda ilk hedef
-            // girilince ustteki satirlar degisiyor ve bolum kendiliginden
-            // kapaniyordu; ikinci dokunus baska bir yere denk geliyordu.
-            DisclosureGroup("Edit goals", isExpanded: $editingGoals) {
-                if editingGoals {
-                    VStack(alignment: .leading, spacing: 14) {
-                        GoalHoursField(title: "Daily", hours: $dailyGoalHours, step: 0.5, maximum: 24,
-                                       pendingFocus: $pendingDailyFocus, field: .daily, focusedField: $focusedGoal)
-                            .id(GoalField.daily)
-                        GoalHoursField(title: "Monthly", hours: $monthlyGoalHours, step: 5, maximum: 744,
-                                       pendingFocus: .constant(false), field: .monthly, focusedField: $focusedGoal)
-                            .id(GoalField.monthly)
-                        Text("Type any value, like 7.5, or use the steps: half an hour for the daily goal, five hours for the monthly one. Zero turns a goal off. Goals are for tracking only and do not change your level or badges.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 12)
-                }
-            }
-            .font(.subheadline)
+            .padding(16)
         }
-        .padding(16).card(palette)
-        .animation(.smooth(duration: 0.25), value: stats.goalEstimate)
-    }
-
-    private func goalRow(_ title: String, duration: TimeInterval, hours: Double) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            metric(title, value: DurationText.compact(duration))
-            if hours > 0 {
-                let target = hours * 3600
-                SwiftUI.ProgressView(value: min(max(duration / target, 0), 1))
-                    .accessibilityLabel("\(title) goal progress")
-                Text(duration >= target ? "Goal reached • \(DurationText.compact(target)) goal" :
-                        "\(DurationText.compact(max(0, target - duration))) remaining of \(DurationText.compact(target))")
-                    .font(.caption).foregroundStyle(.secondary)
-            } else {
-                Text("No goal set").font(.caption).foregroundStyle(.secondary)
-            }
-        }
+        .scrollBounceBehavior(.basedOnSize)
     }
 
     private func totalsCard(_ stats: InsightsSnapshot) -> some View {
@@ -156,30 +64,6 @@ struct InsightsView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).card(palette)
-    }
-
-    private func estimateLines(_ estimate: InsightsGoalEstimate) -> [String] {
-        var lines: [String] = []
-        let time = { (date: Date) in date.formatted(date: .omitted, time: .shortened) }
-        switch estimate.daily {
-        case .off: break
-        case .reached: lines.append("Today's goal is reached.")
-        case .finish(let date): lines.append("At this pace you reach today's goal at \(time(date)).")
-        case .startNow(let date): lines.append("Start now and you reach today's goal at \(time(date)).")
-        }
-        switch estimate.monthly {
-        case .off: break
-        case .reached: lines.append("This month's goal is reached.")
-        case .workDays(let days, let fits):
-            let amount = "\(days) \(days == 1 ? "day" : "days")"
-            lines.append(fits
-                ? "At your 7-day average, this month's goal is about \(amount) of work away."
-                : "At your 7-day average, this month's goal needs about \(amount) of work, more than this month has left.")
-        case .unavailable:
-            lines.append("No work in the last 7 days to estimate this month's goal from.")
-        }
-        if lines.isEmpty { lines.append("Set a daily or monthly goal to get started.") }
-        return lines
     }
 
     private func reportsCard(_ stats: InsightsSnapshot) -> some View {
@@ -231,5 +115,6 @@ extension InsightsSnapshot {
                                               uniquingKeysWith: { first, _ in first }),
                   runningEarnings: store.currentEarnings(at: now), now: now, calendar: .current,
                   dailyGoal: dailyGoal, monthlyGoal: monthlyGoal)
+        collectionBadges = PurchaseBadges.make(ledger: WardrobeStore.shared.ledger)
     }
 }

@@ -1,6 +1,8 @@
 import Foundation
 
 struct InsightsSnapshot {
+    // Injected by the app adapter. Work-only snapshots keep coin calculations independent.
+    var collectionBadges: [InsightsBadge] = []
     var daily: [Date: TimeInterval] = [:]
     var dailyEarnings: [Date: Double] = [:]
     var totalDuration: TimeInterval = 0
