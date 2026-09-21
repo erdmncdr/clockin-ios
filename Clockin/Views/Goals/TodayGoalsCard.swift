@@ -21,7 +21,7 @@ struct TodayGoalsCard: View {
                 Button(action: showInsights) {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Label("GOALS", systemImage: "target")
+                            Label(daily == nil ? "YOUR PLAN" : "TODAY’S GOAL", systemImage: "target")
                                 .font(.caption2.weight(.bold))
                                 .tracking(1)
                                 .foregroundStyle(.secondary)
@@ -31,7 +31,9 @@ struct TodayGoalsCard: View {
                                 .foregroundStyle(.tertiary)
                         }
                         if let daily { row("Today", daily) }
-                        if let monthly { row("This month", monthly) }
+                        if monthly != nil { TodayPaceSummary() }
+                        Text("Adjust goals & pace")
+                            .font(.caption.weight(.semibold)).foregroundStyle(palette.accent)
                     }
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -39,7 +41,7 @@ struct TodayGoalsCard: View {
                 }
                 .buttonStyle(.pressable(scale: 0.98))
                 .card(palette)
-                .accessibilityHint("Opens Insights, where goals are edited")
+                .accessibilityHint("Opens Progress, Goals: your targets, workdays and month-end outlook")
                 .transition(.opacity)
             } else if GoalPrompt.isVisible(daily: dailyGoalHours, monthly: monthlyGoalHours,
                 everConfigured: everConfigured, completedSessions: store.sessions.count,
