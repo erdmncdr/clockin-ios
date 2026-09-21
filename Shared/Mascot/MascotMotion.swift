@@ -21,7 +21,7 @@ enum MascotMood: String, CaseIterable, Sendable {
         switch self {
         case .hello, .angry, .tired, .proud: 0.89
         case .celebrate: 0.82
-        case .working: 0.86
+        case .working: 300.0 / 314.0
         case .coffee: 0.88
         }
     }
@@ -393,6 +393,18 @@ struct MascotSwaySchedule: Equatable, Sendable {
 
     func isMoving(at elapsed: TimeInterval) -> Bool {
         elapsed >= 0 && elapsed.truncatingRemainder(dividingBy: cycle) < active
+    }
+}
+
+/// Two gentle wing beats, followed by a still interval between bursts.
+enum MascotWingMotion {
+    static let duration = 1.8
+    static let rest = 5.4
+
+    static func pose(progress: Double) -> (scaleX: Double, radians: Double) {
+        let p = min(1, max(0, progress))
+        let fold = pow(sin(p * 2 * .pi), 2)
+        return (1 - 0.22 * fold, 0.14 * fold)
     }
 }
 

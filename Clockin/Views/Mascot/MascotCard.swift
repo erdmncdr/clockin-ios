@@ -7,10 +7,8 @@ struct MascotCard: View {
     @ObservedObject private var nudges = NudgeController.shared
     @Environment(\.palette) private var palette
 
-    /// Kart Insights'a gotursun. Eskiden "Tap your level..." yaziyordu ama
-    /// dokunulacak sey ekranin obur ucundaki rozetti; karta basan hicbir sey
-    /// olmadigini goruyordu.
     let showInsights: () -> Void
+    let showCompanion: () -> Void
 
     private var state: MascotAsset {
         celebrations.companionState(running: store.running, angry: nudges.mood?.isAngry == true,
@@ -19,10 +17,12 @@ struct MascotCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Maskotun kendi dokunusu duruslari degistiriyor, o yuzden
-            // Insights'a giden dugme yalnizca metin sutunu.
-            ClockinMascotStage(state: state)
-                .frame(width: 62, height: 62)
+            Button(action: showCompanion) {
+                ClockinMascotStage(state: state).allowsHitTesting(false)
+                    .frame(width: 62, height: 62)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open Companion")
             Button(action: showInsights) {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -50,5 +50,7 @@ struct MascotCard: View {
         }
         .padding(14)
         .card(palette)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: showCompanion)
     }
 }

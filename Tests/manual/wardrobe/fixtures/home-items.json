@@ -1,0 +1,1 @@
+{"rooms":{"cozy":{"name":"Cozy","file":"room-cozy.png","floorY":220,"slots":{"floorLeft":[40,220],"rug":[180,222]},"mascotSpot":[180,220]}},"items":{"plant":{"name":"Plant","file":"plant.png","slot":"floorLeft","pivot":[8,20]}}}
