@@ -20,6 +20,7 @@ struct ClockinSnapshot: Codable, Equatable, Sendable {
     var companionFriendly = false
     var companionLastWorkedDay: Date?
     var companionProudUntil: Date?
+    var wardrobeJSON: String?
     var companionAccessoryID: String?
 
     static let empty = ClockinSnapshot(
@@ -41,6 +42,7 @@ extension ClockinSnapshot {
         companionFriendly = try container.decodeIfPresent(Bool.self, forKey: .companionFriendly) ?? false
         companionLastWorkedDay = try container.decodeIfPresent(Date.self, forKey: .companionLastWorkedDay)
         companionProudUntil = try container.decodeIfPresent(Date.self, forKey: .companionProudUntil)
+        wardrobeJSON = try container.decodeIfPresent(String.self, forKey: .wardrobeJSON)
         companionAccessoryID = try container.decodeIfPresent(String.self, forKey: .companionAccessoryID)
         // Eski dosyalarda tema yok; kullanicinin widget verisi kaybolmasin.
         theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon

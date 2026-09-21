@@ -45,17 +45,26 @@ enum InsightsPeriods {
                         grouping: InsightsGrouping, now: Date, calendar: Calendar) -> [InsightsPeriod] {
         let component: Calendar.Component = grouping == .month ? .month : (grouping == .week ? .weekOfYear : .day)
         func start(_ date: Date) -> Date {
-            if grouping == .week { return weekStart(date, calendar: calendar) }
+            if grouping == .week { return MonthWeek.interval(containing: date, calendar: calendar).start }
             return calendar.dateInterval(of: component, for: date)?.start ?? calendar.startOfDay(for: date)
         }
         let today = calendar.startOfDay(for: now)
         let keys = Set(daily.keys).union(earnings.keys)
         let first = start(min(keys.min() ?? today, today))
-        let dates = starts(from: first, through: today, component: component, calendar: calendar)
+        var dates: [Date] = []
+        var cursor = first
+        while cursor <= today {
+            dates.append(cursor)
+            let next = grouping == .week ? MonthWeek.interval(containing: cursor, calendar: calendar).end
+                : calendar.date(byAdding: component, value: 1, to: cursor)!
+            guard next > cursor else { break }
+            cursor = next
+        }
         var totals: [Date: InsightsPeriod] = [:]
         for date in dates {
             totals[date] = InsightsPeriod(start: date,
-                end: calendar.date(byAdding: component, value: 1, to: date) ?? date)
+                end: grouping == .week ? MonthWeek.interval(containing: date, calendar: calendar).end
+                    : calendar.date(byAdding: component, value: 1, to: date) ?? date)
         }
         for day in keys {
             let key = start(day)

@@ -13,6 +13,8 @@ struct DeskModeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
 
+    @AppStorage(WardrobeState.deskKey) private var showHome = true
+
     @State private var sessionFeedback = HapticSignal()
 
     var body: some View {
@@ -36,10 +38,13 @@ struct DeskModeView: View {
                 .padding(.vertical, 16)
         }
         .overlay(alignment: .topLeading) {
-            DeskCompanion()
-                .frame(width: 72, height: 72)
-                .padding(.leading, 24)
-                .padding(.top, 8)
+            if !showHome {
+                DeskCompanion().frame(width: 72, height: 72)
+                    .padding(.leading, 24).padding(.top, 8)
+            }
+        }
+        .background {
+            if showHome { CompanionHomeView().opacity(0.25).allowsHitTesting(false).ignoresSafeArea() }
         }
         .background { palette.background.ignoresSafeArea() }
         .hapticFeedback(sessionFeedback)

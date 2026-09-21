@@ -16,9 +16,24 @@ struct ClockinApp: App {
         return Array(Set(dates.map { ExchangeRateStore.calendarRateDate($0) })).sorted()
     }
 
+    @ViewBuilder
+    private var entryView: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--feedback-review") {
+            LevelFeedbackReview()
+        } else if ProcessInfo.processInfo.arguments.contains("--level-effects-preview") {
+            LevelEffectsPreview()
+        } else { RootView() }
+        #else
+        RootView()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            entryView
+                .liveActivitySetup()
+                .timerPersistenceAlert()
                 .environmentObject(store)
                 .environmentObject(exchangeRates)
                 .task(id: rateDates) {

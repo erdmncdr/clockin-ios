@@ -14,13 +14,23 @@ enum CelebrationEvent: Equatable, Sendable {
     case levelUp(level: Int, hours: Int)
     case badge(CelebrationBadge)
     case accessory(CompanionAccessory)
+    case wardrobe(name: String, introductory: Bool)
     case moreBadges([String])
     case reaction(CelebrationReaction)
+
+    /// Full level cards contain reading and sharing actions; only banners expire.
+    var autoDismissDelay: TimeInterval? {
+        switch self {
+        case .levelUp: nil
+        case .reaction: 1.6
+        default: 4
+        }
+    }
 
     var startsPride: Bool {
         switch self {
         case .levelUp, .badge, .moreBadges: true
-        case .accessory, .reaction: false
+        case .accessory, .wardrobe, .reaction: false
         }
     }
 
@@ -122,7 +132,7 @@ struct CelebrationQueue {
         self.seenAccessoryIDs = seenAccessoryIDs
     }
 
-    mutating func ingest(_ state: CelebrationState, now: TimeInterval, canReact: Bool) {
+    mutating func ingest(_ state: CelebrationState, now: TimeInterval, canReact: Bool, includeAccessories: Bool = true) {
         defer { previous = state }
         if lastLevel == nil { lastLevel = state.level }
         if seenBadgeIDs == nil { seenBadgeIDs = Set(state.badges.map(\.id)) }
@@ -131,7 +141,7 @@ struct CelebrationQueue {
         let reservedAccessories = Set((pending + (current.map { [$0] } ?? [])).compactMap { event -> String? in
             if case .accessory(let accessory) = event { return accessory.id }; return nil
         })
-        pending += unlockedAccessories.filter {
+        pending += (includeAccessories ? unlockedAccessories : []).filter {
             !(seenAccessoryIDs ?? []).contains($0.id) && !reservedAccessories.contains($0.id)
         }.map(CelebrationEvent.accessory)
         let queuedLevel = pending.compactMap { event -> Int? in
@@ -182,11 +192,22 @@ struct CelebrationQueue {
                 seenBadgeIDs?.formUnion(event.badgeIDs)
             case .moreBadges: seenBadgeIDs?.formUnion(event.badgeIDs)
             case .accessory(let accessory): seenAccessoryIDs?.insert(accessory.id)
-            case .reaction: break
+            case .wardrobe, .reaction: break
             }
             return
         }
         badgesPresented = 0
+    }
+
+    mutating func wardrobeUnlocked(first: Bool, names: [String]) {
+        if first { pending.append(.wardrobe(name: "Outfits, coins and home", introductory: true)); return }
+        let existing = pending.filter { if case .wardrobe = $0 { return true }; return false }.count
+        let available = max(0, 3 - existing)
+        pending += names.prefix(available).map { .wardrobe(name: $0, introductory: false) }
+        if names.count > available {
+            let summary = CelebrationEvent.wardrobe(name: "More items unlocked. Open Companion", introductory: false)
+            if !pending.contains(summary) { pending.append(summary) }
+        }
     }
 
     mutating func finish() {

@@ -6,6 +6,7 @@ import SwiftUI
 /// baska bir ekranin parcasi gibi duruyordu ve tam genislikte vurgu dugmesi
 /// sayfanin en dikkat ceken ogesi oluyordu. Diger bolumler gibi satir.
 struct FocusSettingsSection: View {
+    var only: DashboardShortcut? = nil
     @Environment(\.palette) private var palette
     @Environment(\.openURL) private var openURL
     @AppStorage("Clockin.ChimeEnabled") private var chimeEnabled = false
@@ -18,98 +19,99 @@ struct FocusSettingsSection: View {
     @State private var selectionFeedback = HapticSignal()
 
     var body: some View {
-        Section {
-            Toggle("Focus chime", isOn: Binding(get: { chimeEnabled }, set: { enabled in
-                let changed = chimeEnabled != enabled
-                chimeEnabled = enabled
-                if changed { selectionFeedback.send(.selection) }
-                if enabled { Task { await chime.requestPermission() } }
-            }))
-            if chimeEnabled {
-                Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
-                    LabeledContent("Every", value: "\(interval) min of work")
-                }
-                .accessibilityValue("\(interval) minutes of work")
-                Picker("Sound", selection: Binding(get: {
-                    FocusChimeSound.selected(sound).rawValue
-                }, set: { selection in
-                    sound = selection
-                    chime.preview(sound: selection)
-                })) {
-                    ForEach(FocusChimeSound.allCases) { sound in
-                        Text(sound.displayName).tag(sound.rawValue)
-                    }
-                }
-                Button("Preview", systemImage: "speaker.wave.2") {
-                    chime.preview(sound: sound)
-                }
-                VStack(alignment: .leading) {
-                    LabeledContent("Volume", value: "\(Int((FocusChimeVolume.clamped(volume) * 100).rounded()))%")
-                    Slider(value: Binding(get: { FocusChimeVolume.clamped(volume) }, set: {
-                        volume = FocusChimeVolume.clamped($0)
-                        chime.updatePlaybackVolume()
-                    }), in: FocusChimeVolume.range, step: 0.01)
-                    .accessibilityLabel("Chime volume")
-                    .accessibilityValue("\(Int((FocusChimeVolume.clamped(volume) * 100).rounded())) percent")
-                }
-                if chime.needsSystemSettings {
-                    Button("Open notification settings", systemImage: "gear") {
-                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
-                    }
-                }
-            }
-        } header: {
-            Text("Focus chime")
-        } footer: {
-            VStack(alignment: .leading, spacing: 4) {
+        if only == nil || only == .chime {
+            Section {
+                DashboardPinButton(feature: .chime)
+                FocusChimeToggle()
                 if chimeEnabled {
-                    Text(chime.permissionText)
-                    if let error = chime.errorMessage { Text(error).foregroundStyle(.red) }
+                    Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
+                        LabeledContent("Every", value: "\(interval) min of work")
+                    }
+                    .accessibilityValue("\(interval) minutes of work")
+                    Picker("Sound", selection: Binding(get: {
+                        FocusChimeSound.selected(sound).rawValue
+                    }, set: { selection in
+                        sound = selection
+                        chime.preview(sound: selection)
+                    })) {
+                        ForEach(FocusChimeSound.allCases) { sound in
+                            Text(sound.displayName).tag(sound.rawValue)
+                        }
+                    }
+                    Button("Preview", systemImage: "speaker.wave.2") {
+                        chime.preview(sound: sound)
+                    }
+                    VStack(alignment: .leading) {
+                        LabeledContent("Volume", value: "\(Int((FocusChimeVolume.clamped(volume) * 100).rounded()))%")
+                        Slider(value: Binding(get: { FocusChimeVolume.clamped(volume) }, set: {
+                            volume = FocusChimeVolume.clamped($0)
+                            chime.updatePlaybackVolume()
+                        }), in: FocusChimeVolume.range, step: 0.01)
+                        .accessibilityLabel("Chime volume")
+                        .accessibilityValue("\(Int((FocusChimeVolume.clamped(volume) * 100).rounded())) percent")
+                    }
+                    if chime.needsSystemSettings {
+                        Button("Open notification settings", systemImage: "gear") {
+                            if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+                        }
+                    }
                 }
-                Text("A chime after every interval of worked time; pauses do not count. Volume applies while Clockin is open. In the background, iOS plays notification sounds at the system volume and follows silent mode and Focus.")
-                if chimeEnabled && radio.isStarted {
-                    Text("While Focus radio is playing, chimes remain audible in silent mode.")
+            } header: {
+                Text("Focus chime")
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    if chimeEnabled {
+                        Text(chime.permissionText)
+                        if let error = chime.errorMessage { Text(error).foregroundStyle(.red) }
+                    }
+                    Text("A chime after every interval of worked time; pauses do not count. Volume applies while Clockin is open. In the background, iOS plays notification sounds at the system volume and follows silent mode and Focus.")
+                    if chimeEnabled && radio.isStarted {
+                        Text("While Focus radio is playing, chimes remain audible in silent mode.")
+                    }
                 }
+                .animation(.default, value: chimeEnabled)
             }
-            .animation(.default, value: chimeEnabled)
-        }
-        .hapticFeedback(selectionFeedback)
-        .task {
-            sound = FocusChimeSound.migrate().rawValue
-            volume = FocusChimeVolume.clamped(volume)
-            interval = min(120, max(1, interval == 0 ? 10 : interval))
-            await chime.refreshPermission()
-        }
+            .hapticFeedback(selectionFeedback)
+            .task {
+                sound = FocusChimeSound.migrate().rawValue
+                volume = FocusChimeVolume.clamped(volume)
+                interval = min(120, max(1, interval == 0 ? 10 : interval))
+                await chime.refreshPermission()
+            }
 
-        Section {
-            HStack(spacing: 12) {
-                Image(systemName: radio.isPlaying ? "dot.radiowaves.left.and.right" : "radio")
-                    .font(.title3)
-                    .foregroundStyle(palette.accent)
-                    .frame(width: 28)
-                    .contentTransition(.symbolEffect(.replace))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(radio.station.name)
-                    Text(radioStatus)
-                        .font(.caption)
-                        .foregroundStyle(radio.errorMessage == nil ? Color.secondary : Color.red)
-                        .contentTransition(.opacity)
+        }
+        if only == nil || only == .radio {
+            Section {
+                DashboardPinButton(feature: .radio)
+                HStack(spacing: 12) {
+                    Image(systemName: radio.isPlaying ? "dot.radiowaves.left.and.right" : "radio")
+                        .font(.title3)
+                        .foregroundStyle(palette.accent)
+                        .frame(width: 28)
+                        .contentTransition(.symbolEffect(.replace))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(radio.station.name)
+                        Text(radioStatus)
+                            .font(.caption)
+                            .foregroundStyle(radio.errorMessage == nil ? Color.secondary : Color.red)
+                            .contentTransition(.opacity)
+                    }
+                    Spacer()
+                    FocusRadioButtons(radio: radio)
                 }
-                Spacer()
-                FocusRadioButtons(radio: radio)
+                FocusRadioStationPicker(radio: radio)
+                HStack(spacing: 10) {
+                    Image(systemName: "speaker.fill").foregroundStyle(.secondary)
+                    Slider(value: $radio.volume, in: 0...1)
+                        .accessibilityLabel("Radio volume")
+                        .accessibilityValue("\(Int(radio.volume * 100)) percent")
+                    Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Focus radio")
+            } footer: {
+                Text("\(radio.station.description). Streams over the internet and keeps playing with the screen locked. Pin it to Today for station, playback and volume controls.")
             }
-            FocusRadioStationPicker(radio: radio)
-            HStack(spacing: 10) {
-                Image(systemName: "speaker.fill").foregroundStyle(.secondary)
-                Slider(value: $radio.volume, in: 0...1)
-                    .accessibilityLabel("Radio volume")
-                    .accessibilityValue("\(Int(radio.volume * 100)) percent")
-                Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
-            }
-        } header: {
-            Text("Focus radio")
-        } footer: {
-            Text("\(radio.station.description). Streams over the internet and keeps playing with the screen locked. Pause or stop from Today; volume stays here.")
         }
     }
 

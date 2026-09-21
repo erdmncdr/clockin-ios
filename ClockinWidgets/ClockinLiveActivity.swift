@@ -6,43 +6,45 @@ import WidgetKit
 struct ClockinLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ClockinActivityAttributes.self) { context in
-            let palette = context.state.theme.palette
-            LockScreenActivityView(state: context.state, currencyCode: context.attributes.currencyCode)
+            let state = context.attributes.displayState(context.state)
+            let palette = state.theme.palette
+            LockScreenActivityView(state: state, currencyCode: context.attributes.currencyCode)
                 .environment(\.palette, palette)
                 .environment(\.colorScheme, palette.colorScheme)
                 .activityBackgroundTint(palette.background)
                 .activitySystemActionForegroundColor(palette.accent)
         } dynamicIsland: { context in
-            let palette = context.state.theme.palette.dynamicIslandPalette
+            let state = context.attributes.displayState(context.state)
+            let palette = state.theme.palette.dynamicIslandPalette
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        statusLabel(context.state)
+                        statusLabel(state)
                             .font(.caption.weight(.semibold))
-                        Text(context.state.earnedAtUpdate.money(code: context.attributes.currencyCode))
+                        Text(state.earnedAtUpdate.money(code: context.attributes.currencyCode))
                             .font(.title3.weight(.semibold))
                             .monospacedDigit()
-                        if let label = asOfText(context.state) {
+                        if let label = asOfText(state) {
                             Text(label)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .foregroundStyle(context.state.isPaused ? palette.secondary : palette.accent)
+                    .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    islandTimerText(context.state)
+                    islandTimerText(state)
                         .font(.title3.weight(.semibold))
                         .monospacedDigit()
                         .multilineTextAlignment(.trailing)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
-                        Text(rateText(context.state, context.attributes.currencyCode))
+                        Text(rateText(state, context.attributes.currencyCode))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        ActivityButtons(state: context.state)
+                        ActivityButtons(state: state)
                             .environment(\.palette, palette)
                             .environment(\.colorScheme, .dark)
                     }
@@ -53,7 +55,7 @@ struct ClockinLiveActivity: Widget {
                 // Yuz saati gecen bir oturumda "200:00" bu genislige sigmiyor
                 // ve "200:..." diye kesiliyordu. Kesmek yerine kuculsun:
                 // okunakli kalir ve ada genislemez.
-                islandTimerText(context.state)
+                islandTimerText(state)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -61,16 +63,16 @@ struct ClockinLiveActivity: Widget {
             } compactTrailing: {
                 // Tam sayiya asagi yuvarlanir: $1,61 "$2" yaziyordu, kazanilandan
                 // fazlasi. Tutar son guncellemeye ait oldugu icin zaten geride kalabilir.
-                Text(context.state.earnedAtUpdate.rounded(.down).money(code: context.attributes.currencyCode, maxFractionDigits: 0))
+                Text(state.earnedAtUpdate.rounded(.down).money(code: context.attributes.currencyCode, maxFractionDigits: 0))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
-                    .foregroundStyle(context.state.isPaused ? palette.secondary : palette.accent)
+                    .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
                     .frame(width: 32, alignment: .trailing)
             } minimal: {
                 Image(systemName: "timer")
                     .foregroundStyle(palette.accent)
-                    .accessibilityLabel(context.state.isPaused ? "Paused session" : "Working session")
+                    .accessibilityLabel(state.isPaused ? "Paused session" : "Working session")
             }
         }
     }
@@ -106,12 +108,7 @@ private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some 
     Text(timerInterval: state.timerRange, pauseTime: state.pausedAt, countsDown: false, showsHours: true)
 }
 
-/// Tutarin ait oldugu an. Live Activity tutari kendisi ilerletemez; uygulama
-/// arka plandayken guncelleme gelmez ve sure akarken para donuk kalir.
-/// Etkinlik yalnizca uygulama onde degilken gorunur, yani gorundugu her an
-/// tutar en son uygulamadan cikildigi ana aittir; bu yuzden calisan seansta
-/// hep yazilir. Sistemin `isStale` bayragina guvenilmedi: simulatorde eskime
-/// tarihi gecse de gelmedi.
+/// Shows the timestamp of the last local update or remote clock tick.
 private func asOfText(_ state: ClockinActivityAttributes.ContentState) -> String? {
     guard !state.isPaused, let updatedAt = state.updatedAt else { return nil }
     return "as of " + updatedAt.formatted(date: .omitted, time: .shortened)

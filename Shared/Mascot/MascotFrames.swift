@@ -29,25 +29,55 @@ enum MascotResources {
         .flatMap { try? MascotLibrary(data: $0) }
 }
 
-// Widget sadece tek kucuk kareyi tutar; hareket onbellegini kullanmaz.
+// Widget hazir resmi alir; uygulama arka planda hazirlar.
 struct ClockinMascotStill: View {
-    private let image: CGImage?
+    #if WIDGET_EXTENSION
+    private var image: CGImage?
+    #else
+    @State private var image: CGImage?
+    #endif
+    private var mood: MascotMood = .hello
+    private var size = 192
+    private var outfit = WardrobeState()
+    private var prepared = false
+    private var preparedImage: CGImage?
+    private struct Request: Equatable {
+        let mood: MascotMood
+        let size: Int
+        let outfit: WardrobeState
+    }
 
-    init(mood: MascotMood, accessory: CompanionAccessory? = nil, maxPixelSize: Int = 192) {
-        let rest = MascotResources.library?[mood].rest ?? "h01"
-        let frame = CompanionAccessory.displayFrame(rest, helloRest: mood == .hello, performingEvent: false, accessory: accessory)
-        image = MascotResources.decode(frame, maxPixelSize: maxPixelSize)
+    init(image: CGImage?) {
+        preparedImage = image
+        prepared = true
+    }
+
+    init(mood: MascotMood, accessory: CompanionAccessory? = nil, maxPixelSize: Int = 192,
+         outfit: WardrobeState = WardrobeState()) {
+        self.mood = mood; size = maxPixelSize; self.outfit = outfit
+        if let accessory, let item = WardrobeCatalog.item(accessory.rawValue) {
+            self.outfit.equipped[item.slot.rawValue] = item.id
+        }
     }
 
     var body: some View {
         Group {
-            if let image {
-                Image(decorative: image, scale: 1).resizable().interpolation(.none).scaledToFit()
+            if let displayed = prepared ? preparedImage : image {
+                Image(decorative: displayed, scale: 1).resizable().interpolation(.none).scaledToFit()
             } else {
                 Image(systemName: "face.smiling").resizable().scaledToFit()
             }
         }
         .accessibilityHidden(true)
+        #if !WIDGET_EXTENSION
+        .task(id: Request(mood: mood, size: size, outfit: outfit)) {
+            guard !prepared else { return }
+            let rest = MascotResources.library?[mood].rest ?? "h01"
+            let result = await WardrobeFrameCache.shared.composite(frame: rest, outfit: outfit, size: size)
+            guard !Task.isCancelled else { return }
+            image = result
+        }
+        #endif
     }
 }
 
@@ -57,23 +87,46 @@ final class MascotFrames {
     static let shared = MascotFrames()
     let library = MascotResources.library
     private var images: [String: CGImage] = [:]
-    private var loading: [MascotMood: Task<Void, Never>] = [:]
+    private var loading: [String: Task<Void, Never>] = [:]
+    private(set) var overlayImages: [String: CGImage] = [:]
 
-    func image(_ id: String) -> CGImage? { images[id] }
+    func image(_ id: String, colorway: String = "classic", hidingAntenna: Bool = false) -> CGImage? { images[colorway + "/" + id + "/" + String(hidingAntenna)] }
 
-    func preload(_ mood: MascotMood) async {
-        guard let library else { return }
-        if let task = loading[mood] { return await task.value }
-        let frames = library[mood].frames.union(mood == .hello ? Set(CompanionAccessory.allCases.map(\.frame)) : [])
-        let missing = frames.filter { images[$0] == nil }
-        // Paylasilan isin omru tek gorunumun iptalinden bagimsizdir.
+    private var outfitLoading: Task<Void, Never>?
+
+    func preloadOutfit() async {
+        if let task = outfitLoading { return await task.value }
+        let ids = Array(WardrobeArt.sprites.keys)
         let task = Task {
             let decoded = await Task.detached(priority: .utility) {
-                missing.compactMap { id in MascotResources.decode(id).map { (id, $0) } }
+                ids.compactMap { id in
+                    WardrobeArt.decode(id + ".png", folder: "Wardrobe").map { (id, $0) }
+                }
             }.value
-            for (id, image) in decoded { images[id] = image }
+            for (id, image) in decoded { overlayImages[id] = image }
         }
-        loading[mood] = task
+        outfitLoading = task
+        await task.value
+    }
+
+    func preload(_ mood: MascotMood, colorway: String = "classic", hidingAntenna: Bool = false) async {
+        await preloadOutfit()
+        guard let library else { return }
+        let key = colorway + "/" + mood.rawValue + "/" + String(hidingAntenna)
+        if let task = loading[key] { return await task.value }
+        let missing = library[mood].frames.filter { images[colorway + "/" + $0 + "/" + String(hidingAntenna)] == nil }
+        // Paylasilan decode isi gorunum kapaninca sonucunu onbellege birakir.
+        let task = Task {
+            let decoded = await Task.detached(priority: .utility) {
+                var frames: [(String, CGImage)] = []
+                for id in missing {
+                    if let image = await WardrobeFrameCache.shared.image(id, colorway: colorway, hidingAntenna: hidingAntenna) { frames.append((id, image)) }
+                }
+                return frames
+            }.value
+            for (id, image) in decoded { images[colorway + "/" + id + "/" + String(hidingAntenna)] = image }
+        }
+        loading[key] = task
         await task.value
     }
 }

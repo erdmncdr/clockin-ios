@@ -46,9 +46,21 @@ final class CelebrationCenter: ObservableObject {
         releaseTasks.values.forEach { $0.cancel() }
     }
 
+    #if DEBUG
+    func previewLevelForReview() {
+        var seed = CelebrationState(); seed.level = 499
+        queue.ingest(seed, now: 0, canReact: false)
+        seed.level = 500; seed.focusHours = 2495
+        queue.ingest(seed, now: 1, canReact: false)
+        setActive(true)
+    }
+    #endif
+
     // SessionMirror ve mevcut dakika yenilemesi tek ortak ozeti besler.
     func refresh(store: ClockStore, now: Date = .now) {
         let dailyGoal = defaults.double(forKey: "Clockin.GoalDailyHours")
+        let wardrobe = WardrobeStore.shared.refresh(sessions: store.sessions, now: now, dailyGoal: dailyGoal)
+        queue.wardrobeUnlocked(first: wardrobe.first, names: wardrobe.items.compactMap { WardrobeCatalog.item($0)?.name })
         let stats = InsightsSnapshot(store: store, now: now, dailyGoal: dailyGoal,
                                      monthlyGoal: defaults.double(forKey: "Clockin.GoalMonthlyHours"))
         snapshot = stats
@@ -81,7 +93,7 @@ final class CelebrationCenter: ObservableObject {
         let earnedPride = CelebrationRules.earnsPride(from: queue.previous, to: state)
         let oldPending = queue.pending
         queue.ingest(state, now: ProcessInfo.processInfo.systemUptime,
-                     canReact: active && UIApplication.shared.applicationState == .active && blockers.isEmpty && !visibleCompanions.isEmpty)
+                     canReact: active && UIApplication.shared.applicationState == .active && blockers.isEmpty && !visibleCompanions.isEmpty, includeAccessories: false)
         if earnedPride || queue.pending.contains(where: { $0.startsPride && !oldPending.contains($0) }) {
             // Widget olayi hemen alir; kapali kart sheet sonrasi kendi penceresini acar.
             showPride()
@@ -186,7 +198,11 @@ final class CelebrationCenter: ObservableObject {
                 Haptics.play(.levelUp)
             }
             self.persist()
-            do { try await Task.sleep(for: .seconds(event.isReaction ? 1.6 : 2.5)) } catch { return }
+            guard let delay = event.autoDismissDelay else {
+                self.dismissal = nil
+                return
+            }
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
             guard !Task.isCancelled else { return }
             self.dismiss()
         }

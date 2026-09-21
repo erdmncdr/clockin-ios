@@ -1,0 +1,281 @@
+{
+  "antenna" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      16,
+      36
+    ],
+    "slot" : "head"
+  },
+  "backpack" : {
+    "anchorPoint" : "back",
+    "layer" : "back",
+    "pivot" : [
+      60,
+      36
+    ],
+    "poseOffsets" : {
+      "c" : [
+        38,
+        -6
+      ],
+      "pose2" : [
+        -26,
+        -4
+      ],
+      "pose4" : [
+        -22,
+        0
+      ],
+      "t" : [
+        -26,
+        -4
+      ]
+    },
+    "slot" : "back"
+  },
+  "balloon" : {
+    "anchorPoint" : "handR",
+    "layer" : "front",
+    "pivot" : [
+      2,
+      66
+    ],
+    "slot" : "hand"
+  },
+  "beanie" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      44,
+      40
+    ],
+    "slot" : "head"
+  },
+  "bow-tie" : {
+    "anchorPoint" : "neck",
+    "layer" : "front",
+    "pivot" : [
+      22,
+      10
+    ],
+    "slot" : "neck"
+  },
+  "cap" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      50,
+      30
+    ],
+    "slot" : "head"
+  },
+  "cape" : {
+    "anchorPoint" : "back",
+    "layer" : "back",
+    "pivot" : [
+      62,
+      14
+    ],
+    "poseOffsets" : {
+      "c" : [
+        12,
+        0
+      ],
+      "pose2" : [
+        -10,
+        0
+      ],
+      "pose4" : [
+        -10,
+        0
+      ],
+      "t" : [
+        -10,
+        0
+      ]
+    },
+    "slot" : "back"
+  },
+  "chef-hat" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      44,
+      34
+    ],
+    "slot" : "head"
+  },
+  "cowboy-hat" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      56,
+      30
+    ],
+    "slot" : "head"
+  },
+  "crown" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      46,
+      34
+    ],
+    "slot" : "head"
+  },
+  "gold-medal" : {
+    "anchorPoint" : "neck",
+    "layer" : "front",
+    "pivot" : [
+      22,
+      4
+    ],
+    "slot" : "neck"
+  },
+  "headphones" : {
+    "anchorPoint" : "visor",
+    "layer" : "front",
+    "pivot" : [
+      62,
+      54
+    ],
+    "slot" : "head"
+  },
+  "jetpack" : {
+    "anchorPoint" : "back",
+    "layer" : "back",
+    "pivot" : [
+      56,
+      30
+    ],
+    "poseOffsets" : {
+      "c" : [
+        24,
+        -6
+      ],
+      "pose2" : [
+        -20,
+        -4
+      ],
+      "pose4" : [
+        -18,
+        0
+      ],
+      "t" : [
+        -20,
+        -4
+      ]
+    },
+    "slot" : "back"
+  },
+  "monocle" : {
+    "anchorPoint" : "visor",
+    "layer" : "front",
+    "pivot" : [
+      6,
+      16
+    ],
+    "slot" : "face"
+  },
+  "mug" : {
+    "anchorPoint" : "handR",
+    "layer" : "front",
+    "pivot" : [
+      8,
+      34
+    ],
+    "slot" : "hand"
+  },
+  "necktie" : {
+    "anchorPoint" : "neck",
+    "layer" : "front",
+    "pivot" : [
+      10,
+      6
+    ],
+    "slot" : "neck"
+  },
+  "party-hat" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      28,
+      34
+    ],
+    "slot" : "head"
+  },
+  "pixel-shades" : {
+    "anchorPoint" : "visor",
+    "layer" : "front",
+    "pivot" : [
+      38,
+      14
+    ],
+    "slot" : "face"
+  },
+  "round-glasses" : {
+    "anchorPoint" : "visor",
+    "layer" : "front",
+    "pivot" : [
+      42,
+      14
+    ],
+    "slot" : "face"
+  },
+  "scarf" : {
+    "anchorPoint" : "neck",
+    "layer" : "front",
+    "pivot" : [
+      28,
+      10
+    ],
+    "slot" : "neck"
+  },
+  "small-flag" : {
+    "anchorPoint" : "handR",
+    "layer" : "front",
+    "pivot" : [
+      6,
+      62
+    ],
+    "slot" : "hand"
+  },
+  "sunglasses" : {
+    "anchorPoint" : "visor",
+    "layer" : "front",
+    "pivot" : [
+      40,
+      14
+    ],
+    "slot" : "face"
+  },
+  "trophy" : {
+    "anchorPoint" : "handR",
+    "layer" : "front",
+    "pivot" : [
+      24,
+      50
+    ],
+    "slot" : "hand"
+  },
+  "wings" : {
+    "anchorPoint" : "back",
+    "layer" : "back",
+    "pivot" : [
+      108,
+      40
+    ],
+    "slot" : "back"
+  },
+  "wizard-hat" : {
+    "anchorPoint" : "head",
+    "layer" : "front",
+    "pivot" : [
+      44,
+      36
+    ],
+    "slot" : "head"
+  }
+}

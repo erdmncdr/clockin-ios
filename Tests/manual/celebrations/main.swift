@@ -217,4 +217,8 @@ check(accumulating.pending.last == .moreBadges(["6", "7", "8"]), "batch cap span
 
 check(CelebrationRules.levelKey == "Clockin.LastCelebratedLevel", "level persistence key")
 check(CelebrationRules.badgesKey == "Clockin.SeenBadgeIDs", "badge persistence key")
+
+check(CelebrationEvent.levelUp(level: 75, hours: 370).autoDismissDelay == nil, "level card waits for explicit dismissal")
+check(CelebrationEvent.reaction(.clockIn).autoDismissDelay == 1.6, "brief companion reaction still expires")
+check(CelebrationEvent.badge(badge("test")).autoDismissDelay == 4, "badge banner allows reading time")
 print("\(checks) celebration checks passed")

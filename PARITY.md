@@ -17,8 +17,8 @@ with matching station ids and names.
 - iOS 18 controls for clock in/out and pause/resume in Control Center, Lock Screen slots, and the Action Button on supported iPhones
 - Companion nudges with Grumpy or Friendly tone and at most two daytime notifications per day
 - Tired idle mood after two quiet calendar days (including a streak broken yesterday), with existing Grumpy anger taking priority; four-second proud mood for levels, badges, daily goals and saved sessions longer than two hours
-- Earned companion accessories at 25/50/100/250 total hours, including the active session; Auto/None/manual selection, unlock banners, silent upgrade seeding and progress in Badges > Companion
-- Companion in desk mode and matching medium-widget mood/accessory stills; accessory art replaces only hello at rest
+- Layered wardrobe with permanent milestone ownership at 25/50/100/250 completed hours, coin purchases, migrated accessory choices and Companion navigation
+- Companion home in desk mode and matching layered medium-widget mood/outfit stills
 - Finite standing sway bursts with animation-free rests, slower tired motion, and shared Reduce Motion, visibility, power and thermal gates
 - Long session reminder with Clock out, Set end time, and Remind in 1 hour actions
 - Haptics on timer actions, a celebration on the clock-out summary
@@ -69,3 +69,17 @@ do not overwrite the platform-specific behavior:
 ```bash
 diff ../Sources/Clockin/MascotMotion.swift Shared/Mascot/MascotMotion.swift
 ```
+
+## iPhone wardrobe, focus coins and companion home
+
+The iPhone has a layered outfit with head, face, neck, back, hand and colorway slots,
+a Companion screen (Outfit / Home / Shop), deterministic archive-derived focus
+coins, milestone ownership, confirmed purchases and room/furniture placement.
+Today's companion opens this screen; its text row opens Insights. Badges and
+Settings also link to Companion. Landscape desk mode can show a dimmed home.
+
+Ownership and purchases live in `Clockin.Wardrobe*` UserDefaults, not ClockinData.
+The four original accessory thresholds and stored selection migrate. Widget and
+celebration companions share the composition. Exported/automatic iPhone backups
+carry an optional `wardrobe` JSON section; Mac archive schema and Mac behavior are
+unchanged. Older backups without the section preserve the iPhone's wardrobe.

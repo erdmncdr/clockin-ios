@@ -62,7 +62,7 @@ extension InsightsSnapshot {
             .init(id: "active500", title: "Permanent practice", requirement: "Work on 500 different days", icon: "calendar.circle.fill", unlocked: daily.count >= 500, progress: progressText(String(daily.count), "500 active days")),
             .init(id: "xp50", title: "XP architect", requirement: "Earn 50,000 XP", icon: "star.circle.fill", unlocked: xp >= 50_000, progress: progressText(String(xp), "50,000 XP")),
             .init(id: "xp100", title: "XP legend", requirement: "Earn 100,000 XP", icon: "sparkles", unlocked: xp >= 100_000, progress: progressText(String(xp), "100,000 XP"))
-        ]
+        ] + collectionBadges
     }
 
     private func progressText(_ current: String, _ target: String) -> String { current + " / " + target }

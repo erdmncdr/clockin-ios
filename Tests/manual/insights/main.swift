@@ -150,9 +150,9 @@ check(starts.earlyBirdSessions == 5 && starts.nightOwlSessions == 5 && starts.we
 let daily: [Date: TimeInterval] = [date(8, 30): 3600, date(8, 31): 7200, date(9, 1): 3600, date(9, 7): 10800]
 let earnings: [Date: Double] = [date(8, 30): 10, date(8, 31): 20, date(9, 1): 10, date(9, 7): 60]
 let weeks = InsightsPeriods.buckets(daily: daily, earnings: earnings, grouping: .week, now: now, calendar: calendar)
-check(weeks.map(\.start) == [date(8, 24), date(8, 31), date(9, 7)], "weeks start Monday across month edge")
-check(weeks.map(\.duration) == [3600, 10800, 10800] && weeks.map(\.earnings) == [10, 30, 60], "weekly cells aggregate full calendar weeks")
-check(weeks[1].intensity == 0.625 && weeks[2].intensity == 1, "relative earnings, not hours, determine aggregate color")
+check(weeks.map(\.start) == [date(8, 29), date(9, 1), date(9, 8)], "weeks stay inside each month")
+check(weeks.map(\.duration) == [10800, 14400, 0] && weeks.map(\.earnings) == [30, 70, 0], "weekly cells aggregate month-aligned days")
+check(weeks[1].intensity == 1 && weeks[2].intensity == 0, "relative earnings, not hours, determine aggregate color")
 let months = InsightsPeriods.buckets(daily: daily, earnings: earnings, grouping: .month, now: now, calendar: calendar)
 check(months.map(\.start) == [date(8, 1), date(9, 1)] && months.map(\.earnings) == [30, 70], "midnight month boundary belongs to new month")
 check(months[0].end == date(9, 1) && months[1].end == date(10, 1), "month end is exclusive")
@@ -169,8 +169,8 @@ check(months[1].conversion(currencyCode: "USD", startRate: nil, latestRate: 40)?
 check(months[1].conversion(currencyCode: "USD", startRate: nil, latestRate: nil) == nil && months[1].conversion(currencyCode: "EUR", startRate: 30, latestRate: 40) == nil, "missing rates and non-USD accounts do not invent TRY amounts")
 var dstCalendar = calendar
 dstCalendar.timeZone = TimeZone(identifier: "America/New_York")!
-let dstStart = dstCalendar.date(from: DateComponents(year: 2026, month: 3, day: 2))!
-let dstNow = dstCalendar.date(from: DateComponents(year: 2026, month: 3, day: 9))!
+let dstStart = dstCalendar.date(from: DateComponents(year: 2026, month: 3, day: 8))!
+let dstNow = dstCalendar.date(from: DateComponents(year: 2026, month: 3, day: 15))!
 let dstPeriods = InsightsPeriods.buckets(daily: [dstStart: 3600], earnings: [:], grouping: .week, now: dstNow, calendar: dstCalendar)
 check(dstPeriods[0].end == dstNow && dstPeriods[0].end.timeIntervalSince(dstStart) == 167 * 3600, "DST week uses calendar boundaries rather than fixed seconds")
 let hourWinner = snapshot([session(date(9, 7, 9), 2), session(date(9, 8, 9), 2), session(date(9, 9, 14), 3)])

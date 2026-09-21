@@ -26,38 +26,16 @@ struct MonthPerformanceView: View {
                 Text("Uses the last 7 days of completed earnings at their historical rates for the days after today.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
-            if let goal = performance.goal {
-                Divider()
-                metric("Monthly goal", (goal.worked / goal.target).formatted(.percent.precision(.fractionLength(0))))
-                SwiftUI.ProgressView(value: goal.fraction)
-                    .accessibilityLabel("Monthly goal progress")
-                Text("\(DurationText.compact(goal.remaining)) remaining of \(DurationText.compact(goal.target))")
-                    .font(.caption).foregroundStyle(.secondary)
-                if performance.isCurrent {
-                    if let projected = performance.projectedDuration {
-                        metric("Projected month end", DurationText.compact(projected))
-                        Text("Uses the last 7 days of completed work, averaged over 7 days, for the days after today.")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    } else {
-                        Text("No completed work in the last 7 days to project from.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if !performance.isCurrent {
-                    Text("Compared with your current monthly goal.")
-                        .font(.caption2).foregroundStyle(.secondary)
-                }
-            }
             Text(comparison)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(performance.difference >= 0 ? palette.accent : .secondary)
-            if performance.duration > 0 || performance.goal != nil {
+            if performance.duration > 0 {
                 ZStack {
                     cumulativeChart
                         .id(interval)
                         .transition(.opacity)
                 }
-                Text("Hours: daily bars, cumulative solid line\(performance.goal == nil ? "." : ", monthly goal dashed line.")")
+                Text("Hours: daily bars and cumulative solid line.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
@@ -89,17 +67,10 @@ struct MonthPerformanceView: View {
                     .accessibilityLabel("Cumulative through \(point.day.formatted(date: .abbreviated, time: .omitted))")
                     .accessibilityValue(DurationText.compact(point.cumulative))
             }
-            ForEach(performance.target) { point in
-                LineMark(x: .value("Day", point.day, unit: .day), y: .value("Hours", point.duration / 3600),
-                         series: .value("Series", "Goal"))
-                    .foregroundStyle(palette.secondary)
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-                    .accessibilityLabel("Goal pace on \(point.day.formatted(date: .abbreviated, time: .omitted))")
-                    .accessibilityValue(DurationText.compact(point.duration))
-            }
+
         }
         .chartXScale(domain: EarningsChartAxis.dateDomain(interval))
-        .chartYScale(domain: 0...max(1, max(performance.duration, performance.goal?.target ?? 0) / 3600))
+        .chartYScale(domain: 0...max(1, performance.duration / 3600))
         .chartXAxis {
             AxisMarks(values: EarningsChartAxis.dayMarks(in: interval)) { _ in
                 AxisValueLabel(format: .dateTime.day())
@@ -107,7 +78,7 @@ struct MonthPerformanceView: View {
         }
         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
         .frame(height: 160)
-        .accessibilityLabel("Monthly hours and goal pace")
+        .accessibilityLabel("Monthly worked hours")
     }
 
     private func metric(_ title: String, _ value: String) -> some View {
