@@ -20,6 +20,15 @@ final class LiveActivityPush: ObservableObject {
     @Published private(set) var registrationStatus: LiveActivityRegistrationStatus = .idle
     private var statusActivityID: String?
 
+    /// Sunucuda kaydi olan token'lar, gecerlilik sonlariyla. Bellekteki
+    /// `registeredTokens` her acilista sifirlaniyor; guncelleme uygulamayi
+    /// oldururken etkinligi de sonlandirdigi icin silme istegi kuyruga
+    /// giremiyor ve sunucudaki kayit "canli" sayilmaya devam ediyordu.
+    private var storedRegistrations: [String: Double] {
+        get { UserDefaults.standard.dictionary(forKey: LiveActivityPrivacy.registeredTokensKey) as? [String: Double] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: LiveActivityPrivacy.registeredTokensKey) }
+    }
+
     private var pendingDeletions: [String: Double] {
         get { UserDefaults.standard.dictionary(forKey: LiveActivityPrivacy.pendingDeletionsKey) as? [String: Double] ?? [:] }
         set {
@@ -121,6 +130,7 @@ final class LiveActivityPush: ObservableObject {
                     guard !Task.isCancelled, LiveActivityPrivacy.enabled else { return }
                     if status == 204 {
                         self?.registeredTokens.insert(token)
+                        self?.remember(token, expiresAt: expiresAt)
                         self?.setStatus(.registered, for: id)
                         return
                     }
@@ -159,6 +169,7 @@ final class LiveActivityPush: ObservableObject {
         let fallback = data?.map { String(format: "%02x", $0) }.joined()
         guard let token = knownTokens.removeValue(forKey: id) ?? fallback else { return }
         registeredTokens.remove(token)
+        forget(token)
         queueDeletion(token, expiresAt: expiresAt ?? .now.addingTimeInterval(8 * 3600))
     }
 
@@ -169,8 +180,37 @@ final class LiveActivityPush: ObservableObject {
         retryPendingDeletions()
     }
 
+    private func remember(_ token: String, expiresAt: Date) {
+        var stored = storedRegistrations
+        stored[token] = max(stored[token] ?? 0, expiresAt.timeIntervalSince1970)
+        storedRegistrations = stored
+    }
+
+    private func forget(_ token: String) {
+        var stored = storedRegistrations
+        stored.removeValue(forKey: token)
+        storedRegistrations = stored
+    }
+
+    /// Yasayan bir etkinlige ait olmayan her kaydi silme kuyruguna alir.
+    /// Bir etkinligin token'i henuz gelmediyse tur atlanir, yoksa yasayan
+    /// bir kayit yanlislikla silinebilirdi.
+    private func reconcileRegistrations() {
+        var stored = storedRegistrations
+        guard !stored.isEmpty else { return }
+        let activities = Activity<ClockinActivityAttributes>.activities
+        guard activities.allSatisfy({ $0.pushToken != nil }) else { return }
+        let live = Set(activities.compactMap { $0.pushToken?.map { String(format: "%02x", $0) }.joined() })
+        let stale = LiveActivityRegistry.stale(stored: stored, live: live)
+        guard !stale.isEmpty else { return }
+        for token in stale.keys { stored.removeValue(forKey: token) }
+        storedRegistrations = stored
+        pendingDeletions = LiveActivityRegistry.merging(queue: pendingDeletions, with: stale)
+    }
+
     func retryPendingDeletions() {
         guard let endpoint = Self.endpoint else { return }
+        reconcileRegistrations()
         var queued = pendingDeletions
         queued = queued.filter { $0.value > Date.now.timeIntervalSince1970 }
         pendingDeletions = queued

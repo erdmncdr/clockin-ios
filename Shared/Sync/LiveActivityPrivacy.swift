@@ -4,6 +4,7 @@ enum LiveActivityPrivacy {
     // New, versioned opt-in: earlier automatic registrations are not consent.
     static let consentKey = "Clockin.RemoteActivityConsent.v2"
     static let pendingDeletionsKey = "Clockin.RemoteActivityPendingDeletions.v2"
+    static let registeredTokensKey = "Clockin.RemoteActivityRegisteredTokens.v1"
     static let setupSeenKey = "Clockin.LiveActivitySetupSeen.v1"
     static var enabled: Bool { isEnabled(in: .standard) }
     static func isEnabled(in defaults: UserDefaults) -> Bool { defaults.bool(forKey: consentKey) }
