@@ -273,8 +273,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         }
         guard id.hasPrefix("Clockin.FocusChime."), enabled,
               let running = SharedStore.clock.running, !running.isPaused else { return [] }
+        // Uygulama ondeyken cani kendimiz caliyoruz, banner ayni olayi ikinci
+        // kez duyurmak olurdu. Bes dakikalik aralikta saatte on iki banner
+        // birikiyordu. Ses kalir, bildirim gorunmez ve listede iz birakmaz.
         play(FocusChimeSound.migrate())
-        return [.banner]
+        clearDelivered()
+        return []
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
