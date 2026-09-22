@@ -9,7 +9,7 @@ var checks = 0
 }
 let now = Date(timeIntervalSince1970: 1_800_000_000)
 func dates(_ worked: Double, interval: Int = 10, paused: Bool = false,
-           enabled: Bool = true, count: Int = 20, at date: Date = now) -> [Date] {
+           enabled: Bool = true, count: Int = ChimeSchedule.maximumCount, at date: Date = now) -> [Date] {
     ChimeSchedule.fireDates(now: date, worked: worked, isPaused: paused,
         enabled: enabled, intervalMinutes: interval, count: count)
 }
@@ -25,10 +25,15 @@ check(dates(750, interval: 5).first == now.addingTimeInterval(150), "interval ch
 check(dates(750, interval: 20).first == now.addingTimeInterval(450), "longer interval skips old baseline")
 check(dates(750, enabled: false).isEmpty, "disabled chime has no schedule")
 check(dates(750).first == now.addingTimeInterval(450), "enabling mid-session does not replay missed chimes")
-check(dates(0, count: 100).count == 20, "request count capped at twenty")
+check(dates(0, count: 100).count == ChimeSchedule.maximumCount, "request count capped at the maximum")
+// Varsayilan on dakikalik aralikta kuyruk bir is gununu kapsamali; yirmi bildirim
+// yalnizca 3 saat 20 dakika ediyordu ve telefon cepteyken chime susuyordu.
+check(dates(0).last!.timeIntervalSince(now) >= 7 * 3600,
+    "default interval covers at least seven hours before the queue runs out")
 check(dates(0, count: 3).count == 3, "available notification slots respected")
 check(dates(0, count: 0).isEmpty && dates(0, count: -1).isEmpty, "no slots produce no dates")
-check(dates(0).last == now.addingTimeInterval(12000), "all twenty dates are spaced by interval")
+check(dates(0).last == now.addingTimeInterval(Double(ChimeSchedule.maximumCount) * 600),
+    "every date is spaced by the interval up to the last slot")
 check(dates(0, interval: 0).first == now.addingTimeInterval(600), "unset preference defaults to ten minutes")
 check(dates(0, interval: -1).first == now.addingTimeInterval(60), "interval lower bound is one minute")
 check(dates(0, interval: 200).first == now.addingTimeInterval(7200), "interval upper bound is 120 minutes")
@@ -42,9 +47,11 @@ let deliveredDate = now.addingTimeInterval(351)
 let afterDelivery = pending.filter { $0.value > deliveredDate }
 let topUp = ChimeSchedule.reconcile(desired: dates(601, at: deliveredDate), existing: afterDelivery)
 check(topUp.removed.isEmpty && topUp.additions.count == 1, "one delivered chime only adds one new tail request")
-check(topUp.additions[0] == deliveredDate.addingTimeInterval(11999), "top-up reuses the free slot at the next boundary")
+check(topUp.additions[0] == deliveredDate.addingTimeInterval(Double(ChimeSchedule.maximumCount - 1) * 600 + 599),
+    "top-up reuses the free slot at the next boundary")
 let stopped = ChimeSchedule.reconcile(desired: [], existing: pending)
-check(stopped.removed.count == 20 && stopped.additions.isEmpty, "pause or clock out clears all pending chimes")
+check(stopped.removed.count == ChimeSchedule.maximumCount && stopped.additions.isEmpty,
+    "pause or clock out clears all pending chimes")
 let empty = ChimeSchedule.reconcile(desired: dates(0, count: 3), existing: [:])
 check(empty.additions.count == 3 && empty.removed.isEmpty, "empty queue is filled within the available capacity")
 let changed = ChimeSchedule.reconcile(desired: dates(250, interval: 7), existing: pending)

@@ -3,7 +3,12 @@ import Foundation
 /// Mac gibi mevcut kovayi atlar; ayar degisince gecmis esikler calinmaz.
 /// Duvar saati yerine molalar cikarilmis calisma suresi verilir.
 enum ChimeSchedule {
-    static let maximumCount = 20
+    /// Yirmi bildirim varsayilan on dakikalik aralikta yalnizca 3 saat 20 dakika
+    /// eder; kuyrugu dolduran tek sey uygulamanin on plana gelmesi oldugu icin
+    /// telefon cepteyken uzun mesai sessize duserdi. Kirk bes bildirim 7,5 saat
+    /// tutar. iOS uygulama basina 64 bekleyen bildirime izin veriyor; kalani
+    /// hatirlatici ve nudgelara yeter ve `drain` zaten gercek bosluga gore kirpiyor.
+    static let maximumCount = 45
 
     static func fireDates(now: Date, worked: TimeInterval, isPaused: Bool,
                           enabled: Bool, intervalMinutes: Int, count: Int = maximumCount) -> [Date] {

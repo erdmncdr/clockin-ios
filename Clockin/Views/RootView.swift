@@ -154,6 +154,7 @@ struct RootView: View {
         .task(id: scenePhase) {
             // Arka plana gecerken hazir kuyrugu silme; uygulama eklerken askiya alinabilir.
             guard scenePhase == .active else { return }
+            FocusChimeController.shared.clearDelivered()
             reminder.update(running: store.running, force: true)
             nudges.update(store: store)
             updateChimes(force: true)

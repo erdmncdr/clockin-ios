@@ -76,8 +76,8 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     }
 
     /// Girdiler degismediyse kuyruga dokunulmaz. `SessionMirror` her kayit
-    /// duzenlemesinde cagirir; her seferinde yirmi bildirimi silip yeniden
-    /// kurmak gereksiz. On plandaki dakikalik tamamlama `force` ile gelir.
+    /// duzenlemesinde cagirir; her seferinde butun kuyrugu silip yeniden kurmak
+    /// gereksiz. On plandaki dakikalik tamamlama `force` ile gelir.
     func update(running: RunningSession?, enabled: Bool, interval: Int, sound: String, force: Bool = false) {
         let selected = FocusChimeSound.selected(sound)
         let input = Input(running: running, enabled: enabled, interval: interval, sound: selected.rawValue)
@@ -127,7 +127,11 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             let existing = Dictionary(uniqueKeysWithValues: pending.compactMap { request -> (Int, Date)? in
                 guard let slot = identifiers.firstIndex(of: request.identifier) else { return nil }
                 let date = (request.content.userInfo["fireDate"] as? Double).map(Date.init(timeIntervalSinceReferenceDate:))
-                return (slot, date ?? .distantPast)
+                // Sesi degisen bildirim korunamaz: eslesme yalnizca tarihe bakiyordu ve
+                // kuyrukta bekleyenler eski sesle calmaya devam ediyordu. Gecmis bir
+                // tarih hicbir istenen tarihle eslesmez, boylece slot yeniden kurulur.
+                let stale = request.content.userInfo["sound"] as? String != sound.fileName
+                return (slot, stale ? .distantPast : (date ?? .distantPast))
             })
             // Dakikalik tamamlama ayni bildirimleri silip eklemez.
             let changes = ChimeSchedule.reconcile(desired: dates, existing: existing)
@@ -141,7 +145,9 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 content.title = "Focus chime"
                 content.body = "Another interval of focused work."
                 content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: sound.fileName))
-                content.userInfo = ["fireDate": date.timeIntervalSinceReferenceDate]
+                // Tek baslik altinda toplanir; kirk bes ayri satir yerine bir yigin gorunur.
+                content.threadIdentifier = Self.threadIdentifier
+                content.userInfo = ["fireDate": date.timeIntervalSinceReferenceDate, "sound": sound.fileName]
                 let delay = date.timeIntervalSinceNow
                 guard delay > 0 else { continue }
                 let request = UNNotificationRequest(identifier: identifiers[index], content: content,
@@ -149,6 +155,20 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 do { try await center.add(request) }
                 catch { errorMessage = "Could not schedule chimes: \(error.localizedDescription)"; break }
             }
+        }
+    }
+
+    static let threadIdentifier = "Clockin.FocusChime"
+
+    /// Uygulama one gelince teslim edilmis chime bildirimleri birikmesin.
+    /// Yalnizca burada silinir: az once dusmus bir banneri kapatmamak icin
+    /// arka plandaki planlama turlarinda dokunulmaz.
+    func clearDelivered() {
+        center.getDeliveredNotifications { [weak self] delivered in
+            let ids = delivered.filter { $0.request.content.threadIdentifier == Self.threadIdentifier }
+                .map { $0.request.identifier }
+            guard !ids.isEmpty else { return }
+            Task { @MainActor in self?.center.removeDeliveredNotifications(withIdentifiers: ids) }
         }
     }
 
@@ -229,35 +249,52 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         }
     }
 
+    /// Tamamlama bloklu bicim, `async` bicim degil. `nonisolated async` yazildiginda
+    /// Swift'in urettigi Objective-C tamamlama blogu, islev hangi is parcaciginda
+    /// bittiyse orada cagriliyordu; UIKit o blogun icinde ana is parcacigi bekledigi
+    /// icin dogruluyor ve uygulama abort ediyordu. Burada bildirimden yalnizca
+    /// tasinabilir degerler okunur, karar ana aktorde verilir ve blok orada cagrilir.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void) {
         let id = notification.request.identifier
-        if id.hasPrefix(NudgePlanner.prefix) { return [] }
-        if id == LongSessionReminderNotification.identifier {
-            let start = Self.reminderStart(notification.request.content)
-            return await MainActor.run {
-                LongSessionReminderController.shared.shouldPresent(start: start) ? [.sound, .banner] : []
-            }
-        }
-        guard id.hasPrefix("Clockin.FocusChime.") else { return [] }
-        return await MainActor.run {
-            guard self.enabled, let running = SharedStore.clock.running, !running.isPaused else { return [] }
-            self.play(FocusChimeSound.migrate())
-            return [.banner]
+        let reminderStart = Self.reminderStart(notification.request.content)
+        Task { @MainActor in
+            completionHandler(self.presentation(for: id, reminderStart: reminderStart))
         }
     }
 
+    private func presentation(for id: String, reminderStart: Date?) -> UNNotificationPresentationOptions {
+        if id.hasPrefix(NudgePlanner.prefix) { return [] }
+        if id == LongSessionReminderNotification.identifier {
+            return LongSessionReminderController.shared.shouldPresent(start: reminderStart) ? [.sound, .banner] : []
+        }
+        guard id.hasPrefix("Clockin.FocusChime."), enabled,
+              let running = SharedStore.clock.running, !running.isPaused else { return [] }
+        play(FocusChimeSound.migrate())
+        return [.banner]
+    }
+
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse) async {
-        if response.notification.request.identifier.hasPrefix(NudgePlanner.prefix) {
-            if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
-                await MainActor.run { NudgeController.shared.openToday = true }
-            }
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void) {
+        let id = response.notification.request.identifier
+        let category = response.notification.request.content.categoryIdentifier
+        let action = response.actionIdentifier
+        let reminderStart = Self.reminderStart(response.notification.request.content)
+        Task { @MainActor in
+            await Self.handle(id: id, category: category, action: action, reminderStart: reminderStart)
+            completionHandler()
+        }
+    }
+
+    private static func handle(id: String, category: String, action: String, reminderStart: Date?) async {
+        if id.hasPrefix(NudgePlanner.prefix) {
+            if action == UNNotificationDefaultActionIdentifier { NudgeController.shared.openToday = true }
             return
         }
-        guard response.notification.request.content.categoryIdentifier == LongSessionReminderNotification.category else { return }
-        let start = Self.reminderStart(response.notification.request.content)
-        await LongSessionReminderController.shared.handle(action: response.actionIdentifier, start: start)
+        guard category == LongSessionReminderNotification.category else { return }
+        await LongSessionReminderController.shared.handle(action: action, start: reminderStart)
     }
 
     nonisolated private static func reminderStart(_ content: UNNotificationContent) -> Date? {
