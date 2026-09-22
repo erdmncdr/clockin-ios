@@ -65,8 +65,10 @@ MainActor.assumeIsolated {
     check(legacy.effectiveRateRule(at: today)?.hourlyRate == legacy.currentRate(at: today),
           "legacy duplicate dates select the same current label and earnings rate")
 
-    // Adjacent entries inside the same minute are not overlapping. Editors
-    // must pass the preserved saved times, not the minute-only picker values.
+    // Adjacent entries inside the same minute are not overlapping, and neither
+    // are the minute-only values a picker hands back for them: SessionOverlap
+    // treats a shared handoff minute as a handover. Editors still pass the
+    // preserved saved times, because seconds belong to the saved duration.
     let end = today.addingTimeInterval(9 * 3600 + 30)
     let first = WorkSession(id: UUID(), start: end.addingTimeInterval(-3600), end: end,
                             duration: 3600, note: "", hourlyRate: 40, source: "Clockin")
@@ -75,8 +77,14 @@ MainActor.assumeIsolated {
     check(SessionOverlap.touching(start: second.start, end: second.end, in: [first, second], excluding: second.id).isEmpty,
           "saved second-precision adjacent entries have no overlap")
     check(SessionOverlap.touching(start: calendar.dateInterval(of: .minute, for: second.start)!.start,
-                                  end: second.end, in: [first, second], excluding: second.id).count == 1,
-          "minute-only editor times reproduce the false overlap")
+                                  end: second.end, in: [first, second], excluding: second.id).isEmpty,
+          "minute-only editor times no longer warn about the handoff minute")
+    // The exception is only for the handoff minute; a real overlap still warns.
+    let overlapping = WorkSession(id: UUID(), start: end.addingTimeInterval(-1800), end: end.addingTimeInterval(1800),
+                                  duration: 3600, note: "", hourlyRate: 40, source: "Clockin")
+    check(SessionOverlap.touching(start: overlapping.start, end: overlapping.end,
+                                  in: [first, overlapping], excluding: overlapping.id).count == 1,
+          "an entry that genuinely runs through another is still reported")
     let longStart = yesterday.addingTimeInterval(9 * 3600 + 17)
     let longEnd = calendar.date(byAdding: .hour, value: 26, to: longStart)!
     let long = WorkSession(id: UUID(), start: longStart, end: longEnd, duration: 25 * 3600,
