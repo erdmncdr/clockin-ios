@@ -158,7 +158,9 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         }
     }
 
-    static let threadIdentifier = "Clockin.FocusChime"
+    /// `getDeliveredNotifications` geri cagrisi ana aktorde degil; sabit de
+    /// nonisolated olmali, yoksa oradan okunamaz.
+    nonisolated static let threadIdentifier = "Clockin.FocusChime"
 
     /// Uygulama one gelince teslim edilmis chime bildirimleri birikmesin.
     /// Yalnizca burada silinir: az once dusmus bir banneri kapatmamak icin
