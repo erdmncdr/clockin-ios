@@ -66,7 +66,14 @@ Clockin began as a macOS app built with a collaborator. This iPhone version is
 a separate application written for the phone: its screens, widgets, Live
 Activity, companion and check suite are new here. `Shared/Core`, the store,
 models and importers, started as a port of that macOS core and has grown apart
-from it since.
+from it since. That macOS app is MIT licensed and its notice is kept in
+`NOTICE.md`.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
+Read it, build it, change it, share it, for any purpose that is not commercial.
+Commercial use needs permission. The full terms are in `LICENSE`.
 
 ## Checks
 
