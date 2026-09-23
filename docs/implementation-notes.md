@@ -54,6 +54,23 @@ which both the app and the widget extension compile, and Siri phrases in
 - The importers keep English keywords and `en_US_POSIX` formatters; they read
   other people's files.
 
+## Rank badge and mission medals
+
+Both are drawn in code from one material (`Clockin/Celebrations/PrestigeForge.swift`).
+A single light sits above and to the left. Every edge of a frame or ring is its
+own flat face, shaded by how directly its outward normal faces that light, so
+straight chamfers read as machined facets and curves as turned metal. Faces are
+recessed with the shadow of the rim falling into them; gems are eight facets
+shaded the same way.
+
+- Ranks add structure, not loose decoration: chamfers, an engraved second rim,
+  a two-tier molding, a halo around the socket, then a crest, an arch and a
+  seal. Mission tiers grow their ring the same way; Eternal adds a second ring.
+- Locked medals are matte steel with the emblem engraved instead of raised.
+- The only motion is a band of light crossing the metal (every few seconds on
+  the rank badge, once on reveal for medals) and a glint on the gem. The moving
+  layer is separate from the drawn body so the body is not redrawn per frame.
+
 ## Focus chime sounds
 
 The eight original sounds are synthesized from sine partials and deterministic

@@ -6,7 +6,8 @@ extension LevelPrestige {
     var shade: Color { Color(hue: hue, saturation: 0.75, brightness: 0.43) }
 }
 
-/// Shared by the dashboard, Badges and the level-up card.
+/// Shared by the dashboard, Badges and the level-up card: a groove cut into
+/// the surface with a glossy fill, lit from the same side as the badge.
 struct PrestigeProgressBar: View {
     let level: Int
     let progress: Double
@@ -17,15 +18,8 @@ struct PrestigeProgressBar: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let width = geometry.size.width * fraction
-            ZStack(alignment: .leading) {
-                Capsule().fill(style.shade.opacity(0.16))
-                Capsule().fill(LinearGradient(colors: [style.shade, style.tint, style.highlight],
-                    startPoint: .leading, endPoint: .trailing))
-                    .frame(width: width)
-            }
-            .clipShape(Capsule())
-            .overlay(Capsule().strokeBorder(style.tint.opacity(0.22), lineWidth: 1))
+            PrestigeGroove(style: style, fraction: fraction)
+                .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .frame(height: height)
         .accessibilityElement(children: .ignore)
@@ -34,134 +28,166 @@ struct PrestigeProgressBar: View {
     }
 }
 
-/// A single continuous body, with earned bevels and inset metal layers.
+/// The recessed track and its fill, used at every size.
+struct PrestigeGroove: View {
+    let style: LevelPrestige
+    let fraction: Double
+    var body: some View {
+        Canvas { context, size in
+            let h = size.height, track = CGRect(origin: .zero, size: size)
+            let groove = Path(roundedRect: track, cornerRadius: h / 2)
+            context.fill(groove, with: .linearGradient(Gradient(colors: [.black.opacity(0.75), style.faceBottom.opacity(0.9)]),
+                                                       startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+            // Shadow thrown by the upper lip of the groove.
+            context.drawLayer { layer in
+                layer.clip(to: groove)
+                layer.addFilter(.blur(radius: max(0.6, h * 0.18)))
+                layer.stroke(groove.offsetBy(dx: 0, dy: h * 0.18), with: .color(.black.opacity(0.8)), lineWidth: max(1, h * 0.3))
+            }
+            let width = size.width * fraction
+            if width > 0.5 {
+                let fill = Path(roundedRect: CGRect(x: 0, y: 0, width: max(width, h), height: h).insetBy(dx: 0.5, dy: 0.5),
+                                cornerRadius: h / 2)
+                context.drawLayer { layer in
+                    layer.clip(to: groove)
+                    layer.fill(fill, with: .linearGradient(Gradient(colors: [style.gemTone(0.95), style.gemTone(0.62), style.gemTone(0.42)]),
+                                                           startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+                    // Gloss on the upper half, as on a rounded glass rod.
+                    let gloss = Path(roundedRect: CGRect(x: h * 0.3, y: h * 0.12, width: max(0, max(width, h) - h * 0.6), height: h * 0.34),
+                                     cornerRadius: h * 0.17)
+                    layer.fill(gloss, with: .color(.white.opacity(0.42)))
+                }
+            }
+            // Lower lip catches the light.
+            var lip = Path()
+            lip.move(to: CGPoint(x: h / 2, y: h - 0.4)); lip.addLine(to: CGPoint(x: size.width - h / 2, y: h - 0.4))
+            context.stroke(lip, with: .color(.white.opacity(0.14)), lineWidth: 0.6)
+        }
+    }
+}
+
+/// The badge body's silhouette, for backgrounds and hit areas.
 struct PrestigePlate: Shape {
     let stage: Int
-    func path(in r: CGRect) -> Path {
-        if stage == 0 { return Path(roundedRect: r, cornerRadius: min(13, r.height / 2)) }
-        let cut = min(stage >= 4 ? 13.0 : (stage >= 3 ? 10.0 : 6.0), r.height * 0.3)
-        var p = Path()
-        let points = [CGPoint(x: r.minX + cut, y: r.minY), CGPoint(x: r.maxX - cut, y: r.minY),
-                      CGPoint(x: r.maxX, y: r.minY + cut), CGPoint(x: r.maxX, y: r.maxY - cut),
-                      CGPoint(x: r.maxX - cut, y: r.maxY), CGPoint(x: r.minX + cut, y: r.maxY),
-                      CGPoint(x: r.minX, y: r.maxY - cut), CGPoint(x: r.minX, y: r.minY + cut)]
-        p.addLines(points); p.closeSubpath(); return p
-    }
+    func path(in r: CGRect) -> Path { PrestigeOutline.path(PrestigeOutline.plate(stage: stage, in: r)) }
 }
 
-/// Static forged geometry remains legible even with motion and color removed.
+/// The forged body behind the badge content: beveled metal rim, recessed
+/// face, and the ornaments each rank earns. Ranks add structure, never loose
+/// decoration, and all of it is lit from the same side.
 struct PrestigeMetalFrame: View {
     let style: LevelPrestige
+    private static let margin: CGFloat = 22
+
     var body: some View {
         Canvas { original, fullSize in
-            // Canvas clips at its bounds: reserve room for the earned silhouette.
             var context = original
-            context.translateBy(x: 22, y: 22)
-            let size = CGSize(width: fullSize.width - 44, height: fullSize.height - 44)
-            let rect = CGRect(origin: .zero, size: size)
-            let metal = Gradient(colors: [style.highlight, style.tint.opacity(0.8), style.shade, style.highlight.opacity(0.7)])
-            func plate(_ p: Path) {
-                context.fill(p, with: .linearGradient(metal, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                context.stroke(p, with: .color(style.highlight.opacity(0.65)), lineWidth: 0.6)
-            }
-            if style.stage >= 2 {
-                let inset = rect.insetBy(dx: 3, dy: 3)
-                context.stroke(PrestigePlate(stage: style.stage).path(in: inset), with: .color(style.highlight.opacity(0.38)), lineWidth: 0.7)
-            }
-            // Beveled facets are cut into the existing body, never attached outside.
-            if style.stage >= 3 {
-                let cut = min(style.stage >= 4 ? 13.0 : 10.0, size.height * 0.3)
-                for side in [-1.0, 1.0] {
-                    let edge = side < 0 ? 0.0 : size.width
-                    let inward = -side
-                    var bevel = Path()
-                    bevel.addLines([
-                        CGPoint(x: edge + inward * cut, y: 0.7),
-                        CGPoint(x: edge + inward * 0.7, y: cut),
-                        CGPoint(x: edge + inward * 0.7, y: size.height - cut),
-                        CGPoint(x: edge + inward * cut, y: size.height - 0.7),
-                        CGPoint(x: edge + inward * (cut + 1.5), y: size.height - 3),
-                        CGPoint(x: edge + inward * 3, y: size.height - cut - 1),
-                        CGPoint(x: edge + inward * 3, y: cut + 1),
-                        CGPoint(x: edge + inward * (cut + 1.5), y: 3)])
-                    bevel.closeSubpath(); plate(bevel)
-                }
-            }
-            if style.stage >= 5 {
-                // A recessed satin rail follows the top and bottom of the frame.
-                let inset = min(16.0, size.width * 0.2)
-                for y in [2.5, size.height - 2.5] {
-                    var rail = Path()
-                    rail.move(to: CGPoint(x: inset, y: y))
-                    rail.addLine(to: CGPoint(x: size.width - inset, y: y))
-                    context.stroke(rail, with: .linearGradient(Gradient(colors: [style.shade, style.highlight.opacity(0.8), style.shade]), startPoint: CGPoint(x: inset, y: y), endPoint: CGPoint(x: size.width - inset, y: y)), lineWidth: 1)
-                }
-            }
-            if style.stage >= 6 {
-                let x = size.width / 2
-                var crown = Path()
-                crown.addLines([CGPoint(x: x - 11, y: 0), CGPoint(x: x - 14, y: -6),
-                                CGPoint(x: x - 6, y: -4), CGPoint(x: x, y: -11),
-                                CGPoint(x: x + 6, y: -4), CGPoint(x: x + 14, y: -6), CGPoint(x: x + 11, y: 0)])
-                crown.closeSubpath(); plate(crown)
-            }
-            if style.stage >= 7 {
-                var arch = Path()
-                arch.move(to: CGPoint(x: size.width * 0.18, y: -2))
-                arch.addQuadCurve(to: CGPoint(x: size.width * 0.82, y: -2), control: CGPoint(x: size.width / 2, y: -23))
-                context.stroke(arch, with: .color(style.highlight.opacity(0.7)), lineWidth: 0.8)
-            }
-            if style.stage >= 8 {
-                // Apex stays apex at 675+; the core retains its platinum inner cut.
-                let x = size.width / 2, y = size.height + 3
-                var seal = Path()
-                seal.addLines([CGPoint(x: x - 6, y: y), CGPoint(x: x, y: y + 5), CGPoint(x: x + 6, y: y), CGPoint(x: x, y: y - 3)])
-                seal.closeSubpath(); plate(seal)
-            }
-        }.padding(-22).allowsHitTesting(false).accessibilityHidden(true)
+            context.translateBy(x: Self.margin, y: Self.margin)
+            let size = CGSize(width: fullSize.width - Self.margin * 2, height: fullSize.height - Self.margin * 2)
+            Self.draw(&context, size: size, style: style)
+        }
+        .padding(-Self.margin).allowsHitTesting(false).accessibilityHidden(true)
+    }
+
+    static func rimWidth(_ stage: Int) -> CGFloat { stage == 0 ? 2.4 : (stage >= 4 ? 3.6 : 3) }
+
+    static func draw(_ context: inout GraphicsContext, size: CGSize, style: LevelPrestige) {
+        let stage = style.stage
+        let outer = PrestigeOutline.plate(stage: stage, in: CGRect(origin: .zero, size: size))
+        let rim = rimWidth(stage)
+        let inner = PrestigeOutline.inset(outer, by: rim)
+        let face = PrestigeOutline.path(inner)
+
+        // Soft contact shadow under the whole piece.
+        context.drawLayer { layer in
+            layer.addFilter(.blur(radius: 3))
+            layer.fill(PrestigeOutline.path(outer).offsetBy(dx: 0, dy: 1.5), with: .color(.black.opacity(0.55)))
+        }
+        if stage >= 6 { crest(&context, size: size, style: style, arch: stage >= 7) }
+
+        // Rim: one face per edge; the higher ranks cut it into two tiers.
+        if stage >= 4 {
+            let mid = PrestigeOutline.inset(outer, by: rim * 0.55)
+            PrestigeBevel.band(&context, outer: outer, inner: mid, style: style.tone)
+            PrestigeBevel.band(&context, outer: mid, inner: inner, style: style.tone, sloping: true)
+        } else {
+            PrestigeBevel.band(&context, outer: outer, inner: inner, style: style.tone)
+        }
+
+        // Recessed face with the shadow of the upper rim falling into it.
+        let top = inner.map(\.y).min() ?? 0, bottom = inner.map(\.y).max() ?? size.height
+        context.fill(face, with: .linearGradient(Gradient(colors: [style.faceTop, style.faceBottom]),
+                                                 startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: bottom)))
+        context.fill(face, with: .radialGradient(Gradient(colors: [style.tint.opacity(0.22), .clear]),
+                                                 center: CGPoint(x: 23, y: size.height / 2), startRadius: 0, endRadius: size.height * 0.75))
+        context.drawLayer { layer in
+            layer.clip(to: face)
+            layer.addFilter(.blur(radius: 2.2))
+            layer.stroke(face.offsetBy(dx: 0, dy: 1.8), with: .color(.black.opacity(0.75)), lineWidth: 4)
+        }
+        if stage >= 2 {
+            // Double rim: a fine engraved line a little inside the face.
+            let groove = PrestigeOutline.path(PrestigeOutline.inset(inner, by: 2.4))
+            context.stroke(groove, with: .color(.black.opacity(0.55)), lineWidth: 0.8)
+            context.stroke(groove.offsetBy(dx: 0, dy: 0.6), with: .color(style.highlight.opacity(0.16)), lineWidth: 0.5)
+        }
+        // Silhouette and the light catching the rim's upper edges.
+        context.stroke(PrestigeOutline.path(outer), with: .color(.black.opacity(0.55)), lineWidth: 0.7)
+        PrestigeBevel.glint(&context, outer, inset: 0.55)
+        if stage >= 8 {
+            let seal = PrestigeOutline.seal(centerX: size.width / 2, bottom: size.height, width: 16, height: 10)
+            PrestigeBevel.ornament(&context, outline: seal, style: style.tone)
+        }
+    }
+
+    private static func crest(_ context: inout GraphicsContext, size: CGSize, style: LevelPrestige, arch: Bool) {
+        let x = size.width / 2
+        if arch {
+            // Celestial arch: a beveled band springing from the crest's shoulders.
+            var band = Path()
+            band.move(to: CGPoint(x: size.width * 0.2, y: 1))
+            band.addQuadCurve(to: CGPoint(x: size.width * 0.8, y: 1), control: CGPoint(x: x, y: -20))
+            context.stroke(band.offsetBy(dx: 0, dy: 1), with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 3.4, lineCap: .round))
+            context.stroke(band, with: .linearGradient(Gradient(colors: [style.metal(0.95), style.metal(0.55), style.metal(0.3)]),
+                                                      startPoint: CGPoint(x: x, y: -12), endPoint: CGPoint(x: x, y: 2)),
+                           style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            context.stroke(band.offsetBy(dx: 0, dy: -0.7), with: .color(.white.opacity(0.35)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round))
+        }
+        PrestigeBevel.ornament(&context, outline: PrestigeOutline.crest(centerX: x, top: 0, width: 34, height: 16), style: style.tone)
     }
 }
 
-/// Faceted luminous core: rank is communicated by the surrounding metalwork,
-/// not a second numeric label competing with the actual level.
+/// The rank's gem, set in a socket cut into the face. Rank is carried by the
+/// metalwork around it, not by a second label competing with the level.
 struct PrestigeInsignia: View {
     let style: LevelPrestige
     var body: some View {
         Canvas { context, size in
-            let cx = size.width / 2, cy = size.height / 2
-            let rx = style.stage >= 4 ? 10.0 : 8.0
-            let ry = style.stage >= 4 ? 12.0 : 10.0
-            let top = CGPoint(x: cx, y: cy - ry)
-            let right = CGPoint(x: cx + rx, y: cy - 2)
-            let bottom = CGPoint(x: cx, y: cy + ry)
-            let left = CGPoint(x: cx - rx, y: cy - 2)
-            let core = CGPoint(x: cx - 1.5, y: cy - 1)
-            var outline = Path()
-            outline.addLines([top, right, bottom, left]); outline.closeSubpath()
-            // Quiet socket and cast shadow let the crystal sit inside the frame.
-            let socket = CGRect(x: 1, y: 1, width: size.width - 2, height: size.height - 2)
-            context.fill(Path(ellipseIn: socket), with: .radialGradient(Gradient(colors: [style.tint.opacity(0.28), .clear]), center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: size.width / 2))
-            context.fill(outline, with: .linearGradient(Gradient(colors: [style.highlight, style.tint, style.shade]), startPoint: top, endPoint: bottom))
-            func facet(_ points: [CGPoint], _ color: Color) {
-                var p = Path(); p.addLines(points); p.closeSubpath()
-                context.fill(p, with: .color(color))
+            let side = min(size.width, size.height)
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let socket = CGRect(x: c.x - side / 2 + 0.5, y: c.y - side / 2 + 0.5, width: side - 1, height: side - 1)
+            let well = Path(ellipseIn: socket)
+            context.fill(well, with: .radialGradient(Gradient(colors: [style.tint.opacity(0.55), style.tint.opacity(0.12), style.faceBottom.opacity(0.9)]),
+                                                     center: CGPoint(x: c.x, y: c.y - side * 0.04), startRadius: 0, endRadius: side / 2))
+            context.drawLayer { layer in
+                layer.clip(to: well)
+                layer.addFilter(.blur(radius: 1.4))
+                layer.stroke(well.offsetBy(dx: 0, dy: 1.2), with: .color(.black.opacity(0.8)), lineWidth: 2.4)
             }
-            facet([top, core, left], style.highlight.opacity(0.9))
-            facet([top, right, core], style.tint.opacity(0.85))
-            facet([left, core, bottom], style.tint.opacity(0.65))
-            facet([core, right, bottom], style.shade.opacity(0.8))
-            context.stroke(outline, with: .linearGradient(Gradient(colors: [.white.opacity(0.9), style.tint.opacity(0.15)]), startPoint: top, endPoint: bottom), lineWidth: 0.7)
-            var reflection = Path()
-            reflection.move(to: CGPoint(x: left.x + 2, y: left.y))
-            reflection.addLine(to: CGPoint(x: top.x, y: top.y + 3))
-            context.stroke(reflection, with: .color(.white.opacity(0.8)), style: StrokeStyle(lineWidth: 1, lineCap: .round))
-            if style.stage >= 6 {
-                // A platinum inner cut distinguishes the highest cores.
-                var cut = Path()
-                cut.addLines([CGPoint(x: cx, y: cy - 5), CGPoint(x: cx + 3, y: cy - 1), CGPoint(x: cx, y: cy + 4), CGPoint(x: cx - 3, y: cy - 1)])
-                cut.closeSubpath()
-                context.fill(cut, with: .linearGradient(Gradient(colors: [.white, style.highlight.opacity(0.4)]), startPoint: top, endPoint: bottom))
+            if style.stage >= 5 {
+                // Satin halo: a thin polished ring around the socket.
+                let ring = Path(ellipseIn: socket)
+                context.stroke(ring, with: .linearGradient(Gradient(colors: [style.metal(0.98), style.metal(0.45), style.metal(0.2), style.metal(0.6)]),
+                                                           startPoint: CGPoint(x: socket.minX, y: socket.minY), endPoint: CGPoint(x: socket.maxX, y: socket.maxY)),
+                               lineWidth: 1.3)
+            } else {
+                // The socket's lower lip catches the light; its upper lip is in shadow.
+                context.stroke(well, with: .linearGradient(Gradient(colors: [.black.opacity(0.7), style.metal(0.75).opacity(0.7)]),
+                                                           startPoint: CGPoint(x: c.x, y: socket.minY), endPoint: CGPoint(x: c.x, y: socket.maxY)),
+                               lineWidth: 0.9)
             }
+            let g = side * (style.stage >= 4 ? 0.9 : 0.84)
+            PrestigeGem.draw(&context, in: CGRect(x: c.x - g / 2, y: c.y - g / 2 - side * 0.03, width: g, height: g), style: style.tone)
         }.accessibilityHidden(true)
     }
 }

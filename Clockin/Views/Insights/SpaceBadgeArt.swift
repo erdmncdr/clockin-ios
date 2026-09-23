@@ -12,116 +12,195 @@ extension BadgeTier {
         }
     }
     var highlight: Color { self == .eternal ? .white : tint.opacity(0.65) }
-}
-
-struct SpaceInsignia: Shape {
-    let stage: Int
-    var mission: Bool = false
-    func path(in rect: CGRect) -> Path {
-        let side = min(rect.width, rect.height)
-        let base = mission ? SpaceBadgeGeometry.mission(stage) : SpaceBadgeGeometry.insignia(stage)
-        let transform = CGAffineTransform(translationX: rect.midX-side/2,y:rect.midY-side/2).scaledBy(x:side/100,y:side/100)
-        return Path(base).applying(transform)
+    /// The medal metal for this tier; Eternal is a pale champagne gold.
+    var tone: ForgeTone {
+        switch self {
+        case .launch: ForgeTone(hue: 0.45)
+        case .orbit: ForgeTone(hue: 0.56)
+        case .lunar: ForgeTone(hue: 0.69)
+        case .solar: ForgeTone(hue: 0.09)
+        case .galactic: ForgeTone(hue: 0.91)
+        case .eternal: ForgeTone(hue: 0.12, saturation: 0.45)
+        }
     }
 }
 
-/// One finite, category-specific effect. Its parent owns the animation clock.
-struct BadgeEffectField: View, Animatable {
+/// A round medal cast in the same metal as the rank badge: a beveled ring
+/// that grows richer with the tier, a recessed enamel face, the emblem raised
+/// out of it, and the tier's stone set into the foot of the ring. Locked
+/// medals are plain steel with the emblem engraved instead of raised.
+struct ForgedMedal: View {
+    let emblem: CGPath
     let tier: BadgeTier
-    let mission: BadgeMission
+    var lit = true
+    /// 0 to 1: one band of light crosses the medal as it is revealed.
+    var phase: Double = 0
+
+    var body: some View {
+        // The medal is drawn once; only the band of light is redrawn while it
+        // moves, so a grid of medals can reveal together cheaply.
+        ForgedMedalBody(emblem: emblem, tier: tier, lit: lit)
+            .overlay { MedalSweep(phase: phase) }
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+private struct ForgedMedalBody: View {
+    let emblem: CGPath
+    let tier: BadgeTier
+    let lit: Bool
+
+    var body: some View {
+        Canvas { context, size in
+            let s = min(size.width, size.height)
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let tone = lit ? tier.tone : ForgeTone(hue: tier.tone.hue, saturation: 0.1, brightness: 0.42)
+            let level = tier.rawValue
+            let radius = s * 0.44
+            // Enough faces that the ring reads as turned metal at any size.
+            let segments = Int(max(72, min(240, s * 1.3)))
+            func circle(_ r: CGFloat) -> [CGPoint] {
+                (0..<segments).map { i in
+                    let a = Double(i) / Double(segments) * .pi * 2 - .pi / 2
+                    return CGPoint(x: c.x + cos(a) * r, y: c.y + sin(a) * r)
+                }
+            }
+
+            // Contact shadow beneath the whole medal.
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: s * 0.03))
+                layer.fill(Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius + s * 0.025, width: radius * 2, height: radius * 2)),
+                           with: .color(.black.opacity(0.6)))
+            }
+
+            var r0 = radius
+            if tier == .eternal {
+                // A separate thin outer ring, set off by a dark channel.
+                let band = circle(radius), bandInner = circle(radius - s * 0.03)
+                PrestigeBevel.band(&context, outer: band, inner: bandInner, style: tone)
+                context.stroke(PrestigeOutline.path(band), with: .color(.black.opacity(0.5)), lineWidth: 0.6)
+                PrestigeBevel.glint(&context, band, inset: 0.5)
+                context.fill(PrestigeOutline.path(circle(radius - s * 0.03)), with: .color(.black.opacity(0.7)))
+                r0 = radius - s * 0.05
+            }
+            let outer = circle(r0)
+            let rim = s * (level >= 3 ? 0.1 : 0.085)
+            let fr = r0 - rim
+            let inner = circle(fr)
+            if level >= 3 {
+                let mid = circle(r0 - rim * 0.55)
+                PrestigeBevel.band(&context, outer: outer, inner: mid, style: tone)
+                PrestigeBevel.band(&context, outer: mid, inner: inner, style: tone, sloping: true)
+            } else {
+                PrestigeBevel.band(&context, outer: outer, inner: inner, style: tone)
+            }
+
+            // Recessed enamel face and the shadow of the ring falling into it.
+            let face = PrestigeOutline.path(inner)
+            context.fill(face, with: .linearGradient(Gradient(colors: [tone.faceTop, tone.faceBottom]),
+                                                     startPoint: CGPoint(x: c.x, y: c.y - fr), endPoint: CGPoint(x: c.x, y: c.y + fr)))
+            if lit {
+                context.fill(face, with: .radialGradient(Gradient(colors: [tone.tint.opacity(0.26), .clear]),
+                                                         center: CGPoint(x: c.x, y: c.y - fr * 0.2), startRadius: 0, endRadius: fr))
+            }
+            context.drawLayer { layer in
+                layer.clip(to: face)
+                layer.addFilter(.blur(radius: s * 0.02))
+                layer.stroke(face.offsetBy(dx: 0, dy: s * 0.018), with: .color(.black.opacity(0.75)), lineWidth: s * 0.05)
+            }
+            if level == 2 || level >= 4 {
+                // An engraved line a little inside the ring.
+                let groove = PrestigeOutline.path(circle(fr - s * 0.035))
+                context.stroke(groove, with: .color(.black.opacity(0.5)), lineWidth: max(0.6, s * 0.008))
+                context.stroke(groove.offsetBy(dx: 0, dy: max(0.4, s * 0.005)), with: .color(tone.tint.opacity(0.14)),
+                               lineWidth: max(0.4, s * 0.005))
+            }
+
+            // The emblem: raised metal when earned, engraved steel when locked.
+            let box = fr * 1.18
+            let scale = box / 100
+            let transform = CGAffineTransform(translationX: c.x - box / 2, y: c.y - box / 2 - fr * 0.04).scaledBy(x: scale, y: scale)
+            let mark = Path(emblem).applying(transform)
+            let w = max(1.2, s * 0.042)
+            let round = StrokeStyle(lineWidth: w, lineCap: .round, lineJoin: .round)
+            if lit {
+                context.drawLayer { layer in
+                    layer.addFilter(.blur(radius: max(0.5, s * 0.012)))
+                    layer.stroke(mark.offsetBy(dx: 0, dy: s * 0.016), with: .color(.black.opacity(0.75)), style: round)
+                }
+                context.stroke(mark, with: .linearGradient(Gradient(colors: [tone.metal(1), tone.metal(0.72), tone.metal(0.42)]),
+                                                           startPoint: CGPoint(x: c.x, y: c.y - box / 2), endPoint: CGPoint(x: c.x, y: c.y + box / 2)),
+                               style: round)
+                context.stroke(mark.offsetBy(dx: 0, dy: -w * 0.22), with: .color(.white.opacity(0.4)),
+                               style: StrokeStyle(lineWidth: w * 0.3, lineCap: .round, lineJoin: .round))
+            } else {
+                context.stroke(mark.offsetBy(dx: 0, dy: w * 0.25), with: .color(.white.opacity(0.1)), style: round)
+                context.stroke(mark, with: .color(.black.opacity(0.55)), style: round)
+            }
+
+            context.stroke(PrestigeOutline.path(outer), with: .color(.black.opacity(0.55)), lineWidth: max(0.6, s * 0.006))
+            PrestigeBevel.glint(&context, outer, inset: max(0.5, s * 0.005), strength: lit ? 1 : 0.3)
+
+            // The tier's stone, set into the foot of the ring.
+            let g = s * 0.17
+            let seat = CGPoint(x: c.x, y: c.y + r0 - rim * 0.5)
+            let setting = Path(ellipseIn: CGRect(x: seat.x - g * 0.62, y: seat.y - g * 0.62, width: g * 1.24, height: g * 1.24))
+            context.fill(setting, with: .radialGradient(Gradient(colors: [tone.metal(0.35), tone.metal(0.12)]),
+                                                        center: seat, startRadius: 0, endRadius: g * 0.62))
+            context.stroke(setting, with: .linearGradient(Gradient(colors: [tone.metal(0.95), tone.metal(0.3)]),
+                                                          startPoint: CGPoint(x: seat.x, y: seat.y - g * 0.62),
+                                                          endPoint: CGPoint(x: seat.x, y: seat.y + g * 0.62)),
+                           lineWidth: max(0.6, s * 0.01))
+            PrestigeGem.draw(&context, in: CGRect(x: seat.x - g / 2, y: seat.y - g / 2, width: g, height: g),
+                             style: tone, detail: s > 60)
+        }
+    }
+}
+
+/// The band of light that crosses a medal as it is revealed.
+private struct MedalSweep: View, Animatable {
     nonisolated var phase: Double
-    var seed = 0
     nonisolated var animatableData: Double { get { phase } set { phase = newValue } }
 
     var body: some View {
         Canvas { context, size in
-            let side = min(size.width,size.height)
-            let c = CGPoint(x:size.width/2,y:size.height/2)
-            let radius = side * 0.36
-            let turn = phase * .pi * 2 + Double(seed % 36) * .pi / 18
-            let strength = 0.28 + 0.09 * Double(tier.rawValue)
-            switch mission {
-            case .flight:
-                for n in 0..<(4 + tier.rawValue) {
-                    let a = Double(n) * .pi * 2 / Double(4+tier.rawValue) + Double(seed % 17)
-                    let start = radius * (0.65 + phase * 0.4)
-                    var path = Path()
-                    path.move(to:CGPoint(x:c.x+cos(a)*start,y:c.y+sin(a)*start))
-                    path.addLine(to:CGPoint(x:c.x+cos(a)*(start+side*0.10),y:c.y+sin(a)*(start+side*0.10)))
-                    context.stroke(path,with:.color(tier.tint.opacity(strength)),lineWidth:1.4)
-                }
-            case .signal:
-                for n in 0..<3 {
-                    let r = radius * (0.75 + (phase + Double(n)/3).truncatingRemainder(dividingBy:1)*0.6)
-                    var path = Path()
-                    path.addArc(center:c,radius:r,startAngle:.degrees(-65),endAngle:.degrees(65),clockwise:false)
-                    path.addArc(center:c,radius:r,startAngle:.degrees(115),endAngle:.degrees(245),clockwise:false)
-                    context.stroke(path,with:.color(tier.tint.opacity(strength*(1-Double(n)*0.2))),lineWidth:1)
-                }
-            case .orbit:
-                let r = radius * 1.08
-                let ellipse = CGRect(x:c.x-r,y:c.y-r*0.55,width:r*2,height:r*1.1)
-                context.stroke(Path(ellipseIn:ellipse),with:.color(tier.tint.opacity(0.3)),lineWidth:1)
-                for n in 0..<(tier.rawValue > 3 ? 3 : 1) {
-                    let a = turn + Double(n) * .pi*2/3
-                    let dot = CGRect(x:c.x+cos(a)*r-2,y:c.y+sin(a)*r*0.55-2,width:4,height:4)
-                    context.fill(Path(ellipseIn:dot),with:.color(tier.tint))
-                }
-            case .archive:
-                for n in 0..<3 {
-                    let y = c.y + (Double(n)-1)*side*0.17
-                    let x = c.x - radius + phase * radius*0.3
-                    let r = CGRect(x:x,y:y,width:radius*2-phase*radius*0.3,height:1.3)
-                    context.fill(Path(r),with:.color(tier.tint.opacity(strength*(0.5+Double(n)*0.2))))
-                }
-            case .habitat:
-                for n in 0..<6 {
-                    let a = Double(n) * .pi/3 + .pi/6
-                    let r = radius * (1.05+sin(phase * .pi)*0.08)
-                    let point = CGPoint(x:c.x+cos(a)*r,y:c.y+sin(a)*r)
-                    let next = CGPoint(x:c.x+cos(a + .pi/3)*r,y:c.y+sin(a + .pi/3)*r)
-                    var line = Path();line.move(to:point);line.addLine(to:next)
-                    context.stroke(line,with:.color(tier.tint.opacity(0.35)),lineWidth:1)
-                    context.fill(Path(ellipseIn:CGRect(x:point.x-2,y:point.y-2,width:4,height:4)),with:.color(tier.tint))
-                }
-            case .suit:
-                var path = Path()
-                path.addArc(center:c,radius:radius*1.15,startAngle:.radians(turn),endAngle:.radians(turn + .pi*1.3),clockwise:false)
-                context.stroke(path,with:.color(tier.tint.opacity(strength)),style:StrokeStyle(lineWidth:2,lineCap:.round))
-                path = Path()
-                path.addArc(center:c,radius:radius*0.96,startAngle:.radians(-turn),endAngle:.radians(-turn + .pi/2),clockwise:false)
-                context.stroke(path,with:.color(.white.opacity(0.55)),lineWidth:1)
-            }
-            if tier == .eternal {
-                let r = radius * 1.4
-                context.stroke(Path(ellipseIn:CGRect(x:c.x-r,y:c.y-r,width:r*2,height:r*2)),
-                               with:.color(.white.opacity(0.18)),style:StrokeStyle(lineWidth:1,dash:[2,6]))
+            guard phase > 0.001, phase < 0.999 else { return }
+            let s = min(size.width, size.height)
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let x = c.x - s + phase * s * 2
+            var sweep = Path()
+            sweep.addLines([CGPoint(x: x, y: c.y + s), CGPoint(x: x + s * 0.3, y: c.y - s),
+                            CGPoint(x: x + s * 0.5, y: c.y - s), CGPoint(x: x + s * 0.2, y: c.y + s)])
+            sweep.closeSubpath()
+            context.drawLayer { layer in
+                layer.clip(to: Path(ellipseIn: CGRect(x: c.x - s * 0.44, y: c.y - s * 0.44, width: s * 0.88, height: s * 0.88)))
+                layer.addFilter(.blur(radius: s * 0.04))
+                layer.fill(sweep, with: .color(.white.opacity(0.28 * sin(phase * .pi))))
             }
         }
-        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
+/// A mission badge: its family's emblem on its tier's medal.
 struct SpaceBadgeSeal: View {
     let badge: InsightsBadge
     let size: CGFloat
     var phase = 0.0
     var preview = false
-    private var lit: Bool { badge.unlocked || preview }
     var body: some View {
-        ZStack {
-            BadgeEffectField(tier:badge.tier,mission:badge.mission,phase:phase,seed:badge.visualSeed)
-                .opacity(lit ? 1 : 0.32)
-            Circle().fill(Color(red:0.055,green:0.065,blue:0.12)).padding(size*0.21)
-            Circle().strokeBorder(badge.tier.tint.opacity(lit ? 0.65 : 0.25),lineWidth:1).padding(size*0.21)
-            SpaceInsignia(stage:badge.mission.rawValue,mission:true)
-                .stroke(LinearGradient(colors:[.white,badge.tier.tint],startPoint:.topLeading,endPoint:.bottomTrailing),
-                        style:StrokeStyle(lineWidth:max(1.3,size*0.019),lineCap:.round,lineJoin:.round))
-                .padding(size*0.29).opacity(lit ? 1 : 0.45)
-            SpaceInsignia(stage:badge.tier.rawValue)
-                .stroke(badge.tier.tint,style:StrokeStyle(lineWidth:max(1,size*0.012),lineCap:.round,lineJoin:.round))
-                .frame(width:size*0.20,height:size*0.20).offset(y:size*0.32)
-        }
-        .frame(width:size,height:size).accessibilityHidden(true)
+        ForgedMedal(emblem: SpaceBadgeGeometry.mission(badge.mission.rawValue), tier: badge.tier,
+                    lit: badge.unlocked || preview, phase: phase)
+            .frame(width: size, height: size)
+    }
+}
+
+/// A tier's own medal, for the tier picker and header.
+struct TierMedal: View {
+    let tier: BadgeTier
+    var dimmed = false
+    var phase = 0.0
+    var body: some View {
+        ForgedMedal(emblem: SpaceBadgeGeometry.insignia(tier.rawValue), tier: tier, lit: true, phase: phase)
+            .opacity(dimmed ? 0.55 : 1)
     }
 }

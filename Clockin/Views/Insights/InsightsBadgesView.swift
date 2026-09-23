@@ -82,13 +82,8 @@ struct InsightsBadgesView: View {
         ForEach(BadgeTier.allCases) { item in
             Button { tier = item } label: {
                 VStack(spacing:5) {
-                    ZStack {
-                        BadgeEffectField(tier:item,mission:BadgeMission(rawValue:(item.rawValue-1)%6)!,phase:item == tier ? reveal : 0.3)
-                            .opacity(item == tier ? 0.8 : 0.3)
-                        SpaceInsignia(stage:item.rawValue)
-                            .stroke(item.tint,style:StrokeStyle(lineWidth:1.6,lineCap:.round,lineJoin:.round))
-                            .padding(6)
-                    }.frame(width:44,height:44)
+                    TierMedal(tier:item,dimmed:item != tier,phase:item == tier ? reveal : 0)
+                        .frame(width:44,height:44)
                     Text(item.title).font(.system(size:11,weight:.semibold))
                         .lineLimit(1).minimumScaleFactor(0.75)
                     Capsule().fill(item == tier ? item.tint : .clear).frame(height:2)
@@ -105,12 +100,7 @@ struct InsightsBadgesView: View {
 
     private var tierHeader: some View {
         HStack(spacing:14) {
-            ZStack {
-                BadgeEffectField(tier:tier,mission:BadgeMission(rawValue:(tier.rawValue-1)%6)!,phase:reveal)
-                SpaceInsignia(stage:tier.rawValue)
-                    .stroke(LinearGradient(colors:[.white,tier.tint],startPoint:.topLeading,endPoint:.bottomTrailing),
-                            style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round)).padding(19)
-            }.frame(width:94,height:94)
+            TierMedal(tier:tier,phase:reveal).frame(width:94,height:94)
             VStack(alignment:.leading,spacing:7) {
                 Text(tier.title).font(.title2.bold()).foregroundStyle(tier.tint)
                 Text(tier.caption).font(.caption).foregroundStyle(.white.opacity(0.75))
@@ -139,6 +129,7 @@ private struct InsightsBadgeDetail: View {
             ScrollView {
                 VStack(alignment:.center,spacing:12) {
                     SpaceBadgeSeal(badge:badge,size:184,phase:reveal,preview:true)
+                        .padding(.vertical,14)
                         .frame(maxWidth:.infinity).background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:22))
                     Text("\(badge.tier.title) / \(badge.mission.title)")
                         .font(.caption.weight(.semibold)).foregroundStyle(badge.tier.tint)

@@ -32,7 +32,7 @@ struct LevelEffectsPreview: View {
             if showCrests {
                 ScrollView {
                     VStack(spacing: 16) {
-                        ForEach([1, 75, 150, 225, 300, 375, 500], id: \.self) { item in
+                        ForEach([1, 75, 150, 225, 300, 375, 450, 525, 600], id: \.self) { item in
                             let rank = LevelPrestige(level: item)
                             HStack {
                                 VStack(alignment: .leading, spacing: 5) {
