@@ -26,3 +26,4 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (22) | [Decorative desks and a seated companion](ios-room-layout-build-22.md) |
 | 0.2 (23) | [Room editor](ios-room-editor-build-23.md) |
 | 0.2 (24) | [Focus chime crash fix](ios-testflight-0.2-24.md) |
+| 0.2 (25) | [Silent focus chimes while the app is open](ios-testflight-0.2-25.md) |
