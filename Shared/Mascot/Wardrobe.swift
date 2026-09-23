@@ -12,12 +12,12 @@ enum WardrobeUnlock: Equatable, Sendable {
     var price: Int? { if case .coins(let cost) = self { return cost }; return nil }
     var label: String {
         switch self {
-        case .free: "Free"
-        case .hours(let n): "\(n) hours of work"
-        case .level(let n): "Level \(n)"
-        case .streak(let n): "\(n)-day streak"
-        case .badge(let id): id == "first" ? "First session badge" : "Badge: \(id)"
-        case .coins(let n): "\(n) coins"
+        case .free: String(localized: "Free")
+        case .hours(let n): String(localized: "\(n) hours of work")
+        case .level(let n): String(localized: "Level \(n)")
+        case .streak(let n): String(localized: "\(n)-day streak")
+        case .badge(let id): id == "first" ? String(localized: "First session badge") : String(localized: "Badge: \(id)")
+        case .coins(let n): String(localized: "\(n) coins")
         }
     }
     func met(by progress: WardrobeProgress) -> Bool {
@@ -235,7 +235,7 @@ enum WardrobeGeometry {
 
 enum CompanionHomeLayout: String, Codable, CaseIterable, Sendable {
     case deskLeft, deskRight
-    var title: String { self == .deskLeft ? "Room left" : "Room right" }
+    var title: String { self == .deskLeft ? String(localized: "Room left") : String(localized: "Room right") }
     var mirrored: Bool { self == .deskRight }
     func x(_ x: Double) -> Double { mirrored ? 360 - x : x }
 }
@@ -251,10 +251,10 @@ enum CompanionHomeActivity: String, CaseIterable, Sendable {
     }
     var title: String {
         switch self {
-        case .idle: "At home"
-        case .working: "Working"
-        case .relaxing: "Taking a break"
-        case .sleeping: "Resting"
+        case .idle: String(localized: "At home")
+        case .working: String(localized: "Working")
+        case .relaxing: String(localized: "Taking a break")
+        case .sleeping: String(localized: "Resting")
         }
     }
     var mood: MascotMood {

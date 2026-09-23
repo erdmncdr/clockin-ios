@@ -90,7 +90,7 @@ final class NudgeController: ObservableObject {
                 guard nudge.fireDate > .now else { continue }
                 if let old = existing[nudge.identifier], matches(old, nudge: nudge, calendar: input.calendar) { continue }
                 if existing[nudge.identifier] == nil && available == 0 {
-                    errorMessage = "No notification slots available. Reopen Clockin later to try again."
+                    errorMessage = String(localized: "No notification slots available. Reopen Clockin later to try again.")
                     continue
                 }
                 let content = UNMutableNotificationContent()
@@ -114,7 +114,7 @@ final class NudgeController: ObservableObject {
                     if existing[nudge.identifier] == nil { available -= 1 }
                 } catch {
                     guard processed == revision else { break }
-                    errorMessage = "Could not schedule nudges: \(error.localizedDescription)"
+                    errorMessage = String(localized: "Could not schedule nudges: \(error.localizedDescription)")
                 }
             }
         }

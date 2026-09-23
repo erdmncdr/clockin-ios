@@ -111,11 +111,11 @@ private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some 
 /// Shows the timestamp of the last local update or remote clock tick.
 private func asOfText(_ state: ClockinActivityAttributes.ContentState) -> String? {
     guard !state.isPaused, let updatedAt = state.updatedAt else { return nil }
-    return "as of " + updatedAt.formatted(date: .omitted, time: .shortened)
+    return String(localized: "as of \(updatedAt.formatted(date: .omitted, time: .shortened))")
 }
 
 private func rateText(_ state: ClockinActivityAttributes.ContentState, _ currencyCode: String) -> String {
-    "\(state.hourlyRate.money(code: currencyCode)) / hr"
+    String(localized: "\(state.hourlyRate.money(code: currencyCode)) / hr")
 }
 
 private struct LockScreenActivityView: View {

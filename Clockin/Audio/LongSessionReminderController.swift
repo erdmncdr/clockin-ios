@@ -12,9 +12,9 @@ enum LongSessionReminderNotification {
 
     static func register(on center: UNUserNotificationCenter) {
         center.setNotificationCategories([UNNotificationCategory(identifier: category, actions: [
-            UNNotificationAction(identifier: clockOut, title: "Clock out", options: []),
-            UNNotificationAction(identifier: setEndTime, title: "Set end time", options: [.foreground]),
-            UNNotificationAction(identifier: snooze, title: "Remind in 1 hour", options: [])
+            UNNotificationAction(identifier: clockOut, title: String(localized: "Clock out"), options: []),
+            UNNotificationAction(identifier: setEndTime, title: String(localized: "Set end time"), options: [.foreground]),
+            UNNotificationAction(identifier: snooze, title: String(localized: "Remind in 1 hour"), options: [])
         ], intentIdentifiers: [], options: [])])
     }
 }
@@ -99,8 +99,8 @@ final class LongSessionReminderController: ObservableObject {
                 center.removePendingNotificationRequests(withIdentifiers: [chime.identifier])
             }
             let content = UNMutableNotificationContent()
-            content.title = "Still working?"
-            content.body = "Clockin has been running for \(DurationText.compact(running.elapsed(at: date)))."
+            content.title = String(localized: "Still working?")
+            content.body = String(localized: "Clockin has been running for \(DurationText.compact(running.elapsed(at: date))).")
             content.sound = .default
             content.categoryIdentifier = LongSessionReminderNotification.category
             content.userInfo = [LongSessionReminderNotification.startKey: running.start.timeIntervalSinceReferenceDate]
@@ -113,7 +113,7 @@ final class LongSessionReminderController: ObservableObject {
                 persist()
             } catch {
                 guard processed == revision else { continue }
-                errorMessage = "Could not schedule reminder: \(error.localizedDescription)"
+                errorMessage = String(localized: "Could not schedule reminder: \(error.localizedDescription)")
             }
         }
     }

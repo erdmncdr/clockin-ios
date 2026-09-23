@@ -9,9 +9,9 @@ enum ImportMatchKind: String, Identifiable {
 
     var title: String {
         switch self {
-        case .new: return "NEW"
-        case .matched: return "UPDATE"
-        case .duplicate: return "SKIP"
+        case .new: return String(localized: "NEW")
+        case .matched: return String(localized: "UPDATE")
+        case .duplicate: return String(localized: "SKIP")
         }
     }
 }
@@ -48,15 +48,15 @@ enum ImportScope: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .daysInFile: "Days in file"
-        case .wholeRange: "Whole range"
+        case .daysInFile: String(localized: "Days in file")
+        case .wholeRange: String(localized: "Whole range")
         }
     }
 
     var explanation: String {
         switch self {
-        case .daysInFile: "Only days that appear in the file are reviewed."
-        case .wholeRange: "Every day between the file's first and last entry is reviewed."
+        case .daysInFile: String(localized: "Only days that appear in the file are reviewed.")
+        case .wholeRange: String(localized: "Every day between the file's first and last entry is reviewed.")
         }
     }
 }

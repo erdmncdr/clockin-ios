@@ -68,7 +68,7 @@ struct ManualEntryView: View {
                             SessionRow(session: session, showsDay: true)
                         }
                     } header: {
-                        Label("Overlaps \(conflicts.count) existing \(conflicts.count == 1 ? "entry" : "entries")",
+                        Label("Overlaps \(conflicts.count) existing entries",
                               systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                             .textCase(nil)

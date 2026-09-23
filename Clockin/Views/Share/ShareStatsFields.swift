@@ -1,17 +1,20 @@
 import Foundation
 
 enum StatsSharePrivacy: String, CaseIterable, Identifiable {
+    var title: String { String(localized: String.LocalizationValue(rawValue)) }
     case publicStats = "Public"
     case privateStats = "Private"
     var id: Self { self }
 }
 
 enum StatsSharePage: String, CaseIterable, Identifiable {
+    var title: String { String(localized: String.LocalizationValue(rawValue)) }
     case overview = "Overview", rhythm = "Rhythm", milestones = "Milestones"
     var id: Self { self }
 }
 
 enum StatsShareMode: String, CaseIterable, Identifiable {
+    var title: String { String(localized: String.LocalizationValue(rawValue)) }
     case current = "Current page", all = "All 3"
     var id: Self { self }
     func pages(current: StatsSharePage) -> [StatsSharePage] {
@@ -19,7 +22,9 @@ enum StatsShareMode: String, CaseIterable, Identifiable {
     }
 }
 
+// Ham degerler kimliktir; ekranda ve paylasilan resimde title gorunur.
 enum StatsShareField: String, CaseIterable {
+    var title: String { String(localized: String.LocalizationValue(rawValue)) }
     case time = "Time invested", earnings = "Earned", sessions = "Sessions"
     case activeDays = "Active days", streak = "Streak", badges = "Badges", xp = "Total XP"
     case bestDay = "Best day", bestDayDuration = "Best day duration", longestStreak = "Best streak"
@@ -49,7 +54,7 @@ enum StatsShareFields {
             fields = [.level, .xp, .badges, .fullDays, .longDays, .bigMonths, .momentum]
         }
         return fields.map { field in
-            var value = values[field] ?? "No sessions"
+            var value = values[field] ?? String(localized: "No sessions")
             if field == .bestDay, privacy == .publicStats,
                values[.bestDay] != nil, let duration = values[.bestDayDuration] {
                 value += " • " + duration

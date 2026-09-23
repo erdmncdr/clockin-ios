@@ -67,7 +67,7 @@ struct TodayGoalsCard: View {
 
     private var monthWorked: TimeInterval { store.monthDuration(at: now) }
 
-    private func row(_ title: String, _ goal: GoalProgress) -> some View {
+    private func row(_ title: LocalizedStringKey, _ goal: GoalProgress) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
@@ -90,13 +90,13 @@ struct TodayGoalsCard: View {
                 }
             }
             .frame(height: 6)
-            RollingNumberText(goal.isReached ? "Goal reached" : "\(DurationText.compact(goal.remaining)) to go",
+            RollingNumberText(goal.isReached ? String(localized: "Goal reached") : String(localized: "\(DurationText.compact(goal.remaining)) to go"),
                               value: goal.remaining, font: .caption,
                               foregroundColor: goal.isReached ? palette.accent : .secondary)
                 .foregroundStyle(goal.isReached ? palette.accent : .secondary)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title) goal")
+        .accessibilityLabel("\(Text(title)) goal")
         .accessibilityValue(goal.isReached
             ? "Reached, \(DurationText.compact(goal.worked)) of \(DurationText.compact(goal.target))"
             : "\(DurationText.compact(goal.worked)) of \(DurationText.compact(goal.target)), \(DurationText.compact(goal.remaining)) to go")

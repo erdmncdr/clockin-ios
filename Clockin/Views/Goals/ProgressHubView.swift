@@ -19,7 +19,7 @@ struct ProgressHubView: View {
             VStack(spacing: 0) {
                 Picker("Progress section", selection: $section) {
                     ForEach(ProgressSection.allCases) { section in
-                        Text(section.rawValue).tag(section)
+                        Text(LocalizedStringKey(section.rawValue)).tag(section)
                     }
                 }
                 .pickerStyle(.segmented)

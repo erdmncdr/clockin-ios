@@ -48,7 +48,7 @@ struct InsightsBadgesView: View {
                             SpaceBadgeSeal(badge:badge,size:76,phase:badge.unlocked ? reveal : 0)
                             Text(badge.title).font(.caption.weight(.semibold))
                                 .multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
-                            Text(badge.unlocked ? "Earned" : "Locked")
+                            Text(badge.unlocked ? String(localized: "badge.status.earned", defaultValue: "Earned") : String(localized: "Locked"))
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                         .frame(maxWidth:.infinity,minHeight:124).padding(.horizontal,4).padding(.vertical,6)
@@ -59,7 +59,7 @@ struct InsightsBadgesView: View {
                     }
                     .buttonStyle(.pressable).buttonPressHaptic(false)
                     .accessibilityLabel("\(badge.title), \(tier.title)")
-                    .accessibilityValue(badge.unlocked ? "Earned" : badge.requirement)
+                    .accessibilityValue(badge.unlocked ? String(localized: "badge.status.earned", defaultValue: "Earned") : badge.requirement)
                 }
             }
             .id(tier)

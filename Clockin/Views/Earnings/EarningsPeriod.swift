@@ -67,7 +67,7 @@ struct EarningsPeriod: Equatable {
     }
 
     func title(calendar: Calendar = .current, locale: Locale = .current) -> String {
-        guard range != .all else { return "All time" }
+        guard range != .all else { return String(localized: "All time") }
         let last = calendar.date(byAdding: .day, value: -1, to: interval.end)!
         let formatter = DateFormatter()
         formatter.calendar = calendar
@@ -80,7 +80,8 @@ struct EarningsPeriod: Equatable {
         if range == .month { return format(interval.start, "MMMMyyyy") }
         let sameYear = calendar.component(.year, from: interval.start) == calendar.component(.year, from: last)
         let firstTemplate = range == .week ? (sameYear ? "MMMd" : "MMMdyyyy") : (sameYear ? "MMM" : "MMMyyyy")
-        return "\(format(interval.start, firstTemplate)) to \(format(last, range == .week ? "MMMdyyyy" : "MMMyyyy"))"
+        let from = format(interval.start, firstTemplate), to = format(last, range == .week ? "MMMdyyyy" : "MMMyyyy")
+        return String(localized: "\(from) to \(to)")
     }
 }
 

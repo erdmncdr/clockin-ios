@@ -213,9 +213,8 @@ private struct TodayWidgetView: View {
         // Gece yarisini asan oturum bugune sayilmaz, o yuzden TODAY yaninda
         // donmus duruyor. Basligi hangi gune yazildigini soylesin, yoksa iki
         // sayi birbiriyle celisiyor gorunuyor.
-        let title = snapshot.runningCountsToday(at: entry.date)
-            ? "SESSION"
-            : "SESSION · " + running.start.formatted(.dateTime.month(.abbreviated).day()).uppercased()
+        let day = running.start.formatted(.dateTime.month(.abbreviated).day()).uppercased(with: .current)
+        let title: LocalizedStringKey = snapshot.runningCountsToday(at: entry.date) ? "SESSION" : "SESSION · \(day)"
         return metric(title, duration: liveDuration(elapsed, counts: isEarning),
                       earnings: elapsed / 3600 * snapshot.hourlyRate, value: value, money: money,
                       alignment: alignment)
@@ -227,7 +226,7 @@ private struct TodayWidgetView: View {
                alignment: alignment)
     }
 
-    private func metric(_ title: String, duration: some View, earnings: Double, value: Font, money: Font,
+    private func metric(_ title: LocalizedStringKey, duration: some View, earnings: Double, value: Font, money: Font,
                         alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 1) {
             Text(title)
@@ -315,7 +314,7 @@ private struct TodayWidgetView: View {
     }
 
     /// Dugmeler yan yana esit genislikte; tek dugme tum genisligi kaplar.
-    private func actionLabel(_ title: String, systemImage: String, foreground: Color, background: Color) -> some View {
+    private func actionLabel(_ title: LocalizedStringKey, systemImage: String, foreground: Color, background: Color) -> some View {
         Label(title, systemImage: systemImage)
             .font(.subheadline.weight(.bold))
             .lineLimit(1)

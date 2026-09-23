@@ -45,13 +45,13 @@ enum RoomPlacement {
                       roomID: String, arrangement: RoomArrangement) -> String? {
         let r = rect(item, room: room, roomID: roomID, arrangement: arrangement, layout: .deskLeft)
         if isWall(item.slot), item.slot != "window", r.intersects(CGRect(x:234,y:27,width:100,height:101)) {
-            return "Keep the window clear"
+            return String(localized: "Keep the window clear")
         }
         guard item.slot != "rug" else { return nil }
         for other in items where other.id != item.id && other.slot != "rug" {
             let otherRect = rect(other, room: room, roomID: roomID, arrangement: arrangement, layout: .deskLeft)
             // Two points of breathing room; touching is allowed, covering another item is not.
-            if r.insetBy(dx:1,dy:1).intersects(otherRect.insetBy(dx:1,dy:1)) { return "Leave space for \(other.name)" }
+            if r.insetBy(dx:1,dy:1).intersects(otherRect.insetBy(dx:1,dy:1)) { return String(localized: "Leave space for \(other.name)") }
         }
         return nil
     }

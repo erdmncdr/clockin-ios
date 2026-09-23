@@ -101,13 +101,13 @@ struct BackupsView: View {
     }
 
     private func detail(_ backup: AutomaticBackup) -> String {
-        guard let count = backup.sessionCount else { return "This file cannot be read" }
-        let summary = "\(count) \(count == 1 ? "entry" : "entries") · \(DurationText.compact(backup.totalDuration))"
-        return backup.isSafetyCopy ? "Before restore · \(summary)" : summary
+        guard let count = backup.sessionCount else { return String(localized: "This file cannot be read") }
+        let summary = String(localized: "\(count) entries") + " · " + DurationText.compact(backup.totalDuration)
+        return backup.isSafetyCopy ? String(localized: "Before restore · \(summary)") : summary
     }
 
     private func title(_ backup: AutomaticBackup) -> String {
-        "Restore the backup from \(backup.date.formatted(date: .abbreviated, time: .shortened))?"
+        String(localized: "Restore the backup from \(backup.date.formatted(date: .abbreviated, time: .shortened))?")
     }
 
     private func restore(_ backup: AutomaticBackup) {

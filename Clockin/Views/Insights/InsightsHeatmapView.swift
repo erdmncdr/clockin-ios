@@ -25,7 +25,7 @@ struct InsightsHeatmapView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("WORK HEATMAP")
             Picker("Heatmap grouping", selection: $grouping.hapticSelection($selectionFeedback)) {
-                ForEach(InsightsGrouping.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(InsightsGrouping.allCases, id: \.self) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
             }
             .pickerStyle(.segmented)
             Group {
@@ -64,7 +64,7 @@ struct InsightsHeatmapView: View {
             ScrollViewReader { proxy in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Button("Start") {
+                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start")) {
                             if let first = weeks.first { proxy.scrollTo(first, anchor: .leading) }
                         }
                         Spacer()
@@ -171,7 +171,7 @@ struct InsightsHeatmapView: View {
         .opacity(day > today ? 0 : 1)
         .accessibilityHidden(day > today)
         .accessibilityLabel(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
-        .accessibilityValue("\(DurationText.compact(duration)), \(earnings[day, default: 0].money(code: currencyCode))\(day == selected ? ", selected" : "")")
+        .accessibilityValue("\(DurationText.compact(duration)), \(earnings[day, default: 0].money(code: currencyCode))\(day == selected ? ", " + String(localized: "selected") : "")")
         .accessibilityHint("Shows daily details below the grid")
     }
 

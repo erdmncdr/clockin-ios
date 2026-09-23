@@ -98,7 +98,7 @@ struct CompanionView: View {
                 Button { preview = item } label: {
                     CompanionProductTile(
                         name: item.name,
-                        status: owned ? (wardrobe.selected(item) ? "Equipped" : "Owned") : item.unlock.label,
+                        status: owned ? (wardrobe.selected(item) ? String(localized: "Equipped") : String(localized: "Owned")) : item.unlock.label,
                         symbol: owned ? (wardrobe.selected(item) ? "checkmark.circle.fill" : "checkmark") : (item.unlock.price == nil ? "lock.fill" : "circle.circle"),
                         selected: wardrobe.selected(item), accent: palette.accent, surface: palette.surface
                     ) { WardrobeThumbnail(item: item) }

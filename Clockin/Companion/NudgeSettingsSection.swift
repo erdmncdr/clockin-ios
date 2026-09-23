@@ -19,7 +19,7 @@ struct NudgeSettingsSection: View {
                 if value { requestPermission() }
             }))
             Picker("Tone", selection: $tone.hapticSelection($selectionFeedback)) {
-                ForEach(NudgeTone.allCases, id: \.rawValue) { Text($0.rawValue).tag($0.rawValue) }
+                ForEach(NudgeTone.allCases, id: \.rawValue) { Text(LocalizedStringKey($0.rawValue)).tag($0.rawValue) }
             }
             if enabled {
                 if !chime.canNotify, !chime.needsSystemSettings {

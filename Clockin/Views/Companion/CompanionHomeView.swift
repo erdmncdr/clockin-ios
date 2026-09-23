@@ -70,7 +70,7 @@ struct CompanionHomeView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Companion home. \(activity.title). \(state.homeLayout.title). Lamp \(state.homeLampOn ? "on" : "off").")
+        .accessibilityLabel("Companion home. \(activity.title). \(state.homeLayout.title). Lamp \(state.homeLampOn ? String(localized: "on") : String(localized: "off")).")
         .task(id: imageKey) {
             let state = state
             let decoded = await Task.detached(priority: .utility) {

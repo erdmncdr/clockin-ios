@@ -30,9 +30,9 @@ struct TimecardImportView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .keep: "Keep all"
-            case .choose: "Choose"
-            case .deleteAll: "Delete all"
+            case .keep: String(localized: "Keep all")
+            case .choose: String(localized: "Choose")
+            case .deleteAll: String(localized: "Delete all")
             }
         }
     }
@@ -117,7 +117,7 @@ struct TimecardImportView: View {
                 }
             } message: {
                 if case .review(let review) = phase {
-                    Text("\(removalIDs(review).count) Clockin \(removalIDs(review).count == 1 ? "entry" : "entries") will be removed from this period along with the import. This cannot be undone.")
+                    Text("\(removalIDs(review).count) Clockin entries will be removed from this period along with the import. This cannot be undone.")
                 }
             }
         }
@@ -161,7 +161,7 @@ struct TimecardImportView: View {
                 let pasted = strings.joined(separator: "\n")
                 Task { @MainActor in
                     if pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        errorMessage = "The clipboard does not contain text."
+                        errorMessage = String(localized: "The clipboard does not contain text.")
                         Haptics.play(.validationFailed)
                     } else {
                         text = pasted
@@ -275,7 +275,7 @@ struct TimecardImportView: View {
                 }
                 .pickerStyle(.segmented)
                 if leftoverAction == .deleteAll {
-                    Label("\(review.leftovers.count) \(review.leftovers.count == 1 ? "entry" : "entries") will be deleted. This cannot be undone.",
+                    Label("\(review.leftovers.count) entries will be deleted. This cannot be undone.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.subheadline)
                         .foregroundStyle(.orange)
@@ -284,7 +284,7 @@ struct TimecardImportView: View {
         } header: {
             Text("Your own entries")
         } footer: {
-            Text(scope.explanation + " Entries the file already covers are not listed here.")
+            Text(scope.explanation + " " + String(localized: "Entries the file already covers are not listed here."))
         }
         .listRowBackground(palette.surface)
 
@@ -348,9 +348,9 @@ struct TimecardImportView: View {
     private func importButtonTitle(_ review: TimecardImportReview) -> String {
         let count = removalIDs(review).count
         let chosen = selected(review).count
-        if chosen == 0 { return count > 0 ? "Delete \(count) without importing" : "Nothing selected" }
-        guard count > 0 else { return "Import \(chosen) \(chosen == 1 ? "entry" : "entries")" }
-        return "Import \(chosen) and delete \(count)"
+        if chosen == 0 { return count > 0 ? String(localized: "Delete \(count) without importing") : String(localized: "Nothing selected") }
+        guard count > 0 else { return String(localized: "Import \(chosen) entries") }
+        return String(localized: "Import \(chosen) and delete \(count)")
     }
 
     private func selected(_ review: TimecardImportReview) -> [WorkSession] {
@@ -362,7 +362,7 @@ struct TimecardImportView: View {
         !selected(review).isEmpty || !removalIDs(review).isEmpty
     }
 
-    @ViewBuilder private func comparisonSection(_ title: String, items: [ImportComparisonItem],
+    @ViewBuilder private func comparisonSection(_ title: LocalizedStringKey, items: [ImportComparisonItem],
                                                 selectable: Bool) -> some View {
         if !items.isEmpty {
             Section {
@@ -420,7 +420,7 @@ struct TimecardImportView: View {
         do {
             let sessions = try PastedTextImporter.parse(text, hourlyRate: store.hourlyRate)
             excluded = []
-            prepareReview(sessions, sourceTitle: "Pasted timecards",
+            prepareReview(sessions, sourceTitle: String(localized: "Pasted timecards"),
                           approvedDuration: PastedTextImporter.approvedSummaryDuration(in: text))
         } catch {
             errorMessage = error.localizedDescription
@@ -461,7 +461,7 @@ struct TimecardImportView: View {
         guard case .review = phase else { return }
         guard store.importSessions(selected(review), removing: removalIDs(review)) else {
             Haptics.play(.validationFailed)
-            phase = .result(store.statusMessage ?? "Could not import entries.")
+            phase = .result(store.statusMessage ?? String(localized: "Could not import entries."))
             return
         }
         Haptics.play(.importFinished)
@@ -469,7 +469,7 @@ struct TimecardImportView: View {
         excluded = []
         leftoverAction = .keep
         // Ortak mesaj sonraki islemlerle degisebilir; bu islemin sonucunu sakla.
-        phase = .result(store.statusMessage ?? "Import finished.")
+        phase = .result(store.statusMessage ?? String(localized: "Import finished."))
     }
 }
 
@@ -526,7 +526,7 @@ private struct TimecardImportItemRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func times(_ title: String, session: WorkSession) -> some View {
+    private func times(_ title: LocalizedStringKey, session: WorkSession) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title).font(.subheadline.weight(.semibold))
             Text("Start: \(session.start.formatted(date: .abbreviated, time: .standard))")

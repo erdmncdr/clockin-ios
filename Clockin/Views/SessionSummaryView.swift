@@ -23,7 +23,7 @@ struct SessionSummaryView: View {
                         .foregroundStyle(.secondary)
                     Text("Nice work!")
                         .font(.largeTitle.weight(.black))
-                    Text(SessionDisplay.note(session).isEmpty ? "Focus session" : SessionDisplay.note(session))
+                    Text(SessionDisplay.note(session).isEmpty ? String(localized: "Focus session") : SessionDisplay.note(session))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -47,7 +47,7 @@ struct SessionSummaryView: View {
         .presentationDetents([.medium])
     }
 
-    private func metric(_ title: String, _ value: String) -> some View {
+    private func metric(_ title: LocalizedStringKey, _ value: String) -> some View {
         VStack(spacing: 4) {
             Text(title)
                 .font(.caption2.weight(.bold))

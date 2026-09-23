@@ -143,8 +143,8 @@ struct TimerCard: View {
     }
 
     private var statusText: String {
-        guard let running = store.running else { return "READY TO FOCUS" }
-        return running.isPaused ? "PAUSED" : "FOCUS SESSION"
+        guard let running = store.running else { return String(localized: "READY TO FOCUS") }
+        return running.isPaused ? String(localized: "PAUSED") : String(localized: "FOCUS SESSION")
     }
 }
 

@@ -4,7 +4,7 @@ enum PastedImportError: LocalizedError {
     case noEntries
 
     var errorDescription: String? {
-        "No time entries were recognized. Copy one or more rows including the date, start time, and end time."
+        String(localized: "No time entries were recognized. Copy one or more rows including the date, start time, and end time.")
     }
 }
 

@@ -6,12 +6,12 @@ enum TodaySection: String, CaseIterable, Identifiable {
     var key: String { "Clockin.Today.Show.\(rawValue)" }
     var title: String {
         switch self {
-        case .summary: "Session & Today"
-        case .companion: "Companion"
-        case .goals: "Goals & daily pace"
-        case .momentum: "Money Momentum"
-        case .recent: "Last 3 sessions"
-        case .exchange: "USD / TRY rate"
+        case .summary: String(localized: "Session & Today")
+        case .companion: String(localized: "Companion")
+        case .goals: String(localized: "Goals & daily pace")
+        case .momentum: String(localized: "Money Momentum")
+        case .recent: String(localized: "Last 3 sessions")
+        case .exchange: String(localized: "USD / TRY rate")
         }
     }
 }
@@ -22,10 +22,10 @@ enum TodayQuickLink: String, CaseIterable, Identifiable {
     var key: String { "Clockin.Today.Link.\(rawValue)" }
     var title: String {
         switch self {
-        case .goals: "Goals & Pace"
-        case .history: "History"
-        case .newEntry: "Add entry"
-        case .liveUpdates: "Live updates"
+        case .goals: String(localized: "Goals & Pace")
+        case .history: String(localized: "History")
+        case .newEntry: String(localized: "Add entry")
+        case .liveUpdates: String(localized: "Live updates")
         }
     }
     var icon: String {
@@ -160,7 +160,7 @@ struct TodayTotalsCard: View {
         .accessibilityIdentifier("today.sessionAndToday")
     }
 
-    private func column(_ title: String, duration: TimeInterval, earned: Double) -> some View {
+    private func column(_ title: LocalizedStringKey, duration: TimeInterval, earned: Double) -> some View {
         VStack(alignment: .center, spacing: 5) {
             Text(title).font(.caption2.weight(.bold)).tracking(1).foregroundStyle(.secondary)
             RollingNumberText(DurationText.compact(duration), value: duration, font: .headline)
@@ -211,11 +211,11 @@ struct TodayExchangeRateStrip: View {
         .padding(.vertical, 9)
         .card(palette)
         .accessibilityElement(children: .combine)
-        .accessibilityHint(exchangeRates.errorMessage ?? "Latest available USD to TRY rate")
+        .accessibilityHint(exchangeRates.errorMessage ?? String(localized: "Latest available USD to TRY rate"))
     }
 
     private var status: String {
-        if exchangeRates.errorMessage != nil { return exchangeRates.latestRate == nil ? "Offline" : "Cached" }
-        return exchangeRates.lastSuccessfulCheck == nil ? "Cached" : "Updated"
+        if exchangeRates.errorMessage != nil { return exchangeRates.latestRate == nil ? String(localized: "Offline") : String(localized: "Cached") }
+        return exchangeRates.lastSuccessfulCheck == nil ? String(localized: "Cached") : String(localized: "Updated")
     }
 }

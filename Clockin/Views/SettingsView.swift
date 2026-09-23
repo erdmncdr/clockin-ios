@@ -46,7 +46,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    navigationRow("How to use Clockin", systemImage: "questionmark.circle") {
+                    navigationRow(String(localized: "How to use Clockin"), systemImage: "questionmark.circle") {
                         rateIsFocused = false
                         sheet = .guide
                     }
@@ -75,7 +75,7 @@ struct SettingsView: View {
                 Section {
                     Picker("Theme", selection: $themeRaw.hapticSelection($selectionFeedback)) {
                         ForEach(ClockinThemeChoice.allCases) { theme in
-                            Text(theme.rawValue).tag(theme.rawValue)
+                            Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
                         }
                     }
                 }
@@ -183,7 +183,7 @@ struct SettingsView: View {
                     showRestoreConfirmation = true
                 case .failure(let error):
                     Haptics.play(.validationFailed)
-                    restoreMessage = "Could not open backup: \(error.localizedDescription)"
+                    restoreMessage = String(localized: "Could not open backup: \(error.localizedDescription)")
                 }
             }
             .alert("Replace all data?", isPresented: $showRestoreConfirmation) {
@@ -243,7 +243,7 @@ struct SettingsView: View {
                     Text(code).tag(code)
                 }
             }
-            navigationRow(store.rateHistorySummary == .custom ? "Custom rate schedule" : "Rate schedule", systemImage: "calendar") {
+            navigationRow(store.rateHistorySummary == .custom ? String(localized: "Custom rate schedule") : String(localized: "Rate schedule"), systemImage: "calendar") {
                 rateIsFocused = false
                 sheet = .rateSchedule
             }
@@ -282,7 +282,7 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         Section {
-            navigationRow("Import timecards", systemImage: "doc.text.magnifyingglass") {
+            navigationRow(String(localized: "Import timecards"), systemImage: "doc.text.magnifyingglass") {
                 rateIsFocused = false
                 sheet = .importTimecards
             }
@@ -315,7 +315,7 @@ struct SettingsView: View {
             } label: {
                 Label("Restore from file…", systemImage: "square.and.arrow.down")
             }
-            navigationRow("Automatic backups", systemImage: "clock.arrow.circlepath") {
+            navigationRow(String(localized: "Automatic backups"), systemImage: "clock.arrow.circlepath") {
                 rateIsFocused = false
                 sheet = .backups
             }
@@ -365,8 +365,8 @@ struct SettingsView: View {
     }
 
     private var versionText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? String(localized: "Unknown")
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? String(localized: "Unknown")
         return "\(version) (\(build))"
     }
 
@@ -410,7 +410,7 @@ struct SettingsView: View {
     private var removeSplitMessage: String {
         let proposed = store.proposedRates(earlier: nil, changedOn: changedOn) ?? store.rateRules
         let impact = store.earningsImpact(ofRates: proposed)
-        return "All work will use \(store.hourlyRate.money(code: store.currencyCode)). Earnings before \(changedOn.formatted(date: .abbreviated, time: .omitted)) change by \(impact.delta.money(code: store.currencyCode))."
+        return String(localized: "All work will use \(store.hourlyRate.money(code: store.currencyCode)). Earnings before \(changedOn.formatted(date: .abbreviated, time: .omitted)) change by \(impact.delta.money(code: store.currencyCode)).")
     }
 
     private func syncEarlierRateText() {
@@ -501,11 +501,11 @@ private struct RateChangePrompt: View {
 
     private func impact(from day: Date?) -> String {
         guard let proposed = store.proposedRates(for: value, from: day) else {
-            return "Edit this custom rate schedule in Rate schedule."
+            return String(localized: "Edit this custom rate schedule in Rate schedule.")
         }
         let impact = store.earningsImpact(ofRates: proposed)
-        if impact.sessions == 0 { return "No completed sessions change." }
-        return "\(impact.sessions) completed sessions change by \(impact.delta.money(code: store.currencyCode)) in total."
+        if impact.sessions == 0 { return String(localized: "No completed sessions change.") }
+        return String(localized: "\(impact.sessions) completed sessions change by \(impact.delta.money(code: store.currencyCode)) in total.")
     }
 
     private func save(from day: Date?) {

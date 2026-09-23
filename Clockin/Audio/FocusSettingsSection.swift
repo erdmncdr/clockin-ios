@@ -25,7 +25,7 @@ struct FocusSettingsSection: View {
                 FocusChimeToggle()
                 if chimeEnabled {
                     Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
-                        LabeledContent("Every", value: "\(interval) min of work")
+                        LabeledContent("Every", value: String(localized: "\(interval) min of work"))
                     }
                     .accessibilityValue("\(interval) minutes of work")
                     Picker("Sound", selection: Binding(get: {
@@ -42,7 +42,8 @@ struct FocusSettingsSection: View {
                         chime.preview(sound: sound)
                     }
                     VStack(alignment: .leading) {
-                        LabeledContent("Volume", value: "\(Int((FocusChimeVolume.clamped(volume) * 100).rounded()))%")
+                        LabeledContent("Volume", value: FocusChimeVolume.clamped(volume).formatted(
+                            .percent.precision(.fractionLength(0)).rounded(rule: .toNearestOrAwayFromZero)))
                         Slider(value: Binding(get: { FocusChimeVolume.clamped(volume) }, set: {
                             volume = FocusChimeVolume.clamped($0)
                             chime.updatePlaybackVolume()
@@ -117,9 +118,9 @@ struct FocusSettingsSection: View {
 
     private var radioStatus: String {
         if let error = radio.errorMessage { return error }
-        if radio.isLoading { return "Connecting…" }
-        if radio.state == .failed { return "Could not connect. Tap play to retry." }
-        if radio.state == .paused { return "Paused" }
-        return radio.isPlaying ? "Playing" : "Stopped"
+        if radio.isLoading { return String(localized: "Connecting…") }
+        if radio.state == .failed { return String(localized: "Could not connect. Tap play to retry.") }
+        if radio.state == .paused { return String(localized: "Paused") }
+        return radio.isPlaying ? String(localized: "Playing") : String(localized: "Stopped")
     }
 }

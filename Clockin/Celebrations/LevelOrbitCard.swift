@@ -76,14 +76,14 @@ struct LevelOrbitCard: View {
                 .foregroundStyle(LinearGradient(colors: [.white, style.highlight], startPoint: .top, endPoint: .bottom))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text("\(hours.formatted()) \(hours == 1 ? "hour" : "hours") of focus")
+            Text(hours == 1 ? "1 hour of focus" : "\(hours.formatted()) hours of focus")
                 .font(.subheadline).foregroundStyle(.white.opacity(0.55))
         }
     }
 
     private var earnedBadge: some View {
         VStack(spacing: 10) {
-            Text(style.isMilestone ? "\(style.name) unlocked" : style.name)
+            Text(style.isMilestone ? String(localized: "\(style.name) unlocked") : style.name)
                 .font(.system(.title3, design: .rounded, weight: .semibold))
                 .foregroundStyle(style.highlight)
             // The exact dashboard component, using real XP rather than a mock bar.

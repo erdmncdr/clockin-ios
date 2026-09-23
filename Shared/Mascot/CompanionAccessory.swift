@@ -8,10 +8,10 @@ enum CompanionAccessory: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
     var name: String {
         switch self {
-        case .headphones: "Headphones"
-        case .mug: "Mug"
-        case .cape: "Cape"
-        case .antenna: "Gold antenna"
+        case .headphones: String(localized: "Headphones")
+        case .mug: String(localized: "Mug")
+        case .cape: String(localized: "Cape")
+        case .antenna: String(localized: "Gold antenna")
         }
     }
     var symbol: String {
@@ -33,13 +33,13 @@ enum CompanionAccessory: String, CaseIterable, Identifiable, Sendable {
     }
     func isUnlocked(totalHours: Double) -> Bool { totalHours >= requiredHours }
     func menuLabel(totalHours: Double) -> String {
-        isUnlocked(totalHours: totalHours) ? name : "🔒 \(name) · \(Int(requiredHours))h"
+        isUnlocked(totalHours: totalHours) ? name : String(localized: "🔒 \(name) · \(Int(requiredHours))h")
     }
     func progressText(totalHours: Double) -> String {
-        guard !isUnlocked(totalHours: totalHours) else { return "Unlocked" }
+        guard !isUnlocked(totalHours: totalHours) else { return String(localized: "Unlocked") }
         let hours = totalHours.isFinite ? max(0, totalHours) : 0
         let minutes = Int(ceil(max(0, requiredHours - hours) * 60 - 1e-9))
-        return "\(minutes / 60)h \(minutes % 60)m to go"
+        return String(localized: "\(minutes / 60)h \(minutes % 60)m to go")
     }
     static func selection(_ stored: String, totalHours: Double) -> String {
         if stored == "None" { return stored }

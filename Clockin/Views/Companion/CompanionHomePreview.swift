@@ -33,9 +33,9 @@ struct CompanionHomePreview: View {
     private var owned: Bool { wardrobe.state.owned.contains(item.id) }
     private var canChoose: Bool { owned || (item.unlock.price.map { $0 <= wardrobe.balance } ?? false) }
     private var actionTitle: String {
-        if purchased { return "Done" }
-        if owned { return item.isHomeItem ? "Use in my room" : "Wear this" }
-        if let price = item.unlock.price { return "Buy for \(price) coins" }
+        if purchased { return String(localized: "Done") }
+        if owned { return item.isHomeItem ? String(localized: "Use in my room") : String(localized: "Wear this") }
+        if let price = item.unlock.price { return String(localized: "Buy for \(price) coins") }
         return item.unlock.label
     }
 
@@ -119,7 +119,7 @@ struct CompanionHomePreview: View {
                 ForEach(CompanionHomeLayout.allCases, id: \.self) { Text($0.title).tag($0) }
             }.pickerStyle(.segmented)
             Picker("Window light", selection: $time) {
-                ForEach(["Now", "Day", "Evening", "Night"], id: \.self) { Text($0) }
+                ForEach(["Now", "Day", "Evening", "Night"], id: \.self) { Text(LocalizedStringKey($0)) }
             }.pickerStyle(.segmented)
             Toggle("Room lamp", isOn: $lamp)
             Picker("Companion activity", selection: $activity) {
@@ -141,7 +141,7 @@ struct CompanionHomePreview: View {
         Haptics.play(.companionReaction)
         if wasOwned { dismiss() } else {
             purchased = true
-            UIAccessibility.post(notification: .announcement, argument: "Purchased. \(item.name) is yours and equipped.")
+            UIAccessibility.post(notification: .announcement, argument: String(localized: "Purchased. \(item.name) is yours and equipped."))
         }
     }
 }

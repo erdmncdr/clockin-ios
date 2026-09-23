@@ -39,7 +39,7 @@ struct LiveActivitySetupView: View {
     @State private var showingPolicy = false
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
-    private var titles: [String] { ["Keep earnings in view", "Check your iPhone settings", "Check the connection"] }
+    private var titles: [String] { [String(localized: "Keep earnings in view"), String(localized: "Check your iPhone settings"), String(localized: "Check the connection")] }
 
     var body: some View {
         NavigationStack {
@@ -148,7 +148,7 @@ struct LiveActivitySetupView: View {
         }
     }
 
-    private func permissionRow(_ title: String, detail: String, allowed: Bool) -> some View {
+    private func permissionRow(_ title: LocalizedStringKey, detail: LocalizedStringKey, allowed: Bool) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: allowed ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(allowed ? palette.accent : palette.secondary)

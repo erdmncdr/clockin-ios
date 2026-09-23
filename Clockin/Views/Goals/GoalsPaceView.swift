@@ -78,7 +78,7 @@ struct GoalsPaceView: View {
 
     private func summary(_ plan: MonthlyWorkPlan) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(plan.today.formatted(.dateTime.month(.wide).year()).uppercased())
+            Text(plan.today.formatted(.dateTime.month(.wide).year()).uppercased(with: .current))
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             Text(DurationText.compact(plan.monthWorked))
                 .font(.system(.largeTitle, design: .rounded, weight: .bold)).monospacedDigit()
@@ -133,7 +133,7 @@ struct GoalsPaceView: View {
             SectionTitle("YOUR PLAN")
             Picker("Workdays per week", selection: $workdays) {
                 Text("Choose").tag(0)
-                ForEach(1...7, id: \.self) { count in Text("\(count) \(count == 1 ? "day" : "days")").tag(count) }
+                ForEach(1...7, id: \.self) { count in Text("\(count) days").tag(count) }
             }
             .accessibilityIdentifier("pace.workdays")
             Text("How many days do you usually work each week?")
@@ -218,7 +218,7 @@ struct GoalsPaceView: View {
             Text("Solid: actual total · dashed: recent pace · dotted: monthly goal")
                 .font(.caption2).foregroundStyle(.secondary)
             Text(plan.sampleDays > 0
-                 ? "Uses \(plan.sampleDays) completed calendar days before today, including days without work, adjusted to your \(plan.workdaysPerWeek)-day week. \(plan.sampleDays < 7 ? "Early estimate: a full week will be more representative. " : "")The forecast is an estimate, not a guarantee."
+                 ? "Uses \(plan.sampleDays) completed calendar days before today, including days without work, adjusted to your \(plan.workdaysPerWeek)-day week. \(plan.sampleDays < 7 ? String(localized: "Early estimate: a full week will be more representative.") + " " : "")The forecast is an estimate, not a guarantee."
                  : "Today's work counts toward progress, but an unfinished day isn't used to establish your average.")
                 .font(.caption).foregroundStyle(.secondary)
         }
@@ -276,7 +276,7 @@ struct GoalsPaceView: View {
         .padding(16).card(palette)
     }
 
-    private func metric(_ title: String, _ value: String) -> some View {
+    private func metric(_ title: LocalizedStringKey, _ value: String) -> some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title).foregroundStyle(.secondary)

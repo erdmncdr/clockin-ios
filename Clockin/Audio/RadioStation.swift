@@ -8,13 +8,13 @@ struct RadioStation: Identifiable, Hashable, Sendable {
 
     static let storageKey = "Clockin.RadioStation"
     static let stations: [RadioStation] = [
-        .init(id: "rp", name: "Radio Paradise", description: "Main Mix: eclectic, listener-supported, commercial-free",
+        .init(id: "rp", name: "Radio Paradise", description: String(localized: "Main Mix: eclectic, listener-supported, commercial-free"),
               url: URL(string: "https://stream.radioparadise.com/aac-320")!),
-        .init(id: "rp-mellow", name: "Mellow Mix", description: "Relaxed and mellow music",
+        .init(id: "rp-mellow", name: "Mellow Mix", description: String(localized: "Relaxed and mellow music"),
               url: URL(string: "https://stream.radioparadise.com/mellow-320")!),
-        .init(id: "rp-global", name: "Global Mix", description: "Music from around the world",
+        .init(id: "rp-global", name: "Global Mix", description: String(localized: "Music from around the world"),
               url: URL(string: "https://stream.radioparadise.com/global-320")!),
-        .init(id: "rp-serenity", name: "Serenity", description: "Ambient music for quiet focus",
+        .init(id: "rp-serenity", name: "Serenity", description: String(localized: "Ambient music for quiet focus"),
               url: URL(string: "https://stream.radioparadise.com/serenity")!)
     ]
 

@@ -163,7 +163,7 @@ struct DeskModeView: View {
         }
     }
 
-    private func roundButton(systemImage: String, label: String, foreground: Color, background: Color,
+    private func roundButton(systemImage: String, label: LocalizedStringKey, foreground: Color, background: Color,
                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
@@ -187,31 +187,33 @@ struct DeskModeView: View {
     }
 
     private var statusText: String {
-        guard let running = store.running else { return "READY" }
-        return running.isPaused ? "PAUSED" : "WORKING"
+        guard let running = store.running else { return String(localized: "READY") }
+        return running.isPaused ? String(localized: "PAUSED") : String(localized: "WORKING")
     }
 
     private func timerAccessibilityLabel(elapsed: TimeInterval, earned: Double, day: Date?) -> String {
         let duration = Duration.seconds(max(0, elapsed)).formatted(
             .units(allowed: [.hours, .minutes, .seconds], width: .wide)
-                .locale(Locale(identifier: "en_US"))
         )
+        let money = earned.money(code: store.currencyCode)
         var label = store.running == nil
-            ? "Ready. Earned today \(earned.money(code: store.currencyCode))"
-            : "\(store.running?.isPaused == true ? "Paused. " : "")Session \(duration), earned \(earned.money(code: store.currencyCode))"
+            ? String(localized: "Ready. Earned today \(money)")
+            : store.running?.isPaused == true
+                ? String(localized: "Paused. Session \(duration), earned \(money)")
+                : String(localized: "Session \(duration), earned \(money)")
         if store.currencyCode == "USD", let rate = exchangeRates.latestRate {
             label += ", \((earned * rate).money(code: "TRY"))"
         }
         if let day {
-            label += ". Counts toward \(day.formatted(.dateTime.month(.abbreviated).day()))"
+            label += ". " + String(localized: "Counts toward \(day.formatted(.dateTime.month(.abbreviated).day()))")
         }
         return label
     }
 
     private func todayAccessibilityLabel(duration: TimeInterval, earnings: Double, goal: GoalProgress?) -> String {
-        var label = "Today \(DurationText.compact(duration)), \(earnings.money(code: store.currencyCode))"
+        var label = String(localized: "Today \(DurationText.compact(duration)), \(earnings.money(code: store.currencyCode))")
         if let goal {
-            label += goal.isReached ? ", goal reached" : ", \(DurationText.compact(goal.remaining)) to go"
+            label += ", " + (goal.isReached ? String(localized: "goal reached") : String(localized: "\(DurationText.compact(goal.remaining)) to go"))
         }
         return label
     }

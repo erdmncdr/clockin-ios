@@ -4,7 +4,7 @@ import SwiftUI
 /// 7.5 yazilabilir; adimlar tam saatten daha ince hedefleri de kaybetmeden
 /// ilerletir.
 struct GoalHoursField: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var hours: Double
     let step: Double
     let maximum: Double
@@ -33,7 +33,7 @@ struct GoalHoursField: View {
                     .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .focused($focusedField, equals: field)
                     .decimalInputRegion(active: focusedField != nil)
-                    .accessibilityLabel("\(title) goal in hours")
+                    .accessibilityLabel("\(Text(title)) goal in hours")
                     .onSubmit { focusedField = nil }
                     .task(id: pendingFocus) {
                         guard pendingFocus else { return }

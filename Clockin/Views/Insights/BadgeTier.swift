@@ -3,9 +3,9 @@ import Foundation
 enum BadgeTier: Int, CaseIterable, Identifiable {
     case launch = 1, orbit, lunar, solar, galactic, eternal
     var id: Int { rawValue }
-    var title: String { ["Launch", "Orbit", "Lunar", "Solar", "Galactic", "Eternal"][rawValue - 1] }
+    var title: String { [String(localized: "Launch"), String(localized: "Orbit"), String(localized: "Lunar"), String(localized: "Solar"), String(localized: "Galactic"), String(localized: "Eternal")][rawValue - 1] }
     var caption: String {
-        ["Begin your mission", "Build your rhythm", "Go beyond the familiar", "Make your work shine", "Leave your mark", "A lifetime-class achievement"][rawValue - 1]
+        [String(localized: "Begin your mission"), String(localized: "Build your rhythm"), String(localized: "Go beyond the familiar"), String(localized: "Make your work shine"), String(localized: "Leave your mark"), String(localized: "A lifetime-class achievement")][rawValue - 1]
     }
     static func forBadge(_ id: String) -> Self {
         switch id {
@@ -26,7 +26,7 @@ enum BadgeTier: Int, CaseIterable, Identifiable {
 enum BadgeMission: Int, CaseIterable {
     case flight, signal, orbit, archive, habitat, suit
     var title: String {
-        ["Flight time", "Focus streak", "Active days", "Session log", "Your collection", "Personal style"][rawValue]
+        [String(localized: "Flight time"), String(localized: "Focus streak"), String(localized: "Active days"), String(localized: "Session log"), String(localized: "Your collection"), String(localized: "Personal style")][rawValue]
     }
     static func forBadge(_ id: String) -> Self {
         if id.hasPrefix("outfits") { return .suit }

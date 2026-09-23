@@ -25,12 +25,12 @@ struct StatsShareSnapshot: Identifiable {
             .time: DurationText.compact(stats.totalDuration),
             .earnings: stats.totalEarnings.money(code: store.currencyCode),
             .sessions: "\(stats.sessionCount)", .activeDays: "\(stats.daily.count)",
-            .streak: "\(stats.currentStreak) days", .longestStreak: "\(stats.longestStreak) days",
+            .streak: String(localized: "\(stats.currentStreak) days"), .longestStreak: String(localized: "\(stats.longestStreak) days"),
             .badges: "\(stats.badges.filter(\.unlocked).count)", .xp: "\(stats.xp)", .level: "\(stats.level)",
             .fullDays: "\(stats.fullDays)", .longDays: "\(stats.longDays)",
             .bigMonths: "\(stats.bigMonths)", .momentum: String(format: "%+.0f%%", stats.monthTrend * 100),
-            .weekday: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? "No sessions",
-            .hour: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? "No sessions"
+            .weekday: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions"),
+            .hour: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions")
         ]
         if let day = stats.bestDay {
             fields[.bestDay] = day.formatted(.dateTime.month(.abbreviated).day())
@@ -63,20 +63,20 @@ struct ShareStatsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         SectionTitle("SHARE YOUR STATS")
                         Picker("Privacy", selection: $privacy.hapticSelection($selectionFeedback)) {
-                            ForEach(StatsSharePrivacy.allCases) { Text($0.rawValue).tag($0) }
+                            ForEach(StatsSharePrivacy.allCases) { Text($0.title).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Stats privacy")
                         Text("Private hides headline time, earnings and best-day duration. XP, level, streaks and rhythm remain visible. It is not anonymization.")
                             .font(.caption).foregroundStyle(.secondary)
                         Picker("Page", selection: $page.hapticSelection($selectionFeedback)) {
-                            ForEach(StatsSharePage.allCases) { Text($0.rawValue).tag($0) }
+                            ForEach(StatsSharePage.allCases) { Text($0.title).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Preview page")
                         Picker("Export", selection: $mode.hapticSelection($selectionFeedback)) {
-                            ForEach(StatsShareMode.allCases) { Text($0.rawValue).tag($0) }
+                            ForEach(StatsShareMode.allCases) { Text($0.title).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Image pages")
                     }.padding(16).card(palette)
                     if let preview {
                         Image(uiImage: preview).resizable().scaledToFit()
-                            .accessibilityLabel("\(privacy.rawValue) stats preview, \(mode == .all ? "all three pages" : page.rawValue)")
+                            .accessibilityLabel(String(localized: "\(privacy.title) stats preview, \(mode == .all ? String(localized: "all three pages") : page.title)"))
                             .accessibilityValue(previewDescription)
                     }
                     if let png, let preview {
@@ -86,7 +86,7 @@ struct ShareStatsView: View {
                             .accessibilityLabel("Share stats as PNG")
                         Button {
                             UIPasteboard.general.setData(png.data, forPasteboardType: UTType.png.identifier)
-                            status = "PNG copied to clipboard."
+                            status = String(localized: "PNG copied to clipboard.")
                         } label: { Label("Copy image", systemImage: "doc.on.doc") }
                         .buttonStyle(.bordered).accessibilityLabel("Copy stats PNG to clipboard")
                     }
@@ -120,8 +120,8 @@ struct ShareStatsView: View {
 
     private var previewDescription: String {
         mode.pages(current: page).map { page in
-            page.rawValue + ": " + StatsShareFields.rows(page: page, privacy: privacy, values: snapshot.values)
-                .map { "\($0.field.rawValue): \($0.value)" }.joined(separator: ", ")
+            page.title + ": " + StatsShareFields.rows(page: page, privacy: privacy, values: snapshot.values)
+                .map { "\($0.field.title): \($0.value)" }.joined(separator: ", ")
         }.joined(separator: ". ")
     }
 
@@ -139,13 +139,12 @@ struct ShareStatsView: View {
         .environment(\.palette, palette)
         .environment(\.colorScheme, palette.colorScheme)
         .environment(\.dynamicTypeSize, .medium)
-        .environment(\.locale, Locale(identifier: "en_US"))
         .fontDesign(palette.fontDesign)
         let renderer = ImageRenderer(content: content)
         renderer.scale = displayScale
         renderer.isOpaque = true
         guard let image = renderer.uiImage, let data = image.pngData() else {
-            status = "Could not create image. Please try again."
+            status = String(localized: "Could not create image. Please try again.")
             return
         }
         preview = image
@@ -169,12 +168,12 @@ private struct StatsShareCard: View {
             }
             Rectangle().fill(palette.accent).frame(width: 42, height: 4).padding(.top, 12)
             Text(title).font(.system(size: 32, weight: .black)).tracking(-1)
-            Text(snapshot.date.formatted(.dateTime.locale(Locale(identifier: "en_US")).month(.wide).day().year()))
+            Text(snapshot.date.formatted(.dateTime.month(.wide).day().year()))
                 .font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundStyle(.secondary)
             VStack(spacing: 16) {
                 ForEach(StatsShareFields.rows(page: page, privacy: privacy, values: snapshot.values)) { row in
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text(row.field.rawValue.uppercased())
+                        Text(row.field.title.uppercased(with: .current))
                             .font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(.secondary)
                         Spacer(minLength: 0)
                         Text(row.value).font(.system(size: 18, weight: .bold, design: palette.fontDesign))
@@ -186,7 +185,7 @@ private struct StatsShareCard: View {
             HStack {
                 Text("STATS REWIND")
                 Spacer()
-                Text(privacy.rawValue.uppercased())
+                Text(privacy.title.uppercased(with: .current))
             }.font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(.secondary)
         }
         .padding(28).frame(width: 350, height: 540)
@@ -202,9 +201,9 @@ private struct StatsShareCard: View {
 
     private var title: String {
         switch page {
-        case .overview: privacy == .publicStats ? "FOCUS\nIN NUMBERS" : "FOCUS\nJOURNEY"
-        case .rhythm: "RHYTHM\nREPORT"
-        case .milestones: "MILESTONES\n& MOMENTUM"
+        case .overview: privacy == .publicStats ? String(localized: "FOCUS\nIN NUMBERS") : String(localized: "FOCUS\nJOURNEY")
+        case .rhythm: String(localized: "RHYTHM\nREPORT")
+        case .milestones: String(localized: "MILESTONES\n& MOMENTUM")
         }
     }
 }

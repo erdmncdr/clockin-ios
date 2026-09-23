@@ -41,9 +41,9 @@ struct CelebrationOverlay: View {
                     case .accessory(let accessory):
                         banner(title: accessory.name, icon: accessory.symbol, accessory: accessory)
                     case .wardrobe(let name, let introductory):
-                        banner(title: name, icon: "tshirt.fill", wardrobeTitle: introductory ? "Wardrobe unlocked" : "New item")
+                        banner(title: name, icon: "tshirt.fill", wardrobeTitle: introductory ? String(localized: "Wardrobe unlocked") : String(localized: "New item"))
                     case .moreBadges(let ids):
-                        banner(title: "and \(ids.count) more", icon: "rosette")
+                        banner(title: String(localized: "and \(ids.count) more"), icon: "rosette")
                     case .reaction: EmptyView()
                     }
                 }
@@ -67,7 +67,7 @@ struct CelebrationOverlay: View {
             HStack(spacing: 12) {
                 Image(systemName: icon).font(.title2).foregroundStyle(palette.accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(wardrobeTitle ?? (accessory == nil ? "Badge unlocked" : "New accessory")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text(wardrobeTitle ?? (accessory == nil ? String(localized: "Badge unlocked") : String(localized: "New accessory"))).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                     Text(title).font(.subheadline.bold()).foregroundStyle(.primary)
                 }
                 .fixedSize(horizontal: false, vertical: true)

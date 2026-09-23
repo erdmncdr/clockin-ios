@@ -35,7 +35,7 @@ final class FocusRadioController: ObservableObject {
                     self.isInterrupted = true
                     if self.isStarted {
                         self.endPlayback(.interruption)
-                        self.errorMessage = "Audio was interrupted. Press Play after the interruption ends."
+                        self.errorMessage = String(localized: "Audio was interrupted. Press Play after the interruption ends.")
                     }
                 } else if kind == AVAudioSession.InterruptionType.ended.rawValue {
                     // shouldResume olsa bile kullanici Play'e basmali.
@@ -85,7 +85,7 @@ final class FocusRadioController: ObservableObject {
     func play() {
         guard !state.requestsPlayback else { return }
         guard !isInterrupted else {
-            fail("Audio is interrupted. Try Play after the interruption ends.")
+            fail(String(localized: "Audio is interrupted. Try Play after the interruption ends."))
             return
         }
         errorMessage = nil
@@ -98,7 +98,7 @@ final class FocusRadioController: ObservableObject {
                 ownsAudioSession = true
                 try session.setActive(true)
             } catch {
-                fail("Could not start audio: \(error.localizedDescription)")
+                fail(String(localized: "Could not start audio: \(error.localizedDescription)"))
                 return
             }
             let item = AVPlayerItem(url: station.url)
@@ -131,7 +131,7 @@ final class FocusRadioController: ObservableObject {
             while !Task.isCancelled {
                 guard let self, self.state.requestsPlayback, let player = self.player else { return }
                 if player.currentItem?.status == .failed || player.error != nil {
-                    self.fail("\(self.station.name) is unreachable. Check your connection and try again.")
+                    self.fail(String(localized: "\(self.station.name) is unreachable. Check your connection and try again."))
                     return
                 }
                 let playing = player.timeControlStatus == .playing
@@ -142,7 +142,7 @@ final class FocusRadioController: ObservableObject {
                 }
                 if playing { waitingSince = .now }
                 else if waitingSince.duration(to: .now) >= .seconds(30) {
-                    self.fail("\(self.station.name) did not respond. Check your connection and try again.")
+                    self.fail(String(localized: "\(self.station.name) did not respond. Check your connection and try again."))
                     return
                 }
                 do { try await Task.sleep(for: .milliseconds(500)) }
@@ -160,7 +160,7 @@ final class FocusRadioController: ObservableObject {
             Task { @MainActor in
                 guard let self, let current = self.player?.currentItem,
                       ObjectIdentifier(current) == id else { return }
-                self.fail("\(self.station.name) is unreachable. Check your connection and try again.")
+                self.fail(String(localized: "\(self.station.name) is unreachable. Check your connection and try again."))
             }
         }
     }
@@ -239,7 +239,7 @@ final class FocusRadioController: ObservableObject {
         let center = MPNowPlayingInfoCenter.default()
         center.nowPlayingInfo = [
             MPMediaItemPropertyTitle: station.name,
-            MPMediaItemPropertyArtist: "Radio Paradise • Focus radio",
+            MPMediaItemPropertyArtist: String(localized: "Radio Paradise • Focus radio"),
             MPNowPlayingInfoPropertyIsLiveStream: true,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
         ]

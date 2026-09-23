@@ -116,12 +116,12 @@ struct RoomEditorView: View {
                 }.accessibilityLabel("Reset selected item").disabled(isDragging)
             }
         }
-        Text(feedback ?? "Changes stay here until you save.")
+        Text(feedback ?? String(localized: "Changes stay here until you save."))
             .font(.caption).foregroundStyle(feedback == nil ? Color.secondary : .red)
             .frame(minHeight:30,alignment:.topLeading)
             .accessibilityIdentifier("room.editor.feedback")
     }
-    private func moveButton(_ title: String, symbol: String, dx: Double, dy: Double,
+    private func moveButton(_ title: LocalizedStringKey, symbol: String, dx: Double, dy: Double,
                             item: RoomPlacedItem, room: WardrobeRoom) -> some View {
         Button {
             let next = RoomPlacement.moved(item,translation:CGSize(width:dx,height:dy),room:room,

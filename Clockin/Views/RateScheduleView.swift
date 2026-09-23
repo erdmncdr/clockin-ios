@@ -114,7 +114,7 @@ struct RateScheduleView: View {
         if let end = rule.effectiveUntil {
             return "\(start) – \(end.formatted(date: .abbreviated, time: .omitted))"
         }
-        return "From \(start) · No end date"
+        return String(localized: "From \(start) · No end date")
     }
 }
 
@@ -236,7 +236,7 @@ private struct RatePeriodEditor: View {
             dismiss()
         } else {
             Haptics.play(.validationFailed)
-            errorMessage = store.statusMessage ?? "Could not save this rate period. Please try again."
+            errorMessage = store.statusMessage ?? String(localized: "Could not save this rate period. Please try again.")
         }
     }
 }

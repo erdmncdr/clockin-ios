@@ -20,12 +20,14 @@ extension View {
 }
 
 struct SectionTitle: View {
-    let text: String
+    let text: Text
 
-    init(_ text: String) { self.text = text }
+    /// Sabit basliklar cevrilir; hesaplanan metinler (tarih gibi) oldugu gibi gorunur.
+    init(_ key: LocalizedStringKey) { text = Text(key) }
+    @_disfavoredOverload init<S: StringProtocol>(_ content: S) { text = Text(content) }
 
     var body: some View {
-        Text(text)
+        text
             .font(.caption.weight(.bold))
             .tracking(1.2)
             .foregroundStyle(.secondary)

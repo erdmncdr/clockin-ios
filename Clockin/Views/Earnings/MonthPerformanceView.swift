@@ -50,7 +50,7 @@ struct MonthPerformanceView: View {
         let previous = performance.comparisonInterval
         let last = Calendar.current.date(byAdding: .day, value: -1, to: previous.end)!
         let sign = performance.difference >= 0 ? "+" : "-"
-        return "\(sign)\(DurationText.compact(abs(performance.difference))) vs \(previous.start.formatted(.dateTime.month(.abbreviated).day())) to \(last.formatted(.dateTime.month(.abbreviated).day().year()))"
+        return String(localized: "\(sign)\(DurationText.compact(abs(performance.difference))) vs \(previous.start.formatted(.dateTime.month(.abbreviated).day())) to \(last.formatted(.dateTime.month(.abbreviated).day().year()))")
     }
 
     private var cumulativeChart: some View {
@@ -81,7 +81,7 @@ struct MonthPerformanceView: View {
         .accessibilityLabel("Monthly worked hours")
     }
 
-    private func metric(_ title: String, _ value: String) -> some View {
+    private func metric(_ title: LocalizedStringKey, _ value: String) -> some View {
         ViewThatFits(in: .horizontal) {
             HStack {
                 Text(title).foregroundStyle(.secondary)

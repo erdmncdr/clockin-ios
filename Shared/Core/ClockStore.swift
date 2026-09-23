@@ -78,10 +78,10 @@ final class ClockStore: ObservableObject {
                 let stamp = Int(Date().timeIntervalSince1970 * 1000)
                 let copy = self.fileURL.deletingLastPathComponent().appending(path: "clockin-unreadable-\(stamp).json")
                 if (try? FileManager.default.copyItem(at: self.fileURL, to: copy)) != nil {
-                    loadFailureMessage = "Your data could not be read. The original file was kept as \(copy.lastPathComponent). You can restore a backup from Settings."
+                    loadFailureMessage = String(localized: "Your data could not be read. The original file was kept as \(copy.lastPathComponent). You can restore a backup from Settings.")
                 } else {
                     mustNotOverwrite = true
-                    loadFailureMessage = "Your data could not be read and no safety copy could be made. Restore a backup from Settings before adding entries."
+                    loadFailureMessage = String(localized: "Your data could not be read and no safety copy could be made. Restore a backup from Settings before adding entries.")
                 }
             }
         }
@@ -202,7 +202,7 @@ final class ClockStore: ObservableObject {
         guard data.running == nil else { return }
         guard let safeElapsed = SessionDuration.clockInElapsed(elapsed),
               SessionDuration.isValidDate(date) else {
-            statusMessage = "Invalid elapsed time or date."
+            statusMessage = String(localized: "Invalid elapsed time or date.")
             return
         }
         let running = RunningSession(
@@ -212,7 +212,7 @@ final class ClockStore: ObservableObject {
             note: note
         )
         guard running.hasValidDuration(at: date) else {
-            statusMessage = "Invalid elapsed time or date."
+            statusMessage = String(localized: "Invalid elapsed time or date.")
             return
         }
         let previous = data
@@ -225,13 +225,13 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.running = nil
         guard persistTimerChange(previous: previous) else { return }
-        statusMessage = "Active session cancelled. No earnings were added."
+        statusMessage = String(localized: "Active session cancelled. No earnings were added.")
     }
 
     func pause(at date: Date = .now) {
         guard var running = data.running, running.resumedAt != nil else { return }
         guard running.hasValidDuration(at: date) else {
-            statusMessage = "Invalid elapsed time or date."
+            statusMessage = String(localized: "Invalid elapsed time or date.")
             return
         }
         running.accumulated = running.elapsed(at: date)
@@ -245,7 +245,7 @@ final class ClockStore: ObservableObject {
         guard var running = data.running, running.resumedAt == nil else { return }
         running.resumedAt = date
         guard running.hasValidDuration(at: date) else {
-            statusMessage = "Invalid elapsed time or date."
+            statusMessage = String(localized: "Invalid elapsed time or date.")
             return
         }
         let previous = data
@@ -257,7 +257,7 @@ final class ClockStore: ObservableObject {
     func clockOut(at date: Date = .now) -> WorkSession? {
         guard let running = data.running else { return nil }
         guard running.hasValidDuration(at: date), date >= running.start else {
-            statusMessage = "Invalid elapsed time or date."
+            statusMessage = String(localized: "Invalid elapsed time or date.")
             return nil
         }
         let session = WorkSession(
@@ -279,7 +279,7 @@ final class ClockStore: ObservableObject {
     @discardableResult
     func addManualSession(start: Date, end: Date, note: String = "") -> Bool {
         guard end > start else {
-            statusMessage = "End time must be after the start time."
+            statusMessage = String(localized: "End time must be after the start time.")
             return false
         }
         let session = WorkSession(
@@ -287,12 +287,12 @@ final class ClockStore: ObservableObject {
             note: note, hourlyRate: hourlyRate, source: "Clockin"
         )
         guard session.hasValidDuration else {
-            statusMessage = "Invalid session duration or dates."
+            statusMessage = String(localized: "Invalid session duration or dates.")
             return false
         }
         let key = Self.deduplicationKey(session)
         guard !data.sessions.contains(where: { Self.deduplicationKey($0) == key }) else {
-            statusMessage = "An entry with these exact times already exists."
+            statusMessage = String(localized: "An entry with these exact times already exists.")
             return false
         }
         // Yazilamazsa kayit bellekte de kalmamali: ekranda gorunup diskte
@@ -300,7 +300,7 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.sessions.append(session)
         guard save() else { data = previous; return false }
-        statusMessage = "Entry added."
+        statusMessage = String(localized: "Entry added.")
         return true
     }
 
@@ -404,8 +404,8 @@ final class ClockStore: ObservableObject {
     private func applyRateHistory(_ proposed: [RateRule]?) -> Bool {
         guard let proposed, !proposed.isEmpty else {
             statusMessage = rateHistorySummary == .custom
-                ? "Edit this custom rate schedule in Rate schedule."
-                : "Enter a nonnegative amount and a date no later than today."
+                ? String(localized: "Edit this custom rate schedule in Rate schedule.")
+                : String(localized: "Enter a nonnegative amount and a date no later than today.")
             return false
         }
         let previous = data
@@ -435,15 +435,15 @@ final class ClockStore: ObservableObject {
         let day = calendar.startOfDay(for: effectiveFrom)
         let end = effectiveUntil.map { calendar.startOfDay(for: $0) }
         guard end == nil || end! >= day else {
-            statusMessage = "Rate period end must be on or after its start."
+            statusMessage = String(localized: "Rate period end must be on or after its start.")
             return
         }
         guard !(data.rateRules ?? []).contains(where: { calendar.isDate($0.effectiveFrom, inSameDayAs: day) }) else {
-            statusMessage = "A rate already starts on this day. Edit that rate instead."
+            statusMessage = String(localized: "A rate already starts on this day. Edit that rate instead.")
             return
         }
         guard !overlapsRatePeriod(start: day, end: end, excluding: nil) else {
-            statusMessage = "Rate period overlaps an existing period."
+            statusMessage = String(localized: "Rate period overlaps an existing period.")
             return
         }
         data.rateRules = (data.rateRules ?? []) + [RateRule(effectiveFrom: day, effectiveUntil: end, hourlyRate: hourlyRate)]
@@ -457,15 +457,15 @@ final class ClockStore: ObservableObject {
         let day = calendar.startOfDay(for: effectiveFrom)
         let end = effectiveUntil.map { calendar.startOfDay(for: $0) }
         guard end == nil || end! >= day else {
-            statusMessage = "Rate period end must be on or after its start."
+            statusMessage = String(localized: "Rate period end must be on or after its start.")
             return
         }
         guard !(data.rateRules ?? []).contains(where: { $0.id != id && calendar.isDate($0.effectiveFrom, inSameDayAs: day) }) else {
-            statusMessage = "A rate already starts on this day. Edit that rate instead."
+            statusMessage = String(localized: "A rate already starts on this day. Edit that rate instead.")
             return
         }
         guard !overlapsRatePeriod(start: day, end: end, excluding: id) else {
-            statusMessage = "Rate period overlaps an existing period."
+            statusMessage = String(localized: "Rate period overlaps an existing period.")
             return
         }
         data.rateRules?[index].effectiveFrom = day
@@ -533,9 +533,9 @@ final class ClockStore: ObservableObject {
         do {
             let encoded = try WardrobeBackupSection(defaults: .standard).adding(to: JSONEncoder().encode(data))
             try encoded.write(to: url, options: .atomic)
-            statusMessage = "Backup exported."
+            statusMessage = String(localized: "Backup exported.")
         } catch {
-            statusMessage = "Could not export backup: \(error.localizedDescription)"
+            statusMessage = String(localized: "Could not export backup: \(error.localizedDescription)")
         }
     }
 
@@ -546,7 +546,7 @@ final class ClockStore: ObservableObject {
 
     func restoreLatestBackup() {
         guard let latest = Self.readBackups(in: backupDirectory).first else {
-            statusMessage = "No automatic backup exists yet."
+            statusMessage = String(localized: "No automatic backup exists yet.")
             return
         }
         restoreBackup(from: latest.url)
@@ -571,7 +571,7 @@ final class ClockStore: ObservableObject {
             decoded = try JSONDecoder().decode(ClockinData.self, from: bytes)
             wardrobe = try WardrobeBackupSection.read(from: bytes)
         } catch {
-            statusMessage = "Could not restore backup: \(error.localizedDescription)"
+            statusMessage = String(localized: "Could not restore backup: \(error.localizedDescription)")
             return false
         }
         if FileManager.default.fileExists(atPath: fileURL.path) {
@@ -587,7 +587,7 @@ final class ClockStore: ObservableObject {
                 try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: copy.path)
                 cachedBackupStats = nil
             } catch {
-                statusMessage = "Nothing was restored: your current data could not be kept aside first (\(error.localizedDescription))."
+                statusMessage = String(localized: "Nothing was restored: your current data could not be kept aside first (\(error.localizedDescription)).")
                 return false
             }
         }
@@ -596,7 +596,7 @@ final class ClockStore: ObservableObject {
         guard save() else { data = previous; return false }
         wardrobe?.restore(to: .standard)
         cachedBackupStats = nil
-        statusMessage = "Backup restored. Your previous data was kept as a backup."
+        statusMessage = String(localized: "Backup restored. Your previous data was kept as a backup.")
         return true
     }
 
@@ -699,11 +699,11 @@ final class ClockStore: ObservableObject {
     func updateSession(id: UUID, start: Date, end: Date, note: String) -> Bool {
         let previous = data
         guard SessionDuration.isValidDate(start), SessionDuration.isValidDate(end) else {
-            statusMessage = "Invalid session dates."
+            statusMessage = String(localized: "Invalid session dates.")
             return false
         }
         guard end > start else {
-            statusMessage = "End time must be after the start time."
+            statusMessage = String(localized: "End time must be after the start time.")
             return false
         }
         guard let index = data.sessions.firstIndex(where: { $0.id == id }) else { return false }
@@ -714,11 +714,11 @@ final class ClockStore: ObservableObject {
         if start != old.start || end != old.end {
             let worked = EntryTimes.workedDuration(start: start, end: end, replacing: old)
             guard worked > 0 else {
-                statusMessage = "The new times are shorter than this entry's break."
+                statusMessage = String(localized: "The new times are shorter than this entry's break.")
                 return false
             }
             guard SessionDuration.isValid(worked) else {
-                statusMessage = "Invalid session duration."
+                statusMessage = String(localized: "Invalid session duration.")
                 return false
             }
             data.sessions[index].duration = worked
@@ -727,7 +727,7 @@ final class ClockStore: ObservableObject {
         data.sessions[index].end = end
         data.sessions[index].note = note
         guard save() else { data = previous; return false }
-        statusMessage = "Entry updated."
+        statusMessage = String(localized: "Entry updated.")
         return true
     }
 
@@ -736,7 +736,7 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.sessions.remove(at: index)
         guard save() else { data = previous; return }
-        statusMessage = "Session deleted."
+        statusMessage = String(localized: "Session deleted.")
     }
 
     /// - Parameter removing: silinecek kendi kayitlarinin kimlikleri. Ice
@@ -745,7 +745,7 @@ final class ClockStore: ObservableObject {
     @discardableResult
     func importSessions(_ imported: [WorkSession], removing: Set<UUID> = []) -> Bool {
         guard imported.allSatisfy(\.hasValidDuration) else {
-            statusMessage = "Invalid session duration or dates."
+            statusMessage = String(localized: "Invalid session duration or dates.")
             return false
         }
         let previous = data
@@ -815,12 +815,12 @@ final class ClockStore: ObservableObject {
         data.sessions.append(contentsOf: fresh)
         guard save() else { data = previous; return false }
         if fresh.isEmpty, matched == 0, corrected == 0, removed == 0 {
-            statusMessage = "All entries were already imported."
+            statusMessage = String(localized: "All entries were already imported.")
         } else {
-            var parts = ["Imported \(fresh.count)"]
-            if corrected > 0 { parts.append("corrected \(corrected) Clockin \(corrected == 1 ? "entry" : "entries")") }
-            if matched > 0 { parts.append("matched \(matched)") }
-            if removed > 0 { parts.append("deleted \(removed) Clockin \(removed == 1 ? "entry" : "entries")") }
+            var parts = [String(localized: "Imported \(fresh.count)")]
+            if corrected > 0 { parts.append(String(localized: "corrected \(corrected) Clockin entries")) }
+            if matched > 0 { parts.append(String(localized: "matched \(matched)")) }
+            if removed > 0 { parts.append(String(localized: "deleted \(removed) Clockin entries")) }
             statusMessage = parts.joined(separator: ", ") + "."
         }
         return true
@@ -996,7 +996,7 @@ final class ClockStore: ObservableObject {
     private func persistTimerChange(previous: ClockinData) -> Bool {
         guard save() else {
             data = previous
-            timerPersistenceError = "Your timer change could not be saved. The previous timer state has been kept. Check available storage and try again."
+            timerPersistenceError = String(localized: "Your timer change could not be saved. The previous timer state has been kept. Check available storage and try again.")
             return false
         }
         timerPersistenceError = nil
@@ -1012,7 +1012,7 @@ final class ClockStore: ObservableObject {
             try encoded.write(to: fileURL, options: .atomic)
             return true
         } catch {
-            statusMessage = "Could not save: \(error.localizedDescription)"
+            statusMessage = String(localized: "Could not save: \(error.localizedDescription)")
             return false
         }
     }

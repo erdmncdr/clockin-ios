@@ -30,7 +30,7 @@ struct HistoryView: View {
             List {
                 Section {
                     Picker("Period", selection: $range) {
-                        ForEach(EarningsRange.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(EarningsRange.allCases) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     .hapticFeedback(.selection, trigger: range)
@@ -194,14 +194,14 @@ struct HistoryView: View {
     private func dayLabels(_ day: Date) -> (title: String, subtitle: String) {
         let calendar = Calendar.current
         let full = day.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        if calendar.isDateInToday(day) { return ("TODAY", full) }
-        if calendar.isDateInYesterday(day) { return ("YESTERDAY", full) }
+        if calendar.isDateInToday(day) { return (String(localized: "TODAY"), full) }
+        if calendar.isDateInYesterday(day) { return (String(localized: "YESTERDAY"), full) }
         let days = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: .now)).day ?? 0
         if days < 7 {
-            return (day.formatted(.dateTime.weekday(.wide)).uppercased(),
+            return (day.formatted(.dateTime.weekday(.wide)).uppercased(with: .current),
                     day.formatted(.dateTime.day().month(.abbreviated)))
         }
-        return (day.formatted(.dateTime.day().month(.abbreviated).year()).uppercased(),
+        return (day.formatted(.dateTime.day().month(.abbreviated).year()).uppercased(with: .current),
                 day.formatted(.dateTime.weekday(.wide)))
     }
 

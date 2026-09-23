@@ -20,7 +20,7 @@ struct WorkSession: Codable, Identifiable, Hashable, Sendable {
 }
 
 enum SessionDisplay {
-    static let timecardEntry = "Timecard entry"
+    static let timecardEntry = String(localized: "Timecard entry")
 
     static func isClockin(_ session: WorkSession) -> Bool { session.source == "Clockin" }
 
@@ -47,10 +47,10 @@ enum SessionDisplay {
     }
 
     static func subtitle(_ session: WorkSession) -> String {
-        if isMatched(session) { return "Matched timecard" }
+        if isMatched(session) { return String(localized: "Matched timecard") }
         let note = note(session)
         if !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return note }
-        return isClockin(session) ? "Clockin" : "Imported timecard"
+        return isClockin(session) ? "Clockin" : String(localized: "Imported timecard")
     }
 }
 
@@ -196,10 +196,12 @@ enum DurationText {
 
     static func compact(_ interval: TimeInterval) -> String {
         let minutes = Int(SessionDuration.clamped(interval) / 60)
-        if minutes < 60 { return "\(minutes)m" }
-        let hours = minutes / 60
+        // Sayilar metin olarak gomulur: yerellestirilmis tam sayi binlik ayraci
+        // alir ve 876000h, 876.000h olurdu.
+        if minutes < 60 { return String(localized: "\(String(minutes))m") }
+        let hours = String(minutes / 60)
         let remainder = minutes % 60
-        return remainder == 0 ? "\(hours)h" : "\(hours)h \(remainder)m"
+        return remainder == 0 ? String(localized: "\(hours)h") : String(localized: "\(hours)h \(String(remainder))m")
     }
 }
 

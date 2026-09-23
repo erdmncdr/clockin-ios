@@ -3,59 +3,59 @@ import Foundation
 // Kimlikler sanat dosyalarinin kok adlariyla aynidir.
 enum WardrobeCatalog {
     static let items: [WardrobeItem] = [
-        .init(id: "ataturk-portrait", name: "Atatürk portrait", slot: .wallLeft, unlock: .free),
-        .init(id: "turkish-flag", name: "Turkish flag", slot: .wallRight, unlock: .free),
-        .init(id: "cap", name: "Cap", slot: .head, unlock: .free),
-        .init(id: "round-glasses", name: "Round glasses", slot: .face, unlock: .free),
-        .init(id: "headphones", name: "Headphones", slot: .head, unlock: .hours(25)),
-        .init(id: "mug", name: "Mug", slot: .hand, unlock: .hours(50)),
-        .init(id: "cape", name: "Cape", slot: .back, unlock: .hours(100)),
-        .init(id: "antenna", name: "Gold antenna", slot: .head, unlock: .hours(250)),
-        .init(id: "crown", name: "Crown", slot: .head, unlock: .level(50)),
-        .init(id: "wizard-hat", name: "Wizard hat", slot: .head, unlock: .streak(30)),
-        .init(id: "bow-tie", name: "Bow tie", slot: .neck, unlock: .badge("first")),
-        .init(id: "scarf", name: "Scarf", slot: .neck, unlock: .coins(50)),
-        .init(id: "sunglasses", name: "Sunglasses", slot: .face, unlock: .coins(100)),
-        .init(id: "balloon", name: "Balloon", slot: .hand, unlock: .coins(150)),
-        .init(id: "backpack", name: "Backpack", slot: .back, unlock: .coins(300)),
-        .init(id: "wings", name: "Wings", slot: .back, unlock: .coins(1500)),
-        .init(id: "beanie", name: "Beanie", slot: .head, unlock: .coins(75)),
-        .init(id: "party-hat", name: "Party hat", slot: .head, unlock: .coins(100)),
-        .init(id: "chef-hat", name: "Chef hat", slot: .head, unlock: .coins(200)),
-        .init(id: "cowboy-hat", name: "Cowboy hat", slot: .head, unlock: .coins(300)),
-        .init(id: "pixel-shades", name: "Pixel shades", slot: .face, unlock: .coins(150)),
-        .init(id: "monocle", name: "Monocle", slot: .face, unlock: .coins(250)),
-        .init(id: "gold-medal", name: "Gold medal", slot: .neck, unlock: .coins(300)),
-        .init(id: "necktie", name: "Necktie", slot: .neck, unlock: .coins(100)),
-        .init(id: "jetpack", name: "Jetpack", slot: .back, unlock: .coins(1000)),
-        .init(id: "trophy", name: "Trophy", slot: .hand, unlock: .coins(500)),
-        .init(id: "small-flag", name: "Explorer flag", slot: .hand, unlock: .coins(150)),
-        .init(id: "classic", name: "Classic", slot: .colorway, unlock: .free),
-        .init(id: "mint", name: "Mint", slot: .colorway, unlock: .coins(200)),
-        .init(id: "sunset", name: "Sunset", slot: .colorway, unlock: .coins(200)),
-        .init(id: "midnight", name: "Midnight", slot: .colorway, unlock: .coins(500)),
-        .init(id: "gold", name: "Gold", slot: .colorway, unlock: .coins(500)),
-        .init(id: "stealth", name: "Stealth", slot: .colorway, unlock: .coins(500)),
-        .init(id: "cozy", name: "Cozy", slot: .room, unlock: .free),
-        .init(id: "studio", name: "Studio", slot: .room, unlock: .coins(750)),
-        .init(id: "night", name: "Night", slot: .room, unlock: .coins(1000)),
-        .init(id: "cat-bed", name: "Sleeping cat bed", slot: .floorLeft, unlock: .coins(50)),
-        .init(id: "big-plant", name: "Big plant", slot: .floorRight, unlock: .coins(100)),
-        .init(id: "poster", name: "Poster", slot: .wallLeft, unlock: .coins(100)),
-        .init(id: "wall-clock", name: "Wall clock", slot: .wallRight, unlock: .coins(150)),
-        .init(id: "potted-plant", name: "Potted plant", slot: .window, unlock: .coins(200)),
-        .init(id: "round-rug", name: "Round rug", slot: .rug, unlock: .coins(150)),
-        .init(id: "desk-monitor", name: "Desk and monitor", slot: .desk, unlock: .coins(400)),
-        .init(id: "bookshelf", name: "Bookshelf", slot: .shelf, unlock: .coins(300)),
-        .init(id: "companion-bed", name: "Companion bed", slot: .floorRight, unlock: .coins(350)),
-        .init(id: "bean-bag", name: "Bean bag", slot: .floorRight, unlock: .coins(250)),
-        .init(id: "guitar", name: "Guitar", slot: .floorRight, unlock: .coins(500)),
-        .init(id: "floor-lamp", name: "Floor lamp", slot: .floorLeft, unlock: .coins(200)),
-        .init(id: "coffee-machine", name: "Coffee corner", slot: .floorLeft, unlock: .coins(400)),
-        .init(id: "desk-lamp", name: "Writing desk", slot: .desk, unlock: .coins(300)),
-        .init(id: "record-player", name: "Record player console", slot: .desk, unlock: .coins(600)),
-        .init(id: "certificate", name: "Framed certificate", slot: .wallRight, unlock: .coins(200)),
-        .init(id: "string-lights", name: "String lights", slot: .wallLeft, unlock: .coins(150))
+        .init(id: "ataturk-portrait", name: String(localized: "Atatürk portrait"), slot: .wallLeft, unlock: .free),
+        .init(id: "turkish-flag", name: String(localized: "Turkish flag"), slot: .wallRight, unlock: .free),
+        .init(id: "cap", name: String(localized: "Cap"), slot: .head, unlock: .free),
+        .init(id: "round-glasses", name: String(localized: "Round glasses"), slot: .face, unlock: .free),
+        .init(id: "headphones", name: String(localized: "Headphones"), slot: .head, unlock: .hours(25)),
+        .init(id: "mug", name: String(localized: "Mug"), slot: .hand, unlock: .hours(50)),
+        .init(id: "cape", name: String(localized: "Cape"), slot: .back, unlock: .hours(100)),
+        .init(id: "antenna", name: String(localized: "Gold antenna"), slot: .head, unlock: .hours(250)),
+        .init(id: "crown", name: String(localized: "Crown"), slot: .head, unlock: .level(50)),
+        .init(id: "wizard-hat", name: String(localized: "Wizard hat"), slot: .head, unlock: .streak(30)),
+        .init(id: "bow-tie", name: String(localized: "Bow tie"), slot: .neck, unlock: .badge("first")),
+        .init(id: "scarf", name: String(localized: "Scarf"), slot: .neck, unlock: .coins(50)),
+        .init(id: "sunglasses", name: String(localized: "Sunglasses"), slot: .face, unlock: .coins(100)),
+        .init(id: "balloon", name: String(localized: "Balloon"), slot: .hand, unlock: .coins(150)),
+        .init(id: "backpack", name: String(localized: "Backpack"), slot: .back, unlock: .coins(300)),
+        .init(id: "wings", name: String(localized: "Wings"), slot: .back, unlock: .coins(1500)),
+        .init(id: "beanie", name: String(localized: "Beanie"), slot: .head, unlock: .coins(75)),
+        .init(id: "party-hat", name: String(localized: "Party hat"), slot: .head, unlock: .coins(100)),
+        .init(id: "chef-hat", name: String(localized: "Chef hat"), slot: .head, unlock: .coins(200)),
+        .init(id: "cowboy-hat", name: String(localized: "Cowboy hat"), slot: .head, unlock: .coins(300)),
+        .init(id: "pixel-shades", name: String(localized: "Pixel shades"), slot: .face, unlock: .coins(150)),
+        .init(id: "monocle", name: String(localized: "Monocle"), slot: .face, unlock: .coins(250)),
+        .init(id: "gold-medal", name: String(localized: "Gold medal"), slot: .neck, unlock: .coins(300)),
+        .init(id: "necktie", name: String(localized: "Necktie"), slot: .neck, unlock: .coins(100)),
+        .init(id: "jetpack", name: String(localized: "Jetpack"), slot: .back, unlock: .coins(1000)),
+        .init(id: "trophy", name: String(localized: "Trophy"), slot: .hand, unlock: .coins(500)),
+        .init(id: "small-flag", name: String(localized: "Explorer flag"), slot: .hand, unlock: .coins(150)),
+        .init(id: "classic", name: String(localized: "Classic"), slot: .colorway, unlock: .free),
+        .init(id: "mint", name: String(localized: "Mint"), slot: .colorway, unlock: .coins(200)),
+        .init(id: "sunset", name: String(localized: "Sunset"), slot: .colorway, unlock: .coins(200)),
+        .init(id: "midnight", name: String(localized: "Midnight"), slot: .colorway, unlock: .coins(500)),
+        .init(id: "gold", name: String(localized: "Gold"), slot: .colorway, unlock: .coins(500)),
+        .init(id: "stealth", name: String(localized: "Stealth"), slot: .colorway, unlock: .coins(500)),
+        .init(id: "cozy", name: String(localized: "Cozy"), slot: .room, unlock: .free),
+        .init(id: "studio", name: String(localized: "Studio"), slot: .room, unlock: .coins(750)),
+        .init(id: "night", name: String(localized: "Night"), slot: .room, unlock: .coins(1000)),
+        .init(id: "cat-bed", name: String(localized: "Sleeping cat bed"), slot: .floorLeft, unlock: .coins(50)),
+        .init(id: "big-plant", name: String(localized: "Big plant"), slot: .floorRight, unlock: .coins(100)),
+        .init(id: "poster", name: String(localized: "Poster"), slot: .wallLeft, unlock: .coins(100)),
+        .init(id: "wall-clock", name: String(localized: "Wall clock"), slot: .wallRight, unlock: .coins(150)),
+        .init(id: "potted-plant", name: String(localized: "Potted plant"), slot: .window, unlock: .coins(200)),
+        .init(id: "round-rug", name: String(localized: "Round rug"), slot: .rug, unlock: .coins(150)),
+        .init(id: "desk-monitor", name: String(localized: "Desk and monitor"), slot: .desk, unlock: .coins(400)),
+        .init(id: "bookshelf", name: String(localized: "Bookshelf"), slot: .shelf, unlock: .coins(300)),
+        .init(id: "companion-bed", name: String(localized: "Companion bed"), slot: .floorRight, unlock: .coins(350)),
+        .init(id: "bean-bag", name: String(localized: "Bean bag"), slot: .floorRight, unlock: .coins(250)),
+        .init(id: "guitar", name: String(localized: "Guitar"), slot: .floorRight, unlock: .coins(500)),
+        .init(id: "floor-lamp", name: String(localized: "Floor lamp"), slot: .floorLeft, unlock: .coins(200)),
+        .init(id: "coffee-machine", name: String(localized: "Coffee corner"), slot: .floorLeft, unlock: .coins(400)),
+        .init(id: "desk-lamp", name: String(localized: "Writing desk"), slot: .desk, unlock: .coins(300)),
+        .init(id: "record-player", name: String(localized: "Record player console"), slot: .desk, unlock: .coins(600)),
+        .init(id: "certificate", name: String(localized: "Framed certificate"), slot: .wallRight, unlock: .coins(200)),
+        .init(id: "string-lights", name: String(localized: "String lights"), slot: .wallLeft, unlock: .coins(150))
     ]
     static func item(_ id: String) -> WardrobeItem? { items.first { $0.id == id } }
 }
@@ -68,17 +68,17 @@ enum WardrobeCategory: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .headwear: "Headwear"
-        case .eyewear: "Eyewear"
-        case .neckwear: "Neck accessories"
-        case .back: "Back accessories"
-        case .handheld: "Handheld items"
-        case .colors: "Colors"
-        case .rooms: "Rooms"
-        case .furniture: "Furniture"
-        case .plants: "Plants"
-        case .lighting: "Lighting"
-        case .decor: "Decorations"
+        case .headwear: String(localized: "Headwear")
+        case .eyewear: String(localized: "Eyewear")
+        case .neckwear: String(localized: "Neck accessories")
+        case .back: String(localized: "Back accessories")
+        case .handheld: String(localized: "Handheld items")
+        case .colors: String(localized: "Colors")
+        case .rooms: String(localized: "Rooms")
+        case .furniture: String(localized: "Furniture")
+        case .plants: String(localized: "Plants")
+        case .lighting: String(localized: "Lighting")
+        case .decor: String(localized: "Decorations")
         }
     }
     var symbol: String {

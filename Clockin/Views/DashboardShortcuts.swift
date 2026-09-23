@@ -5,7 +5,7 @@ enum DashboardShortcut: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var storageKey: String { "Clockin.Dashboard.Pin.\(rawValue)" }
     var title: String {
-        switch self { case .chime: "Focus chime"; case .radio: "Focus radio"; case .reminder: "Session reminder" }
+        switch self { case .chime: String(localized: "Focus chime"); case .radio: String(localized: "Focus radio"); case .reminder: String(localized: "Session reminder") }
     }
     var symbol: String {
         switch self { case .chime: "bell.badge"; case .radio: "radio"; case .reminder: "clock.badge" }

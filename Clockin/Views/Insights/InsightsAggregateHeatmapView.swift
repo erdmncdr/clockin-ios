@@ -12,12 +12,12 @@ struct InsightsAggregateHeatmapView: View {
     var body: some View {
         let selected = periods.first { $0.start == selectedStart } ?? periods.last
         VStack(alignment: .leading, spacing: 12) {
-            Text("Each cell shows \(grouping == .week ? "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month" : "a calendar month"). Color shows relative earnings across your archive.")
+            Text("Each cell shows \(grouping == .week ? String(localized: "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month") : String(localized: "a calendar month")). Color shows relative earnings across your archive.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollViewReader { proxy in
                 VStack(spacing: 8) {
                     HStack {
-                        Button("Start") {
+                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start")) {
                             if let first = periods.first { proxy.scrollTo(first.id, anchor: .leading) }
                         }
                         Spacer()
@@ -97,7 +97,7 @@ struct InsightsAggregateHeatmapView: View {
         .buttonStyle(.pressable)
         .buttonPressHaptic(false)
         .accessibilityLabel(title(period))
-        .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", selected" : "")")
+        .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", " + String(localized: "selected") : "")")
         .accessibilityHint("Shows period hours, earnings and available conversion below the grid")
     }
 }

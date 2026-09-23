@@ -33,13 +33,13 @@ enum MascotAsset: String {
 
     var message: String {
         switch self {
-        case .angry: "Your companion is waiting"
-        case .tired: "A little focus will wake us up"
-        case .proud: "Look how far you have come!"
-        case .idle: "Ready when you are"
-        case .working: "You are doing great, keep going!"
-        case .paused: "Taking a reset break"
-        case .celebrate: "Every focused hour makes your companion stronger."
+        case .angry: String(localized: "Your companion is waiting")
+        case .tired: String(localized: "A little focus will wake us up")
+        case .proud: String(localized: "Look how far you have come!")
+        case .idle: String(localized: "Ready when you are")
+        case .working: String(localized: "You are doing great, keep going!")
+        case .paused: String(localized: "Taking a reset break")
+        case .celebrate: String(localized: "Every focused hour makes your companion stronger.")
         }
     }
 }

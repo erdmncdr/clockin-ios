@@ -15,14 +15,14 @@ enum ClockinControlState: Sendable {
     var isOn: Bool { self != .off }
 
     func valueLabel(isOn: Bool) -> String {
-        isOn ? (self == .paused ? "Paused" : "Working") : "Off"
+        isOn ? (self == .paused ? String(localized: "Paused") : String(localized: "Working")) : String(localized: "Off")
     }
 
     var pauseTitle: String {
         switch self {
-        case .off: "Pause or Resume"
-        case .working: "Pause"
-        case .paused: "Resume"
+        case .off: String(localized: "Pause or Resume")
+        case .working: String(localized: "Pause")
+        case .paused: String(localized: "Resume")
         }
     }
 

@@ -128,7 +128,7 @@ struct EarningsChartView: View {
     /// ortalamasi ayrica verilir.
     private var averages: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("AVERAGES · \(snapshot.calendarDays) CALENDAR \(snapshot.calendarDays == 1 ? "DAY" : "DAYS")")
+            Text("AVERAGES · \(snapshot.calendarDays) CALENDAR DAYS")
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -145,7 +145,7 @@ struct EarningsChartView: View {
         amount.value(showTRY: converting).money(code: amount.code(currency: currencyCode, showTRY: converting))
     }
 
-    private func averageChip(_ title: String, _ value: String, money: String? = nil) -> some View {
+    private func averageChip(_ title: LocalizedStringKey, _ value: String, money: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption2).foregroundStyle(.secondary)
             Text(value).font(.subheadline.weight(.semibold)).monospacedDigit()

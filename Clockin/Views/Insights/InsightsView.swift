@@ -70,8 +70,8 @@ struct InsightsView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("REPORTS & RECORDS")
             metric("Average completed session", value: DurationText.compact(stats.averageSession))
-            metric("Best weekday", value: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? "No sessions")
-            metric("Best start hour", value: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? "No sessions")
+            metric("Best weekday", value: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions"))
+            metric("Best start hour", value: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions"))
             metric("Average earnings / hour", value: stats.hourlyEarnings.money(code: store.currencyCode))
             metric("Last 30 days", value: DurationText.compact(stats.recentMonth))
             metric("Preceding 30 days", value: DurationText.compact(stats.previousMonth))
@@ -88,7 +88,7 @@ struct InsightsView: View {
         .padding(16).card(palette)
     }
 
-    private func metric(_ title: String, value: String) -> some View {
+    private func metric(_ title: LocalizedStringKey, value: String) -> some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title).foregroundStyle(.secondary)
