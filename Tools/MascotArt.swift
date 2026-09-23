@@ -143,9 +143,9 @@ let orange = color("FF771A"), gold = color("F2C458"), cyan = color("49EBFF")
 let teal = color("459B93"), purple = color("7961A8"), coral = color("DE756B")
 let wood = color("A96E48"), woodLight = color("D89C68"), woodDark = color("684739")
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let framesDir = root.appendingPathComponent("iOS/Shared/Mascot/Frames")
-let wardrobeDir = root.appendingPathComponent("iOS/Shared/Mascot/Wardrobe")
-let homeDir = root.appendingPathComponent("iOS/Shared/Mascot/Home")
+let framesDir = root.appendingPathComponent("Shared/Mascot/Frames")
+let wardrobeDir = root.appendingPathComponent("Shared/Mascot/Wardrobe")
+let homeDir = root.appendingPathComponent("Shared/Mascot/Home")
 let frameFiles = try FileManager.default.contentsOfDirectory(at: framesDir, includingPropertiesForKeys: nil)
     .filter { $0.lastPathComponent.range(of: "^[htceazp].*\\.png$", options: .regularExpression) != nil }
     .sorted { $0.lastPathComponent < $1.lastPathComponent }
@@ -934,7 +934,7 @@ func makePreview() throws {
     func dressed(_ frame:String,_ ids:[String],_ way:String="classic")->Bitmap {
         let anchor=anchors[frame] as! [String:Any]
         let sourceURL = frame.hasPrefix("pose")
-            ? root.appendingPathComponent("iOS/Clockin/Assets.xcassets/"+frame+".imageset/"+frame+".png")
+            ? root.appendingPathComponent("Clockin/Assets.xcassets/"+frame+".imageset/"+frame+".png")
             : framesDir.appendingPathComponent(frame+".png")
         var normalized = Bitmap(width:314,height:314)
         normalized.blit(Bitmap(url:sourceURL),0,0,width:314,height:314)
@@ -1121,7 +1121,7 @@ if CommandLine.arguments.last == "preview" { try makePreview() }
 if CommandLine.arguments.last == "fixed-anchors" {
     var fixed = [String: Any]()
     for id in ["pose2", "pose3", "pose4"] {
-        let url = root.appendingPathComponent("iOS/Clockin/Assets.xcassets/" + id + ".imageset/" + id + ".png")
+        let url = root.appendingPathComponent("Clockin/Assets.xcassets/" + id + ".imageset/" + id + ".png")
         var normalized = Bitmap(width:314, height:314)
         normalized.blit(Bitmap(url:url), 0, 0, width:314, height:314)
         let geometry = Geometry(normalized, id:id, diagnostics:true)

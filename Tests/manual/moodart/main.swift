@@ -9,16 +9,10 @@ func check(_ condition: @autoclosure () -> Bool, _ message: String) {
     print("ok: \(message)")
 }
 
-// Kok dizin, iOS dizini veya istege bagli Frames yolu kabul edilir.
+// Depo koku veya istege bagli Frames yolu kabul edilir.
 let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let directory: URL
-if CommandLine.arguments.count > 1 {
-    directory = URL(fileURLWithPath: CommandLine.arguments[1])
-} else if FileManager.default.fileExists(atPath: cwd.appendingPathComponent("iOS/Shared/Mascot/Frames").path) {
-    directory = cwd.appendingPathComponent("iOS/Shared/Mascot/Frames")
-} else {
-    directory = cwd.appendingPathComponent("Shared/Mascot/Frames")
-}
+let directory = CommandLine.arguments.count > 1
+    ? URL(fileURLWithPath: CommandLine.arguments[1]) : cwd.appendingPathComponent("Shared/Mascot/Frames")
 let names = Set(try FileManager.default.contentsOfDirectory(atPath: directory.path))
 func numbers(_ prefix: String) -> Set<String> {
     Set(names.filter { $0.range(of: "^\(prefix)[0-9]{2}\\.png$", options: .regularExpression) != nil }

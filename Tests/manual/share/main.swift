@@ -1,4 +1,4 @@
-// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-share-module-cache iOS/Clockin/Views/Share/ShareStatsFields.swift iOS/Tests/manual/share/main.swift -o /tmp/clockin-share-checks && /tmp/clockin-share-checks
+// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-share-module-cache Clockin/Views/Share/ShareStatsFields.swift Tests/manual/share/main.swift -o /tmp/clockin-share-checks && /tmp/clockin-share-checks
 import Foundation
 
 var checks = 0

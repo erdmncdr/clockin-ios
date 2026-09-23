@@ -1,5 +1,5 @@
 // From repository root:
-// swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tests/manual/wardrobeart/main.swift
+// swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/wardrobeart/main.swift
 // Optional first argument is a repository fixture root for negative checks.
 import Foundation
 import CoreGraphics
@@ -10,9 +10,8 @@ func require(_ condition: @autoclosure () -> Bool, _ message: String) {
 }
 let fm = FileManager.default
 let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-let root: URL = CommandLine.arguments.count > 1 ? URL(fileURLWithPath: CommandLine.arguments[1]) :
-    (fm.fileExists(atPath: cwd.appendingPathComponent("iOS/Shared/Mascot").path) ? cwd : cwd.deletingLastPathComponent())
-let mascot = root.appendingPathComponent("iOS/Shared/Mascot")
+let root: URL = CommandLine.arguments.count > 1 ? URL(fileURLWithPath: CommandLine.arguments[1]) : cwd
+let mascot = root.appendingPathComponent("Shared/Mascot")
 let frames = mascot.appendingPathComponent("Frames")
 func decode<T: Decodable>(_ type: T.Type, _ path: URL) throws -> T {
     try JSONDecoder().decode(type, from: Data(contentsOf: path))
@@ -167,14 +166,26 @@ for (id,room) in home.rooms {
     point(room.mascotSpot,360,240,id+" mascotSpot")
     require(room.mascotSpot[1]>=room.floorY,"Companion feet above floor")
 }
+// HeritageArt draws these two at runtime from their original files instead of
+// shipping pixel art, so they keep their own formats and the sizes it renders.
+let heritage:[String:(file:String,width:Int,height:Int)]=[
+    "ataturk-portrait":("ataturk-portrait.jpg",60,80),"turkish-flag":("turkish-flag.svg",72,52)]
 for (id,item) in home.items {
-    require(item.file==id+".png" && slots.contains(item.slot),"Item filename or slot: \(id)")
-    let png=PNG(homeURL.appendingPathComponent(item.file))
-    png.checkArtGrid(id)
-    point(item.pivot,png.width,png.height,id+" pivot")
+    let width:Int,height:Int
+    if let art=heritage[id] {
+        require(item.file==art.file && slots.contains(item.slot),"Item filename or slot: \(id)")
+        require(fm.fileExists(atPath:homeURL.appendingPathComponent(item.file).path),"Missing heritage file: \(id)")
+        (width,height)=(art.width,art.height)
+    } else {
+        require(item.file==id+".png" && slots.contains(item.slot),"Item filename or slot: \(id)")
+        let png=PNG(homeURL.appendingPathComponent(item.file))
+        png.checkArtGrid(id)
+        (width,height)=(png.width,png.height)
+    }
+    point(item.pivot,width,height,id+" pivot")
     for (roomID,room) in home.rooms {
         let slot=room.slots[item.slot]!,x=slot[0]-item.pivot[0],y=slot[1]-item.pivot[1]
-        require(x>=0 && y>=0 && x+Double(png.width)<=360 && y+Double(png.height)<=240,"Furniture clipped: \(roomID)/\(id)")
+        require(x>=0 && y>=0 && x+Double(width)<=360 && y+Double(height)<=240,"Furniture clipped: \(roomID)/\(id)")
     }
 }
 print("ok: \(home.rooms.count) rooms, \(home.items.count) items, slot/pivot placement and unclipped furniture in every room")

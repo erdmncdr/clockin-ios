@@ -56,10 +56,13 @@ These are desktop features with no direct phone equivalent; widgets, the Live Ac
 
 ## Shared logic
 
-`Shared/Core` started as a copy of `../Sources/Clockin`. Fixes to the store, models or importers have to be made in both places:
+`Shared/Core` started as a copy of the Mac app's `Sources/Clockin`, which lives in
+its own repository (see `NOTICE.md`). Fixes to the store, models or importers have
+to be made in both places. With the Mac app checked out next to this repository:
 
 ```bash
-diff ../Sources/Clockin/ClockStore.swift Shared/Core/ClockStore.swift
+MAC=../clockin-main
+diff "$MAC/Sources/Clockin/ClockStore.swift" Shared/Core/ClockStore.swift
 ```
 
 The companion motion engine started as a copy. iPhone now adds tired/proud moods,
@@ -67,7 +70,7 @@ frame fallbacks and a finite sway schedule. Port relevant common fixes deliberat
 do not overwrite the platform-specific behavior:
 
 ```bash
-diff ../Sources/Clockin/MascotMotion.swift Shared/Mascot/MascotMotion.swift
+diff "$MAC/Sources/Clockin/MascotMotion.swift" Shared/Mascot/MascotMotion.swift
 ```
 
 ## iPhone wardrobe, focus coins and companion home

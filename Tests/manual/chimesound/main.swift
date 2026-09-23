@@ -55,8 +55,7 @@ defaults.set(0.0, forKey: FocusChimeVolume.preferenceKey)
 check(FocusChimeVolume.selected(in: defaults) == 0.1, "stored zero clamps to ten percent")
 
 let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let source = FileManager.default.fileExists(atPath: cwd.appendingPathComponent("Clockin/Audio/Sounds").path)
-    ? cwd.appendingPathComponent("Clockin/Audio/Sounds") : cwd.appendingPathComponent("iOS/Clockin/Audio/Sounds")
+let source = cwd.appendingPathComponent("Clockin/Audio/Sounds")
 let directory = CommandLine.arguments.count > 1 ? URL(fileURLWithPath: CommandLine.arguments[1]) : source
 var rmsLevels: [Double] = []
 for sound in FocusChimeSound.allCases {

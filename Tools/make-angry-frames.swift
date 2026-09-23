@@ -1,6 +1,6 @@
 #!/usr/bin/env swift
 // Run from the repository root:
-// swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tools/make-angry-frames.swift
+// swift -module-cache-path /tmp/clockin-art-module-cache Tools/make-angry-frames.swift
 // Coordinates use the top-left image origin. New strokes use detected art pixels.
 import Foundation
 import CoreGraphics
@@ -143,7 +143,7 @@ func cyanFringe(_ p: Pixel) -> Bool {
 }
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let directory = root.appendingPathComponent("iOS/Shared/Mascot/Frames")
+let directory = root.appendingPathComponent("Shared/Mascot/Frames")
 let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
     .filter { $0.lastPathComponent.range(of: "^h[0-9]{2}\\.png$", options: .regularExpression) != nil }
     .sorted { $0.lastPathComponent < $1.lastPathComponent }

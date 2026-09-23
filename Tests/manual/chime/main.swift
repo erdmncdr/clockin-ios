@@ -1,4 +1,4 @@
-// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-chime-module-cache iOS/Clockin/Audio/ChimeSchedule.swift iOS/Tests/manual/chime/main.swift -o /tmp/clockin-chime-tests && /tmp/clockin-chime-tests
+// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-chime-module-cache Clockin/Audio/ChimeSchedule.swift Tests/manual/chime/main.swift -o /tmp/clockin-chime-tests && /tmp/clockin-chime-tests
 import Foundation
 
 var checks = 0

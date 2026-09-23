@@ -1,4 +1,4 @@
-// Depo kokunden: swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-widgettheme-module-cache iOS/Shared/Theme/ClockinThemeChoice.swift iOS/Shared/Core/Models.swift iOS/Shared/Sync/AppGroup.swift iOS/Shared/Sync/ClockinSnapshot.swift iOS/Tests/manual/widgettheme/main.swift -o /tmp/clockin-widgettheme-checks && /tmp/clockin-widgettheme-checks
+// Depo kokunden: swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-widgettheme-module-cache Shared/Theme/ClockinThemeChoice.swift Shared/Core/Models.swift Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Tests/manual/widgettheme/main.swift -o /tmp/clockin-widgettheme-checks && /tmp/clockin-widgettheme-checks
 import Foundation
 
 var checks = 0

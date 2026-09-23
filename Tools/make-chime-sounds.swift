@@ -6,7 +6,7 @@ import AppKit
 let sampleRate = 44_100.0
 let targetPeak = pow(10.0, -3.0 / 20)
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let output = root.appendingPathComponent("iOS/Clockin/Audio/Sounds", isDirectory: true)
+let output = root.appendingPathComponent("Clockin/Audio/Sounds", isDirectory: true)
 let preview = URL(fileURLWithPath: "/tmp/clockin-chime-preview.png")
 
 struct Note {

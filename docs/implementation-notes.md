@@ -40,11 +40,11 @@ filtered noise. No recordings, Apple sound files or third-party packages are use
 Regenerate from the repository root:
 
 ```bash
-swift iOS/Tools/make-chime-sounds.swift
+swift Tools/make-chime-sounds.swift
 ```
 
 The script writes 16-bit linear PCM CAF files at 44.1 kHz, mono, into
-`iOS/Clockin/Audio/Sounds/` and a waveform/spectrum preview to
+`Clockin/Audio/Sounds/` and a waveform/spectrum preview to
 `/tmp/clockin-chime-preview.png`. It reads the files back, prints peak and full-file
 RMS in dBFS, and checks duration, format, headroom, zero endpoints, high-frequency
 energy and an RMS spread of no more than 3 dB. The sound catalog check above also
@@ -160,7 +160,7 @@ Generate the tired (`z*`), proud (`p*`) and four legacy `acc-*` full-frame acces
 from the repository root, without building the app:
 
 ```bash
-swift iOS/Tools/make-mood-frames.swift
+swift Tools/make-mood-frames.swift
 ```
 
 The generator detects the source art's pixel unit, eyes, visor and core, preserves
@@ -329,11 +329,11 @@ The wardrobe art contract lives in `Shared/Mascot/Frames/mascot-anchors.json`,
 Run these commands in order from the repository root:
 
 ```bash
-swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tools/make-mascot-anchors.swift
-swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tools/make-wardrobe.swift
-swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tools/make-home.swift
-swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tools/make-wardrobe-preview.swift
-swift -module-cache-path /tmp/clockin-art-module-cache iOS/Tests/manual/wardrobeart/main.swift
+swift -module-cache-path /tmp/clockin-art-module-cache Tools/make-mascot-anchors.swift
+swift -module-cache-path /tmp/clockin-art-module-cache Tools/make-wardrobe.swift
+swift -module-cache-path /tmp/clockin-art-module-cache Tools/make-home.swift
+swift -module-cache-path /tmp/clockin-art-module-cache Tools/make-wardrobe-preview.swift
+swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/wardrobeart/main.swift
 ```
 
 The entry points invoke the shared `Tools/MascotArt.swift` engine with the system

@@ -1,4 +1,4 @@
-// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-momentum-module-cache iOS/Clockin/Views/Momentum/MoneyMomentum.swift iOS/Tests/manual/momentum/main.swift -o /tmp/clockin-momentum-tests && /tmp/clockin-momentum-tests
+// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-momentum-module-cache Clockin/Views/Momentum/MoneyMomentum.swift Tests/manual/momentum/main.swift -o /tmp/clockin-momentum-tests && /tmp/clockin-momentum-tests
 import Foundation
 
 var checks = 0

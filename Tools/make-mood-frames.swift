@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Kok dizinden: swift iOS/Tools/make-mood-frames.swift
+// Kok dizinden: swift Tools/make-mood-frames.swift
 // Ham RGBA okuma, kaynak kenar renklerini korur.
 import Foundation
 import CoreGraphics
@@ -213,7 +213,7 @@ struct Drawing {
 }
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let directory = root.appendingPathComponent("iOS/Shared/Mascot/Frames")
+let directory = root.appendingPathComponent("Shared/Mascot/Frames")
 let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
     .filter { $0.lastPathComponent.range(of: "^h[0-9]{2}\\.png$", options: .regularExpression) != nil }
     .sorted { $0.lastPathComponent < $1.lastPathComponent }
