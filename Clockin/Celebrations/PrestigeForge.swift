@@ -118,12 +118,12 @@ enum PrestigeOutline {
 /// down into the recess, which is what makes a two-tier molding.
 enum PrestigeBevel {
     static func band(_ context: inout GraphicsContext, outer: [CGPoint], inner: [CGPoint],
-                     style: ForgeTone, sloping: Bool = false, lift: Double = 0) {
+                     style: ForgeTone, sloping: Bool = false) {
         for i in outer.indices {
             let j = (i + 1) % outer.count
             let n = PrestigeOutline.normal(outer[i], outer[j])
             let facing = sloping ? CGVector(dx: -n.dx, dy: -n.dy) : n
-            let e = min(1, PrestigeLight.exposure(facing) * (1 - lift) + lift)
+            let e = PrestigeLight.exposure(facing)
             let quad = PrestigeOutline.path([outer[i], outer[j], inner[j], inner[i]])
             context.fill(quad, with: .color(style.metal(e)))
             // A hairline along the same face keeps neighbouring facets from
