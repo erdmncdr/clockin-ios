@@ -913,8 +913,13 @@ func makeHome() throws {
             a.rect(x-1,y+2,2,4,paper)
         }
     }
+    let sprites=items.count
+    // HeritageArt draws these two from their original files at runtime, so they
+    // have no sprite here; without these lines a regeneration drops them.
+    items["ataturk-portrait"]=["name":"Atatürk portrait","file":"ataturk-portrait.jpg","slot":"wallLeft","pivot":[30,40]]
+    items["turkish-flag"]=["name":"Turkish flag","file":"turkish-flag.svg","slot":"wallRight","pivot":[36,26]]
     try saveJSON(["rooms":rooms,"items":items],homeDir.appendingPathComponent("home-items.json"))
-    print("Home: \(rooms.count) rooms, \(items.count) furniture sprites")
+    print("Home: \(rooms.count) rooms, \(sprites) furniture sprites, \(items.count - sprites) heritage items")
 }
 if CommandLine.arguments.last == "home" { try makeHome() }
 func makePreview() throws {

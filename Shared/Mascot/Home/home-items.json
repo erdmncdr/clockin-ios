@@ -1,302 +1,302 @@
 {
-  "items": {
-    "bean-bag": {
-      "file": "bean-bag.png",
-      "name": "Bean bag",
-      "pivot": [
+  "items" : {
+    "ataturk-portrait" : {
+      "file" : "ataturk-portrait.jpg",
+      "name" : "Atatürk portrait",
+      "pivot" : [
+        30,
+        40
+      ],
+      "slot" : "wallLeft"
+    },
+    "bean-bag" : {
+      "file" : "bean-bag.png",
+      "name" : "Bean bag",
+      "pivot" : [
         44,
         54
       ],
-      "slot": "floorRight"
+      "slot" : "floorRight"
     },
-    "big-plant": {
-      "file": "big-plant.png",
-      "name": "Big plant",
-      "pivot": [
+    "big-plant" : {
+      "file" : "big-plant.png",
+      "name" : "Big plant",
+      "pivot" : [
         34,
         90
       ],
-      "slot": "floorRight"
+      "slot" : "floorRight"
     },
-    "bookshelf": {
-      "file": "bookshelf.png",
-      "name": "Bookshelf",
-      "pivot": [
+    "bookshelf" : {
+      "file" : "bookshelf.png",
+      "name" : "Bookshelf",
+      "pivot" : [
         38,
         44
       ],
-      "slot": "shelf"
+      "slot" : "shelf"
     },
-    "cat-bed": {
-      "file": "cat-bed.png",
-      "name": "Sleeping cat bed",
-      "pivot": [
+    "cat-bed" : {
+      "file" : "cat-bed.png",
+      "name" : "Sleeping cat bed",
+      "pivot" : [
         30,
         34
       ],
-      "slot": "floorLeft"
+      "slot" : "floorLeft"
     },
-    "certificate": {
-      "file": "certificate.png",
-      "name": "Framed certificate",
-      "pivot": [
+    "certificate" : {
+      "file" : "certificate.png",
+      "name" : "Framed certificate",
+      "pivot" : [
         30,
         20
       ],
-      "slot": "wallRight"
+      "slot" : "wallRight"
     },
-    "coffee-machine": {
-      "file": "coffee-machine.png",
-      "name": "Coffee machine on stool",
-      "pivot": [
+    "coffee-machine" : {
+      "file" : "coffee-machine.png",
+      "name" : "Coffee machine on stool",
+      "pivot" : [
         28,
         78
       ],
-      "slot": "floorLeft"
+      "slot" : "floorLeft"
     },
-    "companion-bed": {
-      "file": "companion-bed.png",
-      "name": "Companion bed",
-      "pivot": [
+    "companion-bed" : {
+      "file" : "companion-bed.png",
+      "name" : "Companion bed",
+      "pivot" : [
         52,
         52
       ],
-      "slot": "floorRight"
+      "slot" : "floorRight"
     },
-    "desk-lamp": {
-      "file": "desk-lamp.png",
-      "name": "Desk lamp and writing desk",
-      "pivot": [
+    "desk-lamp" : {
+      "file" : "desk-lamp.png",
+      "name" : "Desk lamp and writing desk",
+      "pivot" : [
         52,
         58
       ],
-      "slot": "desk"
+      "slot" : "desk"
     },
-    "desk-monitor": {
-      "file": "desk-monitor.png",
-      "name": "Desk and monitor",
-      "pivot": [
+    "desk-monitor" : {
+      "file" : "desk-monitor.png",
+      "name" : "Desk and monitor",
+      "pivot" : [
         52,
         50
       ],
-      "slot": "desk"
+      "slot" : "desk"
     },
-    "floor-lamp": {
-      "file": "floor-lamp.png",
-      "name": "Floor lamp",
-      "pivot": [
+    "floor-lamp" : {
+      "file" : "floor-lamp.png",
+      "name" : "Floor lamp",
+      "pivot" : [
         28,
         102
       ],
-      "slot": "floorLeft"
+      "slot" : "floorLeft"
     },
-    "guitar": {
-      "file": "guitar.png",
-      "name": "Guitar on stand",
-      "pivot": [
+    "guitar" : {
+      "file" : "guitar.png",
+      "name" : "Guitar on stand",
+      "pivot" : [
         22,
         90
       ],
-      "slot": "floorRight"
+      "slot" : "floorRight"
     },
-    "poster": {
-      "file": "poster.png",
-      "name": "Mountain poster",
-      "pivot": [
+    "poster" : {
+      "file" : "poster.png",
+      "name" : "Mountain poster",
+      "pivot" : [
         24,
         28
       ],
-      "slot": "wallLeft"
+      "slot" : "wallLeft"
     },
-    "potted-plant": {
-      "file": "potted-plant.png",
-      "name": "Potted plant",
-      "pivot": [
+    "potted-plant" : {
+      "file" : "potted-plant.png",
+      "name" : "Potted plant",
+      "pivot" : [
         26,
         56
       ],
-      "slot": "window"
+      "slot" : "window"
     },
-    "record-player": {
-      "file": "record-player.png",
-      "name": "Record player and console",
-      "pivot": [
+    "record-player" : {
+      "file" : "record-player.png",
+      "name" : "Record player and console",
+      "pivot" : [
         52,
         40
       ],
-      "slot": "desk"
+      "slot" : "desk"
     },
-    "round-rug": {
-      "file": "round-rug.png",
-      "name": "Round rug",
-      "pivot": [
+    "round-rug" : {
+      "file" : "round-rug.png",
+      "name" : "Round rug",
+      "pivot" : [
         78,
         30
       ],
-      "slot": "rug"
+      "slot" : "rug"
     },
-    "string-lights": {
-      "file": "string-lights.png",
-      "name": "String lights",
-      "pivot": [
+    "string-lights" : {
+      "file" : "string-lights.png",
+      "name" : "String lights",
+      "pivot" : [
         38,
         14
       ],
-      "slot": "wallLeft"
+      "slot" : "wallLeft"
     },
-    "wall-clock": {
-      "file": "wall-clock.png",
-      "name": "Wall clock",
-      "pivot": [
+    "turkish-flag" : {
+      "file" : "turkish-flag.svg",
+      "name" : "Turkish flag",
+      "pivot" : [
+        36,
+        26
+      ],
+      "slot" : "wallRight"
+    },
+    "wall-clock" : {
+      "file" : "wall-clock.png",
+      "name" : "Wall clock",
+      "pivot" : [
         20,
         20
       ],
-      "slot": "wallRight"
-    },
-    "ataturk-portrait": {
-      "file": "ataturk-portrait.jpg",
-      "name": "Atatürk portrait",
-      "slot": "wallLeft",
-      "pivot": [
-        30,
-        40
-      ]
-    },
-    "turkish-flag": {
-      "file": "turkish-flag.svg",
-      "name": "Turkish flag",
-      "slot": "wallRight",
-      "pivot": [
-        36,
-        26
-      ]
+      "slot" : "wallRight"
     }
   },
-  "rooms": {
-    "cozy": {
-      "file": "room-cozy.png",
-      "floorY": 180,
-      "mascotSpot": [
+  "rooms" : {
+    "cozy" : {
+      "file" : "room-cozy.png",
+      "floorY" : 180,
+      "mascotSpot" : [
         240,
         224
       ],
-      "name": "Cozy hut",
-      "slots": {
-        "desk": [
+      "name" : "Cozy hut",
+      "slots" : {
+        "desk" : [
           142,
           158
         ],
-        "floorLeft": [
+        "floorLeft" : [
           42,
           224
         ],
-        "floorRight": [
+        "floorRight" : [
           302,
           224
         ],
-        "rug": [
+        "rug" : [
           236,
           204
         ],
-        "shelf": [
+        "shelf" : [
           132,
           90
         ],
-        "wallLeft": [
+        "wallLeft" : [
           55,
           45
         ],
-        "wallRight": [
+        "wallRight" : [
           210,
           69
         ],
-        "window": [
+        "window" : [
           282,
           120
         ]
       }
     },
-    "night": {
-      "file": "room-night.png",
-      "floorY": 180,
-      "mascotSpot": [
+    "night" : {
+      "file" : "room-night.png",
+      "floorY" : 180,
+      "mascotSpot" : [
         240,
         224
       ],
-      "name": "Night hut",
-      "slots": {
-        "desk": [
+      "name" : "Night hut",
+      "slots" : {
+        "desk" : [
           142,
           158
         ],
-        "floorLeft": [
+        "floorLeft" : [
           42,
           224
         ],
-        "floorRight": [
+        "floorRight" : [
           302,
           224
         ],
-        "rug": [
+        "rug" : [
           236,
           204
         ],
-        "shelf": [
+        "shelf" : [
           132,
           90
         ],
-        "wallLeft": [
+        "wallLeft" : [
           55,
           45
         ],
-        "wallRight": [
+        "wallRight" : [
           210,
           69
         ],
-        "window": [
+        "window" : [
           282,
           120
         ]
       }
     },
-    "studio": {
-      "file": "room-studio.png",
-      "floorY": 180,
-      "mascotSpot": [
+    "studio" : {
+      "file" : "room-studio.png",
+      "floorY" : 180,
+      "mascotSpot" : [
         240,
         224
       ],
-      "name": "Studio",
-      "slots": {
-        "desk": [
+      "name" : "Studio",
+      "slots" : {
+        "desk" : [
           142,
           158
         ],
-        "floorLeft": [
+        "floorLeft" : [
           42,
           224
         ],
-        "floorRight": [
+        "floorRight" : [
           302,
           224
         ],
-        "rug": [
+        "rug" : [
           236,
           204
         ],
-        "shelf": [
+        "shelf" : [
           132,
           90
         ],
-        "wallLeft": [
+        "wallLeft" : [
           55,
           45
         ],
-        "wallRight": [
+        "wallRight" : [
           210,
           69
         ],
-        "window": [
+        "window" : [
           282,
           120
         ]
