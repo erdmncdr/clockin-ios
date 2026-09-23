@@ -51,7 +51,7 @@ Shared/Intents/     clock in, clock out, pause
 ClockinWidgets/     widget and Live Activity
 Tools/              scripts that generate the art and the chime sounds
 Tests/manual/       dependency-free checks
-docs/               implementation notes
+docs/               implementation notes; docs/releases/ has a record for every TestFlight build
 ```
 
 `docs/implementation-notes.md` covers the parts that are decided rather than
