@@ -22,6 +22,8 @@ Written in SwiftUI for iOS 17 and later. Shipping on TestFlight as 0.2.
   plus internet radio while you work.
 - **A companion.** A pixel mascot that reacts to the work, levels up, earns
   focus coins, and has a wardrobe and a room you can arrange.
+- **English and Turkish.** The app, widgets, Live Activity, notifications and
+  Siri phrases follow the iPhone's language.
 
 ## Requirements
 

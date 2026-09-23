@@ -1,0 +1,66 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Clock in with ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile mesaiye başla"
+          }
+        }
+      }
+    },
+    "Clock out with ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ile mesaiyi bitir"
+          }
+        }
+      }
+    },
+    "Pause ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}'i duraklat"
+          }
+        }
+      }
+    },
+    "Resume ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}'i sürdür"
+          }
+        }
+      }
+    },
+    "Start ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}'i başlat"
+          }
+        }
+      }
+    },
+    "Stop ${applicationName}": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}'i durdur"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

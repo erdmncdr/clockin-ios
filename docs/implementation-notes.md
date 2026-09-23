@@ -33,6 +33,27 @@ Things that cost time to find and are easy to break again:
   the group for simulator builds; check with
   `xcrun simctl get_app_container booted com.erdmncdr.clockin groups`.
 
+## Languages
+
+English is the development language; Turkish lives in `Shared/Localizable.xcstrings`,
+which both the app and the widget extension compile, and Siri phrases in
+`Clockin/AppShortcuts.xcstrings`.
+
+- SwiftUI literals such as `Text("History")` localize on their own. Text built in
+  code does not: wrap it in `String(localized:)`, or give a view helper a
+  `LocalizedStringKey` parameter so its call sites stay plain literals.
+- Values that are saved or compared stay English. Where an enum's raw value is
+  also its label (themes, share fields, history ranges), the raw value is left
+  alone and the label is looked up from it.
+- One English word with two meanings gets its own key with a `defaultValue`,
+  for example `badge.status.earned` ("Earned" as in a badge, not money).
+- `String(localized:)` groups thousands in integers; `DurationText.compact`
+  interpolates strings so `876000h` keeps its old form.
+- Uppercase with `uppercased(with: .current)`: plain `uppercased()` turns a
+  Turkish "i" into "I" instead of "İ".
+- The importers keep English keywords and `en_US_POSIX` formatters; they read
+  other people's files.
+
 ## Focus chime sounds
 
 The eight original sounds are synthesized from sine partials and deterministic
