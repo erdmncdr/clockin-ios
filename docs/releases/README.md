@@ -27,3 +27,8 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (23) | [Room editor](ios-room-editor-build-23.md) |
 | 0.2 (24) | [Focus chime crash fix](ios-testflight-0.2-24.md) |
 | 0.2 (25) | [Silent focus chimes while the app is open](ios-testflight-0.2-25.md) |
+| 0.2 (26) | [Live Activity registration cleanup](ios-testflight-0.2-26.md), not distributed |
+| 0.2 (27) | [Turkish](ios-testflight-0.2-27.md), not distributed |
+| 0.2 (28) | [Turkish and forged badges](ios-testflight-0.2-28.md) |
+| 0.2 (29) | [Language in Settings](ios-testflight-0.2-29.md) |
+| 0.2 (30) | [Rank and medal identities](ios-testflight-0.2-30.md) |
