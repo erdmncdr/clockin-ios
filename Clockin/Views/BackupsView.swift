@@ -82,14 +82,14 @@ struct BackupsView: View {
                     .foregroundStyle(backup.isSafetyCopy ? .orange : palette.accent)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(backup.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute()))
+                    Text(backup.date.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.abbreviated).day().month(.abbreviated).hour().minute()))
                         .font(.subheadline.weight(.medium))
                     Text(detail(backup))
                         .font(.caption)
                         .foregroundStyle(backup.isReadable ? .secondary : Color.red)
                 }
                 Spacer()
-                Text(backup.date.formatted(.relative(presentation: .named)))
+                Text(backup.date.formatted(.relative(presentation: .named).locale(AppLanguage.formatLocale)))
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -101,13 +101,13 @@ struct BackupsView: View {
     }
 
     private func detail(_ backup: AutomaticBackup) -> String {
-        guard let count = backup.sessionCount else { return String(localized: "This file cannot be read") }
-        let summary = String(localized: "\(count) entries") + " · " + DurationText.compact(backup.totalDuration)
-        return backup.isSafetyCopy ? String(localized: "Before restore · \(summary)") : summary
+        guard let count = backup.sessionCount else { return String(localized: "This file cannot be read", bundle: .app) }
+        let summary = String(localized: "\(count) entries", bundle: .app) + " · " + DurationText.compact(backup.totalDuration)
+        return backup.isSafetyCopy ? String(localized: "Before restore · \(summary)", bundle: .app) : summary
     }
 
     private func title(_ backup: AutomaticBackup) -> String {
-        String(localized: "Restore the backup from \(backup.date.formatted(date: .abbreviated, time: .shortened))?")
+        String(localized: "Restore the backup from \(backup.date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: AppLanguage.formatLocale)))?", bundle: .app)
     }
 
     private func restore(_ backup: AutomaticBackup) {

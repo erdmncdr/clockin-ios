@@ -16,14 +16,14 @@ enum FocusChimeSound: String, CaseIterable, Identifiable {
     var fileName: String { "clockin-\(rawValue).caf" }
     var displayName: String {
         switch self {
-        case .softBell: String(localized: "Soft Bell")
-        case .glass: String(localized: "Glass")
-        case .marimba: String(localized: "Marimba")
-        case .chime: String(localized: "Chime")
-        case .pop: String(localized: "Pop")
-        case .woodBlock: String(localized: "Wood Block")
-        case .singingBowl: String(localized: "Singing Bowl")
-        case .tinyPing: String(localized: "Tiny Ping")
+        case .softBell: String(localized: "Soft Bell", bundle: .app)
+        case .glass: String(localized: "Glass", bundle: .app)
+        case .marimba: String(localized: "Marimba", bundle: .app)
+        case .chime: String(localized: "Chime", bundle: .app)
+        case .pop: String(localized: "Pop", bundle: .app)
+        case .woodBlock: String(localized: "Wood Block", bundle: .app)
+        case .singingBowl: String(localized: "Singing Bowl", bundle: .app)
+        case .tinyPing: String(localized: "Tiny Ping", bundle: .app)
         }
     }
 

@@ -2079,6 +2079,16 @@
         }
       }
     },
+    "Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik, iPhone'unun dilini izler. Araç takımları ve Canlı Etkinlik de uygulamayla birlikte değişir."
+          }
+        }
+      }
+    },
     "Average completed session": {
       "localizations": {
         "tr": {
@@ -2975,16 +2985,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sayaç çalışırken Clockin sunucu bağlantısını denetler. Deneme oturumu gerekmez."
-          }
-        }
-      }
-    },
-    "Clockin follows your iPhone's language. To use another one for Clockin only, choose it in iPhone Settings.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clockin, iPhone'unun dilini izler. Yalnızca Clockin için başka bir dil kullanmak istersen iPhone Ayarları'ndan seç."
           }
         }
       }
@@ -7853,16 +7853,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlerleme'de Hedefler'i açar: hedeflerin, iş günlerin ve ay sonu görünümün"
-          }
-        }
-      }
-    },
-    "Opens iPhone Settings": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iPhone Ayarları'nı açar"
           }
         }
       }

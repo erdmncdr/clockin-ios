@@ -79,8 +79,8 @@ struct BadgesView: View {
                 }.frame(minHeight: 44)
             }.accessibilityIdentifier("badges.levelGallery")
             Divider()
-            metric("Current streak", value: String(localized: "\(stats.currentStreak) days"))
-            metric("Longest streak", value: String(localized: "\(stats.longestStreak) days"))
+            metric("Current streak", value: String(localized: "\(stats.currentStreak) days", bundle: .app))
+            metric("Longest streak", value: String(localized: "\(stats.longestStreak) days", bundle: .app))
             DisclosureGroup("How XP works") {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("100 XP per hour: \(stats.baseXP.formatted()) XP")

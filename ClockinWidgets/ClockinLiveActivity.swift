@@ -9,6 +9,7 @@ struct ClockinLiveActivity: Widget {
             let state = context.attributes.displayState(context.state)
             let palette = state.theme.palette
             LockScreenActivityView(state: state, currencyCode: context.attributes.currencyCode)
+                .environment(\.locale, AppLanguage.locale)
                 .environment(\.palette, palette)
                 .environment(\.colorScheme, palette.colorScheme)
                 .activityBackgroundTint(palette.background)
@@ -20,6 +21,7 @@ struct ClockinLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
                         statusLabel(state)
+                            .environment(\.locale, AppLanguage.locale)
                             .font(.caption.weight(.semibold))
                         Text(state.earnedAtUpdate.money(code: context.attributes.currencyCode))
                             .font(.title3.weight(.semibold))
@@ -45,6 +47,7 @@ struct ClockinLiveActivity: Widget {
                             .foregroundStyle(.secondary)
                         Spacer()
                         ActivityButtons(state: state)
+                            .environment(\.locale, AppLanguage.locale)
                             .environment(\.palette, palette)
                             .environment(\.colorScheme, .dark)
                     }
@@ -111,11 +114,11 @@ private func timerText(_ state: ClockinActivityAttributes.ContentState) -> some 
 /// Shows the timestamp of the last local update or remote clock tick.
 private func asOfText(_ state: ClockinActivityAttributes.ContentState) -> String? {
     guard !state.isPaused, let updatedAt = state.updatedAt else { return nil }
-    return String(localized: "as of \(updatedAt.formatted(date: .omitted, time: .shortened))")
+    return String(localized: "as of \(updatedAt.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale)))", bundle: .app)
 }
 
 private func rateText(_ state: ClockinActivityAttributes.ContentState, _ currencyCode: String) -> String {
-    String(localized: "\(state.hourlyRate.money(code: currencyCode)) / hr")
+    String(localized: "\(state.hourlyRate.money(code: currencyCode)) / hr", bundle: .app)
 }
 
 private struct LockScreenActivityView: View {

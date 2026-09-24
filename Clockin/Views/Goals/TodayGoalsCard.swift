@@ -90,7 +90,7 @@ struct TodayGoalsCard: View {
                 }
             }
             .frame(height: 6)
-            RollingNumberText(goal.isReached ? String(localized: "Goal reached") : String(localized: "\(DurationText.compact(goal.remaining)) to go"),
+            RollingNumberText(goal.isReached ? String(localized: "Goal reached", bundle: .app) : String(localized: "\(DurationText.compact(goal.remaining)) to go", bundle: .app),
                               value: goal.remaining, font: .caption,
                               foregroundColor: goal.isReached ? palette.accent : .secondary)
                 .foregroundStyle(goal.isReached ? palette.accent : .secondary)

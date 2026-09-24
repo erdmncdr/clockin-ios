@@ -23,10 +23,10 @@ struct SessionRow: View {
 
     private var title: String {
         if showsDay {
-            return session.start.formatted(.dateTime.month(.abbreviated).day().hour().minute())
+            return session.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().hour().minute())
         }
-        let start = session.start.formatted(date: .omitted, time: .shortened)
-        let end = session.end.formatted(date: .omitted, time: .shortened)
+        let start = session.start.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale))
+        let end = session.end.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale))
         return "\(start) – \(end)"
     }
 

@@ -50,7 +50,7 @@ struct MonthPerformanceView: View {
         let previous = performance.comparisonInterval
         let last = Calendar.current.date(byAdding: .day, value: -1, to: previous.end)!
         let sign = performance.difference >= 0 ? "+" : "-"
-        return String(localized: "\(sign)\(DurationText.compact(abs(performance.difference))) vs \(previous.start.formatted(.dateTime.month(.abbreviated).day())) to \(last.formatted(.dateTime.month(.abbreviated).day().year()))")
+        return String(localized: "\(sign)\(DurationText.compact(abs(performance.difference))) vs \(previous.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day())) to \(last.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().year()))", bundle: .app)
     }
 
     private var cumulativeChart: some View {
@@ -58,13 +58,13 @@ struct MonthPerformanceView: View {
             ForEach(performance.cumulative) { point in
                 BarMark(x: .value("Day", point.day, unit: .day), y: .value("Hours", point.daily / 3600))
                     .foregroundStyle(palette.accent.opacity(0.25))
-                    .accessibilityLabel(point.day.formatted(date: .abbreviated, time: .omitted))
+                    .accessibilityLabel(point.day.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale)))
                     .accessibilityValue("Daily work: \(DurationText.compact(point.daily))")
                 LineMark(x: .value("Day", point.day, unit: .day), y: .value("Hours", point.cumulative / 3600),
                          series: .value("Series", "Cumulative"))
                     .foregroundStyle(palette.accent)
                     .lineStyle(StrokeStyle(lineWidth: 2))
-                    .accessibilityLabel("Cumulative through \(point.day.formatted(date: .abbreviated, time: .omitted))")
+                    .accessibilityLabel("Cumulative through \(point.day.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale)))")
                     .accessibilityValue(DurationText.compact(point.cumulative))
             }
 

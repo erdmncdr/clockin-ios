@@ -100,7 +100,7 @@ struct RateScheduleView: View {
             } message: { rule in
                 // `periodText` bir liste satiri icin yazildi ("From ... · No end date");
                 // cumle icinde bozuk okunuyordu.
-                Text("Delete the \(rule.hourlyRate.money(code: store.currencyCode))/hr period starting \(rule.effectiveFrom.formatted(date: .abbreviated, time: .omitted))? Earnings for sessions in this period will be recalculated using the remaining rules.")
+                Text("Delete the \(rule.hourlyRate.money(code: store.currencyCode))/hr period starting \(rule.effectiveFrom.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale)))? Earnings for sessions in this period will be recalculated using the remaining rules.")
             }
         }
         .hapticFeedback(.destructiveConfirmation, trigger: pendingDelete?.id) { _, new in new != nil }
@@ -110,11 +110,11 @@ struct RateScheduleView: View {
     }
 
     private func periodText(_ rule: RateRule) -> String {
-        let start = rule.effectiveFrom.formatted(date: .abbreviated, time: .omitted)
+        let start = rule.effectiveFrom.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))
         if let end = rule.effectiveUntil {
-            return "\(start) – \(end.formatted(date: .abbreviated, time: .omitted))"
+            return "\(start) – \(end.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale)))"
         }
-        return String(localized: "From \(start) · No end date")
+        return String(localized: "From \(start) · No end date", bundle: .app)
     }
 }
 
@@ -236,7 +236,7 @@ private struct RatePeriodEditor: View {
             dismiss()
         } else {
             Haptics.play(.validationFailed)
-            errorMessage = store.statusMessage ?? String(localized: "Could not save this rate period. Please try again.")
+            errorMessage = store.statusMessage ?? String(localized: "Could not save this rate period. Please try again.", bundle: .app)
         }
     }
 }

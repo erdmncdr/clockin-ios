@@ -66,8 +66,8 @@ struct EarningsPeriod: Equatable {
         Self(range: range, anchor: anchor, now: now, calendar: calendar)
     }
 
-    func title(calendar: Calendar = .current, locale: Locale = .current) -> String {
-        guard range != .all else { return String(localized: "All time") }
+    func title(calendar: Calendar = .current, locale: Locale = AppLanguage.formatLocale) -> String {
+        guard range != .all else { return String(localized: "All time", bundle: .app) }
         let last = calendar.date(byAdding: .day, value: -1, to: interval.end)!
         let formatter = DateFormatter()
         formatter.calendar = calendar
@@ -81,7 +81,7 @@ struct EarningsPeriod: Equatable {
         let sameYear = calendar.component(.year, from: interval.start) == calendar.component(.year, from: last)
         let firstTemplate = range == .week ? (sameYear ? "MMMd" : "MMMdyyyy") : (sameYear ? "MMM" : "MMMyyyy")
         let from = format(interval.start, firstTemplate), to = format(last, range == .week ? "MMMdyyyy" : "MMMyyyy")
-        return String(localized: "\(from) to \(to)")
+        return String(localized: "\(from) to \(to)", bundle: .app)
     }
 }
 

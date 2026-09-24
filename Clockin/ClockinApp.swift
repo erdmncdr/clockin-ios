@@ -5,6 +5,9 @@ struct ClockinApp: App {
     @UIApplicationDelegateAdaptor(ClockinAppDelegate.self) private var appDelegate
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @Environment(\.scenePhase) private var scenePhase
+    @State private var languages = LanguageSwitch.shared
+
+    init() { AppLanguage.applyToSystem() }
 
     /// Veri widget ile paylasilan grup klasorunde; Mac ile paylasilmiyor.
     /// Kisayollar da ayni ornegi kullansin diye `SharedStore`'dan gelir.
@@ -32,6 +35,10 @@ struct ClockinApp: App {
     var body: some Scene {
         WindowGroup {
             entryView
+                .id(languages.language)
+                // Text literals pick their language from here; strings built
+                // in code pass `Bundle.app`.
+                .environment(\.locale, AppLanguage.locale)
                 .liveActivitySetup()
                 .timerPersistenceAlert()
                 .environmentObject(store)

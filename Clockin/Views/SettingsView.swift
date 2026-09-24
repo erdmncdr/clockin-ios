@@ -19,7 +19,6 @@ struct SettingsView: View {
     @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
-    @Environment(\.openURL) private var openURL
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
@@ -47,7 +46,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    navigationRow(String(localized: "How to use Clockin"), systemImage: "questionmark.circle") {
+                    navigationRow(String(localized: "How to use Clockin", bundle: .app), systemImage: "questionmark.circle") {
                         rateIsFocused = false
                         sheet = .guide
                     }
@@ -79,15 +78,16 @@ struct SettingsView: View {
                             Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
                         }
                     }
-                    // iOS keeps each app's language in its own Settings page;
-                    // this row only takes the user there.
-                    navigationRow(String(localized: "Language"), systemImage: "globe",
-                                  value: languageName, leavesApp: true) {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    Picker(selection: languageSelection) {
+                        Text("Automatic").tag(AppLanguage.automatic)
+                        ForEach([AppLanguage.turkish, .english]) { language in
+                            Text(verbatim: language.nativeName ?? language.rawValue).tag(language)
+                        }
+                    } label: {
+                        Label { Text("Language") } icon: { Image(systemName: "globe").foregroundStyle(palette.accent) }
                     }
-                    .accessibilityHint("Opens iPhone Settings")
                 } footer: {
-                    Text("Clockin follows your iPhone's language. To use another one for Clockin only, choose it in iPhone Settings.")
+                    Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
                 }
                 Section {
                     Toggle("Show home in desk mode", isOn: $showHome.hapticSelection($selectionFeedback))
@@ -193,7 +193,7 @@ struct SettingsView: View {
                     showRestoreConfirmation = true
                 case .failure(let error):
                     Haptics.play(.validationFailed)
-                    restoreMessage = String(localized: "Could not open backup: \(error.localizedDescription)")
+                    restoreMessage = String(localized: "Could not open backup: \(error.localizedDescription)", bundle: .app)
                 }
             }
             .alert("Replace all data?", isPresented: $showRestoreConfirmation) {
@@ -253,7 +253,7 @@ struct SettingsView: View {
                     Text(code).tag(code)
                 }
             }
-            navigationRow(store.rateHistorySummary == .custom ? String(localized: "Custom rate schedule") : String(localized: "Rate schedule"), systemImage: "calendar") {
+            navigationRow(store.rateHistorySummary == .custom ? String(localized: "Custom rate schedule", bundle: .app) : String(localized: "Rate schedule", bundle: .app), systemImage: "calendar") {
                 rateIsFocused = false
                 sheet = .rateSchedule
             }
@@ -292,7 +292,7 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         Section {
-            navigationRow(String(localized: "Import timecards"), systemImage: "doc.text.magnifyingglass") {
+            navigationRow(String(localized: "Import timecards", bundle: .app), systemImage: "doc.text.magnifyingglass") {
                 rateIsFocused = false
                 sheet = .importTimecards
             }
@@ -325,7 +325,7 @@ struct SettingsView: View {
             } label: {
                 Label("Restore from file…", systemImage: "square.and.arrow.down")
             }
-            navigationRow(String(localized: "Automatic backups"), systemImage: "clock.arrow.circlepath") {
+            navigationRow(String(localized: "Automatic backups", bundle: .app), systemImage: "clock.arrow.circlepath") {
                 rateIsFocused = false
                 sheet = .backups
             }
@@ -335,7 +335,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 if let restoreMessage { Text(restoreMessage) }
                 if let latest = store.latestBackupDate {
-                    Text("Last automatic backup \(latest.formatted(.relative(presentation: .named))), \(store.backupCount) saved.")
+                    Text("Last automatic backup \(latest.formatted(.relative(presentation: .named).locale(AppLanguage.formatLocale))), \(store.backupCount) saved.")
                 }
                 Text("Data is stored only on this iPhone. Syncing with the Mac is not set up yet.")
             }
@@ -344,8 +344,7 @@ struct SettingsView: View {
 
     /// Sheet acan satir. Metin vurgu rengini almasin, ok isareti ile bir
     /// ekrana gidildigi belli olsun.
-    private func navigationRow(_ title: String, systemImage: String, value: String? = nil, leavesApp: Bool = false,
-                               action: @escaping () -> Void) -> some View {
+    private func navigationRow(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
         Button {
             commitEarlierRate()
             commitRate()
@@ -361,9 +360,7 @@ struct SettingsView: View {
                     Image(systemName: systemImage).foregroundStyle(palette.accent)
                 }
                 Spacer()
-                if let value { Text(value).foregroundStyle(.secondary) }
-                // A different arrow when the row leaves Clockin for iPhone Settings.
-                Image(systemName: leavesApp ? "arrow.up.forward" : "chevron.right")
+                Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
@@ -372,11 +369,8 @@ struct SettingsView: View {
         .foregroundStyle(.primary)
     }
 
-    /// The language Clockin is actually running in, named in that language.
-    private var languageName: String {
-        let code = Bundle.main.preferredLocalizations.first ?? "en"
-        let locale = Locale(identifier: code)
-        return locale.localizedString(forLanguageCode: code)?.capitalized(with: locale) ?? code
+    private var languageSelection: Binding<AppLanguage> {
+        Binding(get: { LanguageSwitch.shared.language }, set: { LanguageSwitch.shared.choose($0) })
     }
 
     private var currencyCodes: [String] {
@@ -385,8 +379,8 @@ struct SettingsView: View {
     }
 
     private var versionText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? String(localized: "Unknown")
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? String(localized: "Unknown")
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? String(localized: "Unknown", bundle: .app)
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? String(localized: "Unknown", bundle: .app)
         return "\(version) (\(build))"
     }
 
@@ -430,7 +424,7 @@ struct SettingsView: View {
     private var removeSplitMessage: String {
         let proposed = store.proposedRates(earlier: nil, changedOn: changedOn) ?? store.rateRules
         let impact = store.earningsImpact(ofRates: proposed)
-        return String(localized: "All work will use \(store.hourlyRate.money(code: store.currencyCode)). Earnings before \(changedOn.formatted(date: .abbreviated, time: .omitted)) change by \(impact.delta.money(code: store.currencyCode)).")
+        return String(localized: "All work will use \(store.hourlyRate.money(code: store.currencyCode)). Earnings before \(changedOn.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))) change by \(impact.delta.money(code: store.currencyCode)).", bundle: .app)
     }
 
     private func syncEarlierRateText() {
@@ -521,11 +515,11 @@ private struct RateChangePrompt: View {
 
     private func impact(from day: Date?) -> String {
         guard let proposed = store.proposedRates(for: value, from: day) else {
-            return String(localized: "Edit this custom rate schedule in Rate schedule.")
+            return String(localized: "Edit this custom rate schedule in Rate schedule.", bundle: .app)
         }
         let impact = store.earningsImpact(ofRates: proposed)
-        if impact.sessions == 0 { return String(localized: "No completed sessions change.") }
-        return String(localized: "\(impact.sessions) completed sessions change by \(impact.delta.money(code: store.currencyCode)) in total.")
+        if impact.sessions == 0 { return String(localized: "No completed sessions change.", bundle: .app) }
+        return String(localized: "\(impact.sessions) completed sessions change by \(impact.delta.money(code: store.currencyCode)) in total.", bundle: .app)
     }
 
     private func save(from day: Date?) {

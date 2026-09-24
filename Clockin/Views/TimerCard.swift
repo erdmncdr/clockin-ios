@@ -40,7 +40,7 @@ struct TimerCard: View {
                     // Gece yarisini asan oturum bastan sona basladigi gune
                     // yaziliyor. Bunu soylemezsek "Today" sifir kalinca
                     // sayacin kaydedilmedigi saniliyor.
-                    Label("Counts toward \(day.formatted(.dateTime.month(.abbreviated).day()))",
+                    Label("Counts toward \(day.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day()))",
                           systemImage: "moon.stars")
                         .font(.caption)
                         .foregroundStyle(.orange)
@@ -143,8 +143,8 @@ struct TimerCard: View {
     }
 
     private var statusText: String {
-        guard let running = store.running else { return String(localized: "READY TO FOCUS") }
-        return running.isPaused ? String(localized: "PAUSED") : String(localized: "FOCUS SESSION")
+        guard let running = store.running else { return String(localized: "READY TO FOCUS", bundle: .app) }
+        return running.isPaused ? String(localized: "PAUSED", bundle: .app) : String(localized: "FOCUS SESSION", bundle: .app)
     }
 }
 

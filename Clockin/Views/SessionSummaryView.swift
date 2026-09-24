@@ -23,7 +23,7 @@ struct SessionSummaryView: View {
                         .foregroundStyle(.secondary)
                     Text("Nice work!")
                         .font(.largeTitle.weight(.black))
-                    Text(SessionDisplay.note(session).isEmpty ? String(localized: "Focus session") : SessionDisplay.note(session))
+                    Text(SessionDisplay.note(session).isEmpty ? String(localized: "Focus session", bundle: .app) : SessionDisplay.note(session))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

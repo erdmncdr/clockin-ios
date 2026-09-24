@@ -3,9 +3,9 @@ import Foundation
 enum BadgeTier: Int, CaseIterable, Identifiable {
     case launch = 1, orbit, lunar, solar, galactic, eternal
     var id: Int { rawValue }
-    var title: String { [String(localized: "Launch"), String(localized: "Orbit"), String(localized: "Lunar"), String(localized: "Solar"), String(localized: "Galactic"), String(localized: "Eternal")][rawValue - 1] }
+    var title: String { [String(localized: "Launch", bundle: .app), String(localized: "Orbit", bundle: .app), String(localized: "Lunar", bundle: .app), String(localized: "Solar", bundle: .app), String(localized: "Galactic", bundle: .app), String(localized: "Eternal", bundle: .app)][rawValue - 1] }
     var caption: String {
-        [String(localized: "Begin your mission"), String(localized: "Build your rhythm"), String(localized: "Go beyond the familiar"), String(localized: "Make your work shine"), String(localized: "Leave your mark"), String(localized: "A lifetime-class achievement")][rawValue - 1]
+        [String(localized: "Begin your mission", bundle: .app), String(localized: "Build your rhythm", bundle: .app), String(localized: "Go beyond the familiar", bundle: .app), String(localized: "Make your work shine", bundle: .app), String(localized: "Leave your mark", bundle: .app), String(localized: "A lifetime-class achievement", bundle: .app)][rawValue - 1]
     }
     static func forBadge(_ id: String) -> Self {
         switch id {
@@ -26,7 +26,7 @@ enum BadgeTier: Int, CaseIterable, Identifiable {
 enum BadgeMission: Int, CaseIterable {
     case flight, signal, orbit, archive, habitat, suit
     var title: String {
-        [String(localized: "Flight time"), String(localized: "Focus streak"), String(localized: "Active days"), String(localized: "Session log"), String(localized: "Your collection"), String(localized: "Personal style")][rawValue]
+        [String(localized: "Flight time", bundle: .app), String(localized: "Focus streak", bundle: .app), String(localized: "Active days", bundle: .app), String(localized: "Session log", bundle: .app), String(localized: "Your collection", bundle: .app), String(localized: "Personal style", bundle: .app)][rawValue]
     }
     static func forBadge(_ id: String) -> Self {
         if id.hasPrefix("outfits") { return .suit }

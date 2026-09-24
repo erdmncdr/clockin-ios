@@ -52,7 +52,7 @@ struct ManualStartView: View {
                         let rate = store.effectiveRate(at: start, fallback: store.hourlyRate)
                         VStack(alignment: .leading, spacing: 12) {
                             LabeledContent("Start time") {
-                                Text(start.formatted(date: .abbreviated, time: .shortened))
+                                Text(start.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: AppLanguage.formatLocale)))
                                     .multilineTextAlignment(.trailing)
                             }
                             LabeledContent("Elapsed", value: DurationText.compact(elapsed))

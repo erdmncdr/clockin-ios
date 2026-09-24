@@ -12,12 +12,12 @@ enum WardrobeUnlock: Equatable, Sendable {
     var price: Int? { if case .coins(let cost) = self { return cost }; return nil }
     var label: String {
         switch self {
-        case .free: String(localized: "Free")
-        case .hours(let n): String(localized: "\(n) hours of work")
-        case .level(let n): String(localized: "Level \(n)")
-        case .streak(let n): String(localized: "\(n)-day streak")
-        case .badge(let id): id == "first" ? String(localized: "First session badge") : String(localized: "Badge: \(id)")
-        case .coins(let n): String(localized: "\(n) coins")
+        case .free: String(localized: "Free", bundle: .app)
+        case .hours(let n): String(localized: "\(n) hours of work", bundle: .app)
+        case .level(let n): String(localized: "Level \(n)", bundle: .app)
+        case .streak(let n): String(localized: "\(n)-day streak", bundle: .app)
+        case .badge(let id): id == "first" ? String(localized: "First session badge", bundle: .app) : String(localized: "Badge: \(id)", bundle: .app)
+        case .coins(let n): String(localized: "\(n) coins", bundle: .app)
         }
     }
     func met(by progress: WardrobeProgress) -> Bool {
@@ -34,9 +34,15 @@ enum WardrobeUnlock: Equatable, Sendable {
 
 struct WardrobeItem: Identifiable, Sendable {
     let id: String
-    let name: String
+    /// Looked up on each use, so a language change in Settings applies at once.
+    private let nameKey: String.LocalizationValue
     let slot: WardrobeSlot
     let unlock: WardrobeUnlock
+    var name: String { String(localized: nameKey, bundle: .app) }
+
+    init(id: String, name: String.LocalizationValue, slot: WardrobeSlot, unlock: WardrobeUnlock) {
+        self.id = id; nameKey = name; self.slot = slot; self.unlock = unlock
+    }
     var isHomeItem: Bool { slot == .room || WardrobeSlot.furniture.contains(slot) }
 }
 
@@ -235,7 +241,7 @@ enum WardrobeGeometry {
 
 enum CompanionHomeLayout: String, Codable, CaseIterable, Sendable {
     case deskLeft, deskRight
-    var title: String { self == .deskLeft ? String(localized: "Room left") : String(localized: "Room right") }
+    var title: String { self == .deskLeft ? String(localized: "Room left", bundle: .app) : String(localized: "Room right", bundle: .app) }
     var mirrored: Bool { self == .deskRight }
     func x(_ x: Double) -> Double { mirrored ? 360 - x : x }
 }
@@ -251,10 +257,10 @@ enum CompanionHomeActivity: String, CaseIterable, Sendable {
     }
     var title: String {
         switch self {
-        case .idle: String(localized: "At home")
-        case .working: String(localized: "Working")
-        case .relaxing: String(localized: "Taking a break")
-        case .sleeping: String(localized: "Resting")
+        case .idle: String(localized: "At home", bundle: .app)
+        case .working: String(localized: "Working", bundle: .app)
+        case .relaxing: String(localized: "Taking a break", bundle: .app)
+        case .sleeping: String(localized: "Resting", bundle: .app)
         }
     }
     var mood: MascotMood {

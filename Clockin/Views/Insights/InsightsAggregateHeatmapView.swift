@@ -12,12 +12,12 @@ struct InsightsAggregateHeatmapView: View {
     var body: some View {
         let selected = periods.first { $0.start == selectedStart } ?? periods.last
         VStack(alignment: .leading, spacing: 12) {
-            Text("Each cell shows \(grouping == .week ? String(localized: "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month") : String(localized: "a calendar month")). Color shows relative earnings across your archive.")
+            Text("Each cell shows \(grouping == .week ? String(localized: "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month", bundle: .app) : String(localized: "a calendar month", bundle: .app)). Color shows relative earnings across your archive.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollViewReader { proxy in
                 VStack(spacing: 8) {
                     HStack {
-                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start")) {
+                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start", bundle: .app)) {
                             if let first = periods.first { proxy.scrollTo(first.id, anchor: .leading) }
                         }
                         Spacer()
@@ -69,17 +69,17 @@ struct InsightsAggregateHeatmapView: View {
     }
 
     private func title(_ period: InsightsPeriod) -> String {
-        if grouping == .month { return period.start.formatted(.dateTime.month(.wide).year()) }
+        if grouping == .month { return period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()) }
         let last = Calendar.current.date(byAdding: .day, value: -1, to: period.end)!
-        return "\(period.start.formatted(.dateTime.month(.abbreviated).day())) – \(last.formatted(.dateTime.month(.abbreviated).day().year()))"
+        return "\(period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day())) – \(last.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().year()))"
     }
 
     private func periodCell(_ period: InsightsPeriod, selected: Bool) -> some View {
         Button { selectedStart = period.start } label: {
             VStack(spacing: 6) {
                 Text(grouping == .month
-                     ? period.start.formatted(.dateTime.month(.abbreviated).year(.twoDigits))
-                     : period.start.formatted(.dateTime.month(.abbreviated).day()))
+                     ? period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).year(.twoDigits))
+                     : period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day()))
                     .font(.caption2).foregroundStyle(.secondary)
                 RoundedRectangle(cornerRadius: 6)
                     .fill(period.intensity > 0 ? palette.accent.opacity(period.intensity) : palette.surfaceStroke)
@@ -97,7 +97,7 @@ struct InsightsAggregateHeatmapView: View {
         .buttonStyle(.pressable)
         .buttonPressHaptic(false)
         .accessibilityLabel(title(period))
-        .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", " + String(localized: "selected") : "")")
+        .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", " + String(localized: "selected", bundle: .app) : "")")
         .accessibilityHint("Shows period hours, earnings and available conversion below the grid")
     }
 }

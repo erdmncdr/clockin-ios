@@ -1,4 +1,4 @@
-// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-insights-module-cache Shared/Core/Models.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Insights/InsightsPeriods.swift Clockin/Views/Insights/MonthWeek.swift Tests/manual/insights/main.swift -o /tmp/clockin-insights-tests && /tmp/clockin-insights-tests
+// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-insights-module-cache Shared/Core/AppLanguage.swift Shared/Core/Models.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Insights/InsightsPeriods.swift Clockin/Views/Insights/MonthWeek.swift Tests/manual/insights/main.swift -o /tmp/clockin-insights-tests && /tmp/clockin-insights-tests
 import Foundation
 
 var checks = 0

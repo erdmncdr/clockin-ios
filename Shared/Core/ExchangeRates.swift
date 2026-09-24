@@ -129,11 +129,11 @@ final class ExchangeRateStore: ObservableObject {
         latestDate = ratesByDay.keys.max()
         let stillMissing = requestedDays.contains { ratesByDay[$0] == nil }
         if ratesByDay.isEmpty {
-            errorMessage = String(localized: "Exchange rate unavailable")
+            errorMessage = String(localized: "Exchange rate unavailable", bundle: .app)
         } else if liveCheckFailed {
-            errorMessage = String(localized: "Live check failed, showing cached rate")
+            errorMessage = String(localized: "Live check failed, showing cached rate", bundle: .app)
         } else if stillMissing {
-            errorMessage = String(localized: "Some historical rates are still updating")
+            errorMessage = String(localized: "Some historical rates are still updating", bundle: .app)
         } else {
             errorMessage = nil
         }

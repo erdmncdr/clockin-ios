@@ -82,7 +82,7 @@ struct LevelBadgeGallery: View {
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(selection == level ? palette.accent : palette.surfaceStroke, lineWidth: selection == level ? 1.5 : 1))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(style.name), level \(level), \(unlocked ? String(localized: "unlocked") : String(localized: "locked"))")
+        .accessibilityLabel("\(style.name), level \(level), \(unlocked ? String(localized: "unlocked", bundle: .app) : String(localized: "locked", bundle: .app))")
         .accessibilityHint("Previews this badge; your level stays the same")
         .accessibilityIdentifier("badges.rank.\(level)")
     }

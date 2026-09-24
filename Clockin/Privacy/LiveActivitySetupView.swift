@@ -39,7 +39,7 @@ struct LiveActivitySetupView: View {
     @State private var showingPolicy = false
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
-    private var titles: [String] { [String(localized: "Keep earnings in view"), String(localized: "Check your iPhone settings"), String(localized: "Check the connection")] }
+    private var titles: [String] { [String(localized: "Keep earnings in view", bundle: .app), String(localized: "Check your iPhone settings", bundle: .app), String(localized: "Check the connection", bundle: .app)] }
 
     var body: some View {
         NavigationStack {

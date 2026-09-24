@@ -53,19 +53,19 @@ struct ReminderEndTimeView: View {
     private func clockOut() {
         guard LongSessionReminderSchedule.matches(start: running.start, running: store.running) else {
             Haptics.play(.validationFailed)
-            errorMessage = String(localized: "This session is no longer running.")
+            errorMessage = String(localized: "This session is no longer running.", bundle: .app)
             return
         }
         guard LongSessionReminderSchedule.validEnd(end, running: running, now: .now) else {
             Haptics.play(.validationFailed)
-            errorMessage = String(localized: "Choose a time between when you last resumed and now.")
+            errorMessage = String(localized: "Choose a time between when you last resumed and now.", bundle: .app)
             return
         }
         let saved = store.clockOut(at: end)
         SessionMirror.shared.refresh()
         guard store.running == nil, let saved else {
             Haptics.play(.validationFailed)
-            errorMessage = store.statusMessage ?? String(localized: "Could not save this session.")
+            errorMessage = store.statusMessage ?? String(localized: "Could not save this session.", bundle: .app)
             return
         }
         sessionFeedback.send(.sessionEnded)

@@ -7,9 +7,9 @@ enum CSVImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unreadable: String(localized: "The CSV file could not be read.")
-        case .missingColumns: String(localized: "Start Time and End Time columns are required.")
-        case .noValidRows: String(localized: "No valid time entries were found.")
+        case .unreadable: String(localized: "The CSV file could not be read.", bundle: .app)
+        case .missingColumns: String(localized: "Start Time and End Time columns are required.", bundle: .app)
+        case .noValidRows: String(localized: "No valid time entries were found.", bundle: .app)
         }
     }
 }

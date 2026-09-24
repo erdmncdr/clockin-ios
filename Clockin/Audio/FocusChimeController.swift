@@ -7,7 +7,7 @@ import UserNotifications
 @MainActor
 final class FocusChimeController: NSObject, ObservableObject, UNUserNotificationCenterDelegate, AVAudioPlayerDelegate {
     static let shared = FocusChimeController()
-    @Published private(set) var permissionText = String(localized: "Checking notification permission")
+    @Published private(set) var permissionText = String(localized: "Checking notification permission", bundle: .app)
     @Published private(set) var canNotify = false
     @Published private(set) var needsSystemSettings = false
     @Published private(set) var errorMessage: String?
@@ -54,7 +54,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     // Izin isteme yalnizca kullanicinin acma hareketinden cagrilir.
     func requestPermission() async {
         do { _ = try await center.requestAuthorization(options: [.alert, .sound]) }
-        catch { errorMessage = String(localized: "Could not request notifications: \(error.localizedDescription)") }
+        catch { errorMessage = String(localized: "Could not request notifications: \(error.localizedDescription)", bundle: .app) }
         await refreshPermission()
         enqueue()
         LongSessionReminderController.shared.update(running: SharedStore.clock.running, force: true)
@@ -66,12 +66,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         canNotify = [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus)
         needsSystemSettings = settings.authorizationStatus == .denied || settings.authorizationStatus == .provisional || (canNotify && settings.soundSetting != .enabled)
         switch settings.authorizationStatus {
-        case .notDetermined: permissionText = String(localized: "Not requested. Turn on Focus chime to allow notifications.")
-        case .denied: permissionText = String(localized: "Notifications denied")
-        case .provisional: permissionText = String(localized: "Quiet delivery only. Enable sounds in system Settings.")
+        case .notDetermined: permissionText = String(localized: "Not requested. Turn on Focus chime to allow notifications.", bundle: .app)
+        case .denied: permissionText = String(localized: "Notifications denied", bundle: .app)
+        case .provisional: permissionText = String(localized: "Quiet delivery only. Enable sounds in system Settings.", bundle: .app)
         case .authorized, .ephemeral:
-            permissionText = settings.soundSetting == .enabled ? String(localized: "Notifications and sounds allowed") : String(localized: "Notifications allowed, sounds disabled")
-        @unknown default: permissionText = String(localized: "Notification permission unknown")
+            permissionText = settings.soundSetting == .enabled ? String(localized: "Notifications and sounds allowed", bundle: .app) : String(localized: "Notifications allowed, sounds disabled", bundle: .app)
+        @unknown default: permissionText = String(localized: "Notification permission unknown", bundle: .app)
         }
     }
 
@@ -138,12 +138,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             if !changes.removed.isEmpty {
                 center.removePendingNotificationRequests(withIdentifiers: changes.removed.map { identifiers[$0] })
             }
-            if working && dates.isEmpty { errorMessage = String(localized: "No notification slots available. Reopen Clockin later to try again.") }
+            if working && dates.isEmpty { errorMessage = String(localized: "No notification slots available. Reopen Clockin later to try again.", bundle: .app) }
             for (index, date) in changes.additions.sorted(by: { $0.value < $1.value }) {
                 guard processed == revision else { break }
                 let content = UNMutableNotificationContent()
-                content.title = String(localized: "Focus chime")
-                content.body = String(localized: "Another interval of focused work.")
+                content.title = String(localized: "Focus chime", bundle: .app)
+                content.body = String(localized: "Another interval of focused work.", bundle: .app)
                 content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: sound.fileName))
                 // Tek baslik altinda toplanir; kirk bes ayri satir yerine bir yigin gorunur.
                 content.threadIdentifier = Self.threadIdentifier
@@ -153,7 +153,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 let request = UNNotificationRequest(identifier: identifiers[index], content: content,
                     trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(1, delay), repeats: false))
                 do { try await center.add(request) }
-                catch { errorMessage = String(localized: "Could not schedule chimes: \(error.localizedDescription)"); break }
+                catch { errorMessage = String(localized: "Could not schedule chimes: \(error.localizedDescription)", bundle: .app); break }
             }
         }
     }
@@ -185,7 +185,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     private func play(_ sound: FocusChimeSound) {
         stopPlayback()
         guard let url = Bundle.main.url(forResource: sound.fileName, withExtension: nil) else {
-            errorMessage = String(localized: "Could not find the selected chime sound.")
+            errorMessage = String(localized: "Could not find the selected chime sound.", bundle: .app)
             return
         }
         do {
@@ -202,13 +202,13 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             updatePlaybackVolume()
             guard player.prepareToPlay(), player.play() else {
                 stopPlayback()
-                errorMessage = String(localized: "Could not play the selected chime.")
+                errorMessage = String(localized: "Could not play the selected chime.", bundle: .app)
                 return
             }
             errorMessage = nil
         } catch {
             stopPlayback()
-            errorMessage = String(localized: "Could not play chime: \(error.localizedDescription)")
+            errorMessage = String(localized: "Could not play chime: \(error.localizedDescription)", bundle: .app)
         }
     }
 
@@ -247,7 +247,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         Task { @MainActor [weak self] in
             guard let self, let player = self.player, ObjectIdentifier(player) == id else { return }
             self.stopPlayback()
-            if !succeeded { self.errorMessage = String(localized: "Could not finish playing the chime.") }
+            if !succeeded { self.errorMessage = String(localized: "Could not finish playing the chime.", bundle: .app) }
         }
     }
 

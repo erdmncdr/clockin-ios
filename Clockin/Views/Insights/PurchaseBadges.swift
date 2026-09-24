@@ -13,17 +13,17 @@ enum PurchaseBadges {
             zip(thresholds, titles).map { threshold, title in
                 InsightsBadge(id: prefix + String(threshold), title: title,
                     requirement: requirement(threshold), icon: icon,
-                    unlocked: count >= threshold, progress: String(localized: "\(count) / \(threshold) purchased"))
+                    unlocked: count >= threshold, progress: String(localized: "\(count) / \(threshold) purchased", bundle: .app))
             }
         }
         return series("collection", [1, 5, 10, 20, 40], bought.count,
-                      [String(localized: "First find"), String(localized: "Small collection"), String(localized: "Curated collection"), String(localized: "Collector"), String(localized: "Grand collection")],
-                      { String(localized: "Buy \($0) different companion items with earned coins") }, "bag.fill")
+                      [String(localized: "First find", bundle: .app), String(localized: "Small collection", bundle: .app), String(localized: "Curated collection", bundle: .app), String(localized: "Collector", bundle: .app), String(localized: "Grand collection", bundle: .app)],
+                      { String(localized: "Buy \($0) different companion items with earned coins", bundle: .app) }, "bag.fill")
             + series("outfits", [1, 3, 6, 12, 20], outfits,
-                     [String(localized: "New look"), String(localized: "Style starter"), String(localized: "Style collection"), String(localized: "Wardrobe curator"), String(localized: "Style icon")],
-                     { String(localized: "Buy \($0) different outfit items or colors with earned coins") }, "tshirt.fill")
+                     [String(localized: "New look", bundle: .app), String(localized: "Style starter", bundle: .app), String(localized: "Style collection", bundle: .app), String(localized: "Wardrobe curator", bundle: .app), String(localized: "Style icon", bundle: .app)],
+                     { String(localized: "Buy \($0) different outfit items or colors with earned coins", bundle: .app) }, "tshirt.fill")
             + series("home", [1, 3, 6, 12, 18], home,
-                     [String(localized: "First furnishing"), String(localized: "Cozy corner"), String(localized: "Room maker"), String(localized: "Home curator"), String(localized: "Dream home")],
-                     { String(localized: "Buy \($0) different home items or rooms with earned coins") }, "house.fill")
+                     [String(localized: "First furnishing", bundle: .app), String(localized: "Cozy corner", bundle: .app), String(localized: "Room maker", bundle: .app), String(localized: "Home curator", bundle: .app), String(localized: "Dream home", bundle: .app)],
+                     { String(localized: "Buy \($0) different home items or rooms with earned coins", bundle: .app) }, "house.fill")
     }
 }

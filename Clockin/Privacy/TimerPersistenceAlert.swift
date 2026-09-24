@@ -10,7 +10,7 @@ private struct TimerPersistenceAlert: ViewModifier {
         )) {
             Button("OK") { store.timerPersistenceError = nil }
         } message: {
-            Text(store.timerPersistenceError ?? String(localized: "Please try again."))
+            Text(store.timerPersistenceError ?? String(localized: "Please try again.", bundle: .app))
         }
     }
 }

@@ -25,7 +25,7 @@ struct FocusSettingsSection: View {
                 FocusChimeToggle()
                 if chimeEnabled {
                     Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
-                        LabeledContent("Every", value: String(localized: "\(interval) min of work"))
+                        LabeledContent("Every", value: String(localized: "\(interval) min of work", bundle: .app))
                     }
                     .accessibilityValue("\(interval) minutes of work")
                     Picker("Sound", selection: Binding(get: {
@@ -118,9 +118,9 @@ struct FocusSettingsSection: View {
 
     private var radioStatus: String {
         if let error = radio.errorMessage { return error }
-        if radio.isLoading { return String(localized: "Connecting…") }
-        if radio.state == .failed { return String(localized: "Could not connect. Tap play to retry.") }
-        if radio.state == .paused { return String(localized: "Paused") }
-        return radio.isPlaying ? String(localized: "Playing") : String(localized: "Stopped")
+        if radio.isLoading { return String(localized: "Connecting…", bundle: .app) }
+        if radio.state == .failed { return String(localized: "Could not connect. Tap play to retry.", bundle: .app) }
+        if radio.state == .paused { return String(localized: "Paused", bundle: .app) }
+        return radio.isPlaying ? String(localized: "Playing", bundle: .app) : String(localized: "Stopped", bundle: .app)
     }
 }

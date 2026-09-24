@@ -62,6 +62,7 @@ struct TodayWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TodayWidget", provider: TodayProvider()) { entry in
             TodayWidgetView(entry: entry)
+                .environment(\.locale, AppLanguage.locale)
                 .environment(\.palette, entry.snapshot.theme.palette)
                 // Girdiler arasi rakam gecisi bulanik animasyonla cizilip
                 // islemci harciyordu; degerler dogrudan degissin.
@@ -213,7 +214,7 @@ private struct TodayWidgetView: View {
         // Gece yarisini asan oturum bugune sayilmaz, o yuzden TODAY yaninda
         // donmus duruyor. Basligi hangi gune yazildigini soylesin, yoksa iki
         // sayi birbiriyle celisiyor gorunuyor.
-        let day = running.start.formatted(.dateTime.month(.abbreviated).day()).uppercased(with: .current)
+        let day = running.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day()).uppercased(with: .current)
         let title: LocalizedStringKey = snapshot.runningCountsToday(at: entry.date) ? "SESSION" : "SESSION · \(day)"
         return metric(title, duration: liveDuration(elapsed, counts: isEarning),
                       earnings: elapsed / 3600 * snapshot.hourlyRate, value: value, money: money,

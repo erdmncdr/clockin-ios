@@ -193,16 +193,16 @@ struct HistoryView: View {
     /// ayni dili kullanmali.
     private func dayLabels(_ day: Date) -> (title: String, subtitle: String) {
         let calendar = Calendar.current
-        let full = day.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        if calendar.isDateInToday(day) { return (String(localized: "TODAY"), full) }
-        if calendar.isDateInYesterday(day) { return (String(localized: "YESTERDAY"), full) }
+        let full = day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.abbreviated).day().month(.abbreviated))
+        if calendar.isDateInToday(day) { return (String(localized: "TODAY", bundle: .app), full) }
+        if calendar.isDateInYesterday(day) { return (String(localized: "YESTERDAY", bundle: .app), full) }
         let days = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: .now)).day ?? 0
         if days < 7 {
-            return (day.formatted(.dateTime.weekday(.wide)).uppercased(with: .current),
-                    day.formatted(.dateTime.day().month(.abbreviated)))
+            return (day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide)).uppercased(with: .current),
+                    day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated)))
         }
-        return (day.formatted(.dateTime.day().month(.abbreviated).year()).uppercased(with: .current),
-                day.formatted(.dateTime.weekday(.wide)))
+        return (day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated).year()).uppercased(with: .current),
+                day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide)))
     }
 
 }

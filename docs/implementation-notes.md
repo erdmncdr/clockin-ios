@@ -39,9 +39,17 @@ English is the development language; Turkish lives in `Shared/Localizable.xcstri
 which both the app and the widget extension compile, and Siri phrases in
 `Clockin/AppShortcuts.xcstrings`.
 
+- Settings > Language picks Automatic, Türkçe or English (`AppLanguage`, stored
+  in the App Group so the widget extension reads it too). It applies without a
+  relaunch: the root view is rebuilt, `Text` literals take the language from
+  `\.locale`, and strings built in code pass `bundle: .app`, the chosen `.lproj`.
+  Dates formatted in code take `AppLanguage.formatLocale` (chosen language, the
+  iPhone's region), because `Locale.current` only changes on the next launch.
 - SwiftUI literals such as `Text("History")` localize on their own. Text built in
-  code does not: wrap it in `String(localized:)`, or give a view helper a
-  `LocalizedStringKey` parameter so its call sites stay plain literals.
+  code does not: wrap it in `String(localized:bundle: .app)`, or give a view
+  helper a `LocalizedStringKey` parameter so its call sites stay plain literals.
+  Catalogue names (wardrobe items, radio descriptions) are looked up on each use,
+  not stored once, so a language change reaches them too.
 - Values that are saved or compared stay English. Where an enum's raw value is
   also its label (themes, share fields, history ranges), the raw value is left
   alone and the label is looked up from it.

@@ -90,7 +90,7 @@ struct EarningsChartView: View {
                         .font(.caption2).foregroundStyle(.secondary)
                 }
                 if range == .sixMonths, let bar = selectedMonth {
-                    Text("\(bar.day.formatted(.dateTime.month(.wide).year())) · \(DurationText.compact(bar.duration)) · \(money(HistoryAmount(earned: bar.earned, converted: bar.converted)))")
+                    Text("\(bar.day.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year())) · \(DurationText.compact(bar.duration)) · \(money(HistoryAmount(earned: bar.earned, converted: bar.converted)))")
                         .font(.caption).monospacedDigit()
                     if currencyCode == "USD", let converted = bar.converted {
                         Text((converting ? bar.earned : converted).money(code: converting ? "USD" : "TRY")).font(.caption)
@@ -99,8 +99,8 @@ struct EarningsChartView: View {
                     detail(point)
                 } else if let selectedDate {
                     Text(range == .sixMonths
-                        ? "No work in \(selectedDate.formatted(.dateTime.month(.wide).year()))."
-                        : "No work on \(selectedDate.formatted(date: .abbreviated, time: .omitted)).")
+                        ? "No work in \(selectedDate.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()))."
+                        : "No work on \(selectedDate.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))).")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
                     Text(range == .sixMonths ? "Tap a month in the chart to inspect it." : "Tap a day in the chart to inspect it.")
@@ -182,7 +182,7 @@ struct EarningsChartView: View {
                             .foregroundStyle(palette.accent.gradient)
                             .cornerRadius(3)
                             .opacity(selectedMonth == nil || selectedMonth?.day == bar.day ? 1 : 0.45)
-                            .accessibilityLabel(bar.day.formatted(.dateTime.month(.wide).year()))
+                            .accessibilityLabel(bar.day.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()))
                             .accessibilityValue("\(value.money(code: displayCode)), \(DurationText.compact(bar.duration))")
                     }
                 }
@@ -193,7 +193,7 @@ struct EarningsChartView: View {
                             .foregroundStyle(palette.accent.gradient)
                             .cornerRadius(3)
                             .opacity(selected == nil || selected?.day == point.day ? 1 : 0.45)
-                            .accessibilityLabel(point.day.formatted(date: .complete, time: .omitted))
+                            .accessibilityLabel(point.day.formatted(Date.FormatStyle(date: .complete, time: .omitted, locale: AppLanguage.formatLocale)))
                             .accessibilityValue("\(value.money(code: displayCode)), \(DurationText.compact(point.duration))")
                     }
                 }
@@ -239,7 +239,7 @@ struct EarningsChartView: View {
 
     private func detail(_ point: EarningsDay) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(point.day.formatted(date: .complete, time: .omitted)).font(.subheadline.bold())
+            Text(point.day.formatted(Date.FormatStyle(date: .complete, time: .omitted, locale: AppLanguage.formatLocale))).font(.subheadline.bold())
             Text("\(DurationText.compact(point.duration)) · \(money(HistoryAmount(earned: point.earned, converted: point.converted)))")
                 .font(.subheadline).monospacedDigit()
             if currencyCode == "USD", let converted = point.converted {

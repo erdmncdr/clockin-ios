@@ -78,7 +78,7 @@ struct GoalsPaceView: View {
 
     private func summary(_ plan: MonthlyWorkPlan) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(plan.today.formatted(.dateTime.month(.wide).year()).uppercased(with: .current))
+            Text(plan.today.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()).uppercased(with: .current))
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             Text(DurationText.compact(plan.monthWorked))
                 .font(.system(.largeTitle, design: .rounded, weight: .bold)).monospacedDigit()
@@ -114,7 +114,7 @@ struct GoalsPaceView: View {
                         .font(.subheadline).foregroundStyle(palette.accent)
                 } else {
                     metric("Remaining", DurationText.compact(remaining))
-                    let finish = now.addingTimeInterval(remaining).formatted(date: .omitted, time: .shortened)
+                    let finish = now.addingTimeInterval(remaining).formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale))
                     Text(store.running?.isPaused == false
                          ? "Keep working and you'll reach today's goal at \(finish)."
                          : "Start now and you'll reach today's goal at \(finish).")
@@ -218,7 +218,7 @@ struct GoalsPaceView: View {
             Text("Solid: actual total · dashed: recent pace · dotted: monthly goal")
                 .font(.caption2).foregroundStyle(.secondary)
             Text(plan.sampleDays > 0
-                 ? "Uses \(plan.sampleDays) completed calendar days before today, including days without work, adjusted to your \(plan.workdaysPerWeek)-day week. \(plan.sampleDays < 7 ? String(localized: "Early estimate: a full week will be more representative.") + " " : "")The forecast is an estimate, not a guarantee."
+                 ? "Uses \(plan.sampleDays) completed calendar days before today, including days without work, adjusted to your \(plan.workdaysPerWeek)-day week. \(plan.sampleDays < 7 ? String(localized: "Early estimate: a full week will be more representative.", bundle: .app) + " " : "")The forecast is an estimate, not a guarantee."
                  : "Today's work counts toward progress, but an unfinished day isn't used to establish your average.")
                 .font(.caption).foregroundStyle(.secondary)
         }

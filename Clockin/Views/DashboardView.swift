@@ -93,7 +93,16 @@ struct DashboardView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.clockinContentActive, appeared && isSelected && sheet == nil && pendingDelete == nil && scenePhase == .active)
-        .onAppear { appeared = true }
+        .onAppear {
+            appeared = true
+            if LanguageSwitch.shared.reopenSettings {
+                // Back in the new language: Settings reappears in place, no slide.
+                LanguageSwitch.shared.reopenSettings = false
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { sheet = .settings }
+            }
+        }
         .onDisappear { appeared = false }
         .celebrationBlocked(by: sheet != nil)
         .sheet(item: $sheet, onDismiss: presentReminderEnd) { destination in

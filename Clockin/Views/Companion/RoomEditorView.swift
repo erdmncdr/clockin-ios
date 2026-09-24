@@ -116,7 +116,7 @@ struct RoomEditorView: View {
                 }.accessibilityLabel("Reset selected item").disabled(isDragging)
             }
         }
-        Text(feedback ?? String(localized: "Changes stay here until you save."))
+        Text(feedback ?? String(localized: "Changes stay here until you save.", bundle: .app))
             .font(.caption).foregroundStyle(feedback == nil ? Color.secondary : .red)
             .frame(minHeight:30,alignment:.topLeading)
             .accessibilityIdentifier("room.editor.feedback")

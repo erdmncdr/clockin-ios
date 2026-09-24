@@ -200,12 +200,12 @@ struct CelebrationQueue {
     }
 
     mutating func wardrobeUnlocked(first: Bool, names: [String]) {
-        if first { pending.append(.wardrobe(name: String(localized: "Outfits, coins and home"), introductory: true)); return }
+        if first { pending.append(.wardrobe(name: String(localized: "Outfits, coins and home", bundle: .app), introductory: true)); return }
         let existing = pending.filter { if case .wardrobe = $0 { return true }; return false }.count
         let available = max(0, 3 - existing)
         pending += names.prefix(available).map { .wardrobe(name: $0, introductory: false) }
         if names.count > available {
-            let summary = CelebrationEvent.wardrobe(name: String(localized: "More items unlocked. Open Companion"), introductory: false)
+            let summary = CelebrationEvent.wardrobe(name: String(localized: "More items unlocked. Open Companion", bundle: .app), introductory: false)
             if !pending.contains(summary) { pending.append(summary) }
         }
     }

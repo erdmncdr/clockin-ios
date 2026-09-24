@@ -9,7 +9,7 @@ struct CompanionCategoryTabs: View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    tab(nil, title: String(localized: "All"), symbol: "square.grid.2x2")
+                    tab(nil, title: String(localized: "All", bundle: .app), symbol: "square.grid.2x2")
                     ForEach(WardrobeCategory.allCases) { category in
                         tab(category, title: category.title, symbol: category.symbol)
                     }

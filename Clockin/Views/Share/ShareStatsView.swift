@@ -25,15 +25,15 @@ struct StatsShareSnapshot: Identifiable {
             .time: DurationText.compact(stats.totalDuration),
             .earnings: stats.totalEarnings.money(code: store.currencyCode),
             .sessions: "\(stats.sessionCount)", .activeDays: "\(stats.daily.count)",
-            .streak: String(localized: "\(stats.currentStreak) days"), .longestStreak: String(localized: "\(stats.longestStreak) days"),
+            .streak: String(localized: "\(stats.currentStreak) days", bundle: .app), .longestStreak: String(localized: "\(stats.longestStreak) days", bundle: .app),
             .badges: "\(stats.badges.filter(\.unlocked).count)", .xp: "\(stats.xp)", .level: "\(stats.level)",
             .fullDays: "\(stats.fullDays)", .longDays: "\(stats.longDays)",
             .bigMonths: "\(stats.bigMonths)", .momentum: String(format: "%+.0f%%", stats.monthTrend * 100),
-            .weekday: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions"),
-            .hour: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions")
+            .weekday: stats.bestWeekday.map { AppLanguage.calendar.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions", bundle: .app),
+            .hour: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions", bundle: .app)
         ]
         if let day = stats.bestDay {
-            fields[.bestDay] = day.formatted(.dateTime.month(.abbreviated).day())
+            fields[.bestDay] = day.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day())
             fields[.bestDayDuration] = DurationText.compact(stats.bestDayDuration)
         }
         values = fields
@@ -76,7 +76,7 @@ struct ShareStatsView: View {
                     }.padding(16).card(palette)
                     if let preview {
                         Image(uiImage: preview).resizable().scaledToFit()
-                            .accessibilityLabel(String(localized: "\(privacy.title) stats preview, \(mode == .all ? String(localized: "all three pages") : page.title)"))
+                            .accessibilityLabel(String(localized: "\(privacy.title) stats preview, \(mode == .all ? String(localized: "all three pages") : page.title)", bundle: .app))
                             .accessibilityValue(previewDescription)
                     }
                     if let png, let preview {
@@ -86,7 +86,7 @@ struct ShareStatsView: View {
                             .accessibilityLabel("Share stats as PNG")
                         Button {
                             UIPasteboard.general.setData(png.data, forPasteboardType: UTType.png.identifier)
-                            status = String(localized: "PNG copied to clipboard.")
+                            status = String(localized: "PNG copied to clipboard.", bundle: .app)
                         } label: { Label("Copy image", systemImage: "doc.on.doc") }
                         .buttonStyle(.bordered).accessibilityLabel("Copy stats PNG to clipboard")
                     }
@@ -144,7 +144,7 @@ struct ShareStatsView: View {
         renderer.scale = displayScale
         renderer.isOpaque = true
         guard let image = renderer.uiImage, let data = image.pngData() else {
-            status = String(localized: "Could not create image. Please try again.")
+            status = String(localized: "Could not create image. Please try again.", bundle: .app)
             return
         }
         preview = image
@@ -168,7 +168,7 @@ private struct StatsShareCard: View {
             }
             Rectangle().fill(palette.accent).frame(width: 42, height: 4).padding(.top, 12)
             Text(title).font(.system(size: 32, weight: .black)).tracking(-1)
-            Text(snapshot.date.formatted(.dateTime.month(.wide).day().year()))
+            Text(snapshot.date.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).day().year()))
                 .font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundStyle(.secondary)
             VStack(spacing: 16) {
                 ForEach(StatsShareFields.rows(page: page, privacy: privacy, values: snapshot.values)) { row in
@@ -201,9 +201,9 @@ private struct StatsShareCard: View {
 
     private var title: String {
         switch page {
-        case .overview: privacy == .publicStats ? String(localized: "FOCUS\nIN NUMBERS") : String(localized: "FOCUS\nJOURNEY")
-        case .rhythm: String(localized: "RHYTHM\nREPORT")
-        case .milestones: String(localized: "MILESTONES\n& MOMENTUM")
+        case .overview: privacy == .publicStats ? String(localized: "FOCUS\nIN NUMBERS", bundle: .app) : String(localized: "FOCUS\nJOURNEY", bundle: .app)
+        case .rhythm: String(localized: "RHYTHM\nREPORT", bundle: .app)
+        case .milestones: String(localized: "MILESTONES\n& MOMENTUM", bundle: .app)
         }
     }
 }

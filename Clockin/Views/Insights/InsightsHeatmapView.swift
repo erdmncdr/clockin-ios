@@ -64,7 +64,7 @@ struct InsightsHeatmapView: View {
             ScrollViewReader { proxy in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start")) {
+                        Button(String(localized: "heatmap.jump.start", defaultValue: "Start", bundle: .app)) {
                             if let first = weeks.first { proxy.scrollTo(first, anchor: .leading) }
                         }
                         Spacer()
@@ -92,7 +92,7 @@ struct InsightsHeatmapView: View {
                             LazyHStack(alignment: .top, spacing: 0) {
                                 ForEach(weeks, id: \.self) { week in
                                     VStack(spacing: 0) {
-                                        Text(week.formatted(.dateTime.month(.abbreviated).day()))
+                                        Text(week.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day()))
                                             .font(.caption2).foregroundStyle(.secondary)
                                             .frame(width: 44, height: 36)
                                             .multilineTextAlignment(.center)
@@ -131,7 +131,7 @@ struct InsightsHeatmapView: View {
             .font(.caption).foregroundStyle(.secondary)
             Divider()
             VStack(alignment: .leading, spacing: 5) {
-                Text(selected.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
+                Text(selected.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide).month(.wide).day().year()))
                     .font(.subheadline.weight(.semibold))
                 Text("\(DurationText.compact(daily[selected, default: 0])) • \(earnings[selected, default: 0].money(code: currencyCode))")
                     .font(.subheadline).monospacedDigit().foregroundStyle(palette.accent)
@@ -170,8 +170,8 @@ struct InsightsHeatmapView: View {
         .disabled(day > today)
         .opacity(day > today ? 0 : 1)
         .accessibilityHidden(day > today)
-        .accessibilityLabel(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
-        .accessibilityValue("\(DurationText.compact(duration)), \(earnings[day, default: 0].money(code: currencyCode))\(day == selected ? ", " + String(localized: "selected") : "")")
+        .accessibilityLabel(day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide).month(.wide).day().year()))
+        .accessibilityValue("\(DurationText.compact(duration)), \(earnings[day, default: 0].money(code: currencyCode))\(day == selected ? ", " + String(localized: "selected", bundle: .app) : "")")
         .accessibilityHint("Shows daily details below the grid")
     }
 
@@ -180,7 +180,7 @@ struct InsightsHeatmapView: View {
     }
 
     private func weekdayLabel(_ index: Int) -> String {
-        let symbols = calendar.shortWeekdaySymbols
+        let symbols = AppLanguage.calendar.shortWeekdaySymbols
         return symbols[(index + 1) % 7]
     }
 

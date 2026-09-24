@@ -6,12 +6,12 @@ enum TodaySection: String, CaseIterable, Identifiable {
     var key: String { "Clockin.Today.Show.\(rawValue)" }
     var title: String {
         switch self {
-        case .summary: String(localized: "Session & Today")
-        case .companion: String(localized: "Companion")
-        case .goals: String(localized: "Goals & daily pace")
-        case .momentum: String(localized: "Money Momentum")
-        case .recent: String(localized: "Last 3 sessions")
-        case .exchange: String(localized: "USD / TRY rate")
+        case .summary: String(localized: "Session & Today", bundle: .app)
+        case .companion: String(localized: "Companion", bundle: .app)
+        case .goals: String(localized: "Goals & daily pace", bundle: .app)
+        case .momentum: String(localized: "Money Momentum", bundle: .app)
+        case .recent: String(localized: "Last 3 sessions", bundle: .app)
+        case .exchange: String(localized: "USD / TRY rate", bundle: .app)
         }
     }
 }
@@ -22,10 +22,10 @@ enum TodayQuickLink: String, CaseIterable, Identifiable {
     var key: String { "Clockin.Today.Link.\(rawValue)" }
     var title: String {
         switch self {
-        case .goals: String(localized: "Goals & Pace")
-        case .history: String(localized: "History")
-        case .newEntry: String(localized: "Add entry")
-        case .liveUpdates: String(localized: "Live updates")
+        case .goals: String(localized: "Goals & Pace", bundle: .app)
+        case .history: String(localized: "History", bundle: .app)
+        case .newEntry: String(localized: "Add entry", bundle: .app)
+        case .liveUpdates: String(localized: "Live updates", bundle: .app)
         }
     }
     var icon: String {
@@ -211,11 +211,11 @@ struct TodayExchangeRateStrip: View {
         .padding(.vertical, 9)
         .card(palette)
         .accessibilityElement(children: .combine)
-        .accessibilityHint(exchangeRates.errorMessage ?? String(localized: "Latest available USD to TRY rate"))
+        .accessibilityHint(exchangeRates.errorMessage ?? String(localized: "Latest available USD to TRY rate", bundle: .app))
     }
 
     private var status: String {
-        if exchangeRates.errorMessage != nil { return exchangeRates.latestRate == nil ? String(localized: "Offline") : String(localized: "Cached") }
-        return exchangeRates.lastSuccessfulCheck == nil ? String(localized: "Cached") : String(localized: "Updated")
+        if exchangeRates.errorMessage != nil { return exchangeRates.latestRate == nil ? String(localized: "Offline", bundle: .app) : String(localized: "Cached", bundle: .app) }
+        return exchangeRates.lastSuccessfulCheck == nil ? String(localized: "Cached", bundle: .app) : String(localized: "Updated", bundle: .app)
     }
 }

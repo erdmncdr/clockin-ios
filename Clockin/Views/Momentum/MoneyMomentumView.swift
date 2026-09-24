@@ -65,9 +65,9 @@ struct MoneyMomentumView: View {
         let primary = roundedRate(momentum.perSecond, currency: store.currencyCode, digits: 3)
         if let converted = momentum.tryPerSecond {
             let secondary = roundedRate(converted, currency: "TRY", digits: 2)
-            return String(localized: "\(primary) = \(secondary) /sec")
+            return String(localized: "\(primary) = \(secondary) /sec", bundle: .app)
         }
-        return String(localized: "\(primary) /sec")
+        return String(localized: "\(primary) /sec", bundle: .app)
     }
 
     private func roundedRate(_ value: Double, currency: String, digits: Int) -> String {
@@ -119,7 +119,7 @@ private struct MomentumRemainingLabel: View {
             .overlay(alignment: alignment) {
                 ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
                     let remaining = max(0, target - store.currentEarnings(at: now))
-                    RollingNumberText(String(localized: "\(remaining.money(code: currencyCode)) to go"),
+                    RollingNumberText(String(localized: "\(remaining.money(code: currencyCode)) to go", bundle: .app),
                                       value: remaining, font: .caption.weight(.semibold))
                 }
             }

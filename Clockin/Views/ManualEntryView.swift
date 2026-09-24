@@ -58,7 +58,7 @@ struct ManualEntryView: View {
                                displayedComponents: editing == nil ? .hourAndMinute : [.date, .hourAndMinute])
                 } footer: {
                     if crossesMidnight {
-                        Text("Ends on \(resolvedEnd.formatted(date: .abbreviated, time: .omitted)).")
+                        Text("Ends on \(resolvedEnd.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))).")
                     }
                 }
 

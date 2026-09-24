@@ -70,8 +70,8 @@ struct InsightsView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle("REPORTS & RECORDS")
             metric("Average completed session", value: DurationText.compact(stats.averageSession))
-            metric("Best weekday", value: stats.bestWeekday.map { Calendar.current.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions"))
-            metric("Best start hour", value: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions"))
+            metric("Best weekday", value: stats.bestWeekday.map { AppLanguage.calendar.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions", bundle: .app))
+            metric("Best start hour", value: stats.bestStartHour.map { String(format: "%02d:00", $0) } ?? String(localized: "No sessions", bundle: .app))
             metric("Average earnings / hour", value: stats.hourlyEarnings.money(code: store.currencyCode))
             metric("Last 30 days", value: DurationText.compact(stats.recentMonth))
             metric("Preceding 30 days", value: DurationText.compact(stats.previousMonth))
@@ -79,7 +79,7 @@ struct InsightsView: View {
             Divider()
             metric("Best completed day", value: DurationText.compact(stats.bestDayDuration))
             if let day = stats.bestDay {
-                Text(day.formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
+                Text(day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide).month(.wide).day().year()))
                     .font(.caption).foregroundStyle(.secondary)
             }
             Text("Reports use completed sessions. Earnings per hour also includes active work. Best weekday and start hour use total duration; ties choose the first calendar weekday or earliest hour. The trend compares the last 30 calendar days, today included, with the 30 before them.")

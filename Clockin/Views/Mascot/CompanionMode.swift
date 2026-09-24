@@ -40,8 +40,8 @@ enum CompanionMode: String, CaseIterable, Identifiable, Sendable {
 
     /// Kilitli secenek listede esigiyle birlikte gorunur, secilemez.
     func menuLabel(totalHours: Double) -> String {
-        let title = String(localized: String.LocalizationValue(rawValue))
-        return isUnlocked(totalHours: totalHours) ? title : String(localized: "🔒 \(title) · \(Int(requiredHours))h")
+        let title = String(localized: String.LocalizationValue(rawValue), bundle: .app)
+        return isUnlocked(totalHours: totalHours) ? title : String(localized: "🔒 \(title) · \(Int(requiredHours))h", bundle: .app)
     }
 
     /// Sabit poz gorselinin sirasi. `auto` oturumu takip ettigi icin,
