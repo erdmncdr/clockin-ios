@@ -13,7 +13,7 @@ struct LevelPrestige: Equatable {
     var symbol: String { ["sparkle", "star.circle.fill", "sparkles", "sun.max.fill", "star.fill", "crown.fill", "crown.fill", "moon.stars.fill", "diamond.fill"][stage] }
     var hue: Double { [0.44, 0.56, 0.72, 0.11, 0.94, 0.49, 0.115, 0.60, 0.12][stage] }
     var detail: String {
-        [String(localized: "Polished core", bundle: .app), String(localized: "Cut metal frame", bundle: .app), String(localized: "Double rim", bundle: .app), String(localized: "Beveled frame", bundle: .app), String(localized: "Faceted frame", bundle: .app), String(localized: "Satin frame & halo", bundle: .app), String(localized: "Crowned gold frame", bundle: .app), String(localized: "Celestial arch", bundle: .app), String(localized: "Eternal crest", bundle: .app)][stage]
+        [String(localized: "Steel and a spark", bundle: .app), String(localized: "Bronze and an orbiting moon", bundle: .app), String(localized: "Silver and a nebula stone", bundle: .app), String(localized: "Gold and a turning corona", bundle: .app), String(localized: "Platinum and a nova star", bundle: .app), String(localized: "Emerald and aurora light", bundle: .app), String(localized: "Gold crown and ruby", bundle: .app), String(localized: "Star sapphire and constellations", bundle: .app), String(localized: "Prismatic wings and diamond", bundle: .app)][stage]
     }
     var ornamentCount: Int { min(index + 1, 6) }
     var nextUnlock: Int { (index + 1) * Self.interval }

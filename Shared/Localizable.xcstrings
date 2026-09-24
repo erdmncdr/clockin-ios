@@ -2349,16 +2349,6 @@
         }
       }
     },
-    "Beveled frame": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pahlı çerçeve"
-          }
-        }
-      }
-    },
     "Big plant": {
       "localizations": {
         "tr": {
@@ -2395,6 +2385,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mola bitti"
+          }
+        }
+      }
+    },
+    "Bronze and an orbiting moon": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronz ve yörüngede bir ay"
           }
         }
       }
@@ -2585,16 +2585,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göksel"
-          }
-        }
-      }
-    },
-    "Celestial arch": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Göksel kemer"
           }
         }
       }
@@ -3569,16 +3559,6 @@
         }
       }
     },
-    "Crowned gold frame": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Taçlı altın çerçeve"
-          }
-        }
-      }
-    },
     "Cumulative through %@": {
       "localizations": {
         "tr": {
@@ -3665,16 +3645,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bugün'ü özelleştir"
-          }
-        }
-      }
-    },
-    "Cut metal frame": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kesme metal çerçeve"
           }
         }
       }
@@ -4019,16 +3989,6 @@
         }
       }
     },
-    "Double rim": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çift kenar"
-          }
-        }
-      }
-    },
     "Drag to arrange": {
       "localizations": {
         "tr": {
@@ -4369,6 +4329,16 @@
         }
       }
     },
+    "Emerald and aurora light": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zümrüt ve kutup ışığı"
+          }
+        }
+      }
+    },
     "Enable live earnings updates?": {
       "localizations": {
         "tr": {
@@ -4545,16 +4515,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ebedi"
-          }
-        }
-      }
-    },
-    "Eternal crest": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ebedi arma"
           }
         }
       }
@@ -4765,16 +4725,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "BUGÜNDEN İTİBAREN"
-          }
-        }
-      }
-    },
-    "Faceted frame": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Faset çerçeve"
           }
         }
       }
@@ -5119,12 +5069,32 @@
         }
       }
     },
+    "Gold and a turning corona": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altın ve dönen taç ışınları"
+          }
+        }
+      }
+    },
     "Gold antenna": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Altın anten"
+          }
+        }
+      }
+    },
+    "Gold crown and ruby": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altın taç ve yakut"
           }
         }
       }
@@ -8355,6 +8325,16 @@
         }
       }
     },
+    "Platinum and a nova star": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platin ve nova yıldızı"
+          }
+        }
+      }
+    },
     "Play radio": {
       "localizations": {
         "tr": {
@@ -8381,16 +8361,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lütfen tekrar dene."
-          }
-        }
-      }
-    },
-    "Polished core": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cilalı çekirdek"
           }
         }
       }
@@ -8501,6 +8471,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önceki dönem"
+          }
+        }
+      }
+    },
+    "Prismatic wings and diamond": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanardöner kanatlar ve elmas"
           }
         }
       }
@@ -9435,16 +9415,6 @@
         }
       }
     },
-    "Satin frame & halo": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saten çerçeve ve hale"
-          }
-        }
-      }
-    },
     "Save": {
       "localizations": {
         "tr": {
@@ -9865,6 +9835,16 @@
         }
       }
     },
+    "Silver and a nebula stone": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gümüş ve nebula taşı"
+          }
+        }
+      }
+    },
     "Singing Bowl": {
       "localizations": {
         "tr": {
@@ -9991,6 +9971,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kıvılcım"
+          }
+        }
+      }
+    },
+    "Star sapphire and constellations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yıldız safir ve takımyıldızlar"
           }
         }
       }
@@ -10151,6 +10141,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizli mod"
+          }
+        }
+      }
+    },
+    "Steel and a spark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çelik ve kıvılcım"
           }
         }
       }

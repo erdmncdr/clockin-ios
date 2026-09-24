@@ -71,13 +71,16 @@ straight chamfers read as machined facets and curves as turned metal. Faces are
 recessed with the shadow of the rim falling into them; gems are eight facets
 shaded the same way.
 
-- Ranks add structure, not loose decoration: chamfers, an engraved second rim,
-  a two-tier molding, a halo around the socket, then a crest, an arch and a
-  seal. Mission tiers grow their ring the same way; Eternal adds a second ring.
+- Each rank and each mission tier has its own silhouette, material, stone and
+  one signature motion; `docs/rank-and-medal-design.md` has the table.
+  `RankMaterial.swift` holds the ranks' materials, outlines, ornaments and gem
+  cuts; `RankSignatures.swift` their motion; `MedalSignatures.swift` the
+  medals' tier effects and emblem movements.
 - Locked medals are matte steel with the emblem engraved instead of raised.
-- The only motion is a band of light crossing the metal (every few seconds on
-  the rank badge, once on reveal for medals) and a glint on the gem. The moving
-  layer is separate from the drawn body so the body is not redrawn per frame.
+- The drawn body never changes per frame. Rank badges redraw two thin layers,
+  one under the stone and one over it; medals animate on reveal, and only the
+  detail view runs a continuous effect. Reduce Motion, Low Power Mode and
+  off-screen views get a still frame that still shows the signature.
 
 ## Focus chime sounds
 

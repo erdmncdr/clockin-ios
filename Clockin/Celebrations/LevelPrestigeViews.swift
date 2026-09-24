@@ -1,9 +1,12 @@
 import SwiftUI
 
+/// The rank's colour elsewhere in the app comes from its stone, so ranks that
+/// share a metal still have their own colour.
 extension LevelPrestige {
-    var tint: Color { Color(hue: hue, saturation: 0.62, brightness: 0.96) }
-    var highlight: Color { Color(hue: hue, saturation: 0.18, brightness: 1) }
-    var shade: Color { Color(hue: hue, saturation: 0.75, brightness: 0.43) }
+    private var stoneSaturation: Double { max(0.2, material.stone.saturation) }
+    var tint: Color { Color(hue: material.stone.hue, saturation: 0.62 * stoneSaturation, brightness: 0.96) }
+    var highlight: Color { Color(hue: material.stone.hue, saturation: 0.18 * stoneSaturation, brightness: 1) }
+    var shade: Color { Color(hue: material.stone.hue, saturation: 0.75 * stoneSaturation, brightness: 0.43) }
 }
 
 /// Shared by the dashboard, Badges and the level-up card: a groove cut into
@@ -69,7 +72,7 @@ struct PrestigeGroove: View {
 /// The badge body's silhouette, for backgrounds and hit areas.
 struct PrestigePlate: Shape {
     let stage: Int
-    func path(in r: CGRect) -> Path { PrestigeOutline.path(PrestigeOutline.plate(stage: stage, in: r)) }
+    func path(in r: CGRect) -> Path { PrestigeOutline.path(PrestigeOutline.rankPlate(stage: stage, in: r)) }
 }
 
 /// The forged body behind the badge content: beveled metal rim, recessed
@@ -89,11 +92,11 @@ struct PrestigeMetalFrame: View {
         .padding(-Self.margin).allowsHitTesting(false).accessibilityHidden(true)
     }
 
-    static func rimWidth(_ stage: Int) -> CGFloat { stage == 0 ? 2.4 : (stage >= 4 ? 3.6 : 3) }
+    nonisolated static func rimWidth(_ stage: Int) -> CGFloat { stage == 0 ? 2.4 : (stage >= 4 ? 3.6 : 3) }
 
     static func draw(_ context: inout GraphicsContext, size: CGSize, style: LevelPrestige) {
-        let stage = style.stage
-        let outer = PrestigeOutline.plate(stage: stage, in: CGRect(origin: .zero, size: size))
+        let stage = style.stage, m = style.material
+        let outer = PrestigeOutline.rankPlate(stage: stage, in: CGRect(origin: .zero, size: size))
         let rim = rimWidth(stage)
         let inner = PrestigeOutline.inset(outer, by: rim)
         let face = PrestigeOutline.path(inner)
@@ -103,23 +106,23 @@ struct PrestigeMetalFrame: View {
             layer.addFilter(.blur(radius: 3))
             layer.fill(PrestigeOutline.path(outer).offsetBy(dx: 0, dy: 1.5), with: .color(.black.opacity(0.55)))
         }
-        if stage >= 6 { crest(&context, size: size, style: style, arch: stage >= 7) }
+        RankOrnaments.back(&context, size: size, style: style)
 
         // Rim: one face per edge; the higher ranks cut it into two tiers.
         if stage >= 4 {
             let mid = PrestigeOutline.inset(outer, by: rim * 0.55)
-            PrestigeBevel.band(&context, outer: outer, inner: mid, style: style.tone)
-            PrestigeBevel.band(&context, outer: mid, inner: inner, style: style.tone, sloping: true)
+            PrestigeBevel.band(&context, outer: outer, inner: mid, style: m.metal)
+            PrestigeBevel.band(&context, outer: mid, inner: inner, style: m.metal, sloping: true)
         } else {
-            PrestigeBevel.band(&context, outer: outer, inner: inner, style: style.tone)
+            PrestigeBevel.band(&context, outer: outer, inner: inner, style: m.metal)
         }
 
         // Recessed face with the shadow of the upper rim falling into it.
         let top = inner.map(\.y).min() ?? 0, bottom = inner.map(\.y).max() ?? size.height
-        context.fill(face, with: .linearGradient(Gradient(colors: [style.faceTop, style.faceBottom]),
+        context.fill(face, with: .linearGradient(Gradient(colors: [m.face.faceTop, m.face.faceBottom]),
                                                  startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: bottom)))
         context.fill(face, with: .radialGradient(Gradient(colors: [style.tint.opacity(0.22), .clear]),
-                                                 center: CGPoint(x: 23, y: size.height / 2), startRadius: 0, endRadius: size.height * 0.75))
+                                                 center: RankLayout.gemCenter(in: size), startRadius: 0, endRadius: size.height * 0.75))
         context.drawLayer { layer in
             layer.clip(to: face)
             layer.addFilter(.blur(radius: 2.2))
@@ -136,24 +139,23 @@ struct PrestigeMetalFrame: View {
         PrestigeBevel.glint(&context, outer, inset: 0.55)
         if stage >= 8 {
             let seal = PrestigeOutline.seal(centerX: size.width / 2, bottom: size.height, width: 16, height: 10)
-            PrestigeBevel.ornament(&context, outline: seal, style: style.tone)
+            PrestigeBevel.ornament(&context, outline: seal, style: m.metal)
         }
     }
+}
 
-    private static func crest(_ context: inout GraphicsContext, size: CGSize, style: LevelPrestige, arch: Bool) {
-        let x = size.width / 2
-        if arch {
-            // Celestial arch: a beveled band springing from the crest's shoulders.
-            var band = Path()
-            band.move(to: CGPoint(x: size.width * 0.2, y: 1))
-            band.addQuadCurve(to: CGPoint(x: size.width * 0.8, y: 1), control: CGPoint(x: x, y: -20))
-            context.stroke(band.offsetBy(dx: 0, dy: 1), with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 3.4, lineCap: .round))
-            context.stroke(band, with: .linearGradient(Gradient(colors: [style.metal(0.95), style.metal(0.55), style.metal(0.3)]),
-                                                      startPoint: CGPoint(x: x, y: -12), endPoint: CGPoint(x: x, y: 2)),
-                           style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
-            context.stroke(band.offsetBy(dx: 0, dy: -0.7), with: .color(.white.opacity(0.35)), style: StrokeStyle(lineWidth: 0.6, lineCap: .round))
+/// Parts of the rank's metalwork that pass in front of the gem.
+struct PrestigeFrontOrnaments: View {
+    let style: LevelPrestige
+    private static let margin: CGFloat = 22
+    var body: some View {
+        Canvas { original, fullSize in
+            var context = original
+            context.translateBy(x: Self.margin, y: Self.margin)
+            RankOrnaments.front(&context, size: CGSize(width: fullSize.width - Self.margin * 2,
+                                                       height: fullSize.height - Self.margin * 2), style: style)
         }
-        PrestigeBevel.ornament(&context, outline: PrestigeOutline.crest(centerX: x, top: 0, width: 34, height: 16), style: style.tone)
+        .padding(-Self.margin).allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -186,8 +188,11 @@ struct PrestigeInsignia: View {
                                                            startPoint: CGPoint(x: c.x, y: socket.minY), endPoint: CGPoint(x: c.x, y: socket.maxY)),
                                lineWidth: 0.9)
             }
-            let g = side * (style.stage >= 4 ? 0.9 : 0.84)
-            PrestigeGem.draw(&context, in: CGRect(x: c.x - g / 2, y: c.y - g / 2 - side * 0.03, width: g, height: g), style: style.tone)
+            let m = style.material
+            // Round stones fill the socket; the kite and step cuts sit a little higher.
+            let g = side * (m.cut == .kite ? (style.stage >= 4 ? 0.9 : 0.84) : 0.78)
+            let lift = m.cut == .kite ? side * 0.03 : 0
+            RankGem.draw(&context, in: CGRect(x: c.x - g / 2, y: c.y - g / 2 - lift, width: g, height: g), material: m)
         }.accessibilityHidden(true)
     }
 }

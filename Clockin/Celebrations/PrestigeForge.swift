@@ -41,11 +41,12 @@ struct ForgeTone {
 }
 
 extension LevelPrestige {
-    var tone: ForgeTone { ForgeTone(hue: hue) }
-    func metal(_ exposure: Double) -> Color { tone.metal(exposure) }
-    func gemTone(_ light: Double) -> Color { tone.gem(light) }
-    var faceTop: Color { tone.faceTop }
-    var faceBottom: Color { tone.faceBottom }
+    /// The rank's metal; face and stone come from `material`.
+    var tone: ForgeTone { material.metal }
+    func metal(_ exposure: Double) -> Color { material.metal.metal(exposure) }
+    func gemTone(_ light: Double) -> Color { material.stone.gem(light) }
+    var faceTop: Color { material.face.faceTop }
+    var faceBottom: Color { material.face.faceBottom }
 }
 
 /// Convex outlines as point lists, clockwise from the top-left, so every edge

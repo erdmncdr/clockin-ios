@@ -70,19 +70,33 @@ struct LevelBadge: View {
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
-        .background { PrestigeMetalFrame(style: style) }
+        // The forged body is drawn once; only the rank's signature layers are
+        // redrawn while it moves, one beneath the stone and one above it.
+        .background {
+            ZStack {
+                PrestigeMetalFrame(style: style)
+                TimelineView(.animation(minimumInterval: 1 / 30, paused: !moving)) { clock in
+                    RankSignature(style: style, layer: .under, time: moving ? clock.date.timeIntervalSinceReferenceDate : nil)
+                }
+            }
+        }
         .overlay {
-            TimelineView(.animation(minimumInterval: 1 / 60, paused: !moving)) { clock in
-                ZStack {
-                    BadgeSheen(style: style, time: moving ? clock.date.timeIntervalSinceReferenceDate : nil)
-                    if moving, let burstBegan {
-                        PrestigeUnlockBurst(style: style, elapsed: clock.date.timeIntervalSince(burstBegan))
+            ZStack {
+                PrestigeFrontOrnaments(style: style)
+                TimelineView(.animation(minimumInterval: 1 / 30, paused: !moving)) { clock in
+                    ZStack {
+                        RankSignature(style: style, layer: .over, time: moving ? clock.date.timeIntervalSinceReferenceDate : nil)
+                        if moving, let burstBegan {
+                            PrestigeUnlockBurst(style: style, elapsed: clock.date.timeIntervalSince(burstBegan))
+                        }
                     }
                 }
             }.allowsHitTesting(false).accessibilityHidden(true)
         }
         .shadow(color: style.tint.opacity(style.index >= 3 ? 0.18 : 0.1), radius: 8, y: 3)
-        .padding(.vertical, style.stage >= 6 ? 12 : 0)
+        // Room for what each rank grows past the plate: flares, wings, crown.
+        .padding(.vertical, style.stage >= 6 ? 12 : (style.stage == 4 ? 8 : 0))
+        .padding(.horizontal, style.stage == 8 ? 18 : (style.stage == 7 ? 10 : (style.stage == 3 ? 6 : 0)))
         .onChange(of: style.index) { old, new in
             burstBegan = new > old && moving ? .now : nil
         }
@@ -90,42 +104,5 @@ struct LevelBadge: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Level \(level), \(style.name)")
         .accessibilityValue("\(Int(progress * 100)) percent")
-    }
-}
-
-/// The only motion on the badge: a band of light that crosses the metal every
-/// few seconds, and a glint that blooms on the gem as it passes. Still when
-/// motion is off; the forged body carries the rank on its own.
-private struct BadgeSheen: View {
-    let style: LevelPrestige
-    let time: Double?
-    private static let period = 6.0, sweep = 1.3
-
-    var body: some View {
-        Canvas { context, size in
-            #if DEBUG
-            if let time { LevelFrameDiagnostics.record(time) }
-            #endif
-            guard let time else { return }
-            let t = (time + Double(style.stage) * 0.4).truncatingRemainder(dividingBy: Self.period)
-            let body = PrestigePlate(stage: style.stage).path(in: CGRect(origin: .zero, size: size))
-            if t < Self.sweep {
-                let u = t / Self.sweep
-                let x = -size.height + u * (size.width + size.height * 2)
-                var band = Path()
-                band.addLines([CGPoint(x: x, y: size.height), CGPoint(x: x + size.height * 0.55, y: 0),
-                               CGPoint(x: x + size.height * 0.95, y: 0), CGPoint(x: x + size.height * 0.4, y: size.height)])
-                band.closeSubpath()
-                context.drawLayer { layer in
-                    layer.clip(to: body)
-                    layer.addFilter(.blur(radius: 3))
-                    layer.fill(band, with: .color(.white.opacity(0.16 * sin(u * .pi))))
-                }
-            }
-            // The glint follows the sweep across the gem at its left end.
-            let gemTime = t - Self.sweep * 0.2
-            let bloom = gemTime > 0 && gemTime < 0.9 ? sin(gemTime / 0.9 * .pi) : 0
-            PrestigeGem.glint(&context, at: CGPoint(x: 19.5, y: size.height / 2 - 6), size: 5, opacity: bloom * 0.95)
-        }
     }
 }
