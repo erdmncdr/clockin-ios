@@ -2979,6 +2979,16 @@
         }
       }
     },
+    "Clockin follows your iPhone's language. To use another one for Clockin only, choose it in iPhone Settings.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin, iPhone'unun dilini izler. Yalnızca Clockin için başka bir dil kullanmak istersen iPhone Ayarları'ndan seç."
+          }
+        }
+      }
+    },
     "Clockin has been running for %@.": {
       "localizations": {
         "tr": {
@@ -6067,6 +6077,16 @@
         }
       }
     },
+    "Language": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dil"
+          }
+        }
+      }
+    },
     "Last 3 sessions": {
       "localizations": {
         "tr": {
@@ -7833,6 +7853,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlerleme'de Hedefler'i açar: hedeflerin, iş günlerin ve ay sonu görünümün"
+          }
+        }
+      }
+    },
+    "Opens iPhone Settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone Ayarları'nı açar"
           }
         }
       }

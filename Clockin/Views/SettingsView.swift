@@ -19,6 +19,7 @@ struct SettingsView: View {
     @ObservedObject private var celebrations = CelebrationCenter.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
+    @Environment(\.openURL) private var openURL
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
@@ -78,6 +79,15 @@ struct SettingsView: View {
                             Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
                         }
                     }
+                    // iOS keeps each app's language in its own Settings page;
+                    // this row only takes the user there.
+                    navigationRow(String(localized: "Language"), systemImage: "globe",
+                                  value: languageName, leavesApp: true) {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    }
+                    .accessibilityHint("Opens iPhone Settings")
+                } footer: {
+                    Text("Clockin follows your iPhone's language. To use another one for Clockin only, choose it in iPhone Settings.")
                 }
                 Section {
                     Toggle("Show home in desk mode", isOn: $showHome.hapticSelection($selectionFeedback))
@@ -334,7 +344,8 @@ struct SettingsView: View {
 
     /// Sheet acan satir. Metin vurgu rengini almasin, ok isareti ile bir
     /// ekrana gidildigi belli olsun.
-    private func navigationRow(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func navigationRow(_ title: String, systemImage: String, value: String? = nil, leavesApp: Bool = false,
+                               action: @escaping () -> Void) -> some View {
         Button {
             commitEarlierRate()
             commitRate()
@@ -350,13 +361,22 @@ struct SettingsView: View {
                     Image(systemName: systemImage).foregroundStyle(palette.accent)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
+                if let value { Text(value).foregroundStyle(.secondary) }
+                // A different arrow when the row leaves Clockin for iPhone Settings.
+                Image(systemName: leavesApp ? "arrow.up.forward" : "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
             .contentShape(Rectangle())
         }
         .foregroundStyle(.primary)
+    }
+
+    /// The language Clockin is actually running in, named in that language.
+    private var languageName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "en"
+        let locale = Locale(identifier: code)
+        return locale.localizedString(forLanguageCode: code)?.capitalized(with: locale) ?? code
     }
 
     private var currencyCodes: [String] {
