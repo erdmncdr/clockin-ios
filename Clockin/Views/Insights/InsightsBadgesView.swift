@@ -31,7 +31,7 @@ struct InsightsBadgesView: View {
             if let next = items.first(where:{ !$0.unlocked }) {
                 Button { selectedBadge = next } label: {
                     HStack(spacing:10) {
-                        SpaceBadgeSeal(badge:next,size:46,preview:true)
+                        SpaceBadgeSeal(badge:next,size:46,phase:reveal,preview:true)
                         VStack(alignment:.leading,spacing:3) {
                             Text("Next: \(next.title)").font(.subheadline.weight(.semibold))
                             Text(next.requirement).font(.caption).foregroundStyle(.secondary)
@@ -72,9 +72,13 @@ struct InsightsBadgesView: View {
             InsightsBadgeDetail(badge:badges.first { $0.id == selected.id } ?? selected)
         }
         .task(id:tier) {
-            reveal = 0
+            var reset = Transaction()
+            reset.disablesAnimations = true
+            withTransaction(reset) { reveal = 0 }
             guard !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
-            withAnimation(.easeOut(duration:1.8)) { reveal = 1 }
+            // Let the reset reach the display before starting another reveal.
+            do { try await Task.sleep(for: .milliseconds(30)) } catch { return }
+            withAnimation(.easeInOut(duration:1.8)) { reveal = 1 }
         }
     }
 
@@ -124,40 +128,55 @@ private struct InsightsBadgeDetail: View {
     let badge: InsightsBadge
     @State private var reveal = 0.0
     @State private var replay = 0
+    @State private var medalVisible = true
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment:.center,spacing:12) {
-                    SpaceBadgeSeal(badge:badge,size:184,phase:reveal,preview:true)
-                        .padding(.vertical,14)
-                        .frame(maxWidth:.infinity).background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:22))
-                    Text("\(badge.tier.title) / \(badge.mission.title)")
-                        .font(.caption.weight(.semibold)).foregroundStyle(badge.tier.tint)
-                    Text(badge.title).font(.title2.bold()).multilineTextAlignment(.center)
-                    Text(badge.requirement).multilineTextAlignment(.center)
-                    Text(badge.progress).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
-                    Label(badge.unlocked ? "Mission complete" : "Earn it through your real-world progress",
-                          systemImage:badge.unlocked ? "checkmark.circle" : "lock")
-                        .font(.caption).foregroundStyle(.secondary)
-                    if !reduceMotion {
-                        Button("Replay effect") { replay += 1 }.font(.subheadline.weight(.semibold)).frame(minHeight:44)
-                    }
-                    if badge.id.hasPrefix("collection") || badge.id.hasPrefix("home") || badge.id.hasPrefix("outfits") {
-                        Text("Different purchases count. Free gifts don’t. No extra coins or XP.")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    } else if ["streak","weekstreak","monthstreak"].contains(badge.id) {
-                        Text("Locks again when your current streak ends.").font(.caption2).foregroundStyle(.secondary)
-                    }
-                }.padding(20)
+            GeometryReader { viewport in
+                ScrollView {
+                    VStack(alignment:.center,spacing:12) {
+                        SpaceBadgeSeal(badge:badge,size:184,phase:reveal,preview:true,continuous:true,motionVisible:medalVisible)
+                            .background {
+                                GeometryReader { medal in
+                                    Color.clear.onChange(of: medal.frame(in: .named("medalDetailViewport")), initial: true) { _, frame in
+                                        medalVisible = frame.maxY > 0 && frame.minY < viewport.size.height
+                                    }
+                                }
+                            }
+                            .padding(.vertical,14)
+                            .frame(maxWidth:.infinity).background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:22))
+                        Text("\(badge.tier.title) / \(badge.mission.title)")
+                            .font(.caption.weight(.semibold)).foregroundStyle(badge.tier.tint)
+                        Text(badge.title).font(.title2.bold()).multilineTextAlignment(.center)
+                        Text(badge.requirement).multilineTextAlignment(.center)
+                        Text(badge.progress).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                        Label(badge.unlocked ? "Mission complete" : "Earn it through your real-world progress",
+                              systemImage:badge.unlocked ? "checkmark.circle" : "lock")
+                            .font(.caption).foregroundStyle(.secondary)
+                        if !reduceMotion {
+                            Button("Replay effect") { replay += 1 }.font(.subheadline.weight(.semibold)).frame(minHeight:44)
+                        }
+                        if badge.id.hasPrefix("collection") || badge.id.hasPrefix("home") || badge.id.hasPrefix("outfits") {
+                            Text("Different purchases count. Free gifts don’t. No extra coins or XP.")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        } else if ["streak","weekstreak","monthstreak"].contains(badge.id) {
+                            Text("Locks again when your current streak ends.").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }.padding(20)
+                }
+                .coordinateSpace(name: "medalDetailViewport")
             }
             .background(palette.background).navigationTitle("Mission").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement:.confirmationAction) { Button("Done") { dismiss() } } }
         }
         .tint(badge.tier.tint).fontDesign(palette.fontDesign).presentationDetents([.large])
         .task(id:replay) {
-            reveal = 0
+            var reset = Transaction()
+            reset.disablesAnimations = true
+            withTransaction(reset) { reveal = 0 }
             guard !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
-            withAnimation(.easeInOut(duration:2.4)) { reveal = 1 }
+            // Let the reset reach the display before starting another reveal.
+            do { try await Task.sleep(for: .milliseconds(30)) } catch { return }
+            withAnimation(.easeInOut(duration:1.8)) { reveal = 1 }
         }
     }
 }

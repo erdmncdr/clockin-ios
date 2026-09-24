@@ -33,20 +33,43 @@ struct ForgedMedal: View {
     let emblem: CGPath
     let tier: BadgeTier
     var lit = true
-    /// 0 to 1: one band of light crosses the medal as it is revealed.
     var phase: Double = 0
+    var mission: BadgeMission?
+    var continuous = false
+    var motionVisible = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+
+    private var still: Bool { reduceMotion || lowPower || scenePhase != .active }
 
     var body: some View {
-        // The medal is drawn once; only the band of light is redrawn while it
-        // moves, so a grid of medals can reveal together cheaply.
-        ForgedMedalBody(emblem: emblem, tier: tier, lit: lit)
-            .overlay { MedalSweep(phase: phase) }
+        ForgedMedalBody(tier: tier, lit: lit)
+            .equatable()
+            .overlay {
+                MedalEmblem(emblem: emblem, tier: tier, lit: lit, mission: mission,
+                            phase: lit && !still ? phase : 1)
+            }
+            .background {
+                if lit && tier == .solar { signature }
+            }
+            .overlay {
+                if lit && tier != .solar { signature }
+            }
+            .transaction { if still { $0.animation = nil } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange).receive(on: RunLoop.main)) { _ in
+                lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+            }
             .allowsHitTesting(false).accessibilityHidden(true)
+    }
+
+    private var signature: some View {
+        MedalSignature(tier: tier, phase: phase, continuous: continuous,
+                       still: still, motionVisible: motionVisible)
     }
 }
 
-private struct ForgedMedalBody: View {
-    let emblem: CGPath
+private struct ForgedMedalBody: View, Equatable {
     let tier: BadgeTier
     let lit: Bool
 
@@ -116,28 +139,6 @@ private struct ForgedMedalBody: View {
                                lineWidth: max(0.4, s * 0.005))
             }
 
-            // The emblem: raised metal when earned, engraved steel when locked.
-            let box = fr * 1.18
-            let scale = box / 100
-            let transform = CGAffineTransform(translationX: c.x - box / 2, y: c.y - box / 2 - fr * 0.04).scaledBy(x: scale, y: scale)
-            let mark = Path(emblem).applying(transform)
-            let w = max(1.2, s * 0.042)
-            let round = StrokeStyle(lineWidth: w, lineCap: .round, lineJoin: .round)
-            if lit {
-                context.drawLayer { layer in
-                    layer.addFilter(.blur(radius: max(0.5, s * 0.012)))
-                    layer.stroke(mark.offsetBy(dx: 0, dy: s * 0.016), with: .color(.black.opacity(0.75)), style: round)
-                }
-                context.stroke(mark, with: .linearGradient(Gradient(colors: [tone.metal(1), tone.metal(0.72), tone.metal(0.42)]),
-                                                           startPoint: CGPoint(x: c.x, y: c.y - box / 2), endPoint: CGPoint(x: c.x, y: c.y + box / 2)),
-                               style: round)
-                context.stroke(mark.offsetBy(dx: 0, dy: -w * 0.22), with: .color(.white.opacity(0.4)),
-                               style: StrokeStyle(lineWidth: w * 0.3, lineCap: .round, lineJoin: .round))
-            } else {
-                context.stroke(mark.offsetBy(dx: 0, dy: w * 0.25), with: .color(.white.opacity(0.1)), style: round)
-                context.stroke(mark, with: .color(.black.opacity(0.55)), style: round)
-            }
-
             context.stroke(PrestigeOutline.path(outer), with: .color(.black.opacity(0.55)), lineWidth: max(0.6, s * 0.006))
             PrestigeBevel.glint(&context, outer, inset: max(0.5, s * 0.005), strength: lit ? 1 : 0.3)
 
@@ -157,39 +158,18 @@ private struct ForgedMedalBody: View {
     }
 }
 
-/// The band of light that crosses a medal as it is revealed.
-private struct MedalSweep: View, Animatable {
-    nonisolated var phase: Double
-    nonisolated var animatableData: Double { get { phase } set { phase = newValue } }
-
-    var body: some View {
-        Canvas { context, size in
-            guard phase > 0.001, phase < 0.999 else { return }
-            let s = min(size.width, size.height)
-            let c = CGPoint(x: size.width / 2, y: size.height / 2)
-            let x = c.x - s + phase * s * 2
-            var sweep = Path()
-            sweep.addLines([CGPoint(x: x, y: c.y + s), CGPoint(x: x + s * 0.3, y: c.y - s),
-                            CGPoint(x: x + s * 0.5, y: c.y - s), CGPoint(x: x + s * 0.2, y: c.y + s)])
-            sweep.closeSubpath()
-            context.drawLayer { layer in
-                layer.clip(to: Path(ellipseIn: CGRect(x: c.x - s * 0.44, y: c.y - s * 0.44, width: s * 0.88, height: s * 0.88)))
-                layer.addFilter(.blur(radius: s * 0.04))
-                layer.fill(sweep, with: .color(.white.opacity(0.28 * sin(phase * .pi))))
-            }
-        }
-    }
-}
-
 /// A mission badge: its family's emblem on its tier's medal.
 struct SpaceBadgeSeal: View {
     let badge: InsightsBadge
     let size: CGFloat
     var phase = 0.0
     var preview = false
+    var continuous = false
+    var motionVisible = true
     var body: some View {
         ForgedMedal(emblem: SpaceBadgeGeometry.mission(badge.mission.rawValue), tier: badge.tier,
-                    lit: badge.unlocked || preview, phase: phase)
+                    lit: badge.unlocked || preview, phase: phase, mission: badge.mission,
+                    continuous: continuous, motionVisible: motionVisible)
             .frame(width: size, height: size)
     }
 }
