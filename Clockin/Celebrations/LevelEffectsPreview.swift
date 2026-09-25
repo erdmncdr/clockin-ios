@@ -9,26 +9,34 @@ struct LevelEffectsPreview: View {
     @State private var compact = false
     @State private var largeText = false
     @State private var companion = true
+    @State private var replay = 0
+    @State private var pinned: Double?
+    @State private var clean = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var policy = RollingAnimationPolicy.shared
     private var moving: Bool { policy.allowsAnimation(reduceMotion: still || reduceMotion, contentActive: true, sceneActive: scenePhase == .active, visible: true) }
+    @ViewBuilder private var controls: some View {
+        HStack {
+            Button(showBars ? "Celebration" : "All bars") { showBars.toggle() }
+            Button("Rank frames") { showCrests.toggle() }.padding(.leading, 12)
+            Button("Replay") { replay += 1 }.padding(.leading, 12)
+            Spacer()
+            Toggle("Still", isOn: $still).fixedSize()
+        }.padding(.horizontal, 24).padding(.top, 12)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach([1, 74, 75, 150, 225, 300, 375, 450, 451, 500, 525, 600], id: \.self) { item in
+                    Button("\(item)") { level = item }
+                        .padding(8).background(level == item ? Color.white.opacity(0.18) : .clear, in: Capsule())
+                }
+            }.padding(.horizontal, 20)
+        }.padding(.top, 8)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button(showBars ? "Celebration" : "All bars") { showBars.toggle() }
-                Button("Rank frames") { showCrests.toggle() }.padding(.leading, 12)
-                Spacer()
-                Toggle("Still", isOn: $still).fixedSize()
-            }.padding(.horizontal, 24).padding(.top, 12)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach([1, 74, 75, 150, 225, 300, 375, 450, 500, 525, 600], id: \.self) { item in
-                        Button("\(item)") { level = item }
-                            .padding(8).background(level == item ? Color.white.opacity(0.18) : .clear, in: Capsule())
-                    }
-                }.padding(.horizontal, 20)
-            }.padding(.top, 8)
+            if !clean { controls }
             if showCrests {
                 ScrollView {
                     VStack(spacing: 16) {
@@ -60,9 +68,9 @@ struct LevelEffectsPreview: View {
                     }.padding(24)
                 }
             } else {
-                LevelOrbitCard(level: level, hours: max(1, (level - 1) * 5), xp: 325, moving: moving,
-                               companionEnabled: companion, dismiss: { showBars = true }, share: {})
-                    .id(level)
+                LevelUpCard(level: level, hours: max(1, (level - 1) * 5), xp: 162825, moving: moving,
+                            companionEnabled: companion, dismiss: { showBars = true }, share: {}, pinnedTime: pinned)
+                    .id("\(level)-\(replay)")
                     .dynamicTypeSize(largeText ? .accessibility3 : .large)
                     .frame(width: compact ? 320 : nil, height: compact ? 560 : nil)
                 Spacer(minLength: 0)
@@ -89,6 +97,8 @@ struct LevelEffectsPreview: View {
             compact = args.contains("--preview-compact")
             largeText = args.contains("--preview-large-text")
             companion = !args.contains("--preview-no-companion")
+            clean = args.contains("--preview-clean")
+            if let i = args.firstIndex(of: "--preview-time"), args.indices.contains(i + 1) { pinned = Double(args[i + 1]) }
         }
     }
 }

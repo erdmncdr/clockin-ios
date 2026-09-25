@@ -17,7 +17,9 @@ struct LevelPrestige: Equatable {
     }
     var ornamentCount: Int { min(index + 1, 6) }
     var nextUnlock: Int { (index + 1) * Self.interval }
-    var isMilestone: Bool { level.isMultiple(of: Self.interval) }
+    /// The level opens a new rank. Past the last rank the look stays, so
+    /// 675, 750 and on are ordinary levels.
+    var isMilestone: Bool { level.isMultiple(of: Self.interval) && index <= 8 }
     var rankProgress: Double { Double(level % Self.interval) / Double(Self.interval) }
     static func progress(xp: Int) -> Double { Double(max(0, xp) % 500) / 500 }
 }

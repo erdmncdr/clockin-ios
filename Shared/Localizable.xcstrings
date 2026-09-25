@@ -211,16 +211,6 @@
         }
       }
     },
-    "%@ unlocked": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ açıldı"
-          }
-        }
-      }
-    },
     "%@ · %@": {
       "localizations": {
         "tr": {
@@ -8745,6 +8735,16 @@
         }
       }
     },
+    "Rank": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rütbe"
+          }
+        }
+      }
+    },
     "Rank frames": {
       "localizations": {
         "tr": {
@@ -9031,6 +9031,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tüm veriler değiştirilsin mi?"
+          }
+        }
+      }
+    },
+    "Replay": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden oynat"
           }
         }
       }
@@ -12321,16 +12331,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bir başlangıç yaptın"
-          }
-        }
-      }
-    },
-    "Your %@ level badge": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ seviye rozetin"
           }
         }
       }

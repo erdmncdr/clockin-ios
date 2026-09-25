@@ -195,7 +195,7 @@ final class CelebrationCenter: ObservableObject {
             self.presentationID &+= 1
             self.event = event
             if case .levelUp(let level, _) = event, self.soundedLevels.insert(level).inserted {
-                Haptics.play(.levelUp)
+                LevelUpHaptics.play(milestone: LevelPrestige(level: level).isMilestone)
             }
             self.persist()
             guard let delay = event.autoDismissDelay else {

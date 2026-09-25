@@ -17,10 +17,6 @@ struct CelebrationOverlay: View {
             companionEnabled: companionEnabled)
     }
 
-    private var cardTransition: AnyTransition {
-        !policy.motion ? .opacity : .scale(scale: 0.96).combined(with: .opacity)
-    }
-
     var body: some View {
         ZStack {
             if let event = center.event, !event.isReaction {
@@ -34,8 +30,8 @@ struct CelebrationOverlay: View {
                 Group {
                     switch event {
                     case .levelUp(let level, let hours):
-                        LevelOrbitCard(level: level, hours: hours, xp: center.snapshot?.level == level ? (center.snapshot?.xp ?? 0) : 0, moving: policy.motion, companionEnabled: policy.companion,
-                                       dismiss: { center.dismiss() }, share: share)
+                        LevelUpCard(level: level, hours: hours, xp: center.snapshot?.level == level ? (center.snapshot?.xp ?? 0) : 0, moving: policy.motion, companionEnabled: policy.companion,
+                                    dismiss: { center.dismiss() }, share: share)
                     case .badge(let badge):
                         banner(title: badge.title, icon: badge.icon)
                     case .accessory(let accessory):
@@ -48,7 +44,7 @@ struct CelebrationOverlay: View {
                     }
                 }
                 .id(center.presentationID)
-                .transition(event.isLevel ? cardTransition : .opacity)
+                .transition(.opacity)
                 .accessibilityAddTraits(.isModal)
                 .accessibilityAction(.escape) { center.dismiss() }
                 .zIndex(1)

@@ -97,7 +97,8 @@ struct LevelBadge: View {
         // Room for what each rank grows past the plate: flares, wings, crown.
         .padding(.vertical, style.stage >= 6 ? 12 : (style.stage == 4 ? 8 : 0))
         .padding(.horizontal, style.stage == 8 ? 18 : (style.stage == 7 ? 10 : (style.stage == 3 ? 6 : 0)))
-        .onChange(of: style.index) { old, new in
+        // The burst marks a new look, so it stops once the last rank is reached.
+        .onChange(of: style.stage) { old, new in
             burstBegan = new > old && moving ? .now : nil
         }
         .onAppear { visible = true }.onDisappear { visible = false; burstBegan = nil }
