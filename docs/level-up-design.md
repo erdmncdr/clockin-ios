@@ -52,14 +52,22 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 ## The companion
 
 With the companion enabled it stands on the sigil in the column of light,
-dressed as a space warrior in the pose MMORPG heroes strike at a level-up:
-sword planted in front, both hands on the hilt, cape behind. Its own face
-looks out through the visor, so it is still the same companion. The armour is
-dark blued steel; the trim (helm wings, crest, brow, pauldron edges, belt,
-cuffs, crossguard) is the rank's metal and the energy (core, seams, blade,
-visor rim) is the rank's colour, so its gear rises with the rank. The blade is
-dark steel during the charge and ignites on the impact; on a new rank the trim
-re-forges with the crest on the second beat.
+dressed as a paladin in the pose MMORPG heroes strike at a level-up: a runed
+greatsword planted in front, both gauntlets closed round the grip, wings of
+light and a halo behind. Its own face looks out through the visor, so it is
+still the same companion. The plate is the rank's metal made pale, the trim
+(pauldron edges and feathers, helm wings, circlet, scrollwork, couters, cuffs,
+crossguard) is the rank's metal, the tabard is the rank's colours and the light
+(wings, halo, runes, gems) is the rank's colour, so its gear rises with the
+rank. On a new rank it changes with the crest on the second beat.
+
+The armour is shaded as formed metal rather than flat colour: one key light
+from the upper left as on the badges, the column behind the figure as a rim
+light, a shadow cast by each part onto the one behind it, occlusion where a
+plate turns away and a specular spot on polished faces. It is drawn once per
+rank; only the wings, halo, runes and gems move, so the detail does not cost a
+redraw per frame. Two other looks (plate knight, power-suit pilot) were drawn
+and set aside in favour of this one.
 
 ## Timeline
 
@@ -92,5 +100,6 @@ The debug build has a preview: launch with `--level-effects-preview`, add
 `--preview-level N` for a level, `--preview-time S` to hold every part of the
 card at one moment, `--preview-clean` to hide the controls, and
 `--preview-no-companion`, `--preview-large-text` or `--preview-still` for the
-variants. `--feedback-review overlay` shows the card inside the real
-celebration overlay.
+variants. `--warrior-portrait` shows the companion's armour large on a lit
+stage instead of the card. `--feedback-review overlay` shows the card inside
+the real celebration overlay.

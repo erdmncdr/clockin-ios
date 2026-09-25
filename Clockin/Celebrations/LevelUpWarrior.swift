@@ -1,293 +1,558 @@
 import SwiftUI
 
-/// The companion as a space warrior for the level-up, in the pose MMORPG
-/// heroes strike: sword planted in front, both hands on the hilt, cape behind.
-/// The armour is blued steel trimmed in the rank's metal, the energy is the
-/// rank's colour, and the companion's own face looks out through the visor.
-/// The blade is dark steel during the charge and ignites on the impact.
+/// The companion as a paladin for the level-up, in the pose MMORPG heroes
+/// strike: a greatsword planted in front, both hands on the grip, wings of
+/// light and a halo behind. The plate is the rank's metal made pale, the trim
+/// is the rank's metal and the light is the rank's colour, so the gear rises
+/// with the rank. The companion's own face looks out through the visor.
+///
+/// The armour is drawn once per rank; only the light and the energy move, so
+/// the detail costs nothing while the stage animates.
 struct LevelUpWarrior: View {
     let style: LevelPrestige
     let t: Double
     static let size = CGSize(width: 180, height: 210)
-    /// The visor, in the warrior's own coordinates.
-    private static let visor = CGRect(x: 58, y: 34, width: 64, height: 40)
+    /// Where the face shows, in the warrior's coordinates.
+    static let face = CGRect(x: 60, y: 35, width: 60, height: 36)
+    /// The helm's opening around it.
+    static let visor = CGRect(x: 60, y: 35, width: 60, height: 38)
 
     var body: some View {
+        let lit = LevelUpCurve.ramp(t - LevelUpTiming.impact, 0, 0.15)
+        let face = Self.face
         ZStack(alignment: .topLeading) {
-            Canvas { context, _ in LevelUpWarriorArt.draw(&context, style: style, t: t) }
+            Canvas { context, _ in PaladinArt.back(&context, style, t: t, lit: lit) }
+            WarriorArmor(stage: style.stage).equatable()
             ClockinMascotStill(mood: .hello, maxPixelSize: 314)
                 .frame(width: 236, height: 236)
-                .position(x: Self.visor.midX - 6.5, y: Self.visor.midY + 32)
+                .position(x: face.midX - 6.5, y: face.midY + 32)
                 .mask(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 17, style: .continuous)
-                        .frame(width: Self.visor.width - 6, height: Self.visor.height - 6)
-                        .offset(x: Self.visor.minX + 3, y: Self.visor.minY + 3)
+                    RoundedRectangle(cornerRadius: face.height * 0.44, style: .continuous)
+                        .frame(width: face.width - 6, height: face.height - 6)
+                        .offset(x: face.minX + 3, y: face.minY + 3)
                 }
-            Canvas { context, _ in LevelUpWarriorArt.glass(&context, visor: Self.visor, style: style) }
+            WarriorGlass(stage: style.stage).equatable()
+            Canvas { context, _ in PaladinArt.front(&context, style, t: t, lit: lit) }
         }
         .frame(width: Self.size.width, height: Self.size.height)
     }
 }
 
-enum LevelUpWarriorArt {
-    private typealias C = LevelUpCurve
-    /// Dark blued steel for the armour, so the trim and the energy stand out;
-    /// one light from the upper left, like the badges.
-    private static let steel = ForgeTone(hue: 0.62, saturation: 0.34, brightness: 0.62)
-
-    static func draw(_ ctx: inout GraphicsContext, style: LevelPrestige, t: Double) {
-        let post = t - LevelUpTiming.impact
-        let lit = C.ramp(post, 0, 0.15)
-        let trim = style.material.metal
-        cape(&ctx, style: style, t: t)
-        legs(&ctx, trim: trim)
-        blade(&ctx, style: style, t: t, lit: lit)
-        torso(&ctx, style: style, trim: trim, t: t, lit: lit)
-        arms(&ctx, trim: trim)
-        hilt(&ctx, style: style, trim: trim, lit: lit)
-        pauldron(&ctx, side: -1, style: style, trim: trim)
-        pauldron(&ctx, side: 1, style: style, trim: trim)
-        helmet(&ctx, style: style, trim: trim, lit: lit)
-    }
-
-    // MARK: Parts, back to front
-
-    private static func cape(_ ctx: inout GraphicsContext, style: LevelPrestige, t: Double) {
-        func hem(_ x: CGFloat) -> CGFloat { 198 + sin(t * 2.1 + Double(x) * 0.07) * 3.5 }
-        var cape = Path()
-        cape.move(to: CGPoint(x: 60, y: 80))
-        cape.addLine(to: CGPoint(x: 120, y: 80))
-        cape.addCurve(to: CGPoint(x: 152, y: hem(152)), control1: CGPoint(x: 134, y: 120), control2: CGPoint(x: 150, y: 160))
-        for x in stride(from: 144.0, through: 28, by: -8) {
-            cape.addLine(to: CGPoint(x: x, y: hem(x)))
+private struct WarriorArmor: View, Equatable {
+    let stage: Int
+    var body: some View {
+        Canvas { context, _ in
+            let style = LevelPrestige(level: max(1, stage * LevelPrestige.interval))
+            var ground = context
+            ground.addFilter(.blur(radius: 3))
+            ground.fill(Path(ellipseIn: CGRect(x: 54, y: 201, width: 72, height: 9)), with: .color(.black.opacity(0.6)))
+            PaladinArt.armor(&context, style)
         }
-        cape.addCurve(to: CGPoint(x: 60, y: 80), control1: CGPoint(x: 30, y: 160), control2: CGPoint(x: 46, y: 120))
-        cape.closeSubpath()
-        ctx.fill(cape, with: .linearGradient(Gradient(colors: [style.shade, style.material.face.faceTop, .black.opacity(0.9)]),
-                                             startPoint: CGPoint(x: 90, y: 80), endPoint: CGPoint(x: 90, y: 200)))
-        // Folds catching the column of light.
-        for x: CGFloat in [52, 74, 106, 128] {
-            var fold = Path()
-            fold.move(to: CGPoint(x: 90 + (x - 90) * 0.45, y: 92))
-            fold.addQuadCurve(to: CGPoint(x: x, y: hem(x) - 4), control: CGPoint(x: 90 + (x - 90) * 0.8, y: 150))
-            ctx.stroke(fold, with: .color(style.tint.opacity(0.18)), lineWidth: 1.2)
-        }
-        ctx.stroke(cape, with: .color(style.tint.opacity(0.45)), lineWidth: 1)
-    }
-
-    private static func legs(_ ctx: inout GraphicsContext, trim: ForgeTone) {
-        for side: CGFloat in [-1, 1] {
-            let x = 90 + side * 13
-            let leg = Path(roundedRect: CGRect(x: x - 11, y: 144, width: 22, height: 46), cornerRadius: 7)
-            plate(&ctx, leg, top: 144, bottom: 190)
-            let knee = Path(roundedRect: CGRect(x: x - 9, y: 160, width: 18, height: 12), cornerRadius: 5)
-            plate(&ctx, knee, top: 160, bottom: 172, trim: trim)
-            let boot = Path(roundedRect: CGRect(x: x - 14 + side * 2, y: 186, width: 28, height: 18), cornerRadius: 6)
-            plate(&ctx, boot, top: 186, bottom: 204)
-        }
-    }
-
-    private static func blade(_ ctx: inout GraphicsContext, style: LevelPrestige, t: Double, lit: Double) {
-        var blade = Path()
-        blade.addLines([CGPoint(x: 85, y: 138), CGPoint(x: 95, y: 138), CGPoint(x: 94.5, y: 194),
-                        CGPoint(x: 90, y: 207), CGPoint(x: 85.5, y: 194)])
-        blade.closeSubpath()
-        ctx.fill(blade, with: .linearGradient(Gradient(colors: [steel.metal(0.9), steel.metal(0.4)]),
-                                              startPoint: CGPoint(x: 85, y: 0), endPoint: CGPoint(x: 95, y: 0)))
-        guard lit > 0 else { return }
-        var glow = ctx
-        glow.blendMode = .plusLighter
-        glow.drawLayer { layer in
-            layer.addFilter(.blur(radius: 5))
-            layer.fill(blade, with: .color(style.tint.opacity(0.9 * lit)))
-        }
-        glow.fill(blade, with: .linearGradient(Gradient(colors: [style.tint.opacity(lit), .white.opacity(lit), style.tint.opacity(lit)]),
-                                               startPoint: CGPoint(x: 85, y: 0), endPoint: CGPoint(x: 95, y: 0)))
-        // Energy running down the blade; the pattern repeats, so it never jumps.
-        let run = CGFloat((t / 1.2).truncatingRemainder(dividingBy: 1)) * 24
-        glow.clip(to: blade)
-        glow.fill(Path(CGRect(x: 80, y: 130, width: 20, height: 80)), with: .linearGradient(
-            Gradient(colors: [.clear, .white.opacity(0.5 * lit), .clear]),
-            startPoint: CGPoint(x: 90, y: 138 + run), endPoint: CGPoint(x: 90, y: 162 + run), options: .repeat))
-    }
-
-    private static func torso(_ ctx: inout GraphicsContext, style: LevelPrestige, trim: ForgeTone, t: Double, lit: Double) {
-        var chest = Path()
-        chest.move(to: CGPoint(x: 58, y: 80))
-        chest.addLine(to: CGPoint(x: 122, y: 80))
-        chest.addQuadCurve(to: CGPoint(x: 114, y: 138), control: CGPoint(x: 126, y: 112))
-        chest.addLine(to: CGPoint(x: 66, y: 138))
-        chest.addQuadCurve(to: CGPoint(x: 58, y: 80), control: CGPoint(x: 54, y: 112))
-        chest.closeSubpath()
-        plate(&ctx, chest, top: 80, bottom: 138)
-        // Pectoral plates and a centre ridge.
-        var lines = Path()
-        lines.move(to: CGPoint(x: 64, y: 98)); lines.addQuadCurve(to: CGPoint(x: 90, y: 116), control: CGPoint(x: 72, y: 114))
-        lines.move(to: CGPoint(x: 116, y: 98)); lines.addQuadCurve(to: CGPoint(x: 90, y: 116), control: CGPoint(x: 108, y: 114))
-        lines.move(to: CGPoint(x: 90, y: 116)); lines.addLine(to: CGPoint(x: 90, y: 134))
-        ctx.stroke(lines, with: .color(.black.opacity(0.5)), lineWidth: 2)
-        // Energy runs in the seams, brighter once the level lands.
-        var seams = ctx
-        seams.blendMode = .plusLighter
-        seams.stroke(lines, with: .color(style.tint.opacity(0.35 + 0.5 * lit)), lineWidth: 1)
-        // The energy core over the heart, brighter once the level lands.
-        let core = CGPoint(x: 90, y: 99)
-        let pulse = 0.75 + 0.25 * sin(t * 2.4)
-        let socket = Path(ellipseIn: CGRect(x: core.x - 9, y: core.y - 9, width: 18, height: 18))
-        ctx.fill(socket, with: .color(trim.metal(0.3)))
-        ctx.stroke(socket, with: .linearGradient(Gradient(colors: [trim.metal(1), trim.metal(0.35)]),
-                                                 startPoint: CGPoint(x: core.x, y: core.y - 9), endPoint: CGPoint(x: core.x, y: core.y + 9)),
-                   lineWidth: 2)
-        var light = ctx
-        light.blendMode = .plusLighter
-        let energy = (0.35 + 0.65 * lit) * pulse
-        light.fill(Path(ellipseIn: CGRect(x: core.x - 22, y: core.y - 22, width: 44, height: 44)),
-                   with: .radialGradient(Gradient(colors: [style.tint.opacity(0.55 * energy), .clear]), center: core, startRadius: 0, endRadius: 22))
-        light.fill(Path(ellipseIn: CGRect(x: core.x - 6, y: core.y - 6, width: 12, height: 12)),
-                   with: .radialGradient(Gradient(colors: [.white.opacity(energy), style.tint.opacity(energy), style.shade.opacity(0.8)]),
-                                         center: core, startRadius: 0, endRadius: 6))
-        // Belt and hip plates.
-        for side: CGFloat in [-1, 1] {
-            var tasset = Path()
-            tasset.addLines([CGPoint(x: 90 + side * 3, y: 142), CGPoint(x: 90 + side * 26, y: 142),
-                             CGPoint(x: 90 + side * 24, y: 160), CGPoint(x: 90 + side * 5, y: 158)])
-            tasset.closeSubpath()
-            plate(&ctx, tasset, top: 142, bottom: 160, trim: trim)
-        }
-        let belt = Path(roundedRect: CGRect(x: 62, y: 132, width: 56, height: 12), cornerRadius: 4)
-        ctx.fill(belt, with: .linearGradient(Gradient(colors: [trim.metal(0.85), trim.metal(0.35)]),
-                                             startPoint: CGPoint(x: 0, y: 132), endPoint: CGPoint(x: 0, y: 144)))
-        ctx.stroke(belt, with: .color(.black.opacity(0.55)), lineWidth: 1)
-    }
-
-    private static func arms(_ ctx: inout GraphicsContext, trim: ForgeTone) {
-        for side: CGFloat in [-1, 1] {
-            var arm = Path()
-            arm.move(to: CGPoint(x: 90 + side * 40, y: 92))
-            arm.addLine(to: CGPoint(x: 90 + side * 36, y: 116))
-            arm.addLine(to: CGPoint(x: 90 + side * 9, y: 124))
-            ctx.stroke(arm, with: .color(.black.opacity(0.6)), style: StrokeStyle(lineWidth: 17, lineCap: .round, lineJoin: .round))
-            ctx.stroke(arm, with: .linearGradient(Gradient(colors: [steel.metal(0.85), steel.metal(0.4)]),
-                                                  startPoint: CGPoint(x: 90, y: 92), endPoint: CGPoint(x: 90, y: 128)),
-                       style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round))
-            // Gauntlet cuff in the rank's metal.
-            var cuff = Path()
-            cuff.move(to: CGPoint(x: 90 + side * 30, y: 111))
-            cuff.addLine(to: CGPoint(x: 90 + side * 32, y: 126))
-            ctx.stroke(cuff, with: .color(trim.metal(0.8)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-        }
-    }
-
-    private static func hilt(_ ctx: inout GraphicsContext, style: LevelPrestige, trim: ForgeTone, lit: Double) {
-        var guardBar = Path()
-        guardBar.move(to: CGPoint(x: 68, y: 131))
-        guardBar.addQuadCurve(to: CGPoint(x: 112, y: 131), control: CGPoint(x: 90, y: 140))
-        ctx.stroke(guardBar, with: .color(.black.opacity(0.6)), style: StrokeStyle(lineWidth: 8, lineCap: .round))
-        ctx.stroke(guardBar, with: .linearGradient(Gradient(colors: [trim.metal(1), trim.metal(0.45)]),
-                                                   startPoint: CGPoint(x: 0, y: 128), endPoint: CGPoint(x: 0, y: 138)),
-                   style: StrokeStyle(lineWidth: 6, lineCap: .round))
-        // Both fists on the grip.
-        for y: CGFloat in [113, 123] {
-            let fist = Path(roundedRect: CGRect(x: 80, y: y - 5, width: 20, height: 11), cornerRadius: 5)
-            plate(&ctx, fist, top: y - 5, bottom: y + 6)
-        }
-        let pommel = CGPoint(x: 90, y: 104)
-        let stone = Path(ellipseIn: CGRect(x: pommel.x - 4.5, y: pommel.y - 4.5, width: 9, height: 9))
-        ctx.fill(stone, with: .radialGradient(Gradient(colors: [style.material.stone.gem(1), style.material.stone.gem(0.3)]),
-                                              center: CGPoint(x: pommel.x - 1.5, y: pommel.y - 1.5), startRadius: 0, endRadius: 6))
-        ctx.stroke(stone, with: .color(trim.metal(0.9)), lineWidth: 1.5)
-    }
-
-    private static func pauldron(_ ctx: inout GraphicsContext, side: CGFloat, style: LevelPrestige, trim: ForgeTone) {
-        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: 90 + side * x, y: y) }
-        // A lower plate, then the main dome, each edged in the rank's metal.
-        for (lift, scale) in [(CGFloat(10), CGFloat(0.9)), (0, 1)] {
-            var shell = Path()
-            shell.move(to: p(22 * scale + 8, 76 + lift))
-            shell.addQuadCurve(to: p(56 * scale + 4, 96 + lift), control: p(56 * scale + 6, 64 + lift))
-            shell.addQuadCurve(to: p(24 * scale + 8, 92 + lift), control: p(40 * scale + 6, 100 + lift))
-            shell.closeSubpath()
-            plate(&ctx, shell, top: 64 + lift, bottom: 100 + lift)
-            ctx.stroke(shell, with: .linearGradient(Gradient(colors: [trim.metal(1), trim.metal(0.4)]),
-                                                    startPoint: CGPoint(x: 0, y: 64 + lift), endPoint: CGPoint(x: 0, y: 100 + lift)),
-                       lineWidth: 2)
-        }
-        // A swept fin rising off the shoulder.
-        var fin = Path()
-        fin.addLines([p(38, 70), p(56, 50), p(48, 72)])
-        fin.closeSubpath()
-        ctx.fill(fin, with: .linearGradient(Gradient(colors: [trim.metal(1), trim.metal(0.4)]),
-                                            startPoint: p(56, 50), endPoint: p(42, 72)))
-        ctx.stroke(fin, with: .color(.black.opacity(0.5)), lineWidth: 0.8)
-        let rivet = Path(ellipseIn: CGRect(x: 90 + side * 44 - 3, y: 80, width: 6, height: 6))
-        ctx.fill(rivet, with: .color(style.tint))
-    }
-
-    private static func helmet(_ ctx: inout GraphicsContext, style: LevelPrestige, trim: ForgeTone, lit: Double) {
-        let c = CGPoint(x: 90, y: 48)
-        let gorget = Path(roundedRect: CGRect(x: 72, y: 72, width: 36, height: 12), cornerRadius: 5)
-        plate(&ctx, gorget, top: 72, bottom: 84, trim: trim)
-        // Swept wings off the temples, the helm's silhouette.
-        for side: CGFloat in [-1, 1] {
-            var wing = Path()
-            wing.addLines([CGPoint(x: c.x + side * 32, y: 36), CGPoint(x: c.x + side * 60, y: 14),
-                           CGPoint(x: c.x + side * 52, y: 30), CGPoint(x: c.x + side * 58, y: 34),
-                           CGPoint(x: c.x + side * 34, y: 56)])
-            wing.closeSubpath()
-            plate(&ctx, wing, top: 14, bottom: 56, trim: trim)
-        }
-        // The shell: a domed top, straight cheeks and a pointed chin guard.
-        var shell = Path()
-        shell.move(to: CGPoint(x: 54, y: 44))
-        shell.addQuadCurve(to: CGPoint(x: 126, y: 44), control: CGPoint(x: 90, y: -10))
-        shell.addLine(to: CGPoint(x: 123, y: 64))
-        shell.addLine(to: CGPoint(x: 104, y: 80))
-        shell.addLine(to: CGPoint(x: 90, y: 86))
-        shell.addLine(to: CGPoint(x: 76, y: 80))
-        shell.addLine(to: CGPoint(x: 57, y: 64))
-        shell.closeSubpath()
-        plate(&ctx, shell, top: 8, bottom: 86)
-        // The crest fin over the top, in the rank's metal.
-        var crest = Path()
-        crest.addLines([CGPoint(x: c.x - 5, y: 22), CGPoint(x: c.x, y: -2), CGPoint(x: c.x + 5, y: 22)])
-        crest.closeSubpath()
-        ctx.fill(crest, with: .linearGradient(Gradient(colors: [trim.metal(1), trim.metal(0.4)]),
-                                              startPoint: CGPoint(x: c.x - 5, y: 0), endPoint: CGPoint(x: c.x + 5, y: 0)))
-        ctx.stroke(crest, with: .color(.black.opacity(0.5)), lineWidth: 0.8)
-        // Dark visor glass; the face is drawn over it, the reflection after.
-        let visor = Path(roundedRect: CGRect(x: 58, y: 34, width: 64, height: 40), cornerRadius: 18, style: .continuous)
-        ctx.fill(visor, with: .color(Color(red: 0.03, green: 0.07, blue: 0.13)))
-        ctx.stroke(visor, with: .color(.black.opacity(0.7)), lineWidth: 3)
-        var rim = ctx
-        rim.blendMode = .plusLighter
-        rim.stroke(visor, with: .color(style.tint.opacity(0.3 + 0.5 * lit)), lineWidth: 1.2)
-    }
-
-    /// The visor's reflection and the brow, drawn over the face.
-    static func glass(_ ctx: inout GraphicsContext, visor: CGRect, style: LevelPrestige) {
-        var arc = Path()
-        arc.move(to: CGPoint(x: visor.minX + 10, y: visor.minY + 16))
-        arc.addQuadCurve(to: CGPoint(x: visor.minX + 26, y: visor.minY + 6), control: CGPoint(x: visor.minX + 12, y: visor.minY + 7))
-        ctx.stroke(arc, with: .color(.white.opacity(0.55)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-        // A pointed brow over the visor, in the rank's metal.
-        var brow = Path()
-        brow.addLines([CGPoint(x: 55, y: 30), CGPoint(x: 90, y: 37), CGPoint(x: 125, y: 30),
-                       CGPoint(x: 122, y: 37), CGPoint(x: 90, y: 43), CGPoint(x: 58, y: 37)])
-        brow.closeSubpath()
-        plate(&ctx, brow, top: 30, bottom: 43, trim: style.material.metal)
-    }
-
-    // MARK: Helpers
-
-    /// A steel plate lit from the upper left, outlined, with a lit top edge.
-    /// With `trim` the plate is in the rank's metal instead.
-    private static func plate(_ ctx: inout GraphicsContext, _ path: Path, top: CGFloat, bottom: CGFloat, trim: ForgeTone? = nil) {
-        let tone = trim ?? steel
-        ctx.fill(path, with: .linearGradient(Gradient(colors: [tone.metal(0.95), tone.metal(0.62), tone.metal(0.3)]),
-                                             startPoint: CGPoint(x: 70, y: top), endPoint: CGPoint(x: 110, y: bottom)))
-        ctx.stroke(path, with: .color(.black.opacity(0.55)), lineWidth: 1.1)
-        var edge = ctx
-        edge.clip(to: path)
-        edge.stroke(path.offsetBy(dx: 1, dy: 1.2), with: .color(.white.opacity(0.28)), lineWidth: 1.2)
     }
 }
+
+/// What sits over the face: the visor's reflection and the circlet.
+private struct WarriorGlass: View, Equatable {
+    let stage: Int
+    var body: some View {
+        Canvas { context, _ in
+            PaladinArt.glass(&context, LevelPrestige(level: max(1, stage * LevelPrestige.interval)))
+        }
+    }
+}
+
+// MARK: - Light
+
+/// Light for the armour: the key light from the upper left, as on the
+/// badges; the column behind the figure as a rim light on the right; a
+/// shadow cast onto whatever is behind; occlusion where a part turns away.
+enum ArmorShade {
+    /// A material's colours from the lit highlight to the core shadow, and the
+    /// light that bounces back into the far edge.
+    struct Ramp {
+        let bright: Color
+        let lit: Color
+        let core: Color
+        let bounce: Color
+
+        init(_ bright: Color, _ lit: Color, _ core: Color, _ bounce: Color) {
+            self.bright = bright; self.lit = lit; self.core = core; self.bounce = bounce
+        }
+
+        init(metal tone: ForgeTone) {
+            self.init(tone.metal(0.98), tone.metal(0.66), tone.metal(0.2), tone.metal(0.45))
+        }
+
+        static func rgb(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r, green: g, blue: b) }
+    }
+
+    /// A formed part: a bright band where it turns to the light, a dark core
+    /// and light bounced back at the far edge. Long parts are shaded across
+    /// their width, like a cylinder.
+    static func part(_ ctx: inout GraphicsContext, _ path: Path, _ ramp: Ramp, polish: Double = 1,
+                     rim: Color? = nil, shadow: CGFloat = 1) {
+        let b = path.boundingRect
+        guard b.width > 0.5, b.height > 0.5 else { return }
+        if shadow > 0 { cast(&ctx, path, shadow) }
+        let tall = b.height > b.width * 1.6, wide = b.width > b.height * 1.6
+        let start: CGPoint
+        let end: CGPoint
+        if tall {
+            start = CGPoint(x: b.minX, y: b.midY - b.width * 0.3)
+            end = CGPoint(x: b.maxX, y: b.midY + b.width * 0.3)
+        } else if wide {
+            start = CGPoint(x: b.midX - b.height * 0.3, y: b.minY)
+            end = CGPoint(x: b.midX + b.height * 0.3, y: b.maxY)
+        } else {
+            start = CGPoint(x: b.minX, y: b.minY)
+            end = CGPoint(x: b.maxX, y: b.maxY)
+        }
+        let stops: [Gradient.Stop] = [
+            .init(color: ramp.lit, location: 0), .init(color: ramp.bright, location: 0.2),
+            .init(color: ramp.lit, location: 0.42), .init(color: ramp.core, location: 0.8),
+            .init(color: ramp.bounce, location: 1),
+        ]
+        ctx.fill(path, with: .linearGradient(Gradient(stops: stops), startPoint: start, endPoint: end))
+        light(&ctx, path, bounds: b, polish: polish, rim: rim, tall: tall)
+    }
+
+    /// Woven cloth: soft folds running down it, darker toward the hem.
+    static func cloth(_ ctx: inout GraphicsContext, _ path: Path, dark: Color, light lightColor: Color, folds: Int,
+                      drift: CGFloat = 0, rim: Color?, shadow: Bool = true) {
+        let b = path.boundingRect
+        guard b.width > 0.5, b.height > 0.5 else { return }
+        if shadow { cast(&ctx, path, 1) }
+        let count = max(1, folds) * 2
+        let stops = (0...count).map {
+            Gradient.Stop(color: $0.isMultiple(of: 2) ? dark : lightColor, location: Double($0) / Double(count))
+        }
+        ctx.fill(path, with: .linearGradient(Gradient(stops: stops),
+                                             startPoint: CGPoint(x: b.minX + drift, y: b.minY),
+                                             endPoint: CGPoint(x: b.maxX + drift, y: b.minY + b.height * 0.12)))
+        ctx.fill(path, with: .linearGradient(Gradient(colors: [.black.opacity(0.05), .black.opacity(0.5)]),
+                                             startPoint: CGPoint(x: b.minX, y: b.minY), endPoint: CGPoint(x: b.maxX, y: b.maxY)))
+        light(&ctx, path, bounds: b, polish: 0, rim: rim, tall: false)
+    }
+
+    /// The shadow a part throws onto what is behind it.
+    static func cast(_ ctx: inout GraphicsContext, _ path: Path, _ amount: CGFloat) {
+        var shadow = ctx
+        shadow.addFilter(.blur(radius: 2 * amount))
+        shadow.fill(path.offsetBy(dx: 1.3 * amount, dy: 2.4 * amount), with: .color(.black.opacity(0.5)))
+    }
+
+    /// Occlusion, a specular spot, the lit top edge, the rim light, then the outline.
+    static func light(_ ctx: inout GraphicsContext, _ path: Path, bounds b: CGRect, polish: Double, rim: Color?, tall: Bool) {
+        let small = min(b.width, b.height)
+        var inside = ctx
+        inside.clip(to: path)
+        var occlusion = inside
+        occlusion.addFilter(.blur(radius: max(1, small * 0.1)))
+        occlusion.stroke(path.offsetBy(dx: -1.4, dy: -2.2), with: .color(.black.opacity(0.45)), lineWidth: 3)
+        if polish > 0 {
+            var spec = inside
+            spec.blendMode = .plusLighter
+            spec.addFilter(.blur(radius: max(0.7, small * 0.07)))
+            let spot = tall
+                ? CGRect(x: b.minX + b.width * 0.22, y: b.minY + b.height * 0.12, width: b.width * 0.2, height: b.height * 0.42)
+                : CGRect(x: b.minX + b.width * 0.16, y: b.minY + b.height * 0.1, width: b.width * 0.34, height: max(1.5, b.height * 0.16))
+            spec.fill(Path(ellipseIn: spot), with: .color(.white.opacity(0.5 * polish)))
+        }
+        inside.stroke(path.offsetBy(dx: 0.8, dy: 1), with: .color(.white.opacity(0.26)), lineWidth: 0.9)
+        if let rim {
+            var back = inside
+            back.blendMode = .plusLighter
+            back.stroke(path.offsetBy(dx: -1.1, dy: 0.2), with: .color(rim.opacity(0.6)), lineWidth: 1.5)
+        }
+        ctx.stroke(path, with: .color(.black.opacity(0.62)), lineWidth: 0.8)
+    }
+
+    /// A band of the trim just inside a part's edge.
+    static func edge(_ ctx: inout GraphicsContext, _ path: Path, _ trim: Ramp, width: CGFloat = 3) {
+        let b = path.boundingRect
+        var band = ctx
+        band.clip(to: path)
+        band.stroke(path, with: .linearGradient(Gradient(colors: [trim.bright, trim.lit, trim.core]),
+                                                startPoint: CGPoint(x: b.minX, y: b.minY), endPoint: CGPoint(x: b.maxX, y: b.maxY)),
+                    lineWidth: width)
+        ctx.stroke(path, with: .color(.black.opacity(0.62)), lineWidth: 0.8)
+    }
+
+    /// Energy along a path: a soft halo, the coloured line and a hot core.
+    static func glow(_ ctx: inout GraphicsContext, _ path: Path, _ color: Color, _ strength: Double, width: CGFloat = 1.4) {
+        guard strength > 0.01 else { return }
+        var light = ctx
+        light.blendMode = .plusLighter
+        var soft = light
+        soft.addFilter(.blur(radius: width * 2.2))
+        soft.stroke(path, with: .color(color.opacity(0.9 * strength)), style: StrokeStyle(lineWidth: width * 2.6, lineCap: .round))
+        light.stroke(path, with: .color(color.opacity(strength)), style: StrokeStyle(lineWidth: width, lineCap: .round))
+        light.stroke(path, with: .color(.white.opacity(0.7 * strength)), style: StrokeStyle(lineWidth: width * 0.4, lineCap: .round))
+    }
+
+    /// A round point of light.
+    static func spark(_ ctx: inout GraphicsContext, at p: CGPoint, radius: CGFloat, _ color: Color, _ strength: Double) {
+        guard strength > 0.01 else { return }
+        var light = ctx
+        light.blendMode = .plusLighter
+        light.fill(Path(ellipseIn: CGRect(x: p.x - radius, y: p.y - radius, width: radius * 2, height: radius * 2)),
+                   with: .radialGradient(Gradient(colors: [.white.opacity(strength), color.opacity(0.8 * strength), .clear]),
+                                         center: p, startRadius: 0, endRadius: radius))
+    }
+}
+
+// MARK: - Shapes
+
+private enum WarriorShape {
+    /// A point on one side of the figure's centre line.
+    static func p(_ side: CGFloat, _ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: 90 + side * x, y: y) }
+
+    static func pts(_ xs: [(CGFloat, CGFloat)]) -> [CGPoint] { xs.map { CGPoint(x: $0.0, y: $0.1) } }
+
+    static func poly(_ points: [CGPoint]) -> Path {
+        var path = Path(); path.addLines(points); path.closeSubpath(); return path
+    }
+
+    /// A closed curve through the points (Catmull-Rom), for formed plates.
+    static func smooth(_ points: [CGPoint], _ tension: CGFloat = 0.5) -> Path {
+        let n = points.count
+        guard n > 2 else { return poly(points) }
+        var path = Path()
+        path.move(to: points[0])
+        for i in 0..<n {
+            let p0 = points[(i - 1 + n) % n], p1 = points[i], p2 = points[(i + 1) % n], p3 = points[(i + 2) % n]
+            let k = tension / 3
+            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) * k, y: p1.y + (p2.y - p0.y) * k)
+            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) * k, y: p2.y - (p3.y - p1.y) * k)
+            path.addCurve(to: p2, control1: c1, control2: c2)
+        }
+        path.closeSubpath()
+        return path
+    }
+
+    /// A rounded, tapering segment from one point to another: a limb, a feather.
+    static func limb(_ a: CGPoint, _ b: CGPoint, _ wa: CGFloat, _ wb: CGFloat) -> Path {
+        let dx = b.x - a.x, dy = b.y - a.y, length = max(0.001, hypot(dx, dy))
+        let u = CGVector(dx: dx / length, dy: dy / length), n = CGVector(dx: -u.dy, dy: u.dx)
+        func q(_ o: CGPoint, _ along: CGFloat, _ across: CGFloat) -> CGPoint {
+            CGPoint(x: o.x + u.dx * along + n.dx * across, y: o.y + u.dy * along + n.dy * across)
+        }
+        return smooth([q(a, -wa * 0.4, 0), q(a, 0, wa / 2), q(b, 0, wb / 2), q(b, wb * 0.4, 0),
+                       q(b, 0, -wb / 2), q(a, 0, -wa / 2)], 0.6)
+    }
+
+    static func oval(_ c: CGPoint, _ w: CGFloat, _ h: CGFloat) -> Path {
+        Path(ellipseIn: CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h))
+    }
+
+    static func line(_ a: CGPoint, _ b: CGPoint) -> Path {
+        var path = Path(); path.move(to: a); path.addLine(to: b); return path
+    }
+
+    static func lerp(_ a: CGPoint, _ b: CGPoint, _ f: CGFloat) -> CGPoint {
+        CGPoint(x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f)
+    }
+}
+
+// MARK: - Paladin
+
+private enum PaladinArt {
+    typealias S = WarriorShape
+    typealias R = ArmorShade.Ramp
+
+    /// White gold: the rank's metal, pale, so the trim reads against it.
+    static func pale(_ style: LevelPrestige) -> R {
+        let tone = style.material.metal
+        let pale = ForgeTone(hue: tone.hue, saturation: min(0.32, tone.saturation * 0.4))
+        return R(pale.metal(1), pale.metal(0.82), pale.metal(0.4), pale.metal(0.62))
+    }
+
+    static func armor(_ ctx: inout GraphicsContext, _ style: LevelPrestige) {
+        let trim = R(metal: style.material.metal), rim = style.tint, plate = pale(style)
+        let face = style.material.face
+        for s: CGFloat in [-1, 1] {
+            let skirt = S.smooth([S.p(s, 8, 137), S.p(s, 30, 135), S.p(s, 35, 176), S.p(s, 24, 186), S.p(s, 12, 178)], 0.4)
+            ArmorShade.cloth(&ctx, skirt, dark: face.metal(0.18), light: face.metal(0.42), folds: 2, rim: rim)
+            ArmorShade.edge(&ctx, skirt, trim, width: 2.6)
+        }
+        for s: CGFloat in [-1, 1] { leg(&ctx, s, plate: plate, trim: trim, rim: rim) }
+        let tabard = S.smooth(S.pts([(75, 134), (105, 134), (108, 176), (101, 199), (90, 205), (79, 199), (72, 176)]), 0.35)
+        ArmorShade.cloth(&ctx, tabard, dark: face.metal(0.3), light: face.metal(0.62), folds: 2, rim: rim)
+        ArmorShade.edge(&ctx, tabard, trim, width: 3.4)
+        for s: CGFloat in [-1, 1] {
+            let p: (CGFloat, CGFloat) -> CGPoint = { S.p(s, $0, $1) }
+            for lame in [S.smooth([p(6, 150), p(28, 148), p(30, 159), p(8, 162)], 0.3),
+                         S.smooth([p(4, 139), p(27, 137), p(29, 150), p(6, 153)], 0.3)] {
+                ArmorShade.part(&ctx, lame, plate, polish: 1.3, rim: rim)
+                ArmorShade.edge(&ctx, lame, trim, width: 2.4)
+            }
+        }
+        chest(&ctx, style, plate: plate, trim: trim, rim: rim)
+        blade(&ctx, plate: plate)
+        guardAndGrip(&ctx, style, trim: trim, rim: rim)
+        for s: CGFloat in [-1, 1] { arm(&ctx, s, plate: plate, trim: trim, rim: rim) }
+        // The lower hand first; the upper one sits over its knuckles.
+        hand(&ctx, 1, plate: plate, rim: rim)
+        hand(&ctx, -1, plate: plate, rim: rim)
+        ArmorShade.part(&ctx, S.oval(Grip.pommel, 11, 11), trim, polish: 1.3, rim: rim)
+        RankGem.draw(&ctx, in: CGRect(x: Grip.pommel.x - 3.5, y: Grip.pommel.y - 3.5, width: 7, height: 7), material: style.material, detail: false)
+        for s: CGFloat in [-1, 1] { pauldron(&ctx, s, plate: plate, trim: trim, rim: rim) }
+        helmet(&ctx, plate: plate, trim: trim, rim: rim)
+    }
+
+    static func leg(_ ctx: inout GraphicsContext, _ s: CGFloat, plate: R, trim: R, rim: Color) {
+        let p: (CGFloat, CGFloat) -> CGPoint = { S.p(s, $0, $1) }
+        ArmorShade.part(&ctx, S.smooth([p(5, 142), p(23, 141), p(22, 158), p(14, 165), p(6, 159)]), plate, polish: 1.3, rim: rim)
+        ArmorShade.part(&ctx, S.smooth([p(7, 172), p(21, 172), p(20, 190), p(8, 190)], 0.3), plate, polish: 1.3, rim: rim)
+        ArmorShade.part(&ctx, S.limb(p(19, 168), p(32, 156), 5, 1.2), trim, rim: rim, shadow: 0.5)
+        ArmorShade.part(&ctx, S.oval(p(14, 168), 14, 12), trim, polish: 1.4, rim: rim)
+        ArmorShade.part(&ctx, S.smooth([p(3, 189), p(24, 189), p(31, 204), p(2, 204)], 0.3), plate, polish: 1.2, rim: rim, shadow: 0.6)
+    }
+
+    static func chest(_ ctx: inout GraphicsContext, _ style: LevelPrestige, plate: R, trim: R, rim: Color) {
+        let shell = S.smooth(S.pts([(60, 79), (90, 83), (120, 79), (125, 97), (119, 118), (104, 128), (90, 130),
+                                    (76, 128), (61, 118), (55, 97)]), 0.5)
+        ArmorShade.part(&ctx, shell, plate, polish: 1.6, rim: rim)
+        for s: CGFloat in [-1, 1] {
+            var pec = Path()
+            pec.move(to: S.p(s, 27, 95))
+            pec.addQuadCurve(to: S.p(s, 2, 111), control: S.p(s, 20, 113))
+            ctx.stroke(pec, with: .color(.black.opacity(0.24)), lineWidth: 1)
+            ctx.stroke(pec.offsetBy(dx: 0.6, dy: 0.7), with: .color(.white.opacity(0.3)), lineWidth: 0.7)
+            // Scrollwork in the trim metal.
+            var scroll = Path()
+            scroll.move(to: S.p(s, 9, 87))
+            scroll.addCurve(to: S.p(s, 27, 91), control1: S.p(s, 13, 83), control2: S.p(s, 24, 84))
+            scroll.addCurve(to: S.p(s, 21, 98), control1: S.p(s, 30, 97), control2: S.p(s, 25, 100))
+            scroll.addCurve(to: S.p(s, 19, 93), control1: S.p(s, 18, 97), control2: S.p(s, 17, 94))
+            ctx.stroke(scroll.offsetBy(dx: 0.5, dy: 0.7), with: .color(.black.opacity(0.4)), lineWidth: 1.4)
+            ctx.stroke(scroll, with: .color(trim.bright), lineWidth: 1.1)
+        }
+        for y: CGFloat in [117, 123] {
+            var band = Path()
+            band.move(to: CGPoint(x: 78, y: y)); band.addQuadCurve(to: CGPoint(x: 102, y: y), control: CGPoint(x: 90, y: y + 3))
+            ctx.stroke(band, with: .color(.black.opacity(0.22)), lineWidth: 0.9)
+        }
+        var star: [CGPoint] = []
+        for i in 0..<8 {
+            let a = Double(i) / 8 * 2 * .pi - .pi / 2
+            let r: CGFloat = i.isMultiple(of: 2) ? 10 : 4.5
+            star.append(CGPoint(x: 90 + CGFloat(cos(a)) * r, y: 96 + CGFloat(sin(a)) * r))
+        }
+        ArmorShade.part(&ctx, S.poly(star), trim, polish: 1.3, rim: rim, shadow: 0.6)
+        RankGem.draw(&ctx, in: CGRect(x: 85.5, y: 91.5, width: 9, height: 9), material: style.material, detail: false)
+        ArmorShade.part(&ctx, Path(roundedRect: CGRect(x: 64, y: 130, width: 52, height: 8), cornerRadius: 3), trim, polish: 1.2, rim: rim, shadow: 0.6)
+    }
+
+    /// Where the sword and the hands sit: the pommel at the top of the grip,
+    /// one hand over the other below it, the guard under the lower hand.
+    enum Grip {
+        static let pommel = CGPoint(x: 90, y: 110)
+        /// The centre line of each hand: the upper for the arm on the left.
+        static func hand(_ side: CGFloat) -> CGFloat { side < 0 ? 120 : 131 }
+        /// Where each forearm meets its hand.
+        static func wrist(_ side: CGFloat) -> CGPoint { CGPoint(x: 90 + side * 12, y: hand(side)) }
+    }
+
+    static func blade(_ ctx: inout GraphicsContext, plate: R) {
+        let path = S.poly(S.pts([(84, 144), (96, 144), (96.5, 192), (90, 207), (83.5, 192)]))
+        ArmorShade.cast(&ctx, path, 1)
+        let stops: [Gradient.Stop] = [
+            .init(color: plate.core, location: 0), .init(color: plate.bright, location: 0.28),
+            .init(color: plate.lit, location: 0.5), .init(color: plate.core, location: 0.78), .init(color: plate.lit, location: 1),
+        ]
+        ctx.fill(path, with: .linearGradient(Gradient(stops: stops), startPoint: CGPoint(x: 83.5, y: 0), endPoint: CGPoint(x: 96.5, y: 0)))
+        ctx.fill(Path(roundedRect: CGRect(x: 88.3, y: 148, width: 3.4, height: 40), cornerRadius: 1.7), with: .color(.black.opacity(0.4)))
+        ctx.fill(runes(), with: .color(.black.opacity(0.55)))
+        ctx.stroke(path, with: .color(.black.opacity(0.62)), lineWidth: 0.8)
+    }
+
+    static func runes() -> Path {
+        var path = Path()
+        for i in 0..<5 {
+            let y = 152 + CGFloat(i) * 8
+            path.addPath(S.poly([CGPoint(x: 90, y: y - 2.4), CGPoint(x: 91.4, y: y), CGPoint(x: 90, y: y + 2.4), CGPoint(x: 88.6, y: y)]))
+        }
+        return path
+    }
+
+    static func guardAndGrip(_ ctx: inout GraphicsContext, _ style: LevelPrestige, trim: R, rim: Color) {
+        let leather = R(R.rgb(0.42, 0.28, 0.18), R.rgb(0.28, 0.18, 0.11), R.rgb(0.1, 0.06, 0.04), R.rgb(0.18, 0.11, 0.07))
+        ArmorShade.part(&ctx, Path(roundedRect: CGRect(x: 86.5, y: 112, width: 7, height: 27), cornerRadius: 2), leather, polish: 0.3, rim: rim, shadow: 0.5)
+        for s: CGFloat in [-1, 1] {
+            let wing = S.smooth([CGPoint(x: 90, y: 139), S.p(s, 14, 136), S.p(s, 27, 129), S.p(s, 33, 122),
+                                 S.p(s, 27, 135), S.p(s, 12, 145), CGPoint(x: 90, y: 146)], 0.4)
+            ArmorShade.part(&ctx, wing, trim, polish: 1.3, rim: rim, shadow: 0.7)
+        }
+        RankGem.draw(&ctx, in: CGRect(x: 86, y: 138, width: 8, height: 8), material: style.material, detail: false)
+    }
+
+    /// An arm in plate: the upper arm below the pauldron, a cupped elbow with
+    /// a small fan, a tapering vambrace and a gauntlet cuff flaring at the wrist.
+    static func arm(_ ctx: inout GraphicsContext, _ s: CGFloat, plate: R, trim: R, rim: Color) {
+        let p: (CGFloat, CGFloat) -> CGPoint = { S.p(s, $0, $1) }
+        ArmorShade.part(&ctx, S.limb(p(40, 90), p(41, 117), 15, 12.5), plate, polish: 1.4, rim: rim)
+        var lame = Path()
+        lame.move(to: p(36, 106)); lame.addQuadCurve(to: p(50, 107), control: p(43, 110))
+        ctx.stroke(lame, with: .color(.black.opacity(0.3)), lineWidth: 0.9)
+        ctx.stroke(lame.offsetBy(dx: 0, dy: 0.8), with: .color(.white.opacity(0.3)), lineWidth: 0.6)
+        let wrist = Grip.wrist(s), elbow = p(38, 121)
+        ArmorShade.part(&ctx, S.limb(elbow, S.lerp(elbow, wrist, 0.8), 12.5, 10.5), plate, polish: 1.4, rim: rim)
+        let cuff = S.limb(S.lerp(elbow, wrist, 0.6), wrist, 10.5, 14)
+        ArmorShade.part(&ctx, cuff, plate, polish: 1.4, rim: rim, shadow: 0.6)
+        ArmorShade.edge(&ctx, cuff, trim, width: 2.2)
+        ArmorShade.part(&ctx, S.smooth([p(44, 115), p(49.5, 118), p(49.5, 123), p(44, 125)], 0.5), trim, polish: 1.1, rim: rim, shadow: 0.4)
+        ArmorShade.part(&ctx, S.smooth([p(36, 116), p(42, 114), p(46, 119.5), p(43, 125.5), p(36, 124.5)], 0.55), trim, polish: 1.4, rim: rim, shadow: 0.6)
+    }
+
+    /// A gauntlet closed round the grip: the back of the hand toward the
+    /// viewer, the thumb over the top, the fingers curling round the far side.
+    static func hand(_ ctx: inout GraphicsContext, _ s: CGFloat, plate: R, rim: Color) {
+        let y = Grip.hand(s)
+        let q: (CGFloat, CGFloat) -> CGPoint = { CGPoint(x: 90 + s * $0, y: y + $1) }
+        for i in 0..<4 {
+            let fy = y - 4.6 + CGFloat(i) * 3.1
+            let x0 = min(90 - s * 6.5, 90 - s * 12.5)
+            ArmorShade.part(&ctx, Path(roundedRect: CGRect(x: x0, y: fy - 1.5, width: 6, height: 3), cornerRadius: 1.5),
+                            plate, polish: 0.8, rim: rim, shadow: 0.3)
+        }
+        let back = S.smooth([q(12, -5.5), q(0, -6.5), q(-7, -4.5), q(-8, 4), q(-1, 6.5), q(12, 5.5)], 0.5)
+        ArmorShade.part(&ctx, back, plate, polish: 1.3, rim: rim)
+        let knuckles = S.line(q(-4, -5), q(-5, 5))
+        ctx.stroke(knuckles, with: .color(.black.opacity(0.3)), lineWidth: 0.9)
+        ctx.stroke(knuckles.offsetBy(dx: -s * 0.7, dy: 0), with: .color(.white.opacity(0.35)), lineWidth: 0.6)
+        ArmorShade.part(&ctx, S.limb(q(7, -5), q(-2, -7.5), 4.6, 3.6), plate, polish: 1.2, rim: rim, shadow: 0.4)
+    }
+
+    static func pauldron(_ ctx: inout GraphicsContext, _ s: CGFloat, plate: R, trim: R, rim: Color) {
+        let p: (CGFloat, CGFloat) -> CGPoint = { S.p(s, $0, $1) }
+        // Feathered plates sweeping up off the shoulder, behind the dome.
+        ArmorShade.part(&ctx, S.limb(p(44, 88), p(65, 76), 11, 4.5), trim, polish: 1.2, rim: rim, shadow: 0.6)
+        ArmorShade.part(&ctx, S.limb(p(40, 80), p(60, 61), 12, 4.5), trim, polish: 1.2, rim: rim, shadow: 0.6)
+        let dome = S.smooth([p(24, 76), p(40, 67), p(56, 72), p(61, 88), p(52, 98), p(31, 94)], 0.5)
+        ArmorShade.part(&ctx, dome, plate, polish: 1.6, rim: rim)
+        ArmorShade.edge(&ctx, dome, trim, width: 2.8)
+    }
+
+    static func helmet(_ ctx: inout GraphicsContext, plate: R, trim: R, rim: Color) {
+        ArmorShade.part(&ctx, Path(roundedRect: CGRect(x: 70, y: 77, width: 40, height: 8), cornerRadius: 4), plate, rim: rim)
+        ArmorShade.part(&ctx, Path(roundedRect: CGRect(x: 72, y: 71, width: 36, height: 8), cornerRadius: 4), plate, rim: rim)
+        for s: CGFloat in [-1, 1] {
+            let p: (CGFloat, CGFloat) -> CGPoint = { S.p(s, $0, $1) }
+            for (a, b, w) in [(p(30, 54), p(53, 34), CGFloat(10)), (p(29, 46), p(47, 16), CGFloat(11))] {
+                ArmorShade.part(&ctx, S.limb(a, b, w, 4), trim, polish: 1.2, rim: rim, shadow: 0.6)
+            }
+        }
+        let shell = S.smooth(S.pts([(56, 54), (58, 26), (74, 10), (90, 6), (106, 10), (122, 26), (124, 54), (121, 68),
+                                    (106, 82), (90, 87), (74, 82), (59, 68)]), 0.5)
+        ArmorShade.part(&ctx, shell, plate, polish: 1.7, rim: rim)
+        for s: CGFloat in [-1, 1] {
+            var cheek = Path()
+            cheek.move(to: S.p(s, 31, 58)); cheek.addQuadCurve(to: S.p(s, 14, 81), control: S.p(s, 30, 75))
+            ctx.stroke(cheek, with: .color(trim.bright), lineWidth: 1.4)
+            ctx.stroke(cheek.offsetBy(dx: 0.5, dy: 0.8), with: .color(.black.opacity(0.35)), lineWidth: 0.8)
+        }
+        let opening = Path(roundedRect: LevelUpWarrior.visor, cornerRadius: 16, style: .continuous)
+        ctx.fill(opening, with: .color(Color(red: 0.03, green: 0.05, blue: 0.09)))
+        ctx.stroke(opening, with: .color(.black.opacity(0.75)), lineWidth: 1.4)
+    }
+
+    static func glass(_ ctx: inout GraphicsContext, _ style: LevelPrestige) {
+        let v = LevelUpWarrior.visor
+        var arc = Path()
+        arc.move(to: CGPoint(x: v.minX + 9, y: v.minY + 17))
+        arc.addQuadCurve(to: CGPoint(x: v.minX + 24, y: v.minY + 8), control: CGPoint(x: v.minX + 10, y: v.minY + 8))
+        ctx.stroke(arc, with: .color(.white.opacity(0.45)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+        // A circlet over the brow, its peak set with the rank's stone.
+        let circlet = S.poly(S.pts([(70, 36), (76, 29), (82, 33), (90, 20), (98, 33), (104, 29), (110, 36), (106, 40), (90, 38), (74, 40)]))
+        ArmorShade.part(&ctx, circlet, R(metal: style.material.metal), polish: 1.3, rim: style.tint, shadow: 0.8)
+        RankGem.draw(&ctx, in: CGRect(x: 86.5, y: 26.5, width: 7, height: 7), material: style.material, detail: false)
+    }
+
+    static func back(_ ctx: inout GraphicsContext, _ style: LevelPrestige, t: Double, lit: Double) {
+        let strength = 0.45 + 0.55 * lit
+        var light = ctx
+        light.blendMode = .plusLighter
+        // A halo behind the helm, with points of light running round it.
+        let halo = S.oval(CGPoint(x: 90, y: 46), 88, 88)
+        var soft = light
+        soft.addFilter(.blur(radius: 5))
+        soft.stroke(halo, with: .color(style.tint.opacity(0.7 * strength)), lineWidth: 9)
+        light.stroke(halo, with: .color(style.highlight.opacity(0.9 * strength)), lineWidth: 2.2)
+        for i in 0..<3 {
+            let a = t * 0.6 + Double(i) * 2 * .pi / 3
+            let c = CGPoint(x: 90 + CGFloat(cos(a)) * 44, y: 46 + CGFloat(sin(a)) * 44)
+            ArmorShade.spark(&ctx, at: c, radius: 4, style.tint, strength)
+        }
+        // Wings of light from behind the shoulders, breathing slowly.
+        let flap = sin(t * 1.3) * 0.05
+        for s: CGFloat in [-1, 1] {
+            let anchor = S.p(s, 24, 86)
+            // Long flight feathers behind, a row of shorter coverts over them.
+            for (reach, width, opacity) in [(CGFloat(1), CGFloat(15), 0.42), (CGFloat(0.56), CGFloat(13), 0.58)] {
+                for i in (0..<6).reversed() {
+                    let f = Double(i) / 5
+                    let angle = -1.32 + 1.45 * f + flap
+                    let length = CGFloat(84 - 36 * f) * reach
+                    let tip = CGPoint(x: anchor.x + CGFloat(cos(angle)) * s * length, y: anchor.y + CGFloat(sin(angle)) * length)
+                    let feather = featherPath(anchor, tip, width: width)
+                    light.fill(feather, with: .linearGradient(Gradient(colors: [.white.opacity(opacity * strength), style.tint.opacity(opacity * strength),
+                                                                                style.tint.opacity(0.35 * opacity * strength)]),
+                                                              startPoint: anchor, endPoint: tip))
+                    light.stroke(S.line(S.lerp(anchor, tip, 0.1), S.lerp(anchor, tip, 0.85)), with: .color(.white.opacity(0.25 * strength)), lineWidth: 0.7)
+                }
+            }
+        }
+    }
+
+    /// A feather: narrow at the quill, widest past the middle, a rounded tip.
+    static func featherPath(_ base: CGPoint, _ tip: CGPoint, width: CGFloat) -> Path {
+        let dx = tip.x - base.x, dy = tip.y - base.y, length = max(0.001, hypot(dx, dy))
+        let n = CGVector(dx: -dy / length, dy: dx / length)
+        func at(_ f: CGFloat, _ across: CGFloat) -> CGPoint {
+            let c = S.lerp(base, tip, f)
+            return CGPoint(x: c.x + n.dx * across, y: c.y + n.dy * across)
+        }
+        return S.smooth([base, at(0.3, width * 0.36), at(0.62, width / 2), at(0.9, width * 0.34), tip,
+                         at(0.9, -width * 0.34), at(0.62, -width / 2), at(0.3, -width * 0.36)], 0.5)
+    }
+
+    static func front(_ ctx: inout GraphicsContext, _ style: LevelPrestige, t: Double, lit: Double) {
+        guard lit > 0 else { return }
+        let pulse = 0.8 + 0.2 * sin(t * 2.4)
+        var light = ctx
+        light.blendMode = .plusLighter
+        var soft = light
+        soft.addFilter(.blur(radius: 3))
+        soft.fill(runes(), with: .color(style.tint.opacity(lit * pulse)))
+        light.fill(runes(), with: .color(.white.opacity(0.9 * lit * pulse)))
+        ArmorShade.spark(&ctx, at: CGPoint(x: 90, y: 96), radius: 10, style.tint, lit * 0.7 * pulse)
+        ArmorShade.spark(&ctx, at: CGPoint(x: 90, y: 30), radius: 7, style.tint, lit * 0.6 * pulse)
+    }
+}
+
+#if DEBUG
+/// The warrior large on a lit stage, for choosing between looks.
+struct WarriorPortrait: View {
+    let level: Int
+    let t: Double
+    var body: some View {
+        let style = LevelPrestige(level: level)
+        ZStack {
+            Color(red: 0.02, green: 0.03, blue: 0.06)
+            RadialGradient(colors: [style.tint.opacity(0.35), style.shade.opacity(0.15), .clear],
+                           center: .center, startRadius: 10, endRadius: 280)
+            LinearGradient(colors: [.clear, style.tint.opacity(0.22), .white.opacity(0.28), style.tint.opacity(0.22), .clear],
+                           startPoint: .leading, endPoint: .trailing)
+                .frame(width: 170)
+                .blendMode(.plusLighter)
+            Ellipse()
+                .fill(RadialGradient(colors: [style.tint.opacity(0.5), .clear], center: .center, startRadius: 0, endRadius: 150))
+                .frame(width: 320, height: 64)
+                .offset(y: 205)
+            LevelUpWarrior(style: style, t: t).scaleEffect(1.9)
+        }
+        .ignoresSafeArea()
+    }
+}
+#endif

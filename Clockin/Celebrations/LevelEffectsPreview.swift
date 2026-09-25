@@ -12,6 +12,7 @@ struct LevelEffectsPreview: View {
     @State private var replay = 0
     @State private var pinned: Double?
     @State private var clean = false
+    @State private var warriorPortrait = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var policy = RollingAnimationPolicy.shared
@@ -37,7 +38,9 @@ struct LevelEffectsPreview: View {
     var body: some View {
         VStack(spacing: 0) {
             if !clean { controls }
-            if showCrests {
+            if warriorPortrait {
+                WarriorPortrait(level: level, t: pinned ?? LevelUpCurve.still)
+            } else if showCrests {
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach([1, 75, 150, 225, 300, 375, 450, 525, 600], id: \.self) { item in
@@ -98,6 +101,7 @@ struct LevelEffectsPreview: View {
             largeText = args.contains("--preview-large-text")
             companion = !args.contains("--preview-no-companion")
             clean = args.contains("--preview-clean")
+            warriorPortrait = args.contains("--warrior-portrait")
             if let i = args.firstIndex(of: "--preview-time"), args.indices.contains(i + 1) { pinned = Double(args[i + 1]) }
         }
     }

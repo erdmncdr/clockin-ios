@@ -66,9 +66,9 @@ struct LevelUpStage: View {
                 if companion {
                     // Standing on the sigil, backlit by the column.
                     LevelUpWarrior(style: light, t: t)
-                        .scaleEffect(0.6)
-                        .shadow(color: light.tint.opacity(post < 0 ? 0.15 : 0.55), radius: 16)
-                        .position(x: layout.floor.x, y: layout.floor.y - 57)
+                        .scaleEffect(0.74)
+                        .shadow(color: light.tint.opacity(post < 0 ? 0.15 : 0.45), radius: 14)
+                        .position(x: layout.floor.x, y: layout.floor.y - 70)
                 }
                 LevelUpCrest(level: level, t: t, radius: layout.crestRadius, moving: moving)
                     .position(layout.crest)
@@ -77,7 +77,7 @@ struct LevelUpStage: View {
                 }
             }
         }
-        .frame(height: companion ? 348 : 300)
+        .frame(height: companion ? 384 : 300)
         .accessibilityHidden(true)
     }
 }
