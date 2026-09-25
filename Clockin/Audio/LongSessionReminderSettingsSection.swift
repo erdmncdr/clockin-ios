@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LongSessionReminderSettingsSection: View {
+    var showsHeader = true
     @Environment(\.openURL) private var openURL
     @AppStorage(LongSessionReminderSchedule.preferenceKey) private var hours = LongSessionReminderSchedule.defaultHours
     @ObservedObject private var chime = FocusChimeController.shared
@@ -33,7 +34,7 @@ struct LongSessionReminderSettingsSection: View {
             }
             DashboardPinButton(feature: .reminder)
         } header: {
-            Text("Session reminder")
+            if showsHeader { Text("Session reminder") }
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text("A reminder after the selected hours of worked time. Breaks do not count. Clock out, set an end time, or remind yourself in one hour from the notification.")

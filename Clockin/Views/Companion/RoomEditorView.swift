@@ -39,8 +39,10 @@ struct RoomEditorView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment:.leading,spacing:16) {
-                    Text("Drag to arrange").font(.title3.bold())
-                    Text("Wall items stay on the wall. Rugs fit under furniture.")
+                    // With nothing to place, say so first instead of asking for a drag.
+                    let empty = loaded && items.isEmpty
+                    Text(empty ? "No home items yet" : "Drag to arrange").font(.title3.bold())
+                    Text(empty ? "Choose home items in Companion first." : "Wall items stay on the wall. Rugs fit under furniture.")
                         .font(.caption).foregroundStyle(.secondary)
                     if let room {
                         RoomEditorCanvas(items:items,room:room,roomID:original.room,layout:original.homeLayout,
@@ -51,16 +53,14 @@ struct RoomEditorView: View {
                             .clipShape(RoundedRectangle(cornerRadius:12))
                             .accessibilityIdentifier("room.editor.canvas")
                         if !loaded { ProgressView().frame(maxWidth:.infinity) }
-                        else if items.isEmpty {
-                            Text("Choose home items in Companion first.").font(.subheadline).foregroundStyle(.secondary)
-                        } else {
-                            controls(room)
-                        }
+                        else if !items.isEmpty { controls(room) }
                     }
-                    Button("Reset room",systemImage:"arrow.counterclockwise") {
-                        draft.reset(room:original.room); feedback = nil
-                    }.disabled(isDragging || !loaded || items.isEmpty)
-                        .frame(minHeight:44).accessibilityIdentifier("room.editor.reset")
+                    if !empty {
+                        Button("Reset room",systemImage:"arrow.counterclockwise") {
+                            draft.reset(room:original.room); feedback = nil
+                        }.disabled(isDragging || !loaded)
+                            .frame(minHeight:44).accessibilityIdentifier("room.editor.reset")
+                    }
                 }.padding(16)
             }
             .background(palette.background)

@@ -61,7 +61,7 @@ struct BadgesView: View {
                 .contentTransition(.numericText())
                 .font(.title2.bold())
                 .foregroundStyle(palette.accent)
-            Text("\(stats.xp.formatted()) XP")
+            Text("\(stats.xp.formatted(.number.locale(AppLanguage.formatLocale))) XP")
                 .font(.headline).monospacedDigit()
                 .contentTransition(.numericText())
             PrestigeProgressBar(level: stats.level, progress: LevelPrestige.progress(xp: stats.xp), active: !showCompanion && !showRanks)
@@ -83,8 +83,8 @@ struct BadgesView: View {
             metric("Longest streak", value: String(localized: "\(stats.longestStreak) days", bundle: .app))
             DisclosureGroup("How XP works") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("100 XP per hour: \(stats.baseXP.formatted()) XP")
-                    Text("Streaks: +\(stats.streakXP.formatted()) XP")
+                    Text("100 XP per hour: \(stats.baseXP.formatted(.number.locale(AppLanguage.formatLocale))) XP")
+                    Text("Streaks: +\(stats.streakXP.formatted(.number.locale(AppLanguage.formatLocale))) XP")
                     Text("Streak bonuses add up: 3 days +100, 7 +250, 14 +500, 30 +1,000 and 60 +2,000 XP.")
                     Text("Personal goals do not add XP.")
                 }

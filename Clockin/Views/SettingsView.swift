@@ -55,7 +55,11 @@ struct SettingsView: View {
                     NavigationLink {
                         DashboardPinOptions()
                     } label: {
-                        Label("Pinned controls", systemImage: "pin")
+                        // Accent icon like the other rows; a bare Label took the
+                        // system tint and stayed green in every theme.
+                        Label { Text("Pinned controls") } icon: {
+                            Image(systemName: "pin").foregroundStyle(palette.accent)
+                        }
                     }
                 }
                 paySection

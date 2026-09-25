@@ -41,8 +41,17 @@ struct CompanionView: View {
                         Button { roomEditor = RoomEditorSession(state:wardrobe.state) } label: {
                             Label("Edit room",systemImage:"move.3d").frame(maxWidth:.infinity,minHeight:44)
                         }.buttonStyle(.bordered).accessibilityIdentifier("companion.editRoom")
+                        // Room settings sit with the room, not among the wardrobe items.
+                        DisclosureGroup("Room settings") {
+                            VStack(spacing: 12) {
+                                Picker("Room layout", selection: Binding(get: { wardrobe.state.homeLayout }, set: { wardrobe.setHomeLayout($0) })) {
+                                    ForEach(CompanionHomeLayout.allCases, id: \.self) { Text($0.title).tag($0) }
+                                }.pickerStyle(.segmented)
+                                Toggle("Room lamp", isOn: Binding(get: { wardrobe.state.homeLampOn }, set: { wardrobe.setHomeLamp($0) }))
+                            }.padding(.top, 8)
+                        }
                     }
-                    Label("\(wardrobe.balance.formatted()) focus coins", systemImage: "circle.circle.fill")
+                    Label("\(wardrobe.balance.formatted(.number.locale(AppLanguage.formatLocale))) focus coins", systemImage: "circle.circle.fill")
                         .font(.title3.bold()).foregroundStyle(palette.accent)
                     DisclosureGroup("How coins work") {
                         Text("10 coins/hour, 25/goal day, 50/work badge, 100/level. Saved work only; minutes round down. Edits recalculate coins. Purchased items stay yours.")
@@ -53,16 +62,6 @@ struct CompanionView: View {
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                     Text("Tap any item to preview it. Owned and locked items stay together in their category.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    if category == nil || category?.isHome == true {
-                        DisclosureGroup("Room settings") {
-                            VStack(spacing: 12) {
-                                Picker("Room layout", selection: Binding(get: { wardrobe.state.homeLayout }, set: { wardrobe.setHomeLayout($0) })) {
-                                    ForEach(CompanionHomeLayout.allCases, id: \.self) { Text($0.title).tag($0) }
-                                }.pickerStyle(.segmented)
-                                Toggle("Room lamp", isOn: Binding(get: { wardrobe.state.homeLampOn }, set: { wardrobe.setHomeLamp($0) }))
-                            }.padding(.top, 8)
-                        }
-                    }
                     ForEach(displayedCategories) { section in
                         let items = displayedItems.filter { $0.category == section }
                         if !items.isEmpty {

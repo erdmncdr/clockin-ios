@@ -75,12 +75,17 @@ struct DashboardCustomizationView: View {
 struct DashboardShortcutSheet: View {
     let feature: DashboardShortcut
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.palette) private var palette
     var body: some View {
         NavigationStack {
             Form {
-                if feature == .reminder { LongSessionReminderSettingsSection() }
+                // The sheet's title already names the feature, so its section
+                // header is left out here.
+                if feature == .reminder { LongSessionReminderSettingsSection(showsHeader: false) }
                 else { FocusSettingsSection(only: feature) }
             }
+            .scrollContentBackground(.hidden)
+            .background(palette.background)
             .navigationTitle(feature.title).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }

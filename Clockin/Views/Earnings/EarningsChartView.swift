@@ -28,10 +28,13 @@ struct EarningsChartView: View {
     }
 
     @State private var selectionFeedback = HapticSignal()
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top) {
+            // At the largest text sizes the totals stack under the earnings
+            // instead of truncating both columns.
+            AdaptiveTotalsStack(stacked: typeSize.isAccessibilitySize) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("PERIOD EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                     Text(money(snapshot.money))
@@ -42,8 +45,8 @@ struct EarningsChartView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Spacer(minLength: 4)
-                VStack(alignment: .trailing, spacing: 4) {
+            } trailing: {
+                VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 4) {
                     Text(DurationText.compact(snapshot.duration)).font(.headline)
                         .contentTransition(.numericText())
                     Text("\(snapshot.sessions.count) completed").font(.caption)
@@ -52,9 +55,9 @@ struct EarningsChartView: View {
                 }
                 .foregroundStyle(.secondary)
             }
-            HStack {
+            AdaptiveTotalsStack(stacked: typeSize.isAccessibilitySize) {
                 Text(range == .sixMonths ? "MONTHLY EARNINGS" : "DAILY EARNINGS").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
-                Spacer()
+            } trailing: {
                 if currencyCode == "USD" {
                     Picker("History currency", selection: $showTRY.hapticSelection($selectionFeedback)) {
                         Text("USD").tag(false)
@@ -249,5 +252,19 @@ struct EarningsChartView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Two columns side by side, or one under the other.
+private struct AdaptiveTotalsStack<Leading: View, Trailing: View>: View {
+    let stacked: Bool
+    @ViewBuilder let leading: Leading
+    @ViewBuilder let trailing: Trailing
+    var body: some View {
+        if stacked {
+            VStack(alignment: .leading, spacing: 8) { leading; trailing }
+        } else {
+            HStack(alignment: .top) { leading; Spacer(minLength: 4); trailing }
+        }
     }
 }

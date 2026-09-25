@@ -67,8 +67,9 @@ private struct SessionCelebration: View {
     @State private var appeared = false
 
     var body: some View {
+        // The stage draws the figure well inside its frame; at 64 it read as a speck.
         ClockinMascotStage(state: .celebrate)
-            .frame(width: 64, height: 64)
+            .frame(width: 96, height: 96)
             .scaleEffect(appeared || reduceMotion ? 1 : 0.65)
             .offset(y: appeared || reduceMotion ? 0 : 12)
             .rotationEffect(.degrees(appeared || reduceMotion ? 0 : -10))

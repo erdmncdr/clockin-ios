@@ -2,21 +2,34 @@ import SwiftUI
 
 struct FocusRadioCard: View {
     @Environment(\.palette) private var palette
-    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage(DashboardShortcut.radio.storageKey) private var pinned = false
     @ObservedObject private var radio = FocusRadioController.shared
 
+    // Laid out like the chime card beside it: icon and title with the main
+    // control on the first row, details and the options menu below.
     var body: some View {
         if pinned || radio.state.showsCard {
-            VStack(alignment: .leading, spacing: 8) {
-                if typeSize.isAccessibilitySize {
-                    stationMenu
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Image(systemName: radio.isPlaying ? "dot.radiowaves.left.and.right" : "radio")
+                        .foregroundStyle(palette.accent)
+                        .contentTransition(.symbolEffect(.replace))
+                    Text("Focus radio").font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 0)
                     FocusRadioButtons(radio: radio)
-                } else {
-                    HStack(spacing: 8) {
-                        stationMenu
-                        Spacer(minLength: 0)
-                        FocusRadioButtons(radio: radio)
+                }
+                HStack(spacing: 8) {
+                    FocusRadioStationPicker(radio: radio)
+                        .labelsHidden()
+                        .tint(palette.accent)
+                    Spacer(minLength: 0)
+                    if pinned {
+                        Menu {
+                            DashboardPinButton(feature: .radio)
+                        } label: {
+                            Image(systemName: "ellipsis").frame(width: 44, height: 44)
+                        }
+                        .accessibilityLabel("Focus radio options")
                     }
                 }
                 if pinned {
@@ -25,7 +38,6 @@ struct FocusRadioCard: View {
                         Slider(value: $radio.volume, in: 0...1).accessibilityLabel("Radio volume")
                         Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
                     }
-                    DashboardPinButton(feature: .radio, compact: true)
                 }
                 if radio.state == .failed {
                     Text("Could not connect. Tap play to retry.")
@@ -37,19 +49,8 @@ struct FocusRadioCard: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(14)
+            .padding(.horizontal, 12).padding(.vertical, 10)
             .card(palette)
-        }
-    }
-
-    private var stationMenu: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label("FOCUS RADIO", systemImage: "radio")
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(.secondary)
-            FocusRadioStationPicker(radio: radio)
-                .labelsHidden()
-                .tint(palette.accent)
         }
     }
 }

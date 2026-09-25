@@ -128,7 +128,7 @@ struct LevelUpCard: View {
                 .scaleEffect(1 + 0.35 * (1 - e))
                 LevelUpRule(style: colors, leading: false).frame(maxWidth: 56).scaleEffect(x: rule, anchor: .leading)
             }
-            Text(hours == 1 ? "1 hour of focus" : "\(hours.formatted()) hours of focus")
+            Text(hours == 1 ? "1 hour of focus" : "\(hours.formatted(.number.locale(AppLanguage.formatLocale))) hours of focus")
                 .font(.subheadline).foregroundStyle(.white.opacity(0.6))
                 .opacity(C.ramp(post, 0.3, 0.7))
         }

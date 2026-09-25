@@ -102,20 +102,28 @@ struct InsightsBadgesView: View {
         }
     }
 
+    // On the theme's own surface, lit in the tier's colour, so it belongs to
+    // light themes as well as dark ones instead of being a fixed black block.
     private var tierHeader: some View {
-        HStack(spacing:14) {
+        let light = palette.colorScheme == .light
+        return HStack(spacing:14) {
             TierMedal(tier:tier,phase:reveal).frame(width:94,height:94)
             VStack(alignment:.leading,spacing:7) {
-                Text(tier.title).font(.title2.bold()).foregroundStyle(tier.tint)
-                Text(tier.caption).font(.caption).foregroundStyle(.white.opacity(0.75))
+                Text(tier.title).font(.title2.bold()).foregroundStyle(light ? Color.primary : tier.tint)
+                Text(tier.caption).font(.caption).foregroundStyle(.secondary)
                 ProgressView(value:Double(items.filter(\.unlocked).count),total:Double(max(1,items.count))).tint(tier.tint)
                 Text("\(items.filter(\.unlocked).count) of \(items.count) earned")
-                    .font(.caption2.monospacedDigit()).foregroundStyle(.white.opacity(0.65))
+                    .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
             }
             Spacer(minLength:0)
         }
         .padding(12).frame(maxWidth:.infinity,alignment:.leading)
-        .background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:18))
+        .background {
+            let card = RoundedRectangle(cornerRadius:18)
+            card.fill(palette.surface)
+                .overlay { card.fill(RadialGradient(colors:[tier.tint.opacity(light ? 0.3 : 0.2), .clear],
+                                                    center:.leading, startRadius:10, endRadius:280)) }
+        }
         .overlay(RoundedRectangle(cornerRadius:18).strokeBorder(tier.tint.opacity(0.3)))
     }
 }

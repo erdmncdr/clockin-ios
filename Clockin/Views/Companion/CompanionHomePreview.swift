@@ -63,13 +63,15 @@ struct CompanionHomePreview: View {
                         } else {
                             Text(item.isHomeItem ? "Try it in your room" : "Try it on")
                                 .font(.title3.bold())
-                            Text("Try it before you choose.")
+                            // The title already says try; say what kind of item it is.
+                            Text(item.category.title)
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
                         if item.isHomeItem && !purchased {
                             DisclosureGroup("Scene options") { sceneOptions.padding(.top, 12) }
                         }
-                        if !owned {
+                        // A price the button already shows is not repeated here.
+                        if !owned && (item.unlock.price == nil || !canChoose) {
                             Label(item.unlock.label, systemImage: item.unlock.price == nil ? "lock" : "circle.circle")
                                 .font(.subheadline.weight(.semibold))
                             if !canChoose {
@@ -83,7 +85,7 @@ struct CompanionHomePreview: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 10) {
                     if !purchased {
-                        Text("Balance: \(wardrobe.balance.formatted()) coins")
+                        Text("Balance: \(wardrobe.balance.formatted(.number.locale(AppLanguage.formatLocale))) coins")
                             .font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
                     }
                     Button(actionTitle) {

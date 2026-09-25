@@ -8,6 +8,7 @@ struct ManualEntryView: View {
     @EnvironmentObject private var store: ClockStore
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmingDelete = false
 
     /// Verilirse ekran duzenleme kipinde acilir.
     let editing: WorkSession?
@@ -99,11 +100,28 @@ struct ManualEntryView: View {
                         Text(errorMessage).foregroundStyle(.red)
                     }
                 }
+                // Deleting used to be a hidden swipe in History only.
+                if editing != nil {
+                    Section {
+                        Button("Delete entry", role: .destructive) { confirmingDelete = true }
+                            .frame(maxWidth: .infinity)
+                    }
+                }
             }
             // Saatler degistikce cakisma bolumu aniden belirip kaybolmasin.
             .animation(.smooth(duration: 0.25), value: conflicts.map(\.id))
             .scrollContentBackground(.hidden)
             .background(palette.background)
+            .alert("Delete this session?", isPresented: $confirmingDelete) {
+                Button("Delete", role: .destructive) {
+                    if let editing { store.deleteSession(id: editing.id) }
+                    dismiss()
+                }
+                Button("Keep", role: .cancel) {}
+            } message: {
+                Text("Its time and earnings will be removed permanently.")
+            }
+            .hapticFeedback(.destructiveConfirmation, trigger: confirmingDelete) { _, new in new }
             .navigationTitle(editing == nil ? "Add past entry" : "Edit entry")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

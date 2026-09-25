@@ -95,6 +95,20 @@ struct DashboardView: View {
         .environment(\.clockinContentActive, appeared && isSelected && sheet == nil && pendingDelete == nil && scenePhase == .active)
         .onAppear {
             appeared = true
+            #if DEBUG
+            // Review fixture: `--open-sheet settings|customize|entry|companion|start`.
+            let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "--open-sheet"), args.indices.contains(i + 1) {
+                switch args[i + 1] {
+                case "settings": sheet = .settings
+                case "customize": sheet = .customize
+                case "entry": sheet = .newEntry
+                case "companion": sheet = .companion
+                case "start": sheet = .manualStart
+                default: break
+                }
+            }
+            #endif
             if LanguageSwitch.shared.reopenSettings {
                 // Back in the new language: Settings reappears in place, no slide.
                 LanguageSwitch.shared.reopenSettings = false

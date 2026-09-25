@@ -29,10 +29,10 @@ struct ManualStartView: View {
                         LabeledContent("Hours", value: String(hours))
                             .monospacedDigit()
                     }
-                    Picker("Minutes", selection: $minutes) {
-                        ForEach(0..<60, id: \.self) { minute in
-                            Text("\(minute)").tag(minute)
-                        }
+                    // The same control as hours; five-minute steps keep it a few taps.
+                    Stepper(value: $minutes, in: 0...55, step: 5) {
+                        LabeledContent("Minutes", value: String(minutes))
+                            .monospacedDigit()
                     }
                 } header: {
                     Text("Elapsed time")
@@ -46,29 +46,31 @@ struct ManualStartView: View {
                 }
                 .listRowBackground(palette.surface)
 
+                // One row each, like the rest of the form.
                 Section("Preview") {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let start = context.date.addingTimeInterval(-elapsed)
-                        let rate = store.effectiveRate(at: start, fallback: store.hourlyRate)
-                        VStack(alignment: .leading, spacing: 12) {
-                            LabeledContent("Start time") {
-                                Text(start.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: AppLanguage.formatLocale)))
-                                    .multilineTextAlignment(.trailing)
-                            }
-                            LabeledContent("Elapsed", value: DurationText.compact(elapsed))
-                            LabeledContent("Earnings so far") {
-                                Text((elapsed / 3600 * rate).money(code: store.currencyCode))
-                                    .foregroundStyle(palette.accent)
-                            }
+                        LabeledContent("Start time") {
+                            Text(context.date.addingTimeInterval(-elapsed)
+                                .formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: AppLanguage.formatLocale)))
+                                .multilineTextAlignment(.trailing)
                         }
-                        .monospacedDigit()
+                    }
+                    LabeledContent("Elapsed", value: DurationText.compact(elapsed))
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        let rate = store.effectiveRate(at: context.date.addingTimeInterval(-elapsed), fallback: store.hourlyRate)
+                        LabeledContent("Earnings so far") {
+                            Text((elapsed / 3600 * rate).money(code: store.currencyCode))
+                                .foregroundStyle(palette.accent)
+                        }
                     }
                 }
+                .monospacedDigit()
                 .listRowBackground(palette.surface)
             }
             .scrollContentBackground(.hidden)
             .background(palette.background)
-            .navigationTitle("Start with elapsed time")
+            // Short title of its own: the long label only fits as a button.
+            .navigationTitle(String(localized: "title.startEarlier", defaultValue: "Start earlier", bundle: .app))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

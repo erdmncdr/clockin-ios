@@ -69,13 +69,18 @@ struct CelebrationOverlay: View {
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if policy.companion {
-                    if let accessory {
-                        ClockinMascotStill(mood: .hello, accessory: accessory, outfit: WardrobeStore.shared.state)
-                            .frame(width: 48, height: 48)
-                    } else {
-                        CelebrationMascot(mood: .proud, reaction: .wiggle, moving: policy.motion)
-                            .frame(width: 48, height: 48)
+                    // The figure is drawn well inside its frame; a larger frame that
+                    // overhangs the padding keeps the card's height while the
+                    // companion reads at the size of the icon opposite it.
+                    Group {
+                        if let accessory {
+                            ClockinMascotStill(mood: .hello, accessory: accessory, outfit: WardrobeStore.shared.state)
+                        } else {
+                            CelebrationMascot(mood: .proud, reaction: .wiggle, moving: policy.motion)
+                        }
                     }
+                    .frame(width: 72, height: 72)
+                    .padding(.vertical, -14)
                 }
             }
             .padding(16)

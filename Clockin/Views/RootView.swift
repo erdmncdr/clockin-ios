@@ -51,6 +51,28 @@ struct RootView: View {
 
     @State private var selectionFeedback = HapticSignal()
 
+    #if DEBUG
+    /// Review fixture: `--open-tab history|progress` and
+    /// `--open-progress goals|reports|badges` open a screen without taps.
+    private func openFromLaunchArguments() {
+        let args = ProcessInfo.processInfo.arguments
+        func value(_ flag: String) -> String? {
+            args.firstIndex(of: flag).flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil }
+        }
+        switch value("--open-tab") {
+        case "history": tab = .history
+        case "progress": tab = .progress
+        default: break
+        }
+        switch value("--open-progress") {
+        case "reports": progressSection = .reports
+        case "badges": progressSection = .badges
+        case "goals": progressSection = .goals
+        default: break
+        }
+    }
+    #endif
+
     var body: some View {
         ZStack {
             // Sekmeler masa modunun altinda yasamaya devam eder; dik cevirince
@@ -80,6 +102,9 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        #if DEBUG
+        .onAppear { openFromLaunchArguments() }
+        #endif
         .allowsHitTesting(!showsCelebration && !celebrationFading)
         .accessibilityHidden(showsCelebration || celebrationFading)
         .task(id: showsCelebration) {

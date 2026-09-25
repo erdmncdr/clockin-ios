@@ -59,7 +59,7 @@ struct FocusSettingsSection: View {
                 // The setting comes first; putting it on Today is an extra.
                 DashboardPinButton(feature: .chime)
             } header: {
-                Text("Focus chime")
+                if only == nil { Text("Focus chime") }
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     if chimeEnabled {
@@ -110,7 +110,7 @@ struct FocusSettingsSection: View {
                 }
                 DashboardPinButton(feature: .radio)
             } header: {
-                Text("Focus radio")
+                if only == nil { Text("Focus radio") }
             } footer: {
                 Text("\(radio.station.description). Streams over the internet and keeps playing with the screen locked. Pin it to Today for station, playback and volume controls.")
             }

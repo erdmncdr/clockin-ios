@@ -82,7 +82,7 @@ struct InsightsHeatmapView: View {
                             Color.clear.frame(width: 30, height: 36)
                             ForEach(0..<7, id: \.self) { index in
                                 Text(weekdayLabel(index))
-                                    .font(.caption2)
+                                    .font(.system(size: 11))
                                     .foregroundStyle(.secondary)
                                     .frame(width: 30, height: 44)
                             }
@@ -92,8 +92,12 @@ struct InsightsHeatmapView: View {
                             LazyHStack(alignment: .top, spacing: 0) {
                                 ForEach(weeks, id: \.self) { week in
                                     VStack(spacing: 0) {
+                                        // The grid is fixed in size, so its labels are too; scaled
+                                        // text only turned into "1…" in a 44-point column.
                                         Text(week.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day()))
-                                            .font(.caption2).foregroundStyle(.secondary)
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2).minimumScaleFactor(0.8)
                                             .frame(width: 44, height: 36)
                                             .multilineTextAlignment(.center)
                                         ForEach(0..<7, id: \.self) { offset in
@@ -108,6 +112,15 @@ struct InsightsHeatmapView: View {
                             .padding(.bottom, 8)
                         }
                         .frame(height: 352)
+                        // A week cut by the edge fades out beside the weekday
+                        // labels instead of showing half a date.
+                        .mask {
+                            HStack(spacing: 0) {
+                                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                                    .frame(width: 12)
+                                Color.black
+                            }
+                        }
                     }
                 }
                 .onAppear {

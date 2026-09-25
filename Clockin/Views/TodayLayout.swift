@@ -190,7 +190,7 @@ struct TodayExchangeRateStrip: View {
             Image(systemName: "dollarsign.arrow.circlepath").foregroundStyle(palette.secondary)
                 .accessibilityHidden(true)
             if let rate = exchangeRates.latestRate {
-                Text("1 USD = \(rate.formatted(.number.precision(.fractionLength(2)))) TRY")
+                Text("1 USD = \(rate.formatted(.number.precision(.fractionLength(2)).locale(AppLanguage.formatLocale))) TRY")
                     .monospacedDigit().fontWeight(.medium)
                     .lineLimit(1).minimumScaleFactor(0.8)
             } else {

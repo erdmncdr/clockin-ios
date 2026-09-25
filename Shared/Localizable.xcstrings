@@ -3879,6 +3879,16 @@
         }
       }
     },
+    "Delete entry": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydı sil"
+          }
+        }
+      }
+    },
     "Delete rate period?": {
       "localizations": {
         "tr": {
@@ -4244,7 +4254,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ücret dönemini düzenle"
+            "value": "Dönemi düzenle"
           }
         }
       }
@@ -4829,6 +4839,16 @@
         }
       }
     },
+    "Focus radio options": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak radyosu seçenekleri"
+          }
+        }
+      }
+    },
     "Focus session": {
       "localizations": {
         "tr": {
@@ -5289,12 +5309,12 @@
         }
       }
     },
-    "History starts on this calendar month. Choose W for days 1–7, 8–14, 15–21, 22–28 or the remaining days of each month, M for a month starting on the 1st, 6M for six months with monthly bars, or All. Swipe right over the chart or tap the back arrow for an earlier period; swipe left or tap forward to return, up to the current period. Vertical swipes scroll History. Totals and sessions follow the page. Changing range keeps your place in time. Your range is remembered, but reopening the app starts on its current period. Tap a day, or a month in 6M, for hours and money. Empty periods say there is no work. USD accounts can switch all History money values to TRY using each session's start calendar day rate or the nearest earlier available rate. The choice is remembered across launches. A small secondary line keeps the other currency visible where available. Missing rates keep affected values in USD and show Some rates are unavailable once. Totals with missing rates stay in USD so currencies are never added together. TRY charts omit days without rates, or months containing those days. With no rates, the chart shows USD. This changes only History's display, not stored entries or the app currency. Today shows the latest USD/TRY rate and its status. Overnight sessions count toward the date they started.": {
+    "History starts on this calendar month. Choose Week for days 1–7, 8–14, 15–21, 22–28 or the remaining days of each month, Month for a month starting on the 1st, 6 months for six months with monthly bars, or All. Swipe right over the chart or tap the back arrow for an earlier period; swipe left or tap forward to return, up to the current period. Vertical swipes scroll History. Totals and sessions follow the page. Changing range keeps your place in time. Your range is remembered, but reopening the app starts on its current period. Tap a day, or a month in 6 months, for hours and money. Empty periods say there is no work. USD accounts can switch all History money values to TRY using each session's start calendar day rate or the nearest earlier available rate. The choice is remembered across launches. A small secondary line keeps the other currency visible where available. Missing rates keep affected values in USD and show Some rates are unavailable once. Totals with missing rates stay in USD so currencies are never added together. TRY charts omit days without rates, or months containing those days. With no rates, the chart shows USD. This changes only History's display, not stored entries or the app currency. Today shows the latest USD/TRY rate and its status. Overnight sessions count toward the date they started.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geçmiş bu takvim ayından başlar. Her ayın 1–7, 8–14, 15–21, 22–28 ya da kalan günleri için H'yi, ayın 1'inden başlayan bir ay için A'yı, aylık çubuklarla altı ay için 6A'yı ya da Tümü'nü seç. Daha önceki bir dönem için grafiğin üzerinde sağa kaydır ya da geri okuna dokun; güncel döneme kadar geri dönmek için sola kaydır ya da ileri okuna dokun. Dikey kaydırmalar Geçmiş'i kaydırır. Toplamlar ve oturumlar sayfayı izler. Aralığı değiştirmek zamandaki yerini korur. Aralığın hatırlanır, ama uygulama yeniden açıldığında güncel dönemden başlar. Saat ve tutar için bir güne, 6A'da ise bir aya dokun. Boş dönemler çalışma olmadığını söyler. USD hesaplar, Geçmiş'teki tüm tutarları her oturumun başladığı günün kuruyla ya da ondan önceki en yakın kurla TRY'ye çevirebilir. Seçim uygulama kapansa da hatırlanır. Küçük ikinci bir satır, mümkün olduğunda diğer para birimini de gösterir. Kuru olmayan değerler USD'de kalır ve bir kez Bazı kurlar yok uyarısı gösterilir. Kuru eksik toplamlar USD'de kalır, böylece para birimleri asla birbirine eklenmez. TRY grafikleri kuru olmayan günleri ya da bu günleri içeren ayları göstermez. Hiç kur yoksa grafik USD gösterir. Bu yalnızca Geçmiş'in görünümünü değiştirir, kayıtları ya da uygulamanın para birimini değil. Bugün en son USD/TRY kurunu ve durumunu gösterir. Geceye taşan oturumlar başladıkları güne sayılır."
+            "value": "Geçmiş bu takvim ayından başlar. Her ayın 1–7, 8–14, 15–21, 22–28 ya da kalan günleri için Hafta'yı, ayın 1'inden başlayan bir ay için Ay'ı, aylık çubuklarla altı ay için 6 Ay'ı ya da Tümü'nü seç. Daha önceki bir dönem için grafiğin üzerinde sağa kaydır ya da geri okuna dokun; güncel döneme kadar geri dönmek için sola kaydır ya da ileri okuna dokun. Dikey kaydırmalar Geçmiş'i kaydırır. Toplamlar ve oturumlar sayfayı izler. Aralığı değiştirmek zamandaki yerini korur. Aralığın hatırlanır, ama uygulama yeniden açıldığında güncel dönemden başlar. Saat ve tutar için bir güne, 6 Ay'da ise bir aya dokun. Boş dönemler çalışma olmadığını söyler. USD hesaplar, Geçmiş'teki tüm tutarları her oturumun başladığı günün kuruyla ya da ondan önceki en yakın kurla TRY'ye çevirebilir. Seçim uygulama kapansa da hatırlanır. Küçük ikinci bir satır, mümkün olduğunda diğer para birimini de gösterir. Kuru olmayan değerler USD'de kalır ve bir kez Bazı kurlar yok uyarısı gösterilir. Kuru eksik toplamlar USD'de kalır, böylece para birimleri asla birbirine eklenmez. TRY grafikleri kuru olmayan günleri ya da bu günleri içeren ayları göstermez. Hiç kur yoksa grafik USD gösterir. Bu yalnızca Geçmiş'in görünümünü değiştirir, kayıtları ya da uygulamanın para birimini değil. Bugün en son USD/TRY kurunu ve durumunu gösterir. Geceye taşan oturumlar başladıkları güne sayılır."
           }
         }
       }
@@ -5593,6 +5613,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denetim Merkezi'nde düzenlemek için dokunup basılı tut, Denetim Ekle'ye dokun ve Clockin'i ara. Mesaiye Başla / Bitir ya da Duraklat / Devam Et'i ekle. Kilitli Ekran'a denetim eklemek için Kilitli Ekran'a dokunup basılı tut, Özelleştir > Kilitli Ekran'a dokun, alttaki bir denetimi kaldır ve Clockin'i seçmek için artıya dokun. Destekleyen iPhone'larda Ayarlar > Eylem Düğmesi'ni aç, Denetimler'i seç ve bir Clockin denetimi belirle. Clockin, çalışırken ya da duraklatılmışken açık kalır; kapatmak oturumu kaydeder. Çalışan oturum yokken Duraklat / Devam Et bir şey yapmaz."
+          }
+        }
+      }
+    },
+    "In Month, the month summary shows hours, earnings, worked days and average hours and earnings per worked day. Earnings, earnings per worked day and projected earnings follow History's USD/TRY selection using historical daily rates. The hours chart combines daily bars with a cumulative solid line. For the current month, projected earnings use completed earnings from the last 7 days, converted at their historical daily rates, averaged over 7 days for each day after today. Monthly targets and hour forecasts live in Progress > Goals. The comparison uses the same number of days in the previous month, stopping at its last day if that month is shorter. Past months show final numbers.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ay görünümünde ay özeti saatleri, kazancı, çalışılan günleri ve çalışılan gün başına ortalama saat ile kazancı gösterir. Kazanç, çalışılan gün başına kazanç ve tahmini kazanç, geçmiş günlük kurlarla Geçmiş'teki USD/TRY seçimini izler. Saat grafiği günlük çubukları kümülatif düz bir çizgiyle birleştirir. İçinde bulunulan ay için tahmini kazanç, son 7 günün tamamlanmış kazancını o günlerin kurlarıyla çevirip 7 güne bölerek bugünden sonraki her güne uygular. Aylık hedefler ve saat öngörüleri İlerleme > Hedefler'dedir. Karşılaştırma önceki ayın aynı sayıda gününü kullanır; o ay daha kısaysa son gününde durur. Geçmiş aylar kesin rakamları gösterir."
           }
         }
       }
@@ -7247,6 +7277,16 @@
         }
       }
     },
+    "No home items yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz oda eşyası yok"
+          }
+        }
+      }
+    },
     "No notification slots available. Reopen Clockin later to try again.": {
       "localizations": {
         "tr": {
@@ -7603,16 +7643,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çevrim dışı"
-          }
-        }
-      }
-    },
-    "On M, the month summary shows hours, earnings, worked days and average hours and earnings per worked day. Earnings, earnings per worked day and projected earnings follow History's USD/TRY selection using historical daily rates. The hours chart combines daily bars with a cumulative solid line. For the current month, projected earnings use completed earnings from the last 7 days, converted at their historical daily rates, averaged over 7 days for each day after today. Monthly targets and hour forecasts live in Progress > Goals. The comparison uses the same number of days in the previous month, stopping at its last day if that month is shorter. Past months show final numbers.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A'da ay özeti saatleri, kazancı, çalışılan günleri ve çalışılan gün başına ortalama saat ile kazancı gösterir. Kazanç, çalışılan gün başına kazanç ve tahmini kazanç, geçmiş günlük kurlarla Geçmiş'teki USD/TRY seçimini izler. Saat grafiği günlük çubukları kümülatif düz bir çizgiyle birleştirir. İçinde bulunulan ay için tahmini kazanç, son 7 günün tamamlanmış kazancını o günlerin kurlarıyla çevirip 7 güne bölerek bugünden sonraki her güne uygular. Aylık hedefler ve saat öngörüleri İlerleme > Hedefler'dedir. Karşılaştırma önceki ayın aynı sayıda gününü kullanır; o ay daha kısaysa son gününde durur. Geçmiş aylar kesin rakamları gösterir."
           }
         }
       }
@@ -10535,12 +10565,12 @@
         }
       }
     },
-    "Tap the plus button on Today or History to add completed work. Choose the day, start and end times, and a note. An end time earlier than the start means the next day. Tap a session in Today or History to edit it, then Save.": {
+    "Tap the plus button on Today or History to add completed work. Choose the day, start and end times, and a note. An end time earlier than the start means the next day. Tap a session in Today or History to edit it, then Save. To remove one, tap Delete entry at the bottom of the editor, or swipe left on it in History.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tamamlanmış bir çalışma eklemek için Bugün'de ya da Geçmiş'te artı düğmesine dokun. Günü, başlangıç ve bitiş saatlerini ve bir not seç. Başlangıçtan önceki bir bitiş saati ertesi gün demektir. Düzenlemek için Bugün'de ya da Geçmiş'te bir oturuma dokun, sonra Kaydet."
+            "value": "Tamamlanmış bir çalışma eklemek için Bugün'de ya da Geçmiş'te artı düğmesine dokun. Günü, başlangıç ve bitiş saatlerini ve bir not seç. Başlangıçtan önceki bir bitiş saati ertesi gün demektir. Düzenlemek için Bugün'de ya da Geçmiş'te bir oturuma dokun, sonra Kaydet. Silmek için düzenleyicinin altındaki Kaydı sil'e dokun ya da Geçmiş'te oturumu sola kaydır."
           }
         }
       }
@@ -12818,6 +12848,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "seçili"
+          }
+        }
+      }
+    },
+    "title.import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import timecards"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçe aktar"
+          }
+        }
+      }
+    },
+    "title.setEnd": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set end time"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitişi ayarla"
+          }
+        }
+      }
+    },
+    "title.startEarlier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start earlier"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süreyle başlat"
           }
         }
       }

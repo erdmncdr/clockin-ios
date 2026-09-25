@@ -54,6 +54,16 @@ final class CelebrationCenter: ObservableObject {
         queue.ingest(seed, now: 1, canReact: false)
         setActive(true)
     }
+
+    /// A badge unlock and a wardrobe unlock, to review their banners.
+    func previewBannersForReview() {
+        var seed = CelebrationState(); seed.level = 10
+        queue.ingest(seed, now: 0, canReact: false)
+        seed.badges = [CelebrationBadge(id: "first", title: String(localized: "First session", bundle: .app), icon: "checkmark.seal.fill")]
+        queue.ingest(seed, now: 1, canReact: false)
+        queue.wardrobeUnlocked(first: false, names: [String(localized: "Beanie", bundle: .app)])
+        setActive(true)
+    }
     #endif
 
     // SessionMirror ve mevcut dakika yenilemesi tek ortak ozeti besler.

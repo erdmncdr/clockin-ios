@@ -55,6 +55,7 @@ struct LevelFeedbackReview: View {
                     CelebrationOverlay(center: center, share: { result = "Share callback"; center.dismiss() }, openBadges: {}, openCompanion: {})
                 }
                 .task {
+                    if mode == "banners" { center.previewBannersForReview(); return }
                     center.previewLevelForReview()
                     do { try await Task.sleep(for: .seconds(7)) } catch { return }
                     result = center.event?.autoDismissDelay == nil && center.event != nil ? "PASS: level card remains after 7 seconds" : "FAIL: card dismissed"

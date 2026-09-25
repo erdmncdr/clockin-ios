@@ -41,7 +41,7 @@ struct BackupsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(palette.background)
-            .navigationTitle("Backups")
+            .navigationTitle("Automatic backups")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

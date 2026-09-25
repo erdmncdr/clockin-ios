@@ -97,6 +97,8 @@ struct GoalsPaceView: View {
                 Text("Set a monthly goal to build your plan.").foregroundStyle(.secondary)
             }
         }
+        // Full width like the cards below it, whatever the text length.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18).card(palette)
     }
 

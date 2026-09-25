@@ -155,9 +155,19 @@ private struct TodayWidgetView: View {
     }
 
     /// Kucuk boy: yan yana sigmiyor, dugme de yok; olculer ust uste.
+    /// Hazirken ust kisim bos kaliyordu; arkadas orta boydaki gibi orada durur.
+    /// Oturum varken iki olcu yeri doldurur ve arkadas cikar.
     private var smallLayout: some View {
         VStack(alignment: .leading, spacing: 6) {
-            status
+            HStack(alignment: .top, spacing: 4) {
+                status
+                Spacer(minLength: 0)
+                if running == nil {
+                    ClockinMascotStill(image: entry.companionImage)
+                        .frame(width: 52, height: 56)
+                        .padding(.top, -6)
+                }
+            }
             Spacer(minLength: 0)
             if let running {
                 sessionMetric(running, value: .system(.headline, design: palette.fontDesign).weight(.semibold),

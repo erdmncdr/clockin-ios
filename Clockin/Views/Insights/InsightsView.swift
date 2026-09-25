@@ -51,14 +51,14 @@ struct InsightsView: View {
             metric("Previous 7 days", value: DurationText.compact(stats.previousWeek))
             if stats.previousWeek > 0 {
                 let change = (stats.recentWeek - stats.previousWeek) / stats.previousWeek
-                metric("Change", value: change.formatted(.percent.precision(.fractionLength(0))))
+                metric("Change", value: change.formatted(.percent.precision(.fractionLength(0)).locale(AppLanguage.formatLocale)))
             }
             Divider()
             metric("This month", value: DurationText.compact(stats.monthDuration))
             metric("Month earnings", value: stats.monthEarnings.money(code: store.currencyCode))
             metric("All time", value: DurationText.compact(stats.totalDuration))
             metric("Total earnings", value: stats.totalEarnings.money(code: store.currencyCode))
-            metric("Active days", value: stats.daily.count.formatted())
+            metric("Active days", value: stats.daily.count.formatted(.number.locale(AppLanguage.formatLocale)))
             metric("Longest completed session", value: DurationText.compact(stats.longestSession))
             Text("Time and earnings belong to the day a session started, including sessions that cross midnight.")
                 .font(.caption).foregroundStyle(.secondary)
