@@ -314,16 +314,21 @@ private struct RankSignatureArt {
                 body.addPath(PrestigeOutline.path(feather))
             }
         }
-        let span = size.width + 60
-        let x = -30 + (t / 5).truncatingRemainder(dividingBy: 1) * span
+        // A spectrum that repeats along a diagonal and drifts by exactly one
+        // repeat per cycle. Its first and last hue are the same, so the colour
+        // keeps travelling with no seam and nothing ever starts over.
+        let repeatLength = CGVector(dx: 70, dy: 22)
+        let drift = CGFloat((t / 6).truncatingRemainder(dividingBy: 1))
+        let start = CGPoint(x: repeatLength.dx * drift, y: repeatLength.dy * drift)
         context.drawLayer { layer in
             layer.clip(to: body)
             layer.blendMode = .screen
             let hues = [0.0, 0.14, 0.3, 0.5, 0.66, 0.82, 1.0]
-            let colors = hues.map { Color(hue: $0, saturation: 0.55, brightness: 1).opacity(0.2) }
+            let colors = hues.map { Color(hue: $0, saturation: 0.55, brightness: 1).opacity(0.19) }
             layer.fill(Path(CGRect(x: -40, y: -40, width: size.width + 80, height: size.height + 80)),
-                       with: .linearGradient(Gradient(colors: [.clear] + colors + [.clear]),
-                                             startPoint: CGPoint(x: x - 40, y: -8), endPoint: CGPoint(x: x + 40, y: size.height + 8)))
+                       with: .linearGradient(Gradient(colors: colors), startPoint: start,
+                                             endPoint: CGPoint(x: start.x + repeatLength.dx, y: start.y + repeatLength.dy),
+                                             options: .repeat))
         }
         // Fire in the diamond: a coloured point of light every so often.
         let u = cycle(1.7, still: 0.5)

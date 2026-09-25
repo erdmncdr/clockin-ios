@@ -44,7 +44,7 @@ reach outside that box, as the crest already does.
 | Aurora | 375-449 | Emerald enamel | Arched top edge, two-tier rim | Emerald step cut | Aurora ribbons flow slowly across the face | Ribbons mid-flow |
 | Sovereign | 450-524 | Gold metal, ruby face | Three-point crown on top | Ruby, kite cut | Crown stones light in turn, then a glint runs round the rim | Crown lit |
 | Celestial | 525-599 | Silver metal, midnight face | Crown, arch and small side wings | Star sapphire (six-ray star) | A constellation draws itself between stars in the face | Constellation drawn |
-| Eternal | 600+ | Prismatic white gold | Swept wings, crown and a hanging seal | Diamond with fire | Iridescence travels across the whole badge | Iridescent at rest |
+| Eternal | 600+ | Prismatic white gold | Swept wings, crown and a hanging seal | Diamond with fire | Iridescence travels across the whole badge as a repeating spectrum, so it never visibly starts over | Iridescent at rest |
 
 The rank's tint (progress bars, the level card) comes from its stone, not its
 metal, so neighbouring ranks no longer share a colour.
