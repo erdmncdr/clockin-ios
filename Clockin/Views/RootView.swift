@@ -57,6 +57,21 @@ struct RootView: View {
             // acik ekran ve kaydirma yeri kaybolmaz.
             tabs
                 .accessibilityHidden(showsDeskMode)
+            #if DEBUG
+            // Review fixture: the landscape layout drawn at landscape size and
+            // turned onto the portrait screen, for simulators that cannot rotate.
+            if ProcessInfo.processInfo.arguments.contains("--desk-preview") {
+                GeometryReader { screen in
+                    DeskModeView(onClockOut: { _ in })
+                        .frame(width: screen.size.height, height: screen.size.width)
+                        .background(palette.background)
+                        .rotationEffect(.degrees(90))
+                        .frame(width: screen.size.width, height: screen.size.height)
+                }
+                .ignoresSafeArea()
+                .environment(\.verticalSizeClass, .compact)
+            }
+            #endif
             if showsDeskMode {
                 DeskModeView(onClockOut: { deskSummary = $0 })
                     .environment(\.clockinContentActive, deskSummary == nil && !celebrations.hasBlockingPresentation && (celebrations.event == nil || celebrations.event?.isReaction == true))

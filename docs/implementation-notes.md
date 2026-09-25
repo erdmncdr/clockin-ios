@@ -366,6 +366,10 @@ medium widget with a back item, hat, hand item and non-classic colorway. Check n
 hand anchors, tilted head pivots, None, equip, purchase confirm/cancel, insufficient
 funds, first launch migration, new unlock navigation and backup restore. Open each
 room, place every furniture slot, rotate into desk mode and toggle its home setting.
+In desk mode the room sits low with its edges faded, so the companion watches the
+timer from the bottom edge instead of sitting under the earnings. A debug build
+launched with `--desk-preview` draws desk mode turned onto the portrait screen, for
+simulators that cannot rotate.
 Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss it,
 switch tabs, cover Today, and background the app: all live motion must stop. Compare
 Today idle CPU with the existing baseline using PERFORMANCE.md's 120-second runs;

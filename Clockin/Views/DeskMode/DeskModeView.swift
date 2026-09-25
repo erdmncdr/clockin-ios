@@ -44,7 +44,31 @@ struct DeskModeView: View {
             }
         }
         .background {
-            if showHome { CompanionHomeView().opacity(0.25).allowsHitTesting(false).ignoresSafeArea() }
+            if showHome {
+                // The room keeps its own shape and its edges melt into the
+                // screen instead of ending in hard bars. It sits low, so the
+                // companion watches the timer from the bottom edge, between
+                // today's total and the controls, instead of under the earnings.
+                GeometryReader { screen in
+                    CompanionHomeView()
+                        .aspectRatio(1.5, contentMode: .fit)
+                        .opacity(0.3)
+                        .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.14),
+                                                     .init(color: .black, location: 0.86), .init(color: .clear, location: 1)],
+                                             startPoint: .leading, endPoint: .trailing))
+                        .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2)],
+                                             startPoint: .top, endPoint: .bottom))
+                        .frame(width: screen.size.width, height: screen.size.height)
+                        .offset(y: screen.size.height * 0.25)
+                }
+                    .overlay {
+                        EllipticalGradient(colors: [palette.background.opacity(0.85), palette.background.opacity(0)],
+                                           center: .center, startRadiusFraction: 0.05, endRadiusFraction: 0.5)
+                            .scaleEffect(x: 1, y: 0.8)
+                    }
+                    .allowsHitTesting(false)
+                    .ignoresSafeArea()
+            }
         }
         .background { palette.background.ignoresSafeArea() }
         .hapticFeedback(sessionFeedback)
