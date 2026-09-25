@@ -1271,22 +1271,22 @@
         }
       }
     },
+    "6 months": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 Ay"
+          }
+        }
+      }
+    },
     "60 days": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "60 gün"
-          }
-        }
-      }
-    },
-    "6M": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "6A"
           }
         }
       }
@@ -3759,12 +3759,12 @@
         }
       }
     },
-    "Data is stored only on this iPhone. Syncing with the Mac is not set up yet.": {
+    "Data is stored only on this iPhone.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veriler yalnızca bu iPhone'da saklanır. Mac ile eşzamanlama henüz kurulmadı."
+            "value": "Veriler yalnızca bu iPhone'da saklanır."
           }
         }
       }
@@ -6543,16 +6543,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ay"
-          }
-        }
-      }
-    },
-    "M": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A"
           }
         }
       }
@@ -9395,16 +9385,6 @@
         }
       }
     },
-    "SHARE YOUR STATS": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İSTATİSTİKLERİNİ PAYLAŞ"
-          }
-        }
-      }
-    },
     "SKIP": {
       "localizations": {
         "tr": {
@@ -11445,16 +11425,6 @@
         }
       }
     },
-    "W": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "H"
-          }
-        }
-      }
-    },
     "WORK HEATMAP": {
       "localizations": {
         "tr": {
@@ -12734,6 +12704,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Clockin kaydı silindi"
+          }
+        }
+      }
+    },
+    "entry.start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlangıç"
           }
         }
       }

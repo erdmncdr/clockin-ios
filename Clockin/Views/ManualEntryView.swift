@@ -53,7 +53,9 @@ struct ManualEntryView: View {
             Form {
                 Section {
                     DatePicker("Day", selection: $day, displayedComponents: .date)
-                    DatePicker("Start", selection: $startTime, displayedComponents: .hourAndMinute)
+                    // Its own key: "Start" on its own is the verb on the start button.
+                    DatePicker(String(localized: "entry.start", defaultValue: "Start", bundle: .app),
+                               selection: $startTime, displayedComponents: .hourAndMinute)
                     DatePicker("End", selection: $endTime,
                                displayedComponents: editing == nil ? .hourAndMinute : [.date, .hourAndMinute])
                 } footer: {
@@ -83,12 +85,15 @@ struct ManualEntryView: View {
                 }
 
                 Section {
+                    // Money is the accent everywhere else in the app; time stays neutral.
                     LabeledContent("Duration") {
-                        Text(DurationText.compact(duration))
+                        Text(DurationText.compact(duration)).monospacedDigit()
+                    }
+                    LabeledContent("Earnings") {
+                        Text(earnings.money(code: store.currencyCode))
                             .monospacedDigit()
                             .foregroundStyle(palette.accent)
                     }
-                    LabeledContent("Earnings", value: earnings.money(code: store.currencyCode))
                 } footer: {
                     if let errorMessage {
                         Text(errorMessage).foregroundStyle(.red)

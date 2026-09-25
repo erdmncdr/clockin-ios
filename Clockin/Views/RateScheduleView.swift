@@ -146,7 +146,7 @@ private struct RatePeriodEditor: View {
         _effectiveUntil = State(initialValue: editing?.effectiveUntil ?? start)
         _hasEndDate = State(initialValue: editing?.effectiveUntil != nil)
         // `String(Double)` "25.0" yaziyordu; Ayarlar'daki alanla ayni bicim.
-        _rateText = State(initialValue: editing.map { String(format: "%.2f", $0.hourlyRate) } ?? "")
+        _rateText = State(initialValue: editing.map { $0.hourlyRate.rateFieldText } ?? "")
     }
 
     private var parsedRate: Double? {

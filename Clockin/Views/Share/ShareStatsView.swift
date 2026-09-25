@@ -26,7 +26,7 @@ struct StatsShareSnapshot: Identifiable {
             .earnings: stats.totalEarnings.money(code: store.currencyCode),
             .sessions: "\(stats.sessionCount)", .activeDays: "\(stats.daily.count)",
             .streak: String(localized: "\(stats.currentStreak) days", bundle: .app), .longestStreak: String(localized: "\(stats.longestStreak) days", bundle: .app),
-            .badges: "\(stats.badges.filter(\.unlocked).count)", .xp: "\(stats.xp)", .level: "\(stats.level)",
+            .badges: "\(stats.badges.filter(\.unlocked).count)", .xp: stats.xp.formatted(.number.locale(AppLanguage.formatLocale)), .level: "\(stats.level)",
             .fullDays: "\(stats.fullDays)", .longDays: "\(stats.longDays)",
             .bigMonths: "\(stats.bigMonths)", .momentum: String(format: "%+.0f%%", stats.monthTrend * 100),
             .weekday: stats.bestWeekday.map { AppLanguage.calendar.weekdaySymbols[$0 - 1] } ?? String(localized: "No sessions", bundle: .app),
@@ -61,7 +61,6 @@ struct ShareStatsView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 12) {
-                        SectionTitle("SHARE YOUR STATS")
                         Picker("Privacy", selection: $privacy.hapticSelection($selectionFeedback)) {
                             ForEach(StatsSharePrivacy.allCases) { Text($0.title).tag($0) }
                         }.pickerStyle(.segmented).accessibilityLabel("Stats privacy")

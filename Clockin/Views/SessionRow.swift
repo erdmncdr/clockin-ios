@@ -22,12 +22,13 @@ struct SessionRow: View {
     private var isTimer: Bool { SessionDisplay.isClockin(session) }
 
     private var title: String {
+        // One time style for every row, so Today and History write a time alike.
+        let time = Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale)
         if showsDay {
-            return session.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().hour().minute())
+            let day = session.start.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated))
+            return "\(day) \(session.start.formatted(time))"
         }
-        let start = session.start.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale))
-        let end = session.end.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale))
-        return "\(start) – \(end)"
+        return "\(session.start.formatted(time)) – \(session.end.formatted(time))"
     }
 
     var body: some View {

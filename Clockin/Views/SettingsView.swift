@@ -78,13 +78,11 @@ struct SettingsView: View {
                             Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
                         }
                     }
-                    Picker(selection: languageSelection) {
+                    Picker("Language", selection: languageSelection) {
                         Text("Automatic").tag(AppLanguage.automatic)
                         ForEach([AppLanguage.turkish, .english]) { language in
                             Text(verbatim: language.nativeName ?? language.rawValue).tag(language)
                         }
-                    } label: {
-                        Label { Text("Language") } icon: { Image(systemName: "globe").foregroundStyle(palette.accent) }
                     }
                 } footer: {
                     Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
@@ -337,7 +335,7 @@ struct SettingsView: View {
                 if let latest = store.latestBackupDate {
                     Text("Last automatic backup \(latest.formatted(.relative(presentation: .named).locale(AppLanguage.formatLocale))), \(store.backupCount) saved.")
                 }
-                Text("Data is stored only on this iPhone. Syncing with the Mac is not set up yet.")
+                Text("Data is stored only on this iPhone.")
             }
         }
     }
@@ -386,7 +384,7 @@ struct SettingsView: View {
 
     private func syncRateText() {
         // `String(Double)` "25.0" yaziyordu; Mac'teki alanla ayni bicim.
-        rateText = String(format: "%.2f", store.hourlyRate)
+        rateText = store.hourlyRate.rateFieldText
     }
 
     private var hasEarlierRate: Bool {
@@ -428,7 +426,7 @@ struct SettingsView: View {
     }
 
     private func syncEarlierRateText() {
-        earlierRateText = String(format: "%.2f", earlierRate)
+        earlierRateText = earlierRate.rateFieldText
     }
 
     private func commitEarlierRate() {
@@ -539,4 +537,12 @@ private struct WardrobeBackupDocument: FileDocument {
     init(data: Data) { self.data = data }
     init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
+}
+
+extension Double {
+    /// A rate as it is typed: two decimals with the app language's separator
+    /// and no grouping. Parsing accepts either separator.
+    var rateFieldText: String {
+        String(format: "%.2f", self).replacingOccurrences(of: ".", with: AppLanguage.formatLocale.decimalSeparator ?? ".")
+    }
 }

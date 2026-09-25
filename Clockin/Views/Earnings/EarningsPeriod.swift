@@ -3,6 +3,15 @@ import Foundation
 enum EarningsRange: String, CaseIterable, Identifiable {
     case week = "W", month = "M", sixMonths = "6M", all = "All"
     var id: String { rawValue }
+    /// The segment label. The raw values stay short because they are stored.
+    var title: String {
+        switch self {
+        case .week: String(localized: "Week", bundle: .app)
+        case .month: String(localized: "Month", bundle: .app)
+        case .sixMonths: String(localized: "6 months", bundle: .app)
+        case .all: String(localized: "All", bundle: .app)
+        }
+    }
 
     func interval(at now: Date, calendar: Calendar = .current) -> DateInterval {
         EarningsPeriod(range: self, anchor: now, now: now, calendar: calendar).interval

@@ -195,6 +195,17 @@ struct DashboardView: View {
         .padding(.horizontal, 16)
         .padding(.top, 4)
         .padding(.bottom, 8)
+        // The soft scroll edge alone left card text legible right under the
+        // badge. The screen's own colour fades out below the row instead.
+        .background {
+            LinearGradient(stops: [.init(color: palette.background, location: 0),
+                                   .init(color: palette.background, location: 0.7),
+                                   .init(color: palette.background.opacity(0), location: 1)],
+                           startPoint: .top, endPoint: .bottom)
+                .padding(.bottom, -18)
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+        }
     }
 
     private var exchangeCard: some View { TodayExchangeRateStrip() }

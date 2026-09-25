@@ -21,7 +21,6 @@ struct FocusSettingsSection: View {
     var body: some View {
         if only == nil || only == .chime {
             Section {
-                DashboardPinButton(feature: .chime)
                 FocusChimeToggle()
                 if chimeEnabled {
                     Stepper(value: $interval.hapticSelection($selectionFeedback), in: 1...120) {
@@ -57,6 +56,8 @@ struct FocusSettingsSection: View {
                         }
                     }
                 }
+                // The setting comes first; putting it on Today is an extra.
+                DashboardPinButton(feature: .chime)
             } header: {
                 Text("Focus chime")
             } footer: {
@@ -83,7 +84,6 @@ struct FocusSettingsSection: View {
         }
         if only == nil || only == .radio {
             Section {
-                DashboardPinButton(feature: .radio)
                 HStack(spacing: 12) {
                     Image(systemName: radio.isPlaying ? "dot.radiowaves.left.and.right" : "radio")
                         .font(.title3)
@@ -108,6 +108,7 @@ struct FocusSettingsSection: View {
                         .accessibilityValue("\(Int(radio.volume * 100)) percent")
                     Image(systemName: "speaker.wave.3.fill").foregroundStyle(.secondary)
                 }
+                DashboardPinButton(feature: .radio)
             } header: {
                 Text("Focus radio")
             } footer: {

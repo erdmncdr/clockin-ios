@@ -131,11 +131,17 @@ struct GoalsPaceView: View {
     private var settings: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionTitle("YOUR PLAN")
-            Picker("Workdays per week", selection: $workdays) {
-                Text("Choose").tag(0)
-                ForEach(1...7, id: \.self) { count in Text("\(count) days").tag(count) }
+            // Labelled like the hour rows below; a bare menu read as a stray "Choose".
+            HStack {
+                Text("Workdays per week")
+                Spacer(minLength: 8)
+                Picker("Workdays per week", selection: $workdays) {
+                    Text("Choose").tag(0)
+                    ForEach(1...7, id: \.self) { count in Text("\(count) days").tag(count) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("pace.workdays")
             }
-            .accessibilityIdentifier("pace.workdays")
             Text("How many days do you usually work each week?")
                 .font(.caption).foregroundStyle(.secondary)
             Divider()
@@ -267,6 +273,14 @@ struct GoalsPaceView: View {
                         .foregroundStyle(palette.secondary).lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
                 }
             }
+            // The same month axis as History's daily chart, so the two read alike.
+            .chartXScale(domain: EarningsChartAxis.dateDomain(month(of: plan)))
+            .chartXAxis {
+                AxisMarks(values: EarningsChartAxis.dayMarks(in: month(of: plan))) { _ in
+                    AxisGridLine()
+                    AxisValueLabel(format: .dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated))
+                }
+            }
             .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
             .frame(height: 140)
             .accessibilityLabel("Daily worked hours compared with your saved daily goal")
@@ -274,6 +288,10 @@ struct GoalsPaceView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(16).card(palette)
+    }
+
+    private func month(of plan: MonthlyWorkPlan) -> DateInterval {
+        Calendar.current.dateInterval(of: .month, for: plan.today) ?? DateInterval(start: plan.today, duration: 86_400)
     }
 
     private func metric(_ title: LocalizedStringKey, _ value: String) -> some View {

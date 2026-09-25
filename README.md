@@ -145,8 +145,8 @@ The two-column Working and Paused layouts remain unchanged. Previews include
 these states and the narrow Ready cases. Widget updates have no transitions.
 
 History opens on the current calendar month by default. The last range is saved,
-but its page is not. W uses the calendar's first weekday; M starts on the 1st.
-6M uses six-month blocks ending in the current month, with one bar per month;
+but its page is not. Week uses the calendar's first weekday; Month starts on the 1st.
+6 months uses six-month blocks ending in the current month, with one bar per month;
 previous pages cover the preceding six months. All is not pageable. Range changes
 keep the selected page's anchor date. Totals and the session list follow the page.
 
@@ -164,8 +164,8 @@ previously scrolled down. With no completed sessions, check both idle and runnin
 states; the reminder should appear only after the first completed session.
 
 Build 7 feedback checks: on a fresh History launch, compare the first swipe,
-the next swipe, and both chevrons with populated and empty pages in W, M and
-6M. Bars cross-fade for 0.22 seconds; the period header and totals keep their
+the next swipe, and both chevrons with populated and empty pages in Week, Month and
+6 months. Bars cross-fade for 0.22 seconds; the period header and totals keep their
 numeric transitions. Repeat after selecting a bar, changing range, and enabling
 Reduce Motion. A minute refresh must not trigger the page transition.
 
@@ -175,7 +175,7 @@ On a fresh launch, check populated to populated, populated to empty, empty to
 populated and the return to the initial page, using swipes and both chevrons.
 The title, earnings, duration and completed count must roll together; monthly
 summary metrics also roll. Charts cross-fade without sliding, and session rows
-update without moving into place. Repeat in W, M and 6M, after a chart selection,
+update without moving into place. Repeat in Week, Month and 6 months, after a chart selection,
 and with Reduce Motion. Verify Edit and Delete swipe actions after paging.
 The earnings check covers this populated/empty round trip's titles, page IDs,
 session counts and totals; it does not verify SwiftUI animation frames.

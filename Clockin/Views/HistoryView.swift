@@ -30,7 +30,7 @@ struct HistoryView: View {
             List {
                 Section {
                     Picker("Period", selection: $range) {
-                        ForEach(EarningsRange.allCases) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
+                        ForEach(EarningsRange.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     .hapticFeedback(.selection, trigger: range)
@@ -130,6 +130,9 @@ struct HistoryView: View {
         }
         .buttonStyle(.borderless)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: period.pageID)
+        // The row's first text is the centred title, and List would start the
+        // separator under it, halfway across. Start it at the edge like the rest.
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
     }
 
     private func page(_ direction: Int, period: EarningsPeriod) {
@@ -152,12 +155,7 @@ struct HistoryView: View {
         let clashing = group.sessions.filter { conflicts.contains($0.id) }.count
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                let labels = dayLabels(group.day)
-                SectionTitle(labels.title)
-                Text(labels.subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .padding(.leading, 2)
+                SectionTitle(dayTitle(group.day))
                 // Gunun toplami dogru gorunse bile ustuste binen kayitlar
                 // sureyi iki kez sayiyor. Gun basliginda soylenmezse, satirlara
                 // tek tek bakmadan fark edilmiyor.
@@ -184,25 +182,19 @@ struct HistoryView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Iki satir hicbir zaman ayni seyi tekrarlamasin: gun adi ustteyse tarih
-    /// altta gunsuz yazilir, tarih ustteyse gun adi alta iner. Bir haftadan
-    /// eski gunlerde "PERSEMBE" hangi persembe oldugunu soylemiyor, o yuzden
-    /// orada tarih basa geciyor.
-    ///
-    /// Satirlardaki saatler ve tutarlar cihaz diliyle bicimleniyor; baslik da
-    /// ayni dili kullanmali.
-    private func dayLabels(_ day: Date) -> (title: String, subtitle: String) {
+    /// Every day reads the same way, name then date: "TODAY · 25 SEP",
+    /// "MONDAY · 21 SEP". Days from another year add the year. The rows use
+    /// the app's language, so the header does too.
+    private func dayTitle(_ day: Date) -> String {
         let calendar = Calendar.current
-        let full = day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.abbreviated).day().month(.abbreviated))
-        if calendar.isDateInToday(day) { return (String(localized: "TODAY", bundle: .app), full) }
-        if calendar.isDateInYesterday(day) { return (String(localized: "YESTERDAY", bundle: .app), full) }
-        let days = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: .now)).day ?? 0
-        if days < 7 {
-            return (day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide)).uppercased(with: .current),
-                    day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated)))
-        }
-        return (day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated).year()).uppercased(with: .current),
-                day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide)))
+        let sameYear = calendar.isDate(day, equalTo: .now, toGranularity: .year)
+        let dateStyle = Date.FormatStyle.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated)
+        let date = sameYear ? day.formatted(dateStyle) : day.formatted(dateStyle.year())
+        let name: String
+        if calendar.isDateInToday(day) { name = String(localized: "TODAY", bundle: .app) }
+        else if calendar.isDateInYesterday(day) { name = String(localized: "YESTERDAY", bundle: .app) }
+        else { name = day.formatted(.dateTime.locale(AppLanguage.formatLocale).weekday(.wide)) }
+        return "\(name) · \(date)".uppercased(with: AppLanguage.formatLocale)
     }
 
 }

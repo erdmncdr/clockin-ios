@@ -10,7 +10,6 @@ struct LongSessionReminderSettingsSection: View {
 
     var body: some View {
         Section {
-            DashboardPinButton(feature: .reminder)
             Picker("Long session reminder", selection: Binding(get: { hours }, set: { value in
                 let changed = hours != value
                 hours = value
@@ -32,6 +31,7 @@ struct LongSessionReminderSettingsSection: View {
                     }
                 }
             }
+            DashboardPinButton(feature: .reminder)
         } header: {
             Text("Session reminder")
         } footer: {

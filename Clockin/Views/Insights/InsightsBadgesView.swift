@@ -143,7 +143,18 @@ private struct InsightsBadgeDetail: View {
                                 }
                             }
                             .padding(.vertical,14)
-                            .frame(maxWidth:.infinity).background(Color(red:0.04,green:0.045,blue:0.09),in:RoundedRectangle(cornerRadius:22))
+                            .frame(maxWidth:.infinity)
+                            // A stage lit in the tier's colour, on the sheet's own surface,
+                            // rather than a flat panel of a different dark.
+                            .background {
+                                let stage = RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                stage.fill(palette.surface)
+                                    .overlay {
+                                        stage.fill(RadialGradient(colors: [badge.tier.tint.opacity(badge.unlocked ? 0.26 : 0.1), .clear],
+                                                                  center: .center, startRadius: 20, endRadius: 190))
+                                    }
+                                    .overlay { stage.stroke(badge.tier.tint.opacity(0.18), lineWidth: 1) }
+                            }
                         Text("\(badge.tier.title) / \(badge.mission.title)")
                             .font(.caption.weight(.semibold)).foregroundStyle(badge.tier.tint)
                         Text(badge.title).font(.title2.bold()).multilineTextAlignment(.center)
