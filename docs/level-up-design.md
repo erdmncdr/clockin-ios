@@ -81,7 +81,7 @@ and set aside in favour of this one.
 | Time (s) | What happens |
 |---|---|
 | 0 to 0.62 | Dark stage. The floor sigil draws itself round; stardust spirals into the crest, faster as it arrives; the crest, still dark steel with the old level, trembles; a thread of light finds it from the floor; the XP bar runs to full |
-| 0.62 | Impact: soft bloom, shock ring, a ring across the floor, sparks thrown out with drag; the column of light shoots off the top of the stage; the crest lights and the new number, serif numerals struck in the rank's metal, lands from twice its size |
+| 0.62 | Impact: soft bloom, shock ring, a ring across the floor, sparks thrown out with drag; the column of light shoots off the top of the stage; the crest lights and the new number, serif numerals struck in the rank's metal and centred optically (by their ink, moved three quarters of the way toward their centre of weight, since a figure like 45 carries its weight on the right), lands from twice its size |
 | 0.7 to 1.1 | The title closes in from wide letter spacing with its rules; rays spin up and settle to a slow turn; the XP bar empties |
 | 1.1 to 1.9 | The XP bar refills; the rank panel (centred, under a titled rule) and the next rank land. The top rank has no next look, so that row is left out |
 | 1.7 (new rank) | Second beat: another bloom and ring, the crest re-forges in the new rank, the colours cross-fade, the rank badge lands with its unlock burst |
