@@ -12,11 +12,11 @@ import SwiftUI
 struct LevelUpWarrior: View {
     let style: LevelPrestige
     let t: Double
-    static let size = CGSize(width: 180, height: 210)
+    nonisolated static let size = CGSize(width: 180, height: 210)
     /// Where the face shows, in the warrior's coordinates.
-    static let face = CGRect(x: 60, y: 35, width: 60, height: 36)
+    nonisolated static let face = CGRect(x: 60, y: 35, width: 60, height: 36)
     /// The helm's opening around it.
-    static let visor = CGRect(x: 60, y: 35, width: 60, height: 38)
+    nonisolated static let visor = CGRect(x: 60, y: 35, width: 60, height: 38)
 
     var body: some View {
         let lit = LevelUpCurve.ramp(t - LevelUpTiming.impact, 0, 0.15)
