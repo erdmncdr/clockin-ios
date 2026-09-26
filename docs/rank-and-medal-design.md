@@ -49,6 +49,12 @@ reach outside that box, as the crest already does.
 The rank's tint (progress bars, the level card) comes from its stone, not its
 metal, so neighbouring ranks no longer share a colour.
 
+The crown on Sovereign, Celestial and Eternal (`ForgedCrown.swift`) is one
+casting drawn at any size and seen a little from above: the back of the rim
+through the opening, a band set with stones and points tipped with the rank's
+stone. The badge uses three broad points; the level-up stage, where it is
+large, uses five with pearls on the outer two.
+
 ## Mission medals
 
 Six tiers, six mission families. The **tier** decides the medal and its effect;

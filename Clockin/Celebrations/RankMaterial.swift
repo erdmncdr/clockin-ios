@@ -82,17 +82,6 @@ extension PrestigeOutline {
         }
     }
 
-    /// A three-point crown standing on the top edge: three tips (left base,
-    /// apex, right base) and the band they stand on, all clockwise on screen.
-    static func crownPoints(centerX x: CGFloat, top y: CGFloat, width w: CGFloat, height h: CGFloat) -> [[CGPoint]] {
-        let base = [CGPoint(x: x - w / 2 + 1, y: y - h * 0.22), CGPoint(x: x + w / 2 - 1, y: y - h * 0.22),
-                    CGPoint(x: x + w / 2, y: y + 1.5), CGPoint(x: x - w / 2, y: y + 1.5)]
-        let tip = { (cx: CGFloat, height: CGFloat, half: CGFloat) -> [CGPoint] in
-            [CGPoint(x: cx - half, y: y - h * 0.2), CGPoint(x: cx, y: y - height), CGPoint(x: cx + half, y: y - h * 0.2)]
-        }
-        return [tip(x - w * 0.34, h * 0.72, w * 0.13), tip(x + w * 0.34, h * 0.72, w * 0.13), tip(x, h, w * 0.15), clockwise(base)]
-    }
-
     /// The bevel reads each edge's outward side from the point order, which
     /// must run clockwise on screen (y down): a positive shoelace sum.
     static func clockwise(_ p: [CGPoint]) -> [CGPoint] {
@@ -313,13 +302,7 @@ enum RankOrnaments {
                                style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
                 context.stroke(band.offsetBy(dx: 0, dy: -0.6), with: .color(.white.opacity(0.35)), style: StrokeStyle(lineWidth: 0.5, lineCap: .round))
             }
-            let parts = PrestigeOutline.crownPoints(centerX: x, top: 0, width: 32, height: 19)
-            for part in parts { forged(&context, outline: part, tone: m.metal, inset: 1.2) }
-            for (i, tip) in parts.prefix(3).enumerated() {
-                let apex = tip[1]
-                let s: CGFloat = i == 2 ? 5 : 4
-                RankGem.cabochon(&context, in: CGRect(x: apex.x - s / 2, y: apex.y - s / 2 + 0.5, width: s, height: s), tone: m.stone)
-            }
+            ForgedCrown.draw(&context, crown(in: size), material: m, detail: false)
         }
         if stage == 1 {
             orbitRing(&context, center: gem, material: m, front: false)
@@ -333,6 +316,11 @@ enum RankOrnaments {
     }
 
     static func wingLength(_ stage: Int) -> CGFloat { stage == 8 ? 27 : 17 }
+
+    /// The crown on the top edge of the compact badge, shared with its signature.
+    static func crown(in size: CGSize) -> ForgedCrown.Frame {
+        ForgedCrown.Frame(x: size.width / 2, base: 2, width: 32, height: 20, simple: true)
+    }
 
     /// Orbit's ring, tilted around the gem; its near half crosses over the gem.
     static let orbitTilt = -0.32

@@ -246,11 +246,8 @@ private struct RankSignatureArt {
 
     private func crown(_ context: inout GraphicsContext) {
         let u = cycle(6, still: -1)
-        let tips = PrestigeOutline.crownPoints(centerX: size.width / 2, top: 0, width: 34, height: 15).prefix(3).map { $0[1] }
-        let order = [0, 2, 1] // left, centre, right
-        for (step, index) in order.enumerated() {
-            let apex = tips[index]
-            let stone = CGPoint(x: apex.x, y: apex.y + 0.5)
+        let crown = RankOrnaments.crown(in: size)
+        for (step, stone) in crown.jewels.enumerated() {
             let a = time == nil ? 0.55 : pulse(u, Double(step) * 0.45, Double(step) * 0.45 + 1)
             guard a > 0.01 else { continue }
             context.fill(Path(ellipseIn: CGRect(x: stone.x - 6, y: stone.y - 6, width: 12, height: 12)),
@@ -265,7 +262,8 @@ private struct RankSignatureArt {
             layer.clip(to: plate)
             layer.addFilter(.blur(radius: 1.5))
             var sweep = Path()
-            sweep.move(to: CGPoint(x: x - 8, y: 1.2)); sweep.addLine(to: CGPoint(x: x + 8, y: 1.2))
+            let band = crown.base - crown.bandHeight / 2
+            sweep.move(to: CGPoint(x: x - 8, y: band)); sweep.addLine(to: CGPoint(x: x + 8, y: band))
             layer.stroke(sweep, with: .color(.white.opacity(0.75 * g)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
         }
     }

@@ -97,7 +97,7 @@ and set aside in favour of this one.
 | Solar | Gold, four points | A corona of flame tongues behind the crest |
 | Nova | Platinum, four points | A four-point star behind the crest and a periodic shock ring |
 | Aurora | Emerald, seven points | Aurora ribbons across the sky |
-| Sovereign | Gold over ruby, seven points | A crown of light above the stone, its tips lighting in turn |
+| Sovereign | Gold over ruby, seven points | A gleam that runs round the crest's rim, the ruby beating warmly and ruby sparks drifting round it; no crown over the crest, which crowded the number |
 | Celestial | Silver over midnight, seven long points | A constellation drawing itself round the crest |
 | Eternal | White gold, seven long points | Iridescent wings unfolding behind the crest |
 

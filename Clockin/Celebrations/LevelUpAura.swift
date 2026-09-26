@@ -222,51 +222,38 @@ enum LevelUpAura {
         }
     }
 
-    /// Sovereign: a crown of gold light over the stone, its ruby tips lighting
-    /// in turn and a glint running along it.
+    /// Sovereign: a regal gleam rather than more ornament. A band of light
+    /// runs once round the crest's rim every few seconds, the ruby at its top
+    /// beats warmly, and a few ruby sparks drift round the crest.
     private static func sovereign(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, since: Double,
                                  style: LevelPrestige) {
-        let r = l.crestRadius, settle = C.land(C.ramp(since, 0, 0.9))
-        let base = l.crest.y - r * 1.16
-        let height = min(r * 0.5, max(6, base - 6))
-        let bob = sin((t - C.still) * 0.75) * min(1.5, height * 0.08)
-        let y = base - (1 - settle) * height * 1.6 + bob
-        let width = min(r * 1.2, height * 2.6)
-        let appear = C.easeOut(C.ramp(since, 0, 0.3)), gold = style.material.metal
-        let x = l.crest.x
-        let tips = [CGPoint(x: x - width * 0.38, y: y - height * 0.78), CGPoint(x: x, y: y - height),
-                    CGPoint(x: x + width * 0.38, y: y - height * 0.78)]
-        var crown = Path()
-        crown.move(to: CGPoint(x: x - width / 2, y: y))
-        crown.addLine(to: CGPoint(x: x - width / 2, y: y - height * 0.3))
-        crown.addLine(to: tips[0])
-        crown.addLine(to: CGPoint(x: x - width * 0.19, y: y - height * 0.36))
-        crown.addLine(to: tips[1])
-        crown.addLine(to: CGPoint(x: x + width * 0.19, y: y - height * 0.36))
-        crown.addLine(to: tips[2])
-        crown.addLine(to: CGPoint(x: x + width / 2, y: y - height * 0.3))
-        crown.addLine(to: CGPoint(x: x + width / 2, y: y))
-        crown.closeSubpath()
-        glow(&ctx, at: CGPoint(x: x, y: y - height * 0.45), radius: width * 0.75, color: gold.tint, opacity: 0.22 * appear)
-        ctx.fill(crown, with: .linearGradient(Gradient(colors: [gold.gem(1).opacity(0.6 * appear), gold.tint.opacity(0.3 * appear)]),
-                                              startPoint: CGPoint(x: x, y: y - height), endPoint: CGPoint(x: x, y: y)))
-        ctx.stroke(crown, with: .color(gold.tint.opacity(0.18 * appear)), lineWidth: 4)
-        ctx.stroke(crown, with: .color(gold.gem(1).opacity(0.85 * appear)), style: StrokeStyle(lineWidth: 1, lineJoin: .round))
-        var band = Path()
-        band.move(to: CGPoint(x: x - width / 2, y: y - height * 0.14))
-        band.addLine(to: CGPoint(x: x + width / 2, y: y - height * 0.14))
-        ctx.stroke(band, with: .color(gold.gem(1).opacity(0.6 * appear)), lineWidth: 0.8)
-        let u = cycle(t - C.still + 1.45, 3)
-        for (step, index) in [0, 2, 1].enumerated() {
-            let a = 0.32 + 0.65 * wave(u, Double(step) * 0.4, Double(step) * 0.4 + 1.15)
-            glow(&ctx, at: tips[index], radius: 6, color: style.tint, opacity: a * appear * 0.7)
-            ctx.fill(circle(tips[index], 2.2), with: .color(style.material.stone.gem(0.9).opacity(appear)))
-            glint(&ctx, at: tips[index], size: 3, color: style.material.stone.gem(1), opacity: a * appear)
+        let r = l.crestRadius, c = l.crest
+        let appear = C.easeOut(C.ramp(since, 0, 0.4))
+        let stone = CGPoint(x: c.x, y: c.y - r * 0.9)
+        let beat = pow(max(0, sin((t - C.still) * 1.7)), 6)
+        glow(&ctx, at: stone, radius: r * 0.38, color: style.tint, opacity: (0.2 + 0.3 * beat) * appear)
+        // The gleam: a short arc of light travelling round the rim.
+        let u = cycle(since, 4.2)
+        if u < 1.3 {
+            let p = C.easeInOut(u / 1.3)
+            let head = -Double.pi / 2 + p * 2 * .pi
+            let a = sin(p * .pi) * appear
+            let rim = r * 0.9
+            var arc = Path()
+            arc.addArc(center: c, radius: rim, startAngle: .radians(head - 0.55), endAngle: .radians(head), clockwise: false)
+            var soft = ctx
+            soft.addFilter(.blur(radius: r * 0.05))
+            soft.stroke(arc, with: .color(style.tint.opacity(0.6 * a)), style: StrokeStyle(lineWidth: r * 0.14, lineCap: .round))
+            ctx.stroke(arc, with: .color(style.highlight.opacity(0.7 * a)), style: StrokeStyle(lineWidth: r * 0.035, lineCap: .round))
+            glint(&ctx, at: CGPoint(x: c.x + cos(head) * rim, y: c.y + sin(head) * rim), size: r * 0.1, color: .white, opacity: a)
         }
-        let sweep = C.ramp(u, 1.65, 2.8), gleam = wave(u, 1.65, 2.8) * appear
-        if gleam > 0 {
-            let p = CGPoint(x: x + (sweep - 0.5) * width, y: y - height * 0.2)
-            glint(&ctx, at: p, size: 4, color: gold.gem(1), opacity: gleam)
+        // Sparks drifting round the crest, each twinkling on its own beat.
+        for i in 0..<6 {
+            let a = t * 0.18 + Double(i) / 6 * 2 * .pi + 0.3
+            let radius = r * (1.32 + 0.1 * sin(t * 0.7 + Double(i)))
+            let p = CGPoint(x: c.x + cos(a) * radius, y: c.y + sin(a) * radius * 0.92)
+            let twinkle = 0.35 + 0.65 * pow(0.5 + 0.5 * sin(t * 2.1 + Double(i) * 2.3), 3)
+            glint(&ctx, at: p, size: 2.6, color: style.material.stone.gem(1), opacity: twinkle * appear)
         }
     }
 
