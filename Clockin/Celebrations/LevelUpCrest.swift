@@ -43,26 +43,30 @@ struct LevelUpCrest: View {
         let landed = post >= 0
         let p = C.ramp(post, 0, 0.32)
         let hot = landed ? exp(-post * 3.2) : 0
-        let size = radius * 0.72
+        let size = radius * 0.7
+        // Serif numerals cast in the rank's metal, like the lettering on a
+        // ranked emblem, rather than a rounded display face.
         let face = Text(verbatim: "\(landed ? level : max(1, level - 1))")
-            .font(.system(size: size, weight: .heavy, design: .rounded))
+            .font(.system(size: size, weight: .bold, design: .serif))
             .monospacedDigit()
+            .tracking(-size * 0.03)
             .lineLimit(1)
             .minimumScaleFactor(0.4)
-            .frame(width: radius * 1.3)
-        let metal = LinearGradient(colors: [.white, style.highlight, style.metal(0.66)],
+            .frame(width: radius * 1.34)
+        let metal = LinearGradient(stops: [.init(color: style.metal(1), location: 0), .init(color: style.metal(0.86), location: 0.42),
+                                           .init(color: style.metal(0.5), location: 0.58), .init(color: style.metal(0.74), location: 1)],
                                    startPoint: .top, endPoint: .bottom)
         return ZStack {
-            // Depth: the digits stand proud of the face.
-            face.foregroundStyle(landed ? style.metal(0.1) : .black.opacity(0.5)).offset(y: size * 0.05)
+            // Struck into the face: a shadow below, a lit lip above, then the metal.
+            face.foregroundStyle(.black.opacity(landed ? 0.75 : 0.5)).offset(y: size * 0.035).blur(radius: 0.8)
+            face.foregroundStyle(.white.opacity(landed ? 0.45 : 0.1)).offset(y: -size * 0.02)
             face.foregroundStyle(landed ? AnyShapeStyle(metal) : AnyShapeStyle(Color.white.opacity(0.3)))
             face.foregroundStyle(.white).opacity(hot)
             if landed && moving { sheen(post: post, face: face) }
         }
-        .shadow(color: style.tint.opacity(landed ? 0.3 + 0.55 * hot : 0), radius: 5 + 14 * hot)
+        .shadow(color: style.tint.opacity(landed ? 0.25 + 0.55 * hot : 0), radius: 4 + 14 * hot)
         .scaleEffect(landed ? 1.9 - 0.9 * C.land(p) : 1)
         .opacity(landed ? min(1, p * 5) : 1)
-        .offset(y: radius * 0.06)
     }
 
     /// A band of light crossing the digits every few seconds.

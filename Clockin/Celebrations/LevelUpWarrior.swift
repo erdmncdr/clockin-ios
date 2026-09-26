@@ -540,6 +540,7 @@ private enum PaladinArt {
                 }
             }
         }
+        wingFire(&ctx, style, t: t, strength: strength, flap: flap)
     }
 
     /// A feather: narrow at the quill, widest past the middle, a rounded tip.
@@ -552,6 +553,57 @@ private enum PaladinArt {
         }
         return S.smooth([base, at(0.3, width * 0.36), at(0.62, width / 2), at(0.9, width * 0.34), tip,
                          at(0.9, -width * 0.34), at(0.62, -width / 2), at(0.3, -width * 0.36)], 0.5)
+    }
+
+    /// Magic fire on the wings: small, dim tongues of the rank's colour that
+    /// crawl along the upper edge of each flight feather toward its tip and
+    /// die there, with embers rising off the tips. Felt more than seen.
+    static func wingFire(_ ctx: inout GraphicsContext, _ style: LevelPrestige, t: Double, strength: Double, flap: Double) {
+        var tongues = Path()
+        var embers = Path()
+        for s: CGFloat in [-1, 1] {
+            let anchor = S.p(s, 24, 86)
+            for i in 0..<6 {
+                let f = Double(i) / 5
+                let angle = -1.32 + 1.45 * f + flap
+                let length = CGFloat(84 - 36 * f)
+                let direction = CGVector(dx: CGFloat(cos(angle)) * s, dy: CGFloat(sin(angle)))
+                // The feather's upper edge: offset from the shaft toward the sky.
+                let across = CGVector(dx: -direction.dy, dy: direction.dx)
+                let normal = across.dy > 0 ? CGVector(dx: -across.dx, dy: -across.dy) : across
+                for j in 0..<3 {
+                    let seed = i * 7 + j * 3 + (s > 0 ? 50 : 0)
+                    let phase = (t * 0.55 + LevelUpCurve.noise(seed, 71)).truncatingRemainder(dividingBy: 1)
+                    let along = CGFloat(0.35 + 0.6 * phase)
+                    let life = sin(phase * .pi)
+                    let flicker = CGFloat(0.75 + 0.25 * sin(t * 13 + Double(seed)))
+                    let r = CGFloat(1.8 + 3 * (1 - phase)) * flicker
+                    let base = CGPoint(x: anchor.x + direction.dx * length * along + normal.dx * 4,
+                                       y: anchor.y + direction.dy * length * along + normal.dy * 4)
+                    guard life > 0.05 else { continue }
+                    let sway = CGFloat(sin(t * 5 + Double(seed))) * r * 0.5
+                    let tip = CGPoint(x: base.x + sway, y: base.y - r * 2.8 * CGFloat(life))
+                    tongues.move(to: tip)
+                    tongues.addQuadCurve(to: CGPoint(x: base.x + r, y: base.y), control: CGPoint(x: base.x + r * 1.1, y: base.y - r * 1.3))
+                    tongues.addQuadCurve(to: CGPoint(x: base.x - r, y: base.y), control: CGPoint(x: base.x, y: base.y + r * 1.2))
+                    tongues.addQuadCurve(to: tip, control: CGPoint(x: base.x - r * 1.1, y: base.y - r * 1.3))
+                    tongues.closeSubpath()
+                }
+                // An ember leaving the tip now and then.
+                let rise = (t * 0.4 + LevelUpCurve.noise(i, s > 0 ? 81 : 82)).truncatingRemainder(dividingBy: 1)
+                let tip = CGPoint(x: anchor.x + direction.dx * length, y: anchor.y + direction.dy * length)
+                let e = CGPoint(x: tip.x + CGFloat(sin(t * 1.7 + Double(i))) * 3, y: tip.y - CGFloat(rise) * 22)
+                let size = 1.3 * CGFloat(1 - rise)
+                if size > 0.2 { embers.addEllipse(in: CGRect(x: e.x - size, y: e.y - size, width: size * 2, height: size * 2)) }
+            }
+        }
+        var fire = ctx
+        fire.blendMode = .plusLighter
+        var soft = fire
+        soft.addFilter(.blur(radius: 1.6))
+        soft.fill(tongues, with: .color(style.tint.opacity(0.55 * strength)))
+        fire.fill(tongues, with: .color(style.highlight.opacity(0.26 * strength)))
+        fire.fill(embers, with: .color(style.highlight.opacity(0.55 * strength)))
     }
 
     static func front(_ ctx: inout GraphicsContext, _ style: LevelPrestige, t: Double, lit: Double) {

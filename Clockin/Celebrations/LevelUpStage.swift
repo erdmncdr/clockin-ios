@@ -33,8 +33,8 @@ struct LevelUpStageLayout {
     let companion: Bool
     var floor: CGPoint { CGPoint(x: size.width / 2, y: size.height - sigil.height - 10) }
     /// Room above the crest for what the upper ranks raise over it.
-    var crest: CGPoint { CGPoint(x: size.width / 2, y: companion ? 100 : size.height * 0.44) }
-    var crestRadius: CGFloat { companion ? 58 : 72 }
+    var crest: CGPoint { CGPoint(x: size.width / 2, y: companion ? 94 : size.height * 0.44) }
+    var crestRadius: CGFloat { companion ? 54 : 72 }
     /// The sigil's outer radii: the floor is seen at a low angle.
     var sigil: CGSize {
         let r = min(size.width * 0.4, 150)
@@ -66,9 +66,9 @@ struct LevelUpStage: View {
                 if companion {
                     // Standing on the sigil, backlit by the column.
                     LevelUpWarrior(style: light, t: t)
-                        .scaleEffect(0.74)
+                        .scaleEffect(0.86)
                         .shadow(color: light.tint.opacity(post < 0 ? 0.15 : 0.45), radius: 14)
-                        .position(x: layout.floor.x, y: layout.floor.y - 70)
+                        .position(x: layout.floor.x, y: layout.floor.y - 81)
                 }
                 LevelUpCrest(level: level, t: t, radius: layout.crestRadius, moving: moving)
                     .position(layout.crest)
@@ -77,7 +77,7 @@ struct LevelUpStage: View {
                 }
             }
         }
-        .frame(height: companion ? 384 : 300)
+        .frame(height: companion ? 396 : 300)
         .accessibilityHidden(true)
     }
 }

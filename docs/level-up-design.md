@@ -60,7 +60,9 @@ rather than as the pixel sprite, so it sits in the shaded plate. The eyes are
 hard slits whose top edge falls toward the nose, the stern look of a hero
 rather than the companion's everyday smile: narrow and gathering light during
 the charge, a white flare when the level lands, then a steady burn with a rare
-blink. The plate is the rank's metal made pale, the trim
+blink. Small, dim tongues of magic fire in the rank's colour crawl along the
+upper edge of each flight feather and die at the tip, with an ember rising
+off a tip now and then: felt more than seen, never a flare. The plate is the rank's metal made pale, the trim
 (pauldron edges and feathers, helm wings, circlet, scrollwork, couters, cuffs,
 crossguard) is the rank's metal, the tabard is the rank's colours and the light
 (wings, halo, runes, gems) is the rank's colour, so its gear rises with the
@@ -79,7 +81,7 @@ and set aside in favour of this one.
 | Time (s) | What happens |
 |---|---|
 | 0 to 0.62 | Dark stage. The floor sigil draws itself round; stardust spirals into the crest, faster as it arrives; the crest, still dark steel with the old level, trembles; a thread of light finds it from the floor; the XP bar runs to full |
-| 0.62 | Impact: soft bloom, shock ring, a ring across the floor, sparks thrown out with drag; the column of light shoots off the top of the stage; the crest lights and the new number lands from twice its size |
+| 0.62 | Impact: soft bloom, shock ring, a ring across the floor, sparks thrown out with drag; the column of light shoots off the top of the stage; the crest lights and the new number, serif numerals struck in the rank's metal, lands from twice its size |
 | 0.7 to 1.1 | The title closes in from wide letter spacing with its rules; rays spin up and settle to a slow turn; the XP bar empties |
 | 1.1 to 1.9 | The XP bar refills; the rank panel (centred, under a titled rule) and the next rank land. The top rank has no next look, so that row is left out |
 | 1.7 (new rank) | Second beat: another bloom and ring, the crest re-forges in the new rank, the colours cross-fade, the rank badge lands with its unlock burst |
