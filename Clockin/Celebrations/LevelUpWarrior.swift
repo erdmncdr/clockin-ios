@@ -4,7 +4,8 @@ import SwiftUI
 /// strike: a greatsword planted in front, both hands on the grip, wings of
 /// light and a halo behind. The plate is the rank's metal made pale, the trim
 /// is the rank's metal and the light is the rank's colour, so the gear rises
-/// with the rank. The companion's own face looks out through the visor.
+/// with the rank. The companion's face, a screen with two eyes of light,
+/// looks out through the visor, drawn smooth to match the plate.
 ///
 /// The armour is drawn once per rank; only the light and the energy move, so
 /// the detail costs nothing while the stage animates.
@@ -19,18 +20,10 @@ struct LevelUpWarrior: View {
 
     var body: some View {
         let lit = LevelUpCurve.ramp(t - LevelUpTiming.impact, 0, 0.15)
-        let face = Self.face
         ZStack(alignment: .topLeading) {
             Canvas { context, _ in PaladinArt.back(&context, style, t: t, lit: lit) }
             WarriorArmor(stage: style.stage).equatable()
-            ClockinMascotStill(mood: .hello, maxPixelSize: 314)
-                .frame(width: 236, height: 236)
-                .position(x: face.midX - 6.5, y: face.midY + 32)
-                .mask(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: face.height * 0.44, style: .continuous)
-                        .frame(width: face.width - 6, height: face.height - 6)
-                        .offset(x: face.minX + 3, y: face.minY + 3)
-                }
+            Canvas { context, _ in WarriorFace.draw(&context, t: t) }
             WarriorGlass(stage: style.stage).equatable()
             Canvas { context, _ in PaladinArt.front(&context, style, t: t, lit: lit) }
         }
@@ -57,6 +50,53 @@ private struct WarriorGlass: View, Equatable {
     var body: some View {
         Canvas { context, _ in
             PaladinArt.glass(&context, LevelPrestige(level: max(1, stage * LevelPrestige.interval)))
+        }
+    }
+}
+
+/// The companion's face as the screen behind the visor. The eyes narrow with
+/// focus while the energy gathers, turn to happy arcs with a small bounce when
+/// the level lands, and blink now and then.
+private enum WarriorFace {
+    static let eye = Color(red: 0.36, green: 0.92, blue: 1)
+
+    static func draw(_ ctx: inout GraphicsContext, t: Double) {
+        let f = LevelUpWarrior.face.insetBy(dx: 2.5, dy: 2.5)
+        let screen = Path(roundedRect: f, cornerRadius: f.height * 0.44, style: .continuous)
+        ctx.fill(screen, with: .linearGradient(Gradient(colors: [Color(red: 0.04, green: 0.09, blue: 0.16), Color(red: 0.01, green: 0.02, blue: 0.05)]),
+                                               startPoint: CGPoint(x: f.midX, y: f.minY), endPoint: CGPoint(x: f.midX, y: f.maxY)))
+        ctx.fill(screen, with: .radialGradient(Gradient(colors: [eye.opacity(0.14), .clear]),
+                                               center: CGPoint(x: f.midX, y: f.midY + 2), startRadius: 0, endRadius: f.width * 0.6))
+        let post = t - LevelUpTiming.impact
+        let happy = LevelUpCurve.ramp(post, 0, 0.16)
+        let bounce = post > 0 ? 1 + 0.35 * CGFloat(exp(-post * 8)) : 1
+        let cycle = (t + 1.3).truncatingRemainder(dividingBy: 4.2)
+        let open = 1 - 0.85 * (cycle < 0.16 ? CGFloat(sin(cycle / 0.16 * .pi)) : 0)
+        var shapes = Path()
+        var arcs = Path()
+        for x in [f.midX - 13.5, f.midX + 13.5] {
+            let y = f.midY
+            // Focused: short, level bars.
+            let w: CGFloat = 11, h = 5.2 * open
+            shapes.addRoundedRect(in: CGRect(x: x - w / 2, y: y - h / 2, width: w, height: max(0.8, h)), cornerSize: CGSize(width: 2.6, height: min(2.6, h / 2)))
+            // Happy: an arc like the companion's smile-eyes.
+            let span = 7.5 * bounce, rise = 6.5 * bounce * open
+            arcs.move(to: CGPoint(x: x - span, y: y + 3))
+            arcs.addQuadCurve(to: CGPoint(x: x + span, y: y + 3), control: CGPoint(x: x, y: y - rise - 2.5))
+        }
+        var light = ctx
+        light.blendMode = .plusLighter
+        var soft = light
+        soft.addFilter(.blur(radius: 3))
+        if happy < 1 {
+            soft.fill(shapes, with: .color(eye.opacity(0.6 * (1 - happy))))
+            light.fill(shapes, with: .color(eye.opacity(1 - happy)))
+        }
+        if happy > 0 {
+            let stroke = StrokeStyle(lineWidth: 3.8 * bounce, lineCap: .round, lineJoin: .round)
+            soft.stroke(arcs, with: .color(eye.opacity(0.6 * happy)), style: StrokeStyle(lineWidth: 8 * bounce, lineCap: .round))
+            light.stroke(arcs, with: .color(eye.opacity(happy)), style: stroke)
+            light.stroke(arcs, with: .color(.white.opacity(0.45 * happy)), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
         }
     }
 }

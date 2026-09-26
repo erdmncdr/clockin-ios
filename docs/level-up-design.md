@@ -54,8 +54,11 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 With the companion enabled it stands on the sigil in the column of light,
 dressed as a paladin in the pose MMORPG heroes strike at a level-up: a runed
 greatsword planted in front, both gauntlets closed round the grip, wings of
-light and a halo behind. Its own face looks out through the visor, so it is
-still the same companion. The plate is the rank's metal made pale, the trim
+light and a halo behind. Its face, the screen with two eyes of light that
+makes it the companion, looks out through the visor. It is drawn smooth
+rather than as the pixel sprite, so it sits in the shaded plate: the eyes
+narrow with focus during the charge, turn to happy arcs with a small bounce
+when the level lands, and blink now and then. The plate is the rank's metal made pale, the trim
 (pauldron edges and feathers, helm wings, circlet, scrollwork, couters, cuffs,
 crossguard) is the rank's metal, the tabard is the rank's colours and the light
 (wings, halo, runes, gems) is the rank's colour, so its gear rises with the
