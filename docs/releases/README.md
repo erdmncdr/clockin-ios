@@ -33,3 +33,4 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (29) | [Language in Settings](ios-testflight-0.2-29.md) |
 | 0.2 (30) | [Rank and medal identities](ios-testflight-0.2-30.md) |
 | 0.2 (31) | [MMO level-up and a pass over every screen](ios-testflight-0.2-31.md) |
+| 0.2 (32) | [Paladin, stern eyes and the recast crown](ios-testflight-0.2-32.md) |
