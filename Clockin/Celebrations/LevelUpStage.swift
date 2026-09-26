@@ -63,6 +63,7 @@ struct LevelUpStage: View {
             let post = t - LevelUpTiming.impact
             ZStack {
                 Canvas { context, _ in LevelUpStageArt.back(&context, layout, t: t, style: light) }
+                    .modifier(StageLightBounds())
                 if companion {
                     // Standing on the sigil, backlit by the column.
                     LevelUpWarrior(style: light, t: t)
@@ -75,10 +76,32 @@ struct LevelUpStage: View {
                 Canvas { context, _ in
                     LevelUpStageArt.front(&context, layout, t: t, style: light, milestone: style.isMilestone)
                 }
+                .modifier(StageLightBounds())
             }
         }
         .frame(height: companion ? 396 : 300)
         .accessibilityHidden(true)
+    }
+}
+
+/// Where the stage's light may reach. Rays and shock rings run past the top
+/// of the stage, where the card begins; they fade out before that edge
+/// instead of ending in a straight line. Below, the canvas reaches into the
+/// title so sparks and the floor ring are not cut off either.
+private struct StageLightBounds: ViewModifier {
+    static let fade: CGFloat = 34
+    static let below: CGFloat = 44
+    func body(content: Content) -> some View {
+        content
+            .mask {
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                        .frame(height: Self.fade)
+                    Color.black
+                }
+            }
+            .padding(.bottom, -Self.below)
+            .allowsHitTesting(false)
     }
 }
 

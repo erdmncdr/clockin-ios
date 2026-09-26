@@ -17,15 +17,23 @@ struct LevelUpWarrior: View {
     nonisolated static let face = CGRect(x: 60, y: 35, width: 60, height: 36)
     /// The helm's opening around it.
     nonisolated static let visor = CGRect(x: 60, y: 35, width: 60, height: 38)
+    /// Room around the figure for what reaches past it: the halo's glow, the
+    /// wing tips and their embers, cast shadows. Without it they ended in a
+    /// straight line at the figure's frame.
+    nonisolated static let overflow: CGFloat = 40
 
     var body: some View {
         let lit = LevelUpCurve.ramp(t - LevelUpTiming.impact, 0, 0.15)
         ZStack(alignment: .topLeading) {
-            Canvas { context, _ in PaladinArt.back(&context, style, t: t, lit: lit) }
-            WarriorArmor(stage: style.stage).equatable()
+            Canvas { context, _ in
+                var c = context.overflowing(); PaladinArt.back(&c, style, t: t, lit: lit)
+            }.padding(-Self.overflow)
+            WarriorArmor(stage: style.stage).equatable().padding(-Self.overflow)
             Canvas { context, _ in WarriorFace.draw(&context, t: t) }
             WarriorGlass(stage: style.stage).equatable()
-            Canvas { context, _ in PaladinArt.front(&context, style, t: t, lit: lit) }
+            Canvas { context, _ in
+                var c = context.overflowing(); PaladinArt.front(&c, style, t: t, lit: lit)
+            }.padding(-Self.overflow)
         }
         .frame(width: Self.size.width, height: Self.size.height)
     }
@@ -36,11 +44,22 @@ private struct WarriorArmor: View, Equatable {
     var body: some View {
         Canvas { context, _ in
             let style = LevelPrestige(level: max(1, stage * LevelPrestige.interval))
-            var ground = context
+            var c = context.overflowing()
+            var ground = c
             ground.addFilter(.blur(radius: 3))
             ground.fill(Path(ellipseIn: CGRect(x: 54, y: 201, width: 72, height: 9)), with: .color(.black.opacity(0.6)))
-            PaladinArt.armor(&context, style)
+            PaladinArt.armor(&c, style)
         }
+    }
+}
+
+private extension GraphicsContext {
+    /// This context moved so the figure's own coordinates start inside the
+    /// overflow margin.
+    func overflowing() -> GraphicsContext {
+        var c = self
+        c.translateBy(x: LevelUpWarrior.overflow, y: LevelUpWarrior.overflow)
+        return c
     }
 }
 
