@@ -35,3 +35,4 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (31) | [MMO level-up and a pass over every screen](ios-testflight-0.2-31.md) |
 | 0.2 (32) | [Paladin, stern eyes and the recast crown](ios-testflight-0.2-32.md) |
 | 0.2 (33) | [A level earned back is celebrated again](ios-testflight-0.2-33.md) |
+| 0.2 (34) | [Level-up polish](ios-testflight-0.2-34.md) |
