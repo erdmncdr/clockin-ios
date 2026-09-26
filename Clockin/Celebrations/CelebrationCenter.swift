@@ -100,6 +100,8 @@ final class CelebrationCenter: ObservableObject {
             state.savedPreviousSession = saved != nil
             state.savedPreviousDuration = saved?.duration ?? 0
         }
+        // The level-up haptic plays once per level, unless the level is taken back.
+        soundedLevels = soundedLevels.filter { $0 <= state.level }
         let earnedPride = CelebrationRules.earnsPride(from: queue.previous, to: state)
         let oldPending = queue.pending
         queue.ingest(state, now: ProcessInfo.processInfo.systemUptime,

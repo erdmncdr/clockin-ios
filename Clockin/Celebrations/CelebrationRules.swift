@@ -135,6 +135,11 @@ struct CelebrationQueue {
     mutating func ingest(_ state: CelebrationState, now: TimeInterval, canReact: Bool, includeAccessories: Bool = true) {
         defer { previous = state }
         if lastLevel == nil { lastLevel = state.level }
+        // A level taken back (a cancelled session, a deleted entry) is no
+        // longer earned: a queued card for it is withdrawn, and earning it
+        // again celebrates it again.
+        pending.removeAll { if case .levelUp(let level, _) = $0 { return level > state.level }; return false }
+        if let last = lastLevel, state.level < last { lastLevel = state.level }
         if seenBadgeIDs == nil { seenBadgeIDs = Set(state.badges.map(\.id)) }
         let unlockedAccessories = CompanionAccessory.allCases.filter { $0.isUnlocked(totalHours: state.totalHours) }
         if seenAccessoryIDs == nil { seenAccessoryIDs = Set(unlockedAccessories.map(\.id)) }

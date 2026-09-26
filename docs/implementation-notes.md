@@ -175,7 +175,9 @@ Live goal and money crossings can therefore appear at the next minute refresh.
 
 The first observation seeds the current level and unlocked badge IDs silently.
 Later launches compare against `Clockin.LastCelebratedLevel`; unseen badges use
-`Clockin.SeenBadgeIDs`. A batch shows at most three badge banners, then one count.
+`Clockin.SeenBadgeIDs`. The stored level follows the level down when it is taken
+back (a cancelled session, an edited or deleted entry), and a queued card for a
+level no longer earned is withdrawn, so earning that level again celebrates it again. A batch shows at most three badge banners, then one count.
 RootView hosts the overlay above tabs and desk mode. Sheets, alerts and file pickers
 block delivery, with a UIKit presentation check before showing. Share opens the
 existing stats view. A badge banner opens Badges, leaving desk mode if needed.
