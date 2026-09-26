@@ -54,9 +54,10 @@ private struct WarriorGlass: View, Equatable {
     }
 }
 
-/// The companion's face as the screen behind the visor. The eyes narrow with
-/// focus while the energy gathers, turn to happy arcs with a small bounce when
-/// the level lands, and blink now and then.
+/// The companion's face as the screen behind the visor: two eyes of light cut
+/// as hard, level-browed slits, the look of a hero at a level-up. They
+/// narrow and gather light during the charge, flare white when the level
+/// lands, then burn steady, blinking only rarely.
 private enum WarriorFace {
     static let eye = Color(red: 0.36, green: 0.92, blue: 1)
 
@@ -65,39 +66,35 @@ private enum WarriorFace {
         let screen = Path(roundedRect: f, cornerRadius: f.height * 0.44, style: .continuous)
         ctx.fill(screen, with: .linearGradient(Gradient(colors: [Color(red: 0.04, green: 0.09, blue: 0.16), Color(red: 0.01, green: 0.02, blue: 0.05)]),
                                                startPoint: CGPoint(x: f.midX, y: f.minY), endPoint: CGPoint(x: f.midX, y: f.maxY)))
-        ctx.fill(screen, with: .radialGradient(Gradient(colors: [eye.opacity(0.14), .clear]),
-                                               center: CGPoint(x: f.midX, y: f.midY + 2), startRadius: 0, endRadius: f.width * 0.6))
         let post = t - LevelUpTiming.impact
-        let happy = LevelUpCurve.ramp(post, 0, 0.16)
-        let bounce = post > 0 ? 1 + 0.35 * CGFloat(exp(-post * 8)) : 1
-        let cycle = (t + 1.3).truncatingRemainder(dividingBy: 4.2)
-        let open = 1 - 0.85 * (cycle < 0.16 ? CGFloat(sin(cycle / 0.16 * .pi)) : 0)
-        var shapes = Path()
-        var arcs = Path()
-        for x in [f.midX - 13.5, f.midX + 13.5] {
-            let y = f.midY
-            // Focused: short, level bars.
-            let w: CGFloat = 11, h = 5.2 * open
-            shapes.addRoundedRect(in: CGRect(x: x - w / 2, y: y - h / 2, width: w, height: max(0.8, h)), cornerSize: CGSize(width: 2.6, height: min(2.6, h / 2)))
-            // Happy: an arc like the companion's smile-eyes.
-            let span = 7.5 * bounce, rise = 6.5 * bounce * open
-            arcs.move(to: CGPoint(x: x - span, y: y + 3))
-            arcs.addQuadCurve(to: CGPoint(x: x + span, y: y + 3), control: CGPoint(x: x, y: y - rise - 2.5))
+        let charge = LevelUpCurve.ramp(t, 0.05, LevelUpTiming.impact)
+        // How bright the eyes burn, and a flare that fades after the impact.
+        let power = post < 0 ? 0.45 + 0.55 * charge : 0.92 + 0.08 * sin(t * 2.2)
+        let flare = post < 0 ? 0 : exp(-post * 5)
+        ctx.fill(screen, with: .radialGradient(Gradient(colors: [eye.opacity(0.1 + 0.12 * power + 0.2 * flare), .clear]),
+                                               center: CGPoint(x: f.midX, y: f.midY + 2), startRadius: 0, endRadius: f.width * 0.6))
+        let cycle = (t + 2.1).truncatingRemainder(dividingBy: 6.5)
+        let open = 1 - 0.9 * (cycle < 0.12 ? CGFloat(sin(cycle / 0.12 * .pi)) : 0)
+        // Narrow during the charge, full once the level lands.
+        let h = (post < 0 ? 3.6 + 1.2 * CGFloat(charge) : 5.2) * open
+        var eyes = Path()
+        for side: CGFloat in [-1, 1] {
+            let cx = f.midX + side * 13.5, cy = f.midY + 0.5
+            func q(_ out: CGFloat, _ down: CGFloat) -> CGPoint { CGPoint(x: cx + side * out, y: cy + down) }
+            // The top edge falls toward the nose; the lower edge is a shallow curve.
+            eyes.addPath(WarriorShape.smooth([q(7, -h * 0.55), q(-6.5, h * 0.2), q(-5.5, h * 0.6), q(0, h * 0.66), q(6.2, h * 0.25)], 0.22))
         }
         var light = ctx
         light.blendMode = .plusLighter
         var soft = light
-        soft.addFilter(.blur(radius: 3))
-        if happy < 1 {
-            soft.fill(shapes, with: .color(eye.opacity(0.6 * (1 - happy))))
-            light.fill(shapes, with: .color(eye.opacity(1 - happy)))
-        }
-        if happy > 0 {
-            let stroke = StrokeStyle(lineWidth: 3.8 * bounce, lineCap: .round, lineJoin: .round)
-            soft.stroke(arcs, with: .color(eye.opacity(0.6 * happy)), style: StrokeStyle(lineWidth: 8 * bounce, lineCap: .round))
-            light.stroke(arcs, with: .color(eye.opacity(happy)), style: stroke)
-            light.stroke(arcs, with: .color(.white.opacity(0.45 * happy)), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
-        }
+        soft.addFilter(.blur(radius: 3 + 4 * flare))
+        soft.fill(eyes, with: .color(eye.opacity(0.7 * power + 0.3 * flare)))
+        light.fill(eyes, with: .color(eye.opacity(power)))
+        // A hot core along each slit.
+        var core = light
+        core.addFilter(.blur(radius: 0.8))
+        core.fill(eyes.applying(CGAffineTransform(translationX: f.midX, y: f.midY + 1).scaledBy(x: 0.82, y: 0.45).translatedBy(x: -f.midX, y: -(f.midY + 1))),
+                  with: .color(.white.opacity(0.5 * power + 0.5 * flare)))
     }
 }
 
