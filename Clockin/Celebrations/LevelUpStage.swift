@@ -229,9 +229,10 @@ enum LevelUpStageArt {
         }
     }
 
-    /// An astrolabe drawn on the floor: a ticked outer ring, a dashed ring of
-    /// star marks turning the other way and an inner ring, joined by spokes.
-    /// It draws itself round during the charge and flares at the impact.
+    /// An astrolabe drawn on the floor: a ticked outer ring and, turning the
+    /// other way, an inner band cut into twelve equal cells by spokes, one
+    /// star mark in the middle of each cell. It draws itself round during
+    /// the charge and flares at the impact.
     private static func sigil(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, post: Double, style: LevelPrestige, front: Bool) {
         let drawn = C.easeInOut(C.ramp(t, 0.02, LevelUpTiming.impact - 0.04))
         guard drawn > 0 else { return }
@@ -245,14 +246,13 @@ enum LevelUpStageArt {
         }
         func visible(_ a: Double) -> Bool { (sin(a) >= 0) == front }
         let start = -Double.pi / 2
-        func ring(_ r: CGFloat, width: CGFloat, turn: Double = 0, dash: Int = 0) {
+        func ring(_ r: CGFloat, width: CGFloat) {
             var path = Path()
             var open = false
             let steps = 180, end = Int(Double(steps) * drawn)
             for i in 0...end {
-                let a = start + turn + Double(i) / Double(steps) * 2 * .pi
-                let on = dash == 0 || (i / dash).isMultiple(of: 2)
-                if visible(a) && on {
+                let a = start + Double(i) / Double(steps) * 2 * .pi
+                if visible(a) {
                     if open { path.addLine(to: p(a, r)) } else { path.move(to: p(a, r)); open = true }
                 } else {
                     open = false
@@ -263,7 +263,7 @@ enum LevelUpStageArt {
         }
         let outerTurn = 0.1 * t, innerTurn = -0.16 * t
         ring(rx, width: front ? 1.3 : 1)
-        ring(rx * 0.7, width: front ? 1 : 0.8, turn: innerTurn, dash: 3)
+        ring(rx * 0.7, width: front ? 1 : 0.8)
         ring(rx * 0.38, width: front ? 1.1 : 0.9)
         var ticks = Path()
         for k in 0..<72 where Double(k) / 72 <= drawn {
@@ -274,24 +274,28 @@ enum LevelUpStageArt {
             ticks.addLine(to: p(a, rx * (long ? 0.86 : 0.93)))
         }
         ctx.stroke(ticks, with: .color(color), lineWidth: 0.8)
+        // The band between the inner and middle rings: a spoke at every
+        // twelfth of the turn and one mark centred in each cell between two.
+        let cells = 12
+        var spokes = Path()
         var marks = Path()
-        for k in 0..<12 where Double(k) / 12 <= drawn {
-            let a = start + innerTurn + Double(k) / 12 * 2 * .pi
-            guard visible(a) else { continue }
-            let c = p(a, rx * 0.7), s: CGFloat = k.isMultiple(of: 3) ? 3.4 : 2.2
+        for k in 0..<cells {
+            let a = start + innerTurn + Double(k) / Double(cells) * 2 * .pi
+            if Double(k) / Double(cells) <= drawn, visible(a) {
+                spokes.move(to: p(a, rx * 0.38))
+                spokes.addLine(to: p(a, rx * 0.7))
+            }
+            let mid = a + .pi / Double(cells)
+            guard (Double(k) + 0.5) / Double(cells) <= drawn, visible(mid) else { continue }
+            let c = p(mid, rx * 0.54), s: CGFloat = 2.8
             marks.move(to: CGPoint(x: c.x, y: c.y - s))
             marks.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y))
             marks.addLine(to: CGPoint(x: c.x, y: c.y + s))
             marks.addLine(to: CGPoint(x: c.x - s * 0.55, y: c.y))
             marks.closeSubpath()
-            if k.isMultiple(of: 2) {
-                // Spokes of the rete, from the inner ring to the star ring.
-                marks.move(to: p(a, rx * 0.4))
-                marks.addLine(to: p(a, rx * 0.66))
-            }
         }
+        ctx.stroke(spokes, with: .color(color), lineWidth: 0.8)
         ctx.fill(marks, with: .color(color))
-        ctx.stroke(marks, with: .color(color), lineWidth: 0.7)
     }
 
     // MARK: In front of the crest
