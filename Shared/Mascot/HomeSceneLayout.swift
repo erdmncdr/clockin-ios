@@ -55,12 +55,26 @@ enum HomeSceneLayout {
         return .init(layout.x(x) + delta.x, floor - side * (feet - 0.5) + delta.y)
     }
 
+    /// The companion bed's image size, floor pivot and where a sleeper's head
+    /// goes, in its pixels. The home art tool writes the same numbers into
+    /// home-items.json; the wardrobe checks keep the two equal.
+    static let companionBed = (size: CGSize(width: 124, height: 78), pivot: WardrobePoint(78, 76),
+                               head: WardrobePoint(22, 36))
+
+    static func companionBedRect(in room: WardrobeRoom, layout: CompanionHomeLayout,
+                                 roomID: String = "", arrangement: RoomArrangement = .init()) -> CGRect {
+        let item = WardrobeFurniture(name: "Companion bed", file: "companion-bed.png", slot: "floorRight",
+                                     pivot: companionBed.pivot)
+        return furnitureRect(item, in: room, imageSize: companionBed.size, layout: layout,
+                             roomID: roomID, arrangement: arrangement)
+    }
+
     /// Pose attachments use the same bounds as their source furniture.
     static func attachmentOffset(_ id: String, in room: WardrobeRoom, layout: CompanionHomeLayout,
                                  roomID: String, arrangement: RoomArrangement) -> WardrobePoint {
         let bean = id == "bean-bag"
-        let pivot = bean ? WardrobePoint(44,54) : WardrobePoint(52,52)
-        let size = bean ? CGSize(width:90,height:62) : CGSize(width:106,height:60)
+        let pivot = bean ? WardrobePoint(44,54) : companionBed.pivot
+        let size = bean ? CGSize(width:90,height:62) : companionBed.size
         let item = WardrobeFurniture(name:id,file:id+".png",slot:"floorRight",pivot:pivot)
         let base = furnitureRect(item,in:room,imageSize:size,layout:layout)
         let moved = furnitureRect(item,in:room,imageSize:size,layout:layout,roomID:roomID,arrangement:arrangement)

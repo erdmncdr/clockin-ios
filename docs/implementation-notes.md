@@ -395,11 +395,23 @@ timer from the bottom edge instead of sitting under the earnings. A debug build
 launched with `--desk-preview` draws desk mode turned onto the portrait screen, for
 simulators that cannot rotate.
 When the companion rests (tired, or a session paused for four hours, with the
-companion bed placed), its sleepy `z01` head lies upright on the pillow, so the
-slit eyes read as closed, and the bed's blanket is drawn again over it up to
-the chin, masked to the blanket in the bed image's own pixels, rising a pixel
-with each slow breath; pixel Zs drift up off the pillow. In the mirrored layout
-the head turns with the bed. `--companion-sleep-preview` shows it in every
+companion bed placed), it lies in the bed on its back. The bed is drawn full
+size by `Tools/MascotArt.swift` (`companionBed`): a slim mattress seen a little
+from above, a tall headboard and a low footboard as thin boards with round
+knobs at the ends, a pale blue pillow and a quilted blanket hanging over the
+front. The same tool
+writes two layers for a sleeper, cropped exactly like the bed: the head, taken
+from `z01` (helmet and antenna only, its zzz removed) and turned a quarter so
+the antenna points at the headboard, and the blanket again with the body under
+it drawn as a height map (shoulders, hips, two legs, feet turned up). The app
+draws bed, head (in the companion's colours) and cover in that order, the
+cover rising a pixel with each slow breath, and pixel Zs drift off the pillow.
+`home-items.json` gives the bed's `sleeper` layers, where the head goes and its
+scale; `HomeSceneLayout.companionBed` repeats the bed's size, pivot and head
+point for shared layout code, and the wardrobe checks keep the two equal.
+`swift -module-cache-path /tmp/clockin-art-module-cache Tools/run-art.swift
+Tools/MascotArt.swift bed` draws the bed with its sleeper, large, to
+`/tmp/clockin-bed-preview.png`; `--companion-sleep-preview` shows it in every
 room and both layouts.
 Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss it,
 switch tabs, cover Today, and background the app: all live motion must stop. Compare

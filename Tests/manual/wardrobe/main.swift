@@ -405,37 +405,35 @@ for (roomID, room) in realHome.rooms {
         }
         draw(image,x:x,y:p.y,w:rect.width,h:rect.height,mirror:layout.mirrored && !HeritageArt.preservesOrientation(id))
     }
-    let frame: String = switch activity {case .idle: "h01";case .working: "t01";case .relaxing: "c01";case .sleeping: "z01"}
-    if activity == .sleeping { outfit.equipped = [:] }
-    let overlays=WardrobeArt.overlays(frame:frame,outfit:outfit,images:artImages,anchorManifest:realAnchors,spriteManifest:realSprites)
-    let original = realImage("Frames/"+frame+".png")
-    let pose = activity == .working ? WardrobeArt.seatedWorkingFrame(original, seated: realImage("Frames/c01.png")) : original
-    let robot=WardrobeArt.composite(robot:pose,parts:overlays,size:314)!
-    let center=activity.center(in:room,layout:layout,furniture:Dictionary(uniqueKeysWithValues:furniture.map { (realHome.items[$0]!.slot,$0) })),side=activity.side
-    context.saveGState()
-    context.translateBy(x:center.x,y:center.y)
     if activity == .sleeping {
-        let left = layout.mirrored ? 314 - 117 - 98 : 117.0
-        context.addEllipse(in:CGRect(x:-side/2+left*side/314,y:-side/2+70*side/314,width:98*side/314,height:84*side/314)); context.clip()
-    }
-    draw(robot,x:-side/2,y:-side/2,w:side,h:side,mirror:HomeSceneLayout.mirrorsCompanion(activity, layout:layout))
-    context.restoreGState()
-    if activity == .sleeping {
-        // The blanket over the sleeper, as CompanionHomeView draws it.
-        let item = realHome.items["companion-bed"]!, image = realImage("Home/"+item.file)
-        let rect = HomeSceneLayout.furnitureRect(item, in: room, imageSize: CGSize(width: image.width, height: image.height), layout: layout)
-        let points: [(Double, Double)] = [(22, 26), (40, 21.5), (80, 21.5), (94, 34), (94, 47), (22, 47)]
+        // The sleeper's layers, as CompanionHomeView draws them: the head on
+        // the pillow, then the blanket raised over the body.
+        let item = realHome.items["companion-bed"]!, sleeper = item.sleeper!, bed = realImage("Home/"+item.file)
+        let rect = HomeSceneLayout.furnitureRect(item, in: room, imageSize: CGSize(width: bed.width, height: bed.height), layout: layout)
+        let head = realImage("Home/"+sleeper.head)
+        let w = Double(head.width) * sleeper.scale, h = Double(head.height) * sleeper.scale
+        let cx = layout.mirrored ? rect.maxX - sleeper.center.x : rect.minX + sleeper.center.x, cy = rect.minY + sleeper.center.y
+        draw(head,x:cx-w/2,y:cy-h/2,w:w,h:h,mirror:layout.mirrored)
+        draw(realImage("Home/"+sleeper.cover),x:rect.minX,y:rect.minY,w:rect.width,h:rect.height,mirror:layout.mirrored)
+    } else {
+        let frame: String = switch activity {case .idle: "h01";case .working: "t01";case .relaxing: "c01";case .sleeping: "z01"}
+        let overlays=WardrobeArt.overlays(frame:frame,outfit:outfit,images:artImages,anchorManifest:realAnchors,spriteManifest:realSprites)
+        let original = realImage("Frames/"+frame+".png")
+        let pose = activity == .working ? WardrobeArt.seatedWorkingFrame(original, seated: realImage("Frames/c01.png")) : original
+        let robot=WardrobeArt.composite(robot:pose,parts:overlays,size:314)!
+        let center=activity.center(in:room,layout:layout,furniture:Dictionary(uniqueKeysWithValues:furniture.map { (realHome.items[$0]!.slot,$0) })),side=activity.side
         context.saveGState()
-        context.beginPath()
-        for (i, point) in points.enumerated() {
-            let x = rect.minX + (layout.mirrored ? 106 - point.0 : point.0) / 106 * rect.width, y = rect.minY + point.1 / 60 * rect.height
-            if i == 0 { context.move(to: CGPoint(x: x, y: y)) } else { context.addLine(to: CGPoint(x: x, y: y)) }
-        }
-        context.closePath(); context.clip()
-        draw(image,x:rect.minX,y:rect.minY,w:rect.width,h:rect.height,mirror:layout.mirrored)
+        context.translateBy(x:center.x,y:center.y)
+        draw(robot,x:-side/2,y:-side/2,w:side,h:side,mirror:HomeSceneLayout.mirrorsCompanion(activity, layout:layout))
         context.restoreGState()
     }
     savePNG(context.makeImage()!, "/tmp/clockin-home-"+roomID+"-"+activity.rawValue+"-"+layout.rawValue+"-"+deskID+".png")
+}
+do {
+    let bed = realHome.items["companion-bed"]!, image = realImage("Home/"+bed.file), geometry = HomeSceneLayout.companionBed
+    check(geometry.size == CGSize(width: image.width, height: image.height) && geometry.pivot == bed.pivot
+          && geometry.head == bed.sleeper?.center, "companion bed layout matches its art")
+    for file in [bed.sleeper?.cover, bed.sleeper?.head] { check(file.map { realImage("Home/"+$0).width > 0 } == true, "sleeper layer decodes") }
 }
 for roomID in realHome.rooms.keys.sorted() {
     for activity in CompanionHomeActivity.allCases {

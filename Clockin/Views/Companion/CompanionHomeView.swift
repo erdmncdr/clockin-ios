@@ -77,7 +77,14 @@ struct CompanionHomeView: View {
                 var result: [String: CGImage] = [:]
                 if let room = WardrobeArt.home.rooms[state.room] { result[room.file] = WardrobeArt.decode(room.file, folder: "Home") }
                 for id in state.furniture.values {
-                    if let item = WardrobeArt.home.items[id] { result[item.file] = WardrobeArt.decode(item.file, folder: "Home") }
+                    guard let item = WardrobeArt.home.items[id] else { continue }
+                    result[item.file] = WardrobeArt.decode(item.file, folder: "Home")
+                    // A bed's sleeper layers; the head wears the companion's colours.
+                    if let sleeper = item.sleeper {
+                        result[sleeper.cover] = WardrobeArt.decode(sleeper.cover, folder: "Home")
+                        result[sleeper.head] = WardrobeArt.decode(sleeper.head, folder: "Home")
+                            .map { WardrobeArt.recolor($0, colorway: state.colorway) }
+                    }
                 }
                 return result
             }.value
@@ -97,8 +104,7 @@ struct CompanionHomeView: View {
                 furniture(slot, room: room)
             }
             if enabled || stateOverride != nil {
-                companion(room)
-                if activity == .sleeping { asleep(room) }
+                if activity == .sleeping { asleep(room) } else { companion(room) }
             }
             CompanionHomeAtmosphere(state: state, room: room, light: light, moving: moving)
                 .frame(width: 360, height: 240).allowsHitTesting(false)
@@ -124,27 +130,9 @@ struct CompanionHomeView: View {
         }
     }
 
-    private var sleepingOutfit: WardrobeState {
-        var copy = state
-        copy.equipped = [:]
-        return copy
-    }
-
     private func companion(_ room: WardrobeRoom) -> some View {
         let center = activity.center(in: room, layout: state.homeLayout, furniture: state.furniture, roomID: state.room, arrangement: state.homeArrangement)
-        return Group {
-            if activity == .sleeping {
-                // Only the head shows, upright on the pillow; the blanket
-                // covers the rest (asleep(_:)).
-                ClockinMascotStill(mood: .tired, maxPixelSize: 314, outfit: sleepingOutfit)
-                    .mask {
-                        Ellipse().frame(width: activity.side * 98 / 314, height: activity.side * 84 / 314)
-                            .position(x: activity.side * 166 / 314, y: activity.side * 112 / 314)
-                    }
-            } else {
-                ClockinMotionMascot(mood: activity == .idle ? mood : activity.mood, tap: reaction, outfitOverride: stateOverride)
-            }
-        }
+        return ClockinMotionMascot(mood: activity == .idle ? mood : activity.mood, tap: reaction, outfitOverride: stateOverride)
         .frame(width: activity.side, height: activity.side)
         .scaleEffect(x: HomeSceneLayout.mirrorsCompanion(activity, layout: state.homeLayout) ? -1 : 1, y: 1)
         .position(x: center.x, y: center.y)
@@ -153,47 +141,38 @@ struct CompanionHomeView: View {
 }
 
 extension CompanionHomeView {
-    /// The companion tucked in: the bed's blanket drawn again over it up to
-    /// the chin, rising and falling slowly, and Zs drifting up off the pillow.
+    /// The companion asleep in its bed, lying on its back: its head on the
+    /// pillow, turned toward the headboard, its body under the blanket, which
+    /// the bed's cover layer draws raised over it and which rises and falls
+    /// slowly; Zs drift up off the pillow.
     @ViewBuilder fileprivate func asleep(_ room: WardrobeRoom) -> some View {
-        if let item = WardrobeArt.home.items["companion-bed"], let image = images[item.file] {
+        if let item = WardrobeArt.home.items["companion-bed"], let sleeper = item.sleeper,
+           let bed = images[item.file], let head = images[sleeper.head], let cover = images[sleeper.cover] {
             let rect = HomeSceneLayout.furnitureRect(item, in: room,
-                imageSize: CGSize(width: image.width, height: image.height), layout: state.homeLayout,
+                imageSize: CGSize(width: bed.width, height: bed.height), layout: state.homeLayout,
                 roomID: state.room, arrangement: state.homeArrangement)
             let mirrored = state.homeLayout.mirrored
-            Image(decorative: image, scale: 1).resizable().interpolation(.none)
+            let center = CGPoint(x: mirrored ? rect.maxX - sleeper.center.x : rect.minX + sleeper.center.x,
+                                 y: rect.minY + sleeper.center.y)
+            let size = CGSize(width: Double(head.width) * sleeper.scale, height: Double(head.height) * sleeper.scale)
+            Image(decorative: head, scale: 1).resizable().interpolation(.none)
                 .scaleEffect(x: mirrored ? -1 : 1, y: 1)
-                .mask(CompanionBlanket(mirrored: mirrored))
+                .frame(width: size.width, height: size.height)
+                .position(center)
+            Image(decorative: cover, scale: 1).resizable().interpolation(.none)
+                .scaleEffect(x: mirrored ? -1 : 1, y: 1)
                 .modifier(CompanionBreathing(active: moving))
                 .frame(width: rect.width, height: rect.height)
                 .offset(x: rect.minX, y: rect.minY)
                 .allowsHitTesting(false)
-            let head = CompanionHomeActivity.sleepingHead(in: room, layout: state.homeLayout,
-                                                          roomID: state.room, arrangement: state.homeArrangement)
-            CompanionSleepZs(head: CGPoint(x: head.x, y: head.y), mirrored: mirrored, moving: moving)
+            CompanionSleepZs(head: CGPoint(x: center.x, y: center.y - size.height * 0.3), mirrored: mirrored, moving: moving)
                 .frame(width: 360, height: 240)
                 .allowsHitTesting(false)
         }
     }
 }
 
-/// The companion bed's blanket, in the bed image's own pixels (106 × 60):
-/// from the pillow's edge to the footboard, down to the gold trim.
-private struct CompanionBlanket: Shape {
-    let mirrored: Bool
-    func path(in rect: CGRect) -> Path {
-        let points: [(Double, Double)] = [(22, 26), (40, 21.5), (80, 21.5), (94, 34), (94, 47), (22, 47)]
-        var path = Path()
-        for (i, point) in points.enumerated() {
-            let x = (mirrored ? 106 - point.0 : point.0) / 106 * rect.width, y = point.1 / 60 * rect.height
-            if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
-        }
-        path.closeSubpath()
-        return path
-    }
-}
-
-/// A slow breath under the blanket: its top edge rises about a pixel.
+/// A slow breath under the blanket: the body under it rises about a pixel.
 private struct CompanionBreathing: ViewModifier {
     let active: Bool
     @State private var inhale = false

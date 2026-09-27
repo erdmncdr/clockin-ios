@@ -67,9 +67,18 @@
       "file" : "companion-bed.png",
       "name" : "Companion bed",
       "pivot" : [
-        52,
-        52
+        78,
+        76
       ],
+      "sleeper" : {
+        "center" : [
+          22,
+          36
+        ],
+        "cover" : "companion-bed-cover.png",
+        "head" : "companion-bed-head.png",
+        "scale" : 0.22
+      },
       "slot" : "floorRight"
     },
     "desk-lamp" : {
