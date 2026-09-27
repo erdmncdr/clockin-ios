@@ -40,3 +40,4 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (36) | [A strike across the whole screen](ios-testflight-0.2-36.md) |
 | 0.2 (37) | [From dark chaos into light, with sound](ios-testflight-0.2-37.md) |
 | 0.2 (38) | [Weight after the strike](ios-testflight-0.2-38.md) |
+| 0.2 (39) | [A storm for the level-up](ios-testflight-0.2-39.md) |
