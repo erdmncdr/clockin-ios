@@ -39,7 +39,7 @@ struct LevelUpCard: View {
                                        sceneActive: scenePhase == .active, visible: true)
     }
     /// The rank row lands after the level, or on its own beat for a new rank.
-    private var rankBeat: Double { style.isMilestone ? LevelUpTiming.rankReveal : LevelUpTiming.impact + 0.75 }
+    private var rankBeat: Double { style.isMilestone ? LevelUpTiming.rankReveal : LevelUpTiming.impact + 0.95 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,6 +61,8 @@ struct LevelUpCard: View {
                         LevelUpBackdrop(stage: LevelPrestige(level: level - 1).stage).equatable()
                     }
                     LevelUpBackdrop(stage: style.stage).equatable().opacity(takeover(t))
+                    // The scene darkens in the hush, so the strike lands out of the dark.
+                    Color.black.opacity(0.45 * C.easeIn(C.hush(t)))
                 }
             }
             .ignoresSafeArea()
@@ -68,7 +70,7 @@ struct LevelUpCard: View {
         .onAppear { began = .now }
         .task {
             // Everything but the stage has landed by now; stop redrawing it.
-            do { try await Task.sleep(for: .seconds(rankBeat + 1.2)) } catch { return }
+            do { try await Task.sleep(for: .seconds(LevelUpTiming.wall(rankBeat + 1.2))) } catch { return }
             settled = true
         }
     }
@@ -99,7 +101,7 @@ struct LevelUpCard: View {
         #if DEBUG
         if let pinnedTime { return pinnedTime }
         #endif
-        return motion && !settled ? max(0, date.timeIntervalSince(began)) : C.still
+        return motion && !settled ? LevelUpTiming.scene(max(0, date.timeIntervalSince(began))) : C.still
     }
 
     private var stage: some View {
@@ -113,9 +115,9 @@ struct LevelUpCard: View {
 
     private func banner(_ t: Double) -> some View {
         let post = t - LevelUpTiming.impact
-        let p = C.ramp(post, 0.05, 0.4)
+        let p = C.ramp(post, 0.06, 0.5)
         let e = C.easeOut(p)
-        let rule = C.easeOut(C.ramp(post, 0.15, 0.6))
+        let rule = C.easeOut(C.ramp(post, 0.2, 0.75))
         let title = String(localized: "Level up", bundle: .app).uppercased(with: AppLanguage.locale)
         let colors = shown(t)
         return VStack(spacing: 6) {
@@ -130,7 +132,7 @@ struct LevelUpCard: View {
             }
             Text(hours == 1 ? "1 hour of focus" : "\(hours.formatted(.number.locale(AppLanguage.formatLocale))) hours of focus")
                 .font(.subheadline).foregroundStyle(.white.opacity(0.6))
-                .opacity(C.ramp(post, 0.3, 0.7))
+                .opacity(C.ramp(post, 0.4, 0.85))
         }
         .opacity(p > 0 ? min(1, p * 4) : 0)
         .multilineTextAlignment(.center)
@@ -156,27 +158,29 @@ struct LevelUpCard: View {
 
     // MARK: XP bar
 
-    /// The bar fills to the end during the charge, flashes on the impact, then
-    /// empties and refills to the XP carried into the new level.
+    /// The bar fills to the end during the charge, faster as it goes, glows
+    /// through the hush, flashes on the impact, then empties and refills to the
+    /// XP carried into the new level.
     private func xpBar(_ t: Double) -> some View {
         let post = t - LevelUpTiming.impact
         let carried = LevelPrestige.progress(xp: xp)
-        let start = 0.8
+        let start = 0.6
         // A new rank holds the full bar until its own beat.
-        let refill = style.isMilestone ? LevelUpTiming.rankReveal + 0.1 - LevelUpTiming.impact : 0.5
+        let refill = style.isMilestone ? LevelUpTiming.rankReveal + 0.1 - LevelUpTiming.impact : 0.65
         let fill: Double
         let barLevel: Int
         if post < 0 {
-            fill = start + (1 - start) * C.easeInOut(C.ramp(t, 0.1, LevelUpTiming.impact))
+            let x = C.ramp(t, 0.1, LevelUpTiming.impact - LevelUpTiming.hush)
+            fill = start + (1 - start) * x * x
             barLevel = max(1, level - 1)
         } else if post < refill - 0.1 {
             fill = 1
             barLevel = max(1, level - 1)
         } else {
-            fill = carried * C.easeOut(C.ramp(post, refill, refill + 0.8))
+            fill = carried * C.easeOut(C.ramp(post, refill, refill + 0.9))
             barLevel = level
         }
-        let flash = post < 0 ? 0 : exp(-post * 5)
+        let flash = post < 0 ? 0.35 * C.hush(t) : exp(-post * 5)
         return VStack(spacing: 7) {
             HStack {
                 Text("XP").font(.caption.weight(.semibold)).foregroundStyle(shown(t).highlight.opacity(0.8))

@@ -3,9 +3,11 @@ import SwiftUI
 import UIKit
 
 /// The new level struck into a forged ring of the rank's metal. During the
-/// charge it is dark steel holding the old level and it trembles; at the
-/// impact it lights and the new number lands. On a new rank it re-forges in
-/// the new rank's metal and stone on the second beat.
+/// charge it is dark steel holding the old level, swelling on each pulse and
+/// trembling harder as it builds; in the hush it draws in and goes still while
+/// the old number heats; at the impact it lights and the new number is struck
+/// in. On a new rank it re-forges in the new rank's metal and stone on the
+/// second beat.
 struct LevelUpCrest: View {
     let level: Int
     let t: Double
@@ -19,11 +21,13 @@ struct LevelUpCrest: View {
         let post = t - LevelUpTiming.impact
         let reveal = t - LevelUpTiming.rankReveal
         let milestone = style.isMilestone
-        let charge = C.ramp(t, 0.05, LevelUpTiming.impact)
+        let build = C.ramp(t, 0.05, LevelUpTiming.impact - LevelUpTiming.hush)
+        let hush = C.hush(t)
         let lit = C.ramp(post, 0, 0.12)
         let reforged = milestone ? C.ramp(reveal, 0, 0.15) : 1
-        let tremble = post < 0 ? sin(t * 63) * 1.3 * charge * charge : 0
-        let slam = post < 0 ? 0.86 + 0.06 * charge : 1 + 0.28 * exp(-post * 7) * cos(post * 13)
+        let shake = post < 0 ? pow(build, 3) * pow(1 - hush, 2) : 0
+        let slam = post < 0 ? (0.86 + 0.06 * build + 0.035 * C.pulse(t)) * (1 - 0.1 * C.easeIn(hush))
+            : 1 + 0.34 * exp(-post * 7.5) * cos(post * 14)
         let second = milestone && reveal >= 0 ? 0.14 * exp(-reveal * 7) * cos(reveal * 13) : 0
         ZStack {
             LevelUpCrestFrame(stage: previous.stage, lit: false).equatable()
@@ -34,16 +38,17 @@ struct LevelUpCrest: View {
             }
             LevelUpCrestFrame(stage: style.stage, lit: true).equatable()
                 .opacity(lit * reforged)
-            number(post: post)
+            number(post: post, heat: hush)
         }
         .frame(width: radius * LevelUpCrestFrame.span, height: radius * LevelUpCrestFrame.span)
         .scaleEffect(slam + second)
-        .offset(x: tremble)
+        .offset(x: sin(t * 63) * 2.4 * shake, y: sin(t * 47 + 1) * 0.8 * shake)
     }
 
-    private func number(post: Double) -> some View {
+    /// `heat` is how hot the old number glows in the hush before it is struck.
+    private func number(post: Double, heat: Double) -> some View {
         let landed = post >= 0
-        let p = C.ramp(post, 0, 0.32)
+        let p = C.ramp(post, 0, 0.28)
         let hot = landed ? exp(-post * 3.2) : 0
         let size = radius * 0.7
         // Serif numerals cast in the rank's metal, like the lettering on a
@@ -60,15 +65,16 @@ struct LevelUpCrest: View {
             // Struck into the face: a shadow below, a lit lip above, then the metal.
             face.foregroundStyle(.black.opacity(landed ? 0.75 : 0.5)).offset(y: size * 0.035).blur(radius: 0.8)
             face.foregroundStyle(.white.opacity(landed ? 0.45 : 0.1)).offset(y: -size * 0.02)
-            face.foregroundStyle(landed ? AnyShapeStyle(metal) : AnyShapeStyle(Color.white.opacity(0.3)))
+            face.foregroundStyle(landed ? AnyShapeStyle(metal) : AnyShapeStyle(Color.white.opacity(0.3 + 0.4 * heat)))
             face.foregroundStyle(.white).opacity(hot)
             if landed && moving { sheen(post: post, face: face) }
         }
         // Optical centring: the ink box is centred, then moved part of the
         // way toward where the figures carry their weight.
         .offset(x: -CrestNumerals.opticalShare * (outline.weight.x - outline.bounds.midX) * scale)
-        .shadow(color: style.tint.opacity(landed ? 0.25 + 0.55 * hot : 0), radius: 4 + 14 * hot)
-        .scaleEffect(landed ? 1.9 - 0.9 * C.land(p) : 1)
+        .shadow(color: landed ? style.tint.opacity(0.25 + 0.55 * hot) : previous.tint.opacity(0.7 * heat),
+                radius: landed ? 4 + 14 * hot : 10 * heat)
+        .scaleEffect(landed ? 2.2 - 1.2 * C.land(p) : 1)
         .opacity(landed ? min(1, p * 5) : 1)
     }
 

@@ -16,6 +16,27 @@ enum LevelUpCurve {
         let c = 1.7
         return 1 + (c + 1) * pow(x - 1, 3) + c * pow(x - 1, 2)
     }
+    /// How far into the hush before the impact, 0 to 1; 0 once it has landed.
+    static func hush(_ t: Double) -> Double {
+        t < LevelUpTiming.impact ? ramp(t, LevelUpTiming.impact - LevelUpTiming.hush, LevelUpTiming.impact) : 0
+    }
+    /// The charge's pulse: a kick on each beat that dies away, harder as the
+    /// beats quicken.
+    static func pulse(_ t: Double) -> Double {
+        let beats = LevelUpTiming.pulses
+        var sum = 0.0
+        for (i, beat) in beats.enumerated() where t >= beat && t < LevelUpTiming.impact {
+            sum += (0.5 + 0.5 * Double(i) / Double(beats.count - 1)) * exp(-(t - beat) * 12)
+        }
+        return sum
+    }
+    /// The stage's jolt after a strike: down first, then a shake that is gone
+    /// in half a second.
+    static func shake(after post: Double, strength: Double) -> CGSize {
+        guard post >= 0, post < 0.6 else { return .zero }
+        let decay = strength * exp(-post * 7)
+        return CGSize(width: 7 * decay * sin(post * 52), height: 5 * decay * cos(post * 39))
+    }
     /// The same scatter on every run, so a replay looks identical.
     static func noise(_ i: Int, _ salt: Int) -> Double {
         var h = UInt64(truncatingIfNeeded: (i &* 73_856_093) ^ (salt &* 19_349_663) ^ 0x5bd1_e995)
@@ -61,6 +82,8 @@ struct LevelUpStage: View {
         GeometryReader { proxy in
             let layout = LevelUpStageLayout(size: proxy.size, companion: companion)
             let post = t - LevelUpTiming.impact
+            let jolt = LevelUpCurve.shake(after: post, strength: 1)
+            let second = style.isMilestone ? LevelUpCurve.shake(after: t - LevelUpTiming.rankReveal, strength: 0.6) : .zero
             ZStack {
                 Canvas { context, _ in LevelUpStageArt.back(&context, layout, t: t, style: light) }
                     .modifier(StageLightBounds())
@@ -78,6 +101,7 @@ struct LevelUpStage: View {
                 }
                 .modifier(StageLightBounds())
             }
+            .offset(x: jolt.width + second.width, y: jolt.height + second.height)
         }
         .frame(height: companion ? 396 : 300)
         .accessibilityHidden(true)
@@ -115,15 +139,17 @@ enum LevelUpStageArt {
         let post = t - LevelUpTiming.impact
         let charge = C.ramp(t, 0.05, LevelUpTiming.impact)
         ctx.blendMode = .plusLighter
-        // Energy gathering where the crest is about to light.
+        // Energy gathering where the crest is about to light, kicking on each
+        // pulse; in the hush it is drawn in tight round the rim.
         if post < 0.35 {
-            let g = post < 0 ? charge * charge : pow(1 - post / 0.35, 2)
-            let r = l.crestRadius * (1.1 + 0.9 * charge)
+            let hush = C.easeIn(C.hush(t))
+            let g = post < 0 ? min(1, charge * charge + 0.3 * C.pulse(t) + hush) : pow(1 - post / 0.35, 2)
+            let r = l.crestRadius * ((1.1 + 0.9 * charge) * (1 - hush) + 1.12 * hush)
             ctx.fill(circle(l.crest, r), with: .radialGradient(
                 Gradient(colors: [style.tint.opacity(0.5 * g), style.tint.opacity(0.12 * g), .clear]),
                 center: l.crest, startRadius: 0, endRadius: r))
         }
-        floorGlow(&ctx, l, post: post, charge: charge, style: style)
+        floorGlow(&ctx, l, t: t, post: post, charge: charge, style: style)
         rays(&ctx, l, t: t, post: post, style: style)
         LevelUpAura.draw(&ctx, .under, l, t: t, since: since(t, style), style: style)
         pillar(&ctx, l, t: t, post: post, charge: charge, style: style)
@@ -152,8 +178,11 @@ enum LevelUpStageArt {
 
     // MARK: Behind the crest
 
-    private static func floorGlow(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, post: Double, charge: Double, style: LevelPrestige) {
-        let heat = post < 0 ? 0.2 + 0.5 * charge : 0.45 + 0.55 * exp(-post * 1.5)
+    private static func floorGlow(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, post: Double, charge: Double,
+                                  style: LevelPrestige) {
+        // The floor's light is pulled up into the crest during the hush.
+        let heat = post < 0 ? (0.2 + 0.5 * charge) * (1 - 0.8 * C.hush(t))
+            : 0.45 + 0.55 * exp(-post * 1.5)
         ellipseGlow(&ctx, center: l.floor, radius: l.sigil.width * 1.25, squash: 0.24,
                     colors: [style.tint.opacity(0.4 * heat), style.tint.opacity(0.12 * heat), .clear])
     }
@@ -191,10 +220,13 @@ enum LevelUpStageArt {
             let a = C.ramp(charge, 0.45, 1)
             guard a > 0 else { return }
             let flicker = 0.7 + 0.3 * sin(t * 70)
+            // In the hush the thread pulls taut: thicker and steady.
+            let hush = C.hush(t)
             var line = Path()
             line.move(to: CGPoint(x: l.floor.x, y: floorY))
             line.addLine(to: CGPoint(x: l.floor.x, y: l.crest.y))
-            ctx.stroke(line, with: .color(style.highlight.opacity(0.75 * a * flicker)), lineWidth: 1 + 1.6 * a)
+            ctx.stroke(line, with: .color(style.highlight.opacity(min(1, 0.75 * a * (flicker * (1 - hush) + hush) + 0.25 * hush))),
+                       lineWidth: 1 + 1.6 * a + 1.8 * hush)
             return
         }
         let rise = C.easeOut(C.ramp(post, 0, 0.2))
@@ -233,9 +265,10 @@ enum LevelUpStageArt {
     /// star marks turning the other way and an inner ring, joined by spokes.
     /// It draws itself round during the charge and flares at the impact.
     private static func sigil(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, post: Double, style: LevelPrestige, front: Bool) {
-        let drawn = C.easeInOut(C.ramp(t, 0.02, LevelUpTiming.impact - 0.04))
+        let drawn = C.easeInOut(C.ramp(t, 0.02, LevelUpTiming.impact - LevelUpTiming.hush))
         guard drawn > 0 else { return }
-        let lit = post < 0 ? 0.5 : 0.5 + 0.5 * exp(-post * 1.8)
+        // It beats with the pulse and dims in the hush.
+        let lit = post < 0 ? (0.5 + 0.2 * min(1, C.pulse(t))) * (1 - 0.6 * C.hush(t)) : 0.5 + 0.5 * exp(-post * 1.8)
         let depth = front ? 1.0 : 0.5
         let color = style.highlight.opacity(0.6 * lit * depth)
         let glow = style.tint.opacity(0.22 * lit * depth)
@@ -324,12 +357,12 @@ enum LevelUpStageArt {
     // MARK: In front of the crest
 
     /// Stardust spiralling in to the crest during the charge, speeding up as
-    /// it arrives.
+    /// it arrives. The last of it is swallowed halfway through the hush.
     private static func gather(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, style: LevelPrestige) {
-        let end = LevelUpTiming.impact
+        let end = LevelUpTiming.impact - LevelUpTiming.hush / 2
         guard t < end else { return }
         for i in 0..<58 {
-            let p = C.ramp(t, 0.34 * C.noise(i, 1), end)
+            let p = C.ramp(t, 0.5 * end * C.noise(i, 1), end)
             guard p > 0, p < 1 else { continue }
             let r0 = l.crestRadius * (1.6 + 1.5 * C.noise(i, 2))
             let a0 = C.noise(i, 3) * 2 * .pi
@@ -356,7 +389,7 @@ enum LevelUpStageArt {
         let c = l.crest
         let f = C.ramp(post, 0, 0.35)
         if f < 1 {
-            let r = l.crestRadius * (0.9 + 2.4 * C.easeOut(f))
+            let r = l.crestRadius * (0.9 + 2.8 * C.easeOut(f))
             let a = strength * pow(1 - f, 2)
             ctx.fill(circle(c, r), with: .radialGradient(
                 Gradient(colors: [.white.opacity(0.85 * a), style.tint.opacity(0.4 * a), .clear]),
@@ -367,7 +400,7 @@ enum LevelUpStageArt {
             let r = l.crestRadius * (0.95 + 3.1 * C.easeOut(s))
             let a = strength * pow(1 - s, 1.6)
             ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)),
-                       with: .color(style.tint.opacity(0.75 * a)), lineWidth: 1 + 6 * pow(1 - s, 2))
+                       with: .color(style.tint.opacity(0.75 * a)), lineWidth: 1 + 8 * pow(1 - s, 2))
             let inner = r * 0.97
             ctx.stroke(Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: inner * 2, height: inner * 2)),
                        with: .color(.white.opacity(0.55 * a)), lineWidth: 1)
@@ -384,7 +417,7 @@ enum LevelUpStageArt {
             let tau = post - 0.03 * C.noise(i, salt + 6)
             guard tau > 0, tau < life else { continue }
             let a = C.noise(i, salt + 7) * 2 * .pi
-            let speed = 220 + 360 * C.noise(i, salt + 8), k = 3.4
+            let speed = 260 + 420 * C.noise(i, salt + 8), k = 3.4
             func at(_ q: Double) -> CGPoint {
                 let d = l.crestRadius * 0.5 + speed * (1 - exp(-k * q)) / k
                 return CGPoint(x: c.x + cos(a) * d, y: c.y + sin(a) * d + 70 * q * q)

@@ -16,7 +16,23 @@ func end(of beat: LevelUpHapticBeat) -> Double {
 
 let regular = LevelUpTiming.beats(milestone: false)
 let milestone = LevelUpTiming.beats(milestone: true)
-check(LevelUpTiming.impact == 0.62 && LevelUpTiming.rankReveal == 1.7, "shared cinematic timing")
+check(LevelUpTiming.impact == 1.3 && LevelUpTiming.rankReveal == 2.65 && LevelUpTiming.hush == 0.22,
+      "shared cinematic timing")
+let pulses = LevelUpTiming.pulses
+let gaps = zip(pulses.dropFirst(), pulses).map { $0 - $1 }
+check(pulses.first! > 0 && pulses.last! < LevelUpTiming.impact - LevelUpTiming.hush
+      && gaps.allSatisfy { $0 > 0 } && gaps == gaps.sorted(by: >),
+      "pulses quicken and end before the hush")
+check(LevelUpTiming.hold > LevelUpTiming.impact && LevelUpTiming.hold < LevelUpTiming.impact + 0.1
+      && near(LevelUpTiming.scene(LevelUpTiming.impact), LevelUpTiming.impact),
+      "the strike holds just after the impact, which is on real time")
+check(near(LevelUpTiming.scene(LevelUpTiming.hold + LevelUpTiming.hitstop / 2), LevelUpTiming.hold)
+      && near(LevelUpTiming.scene(LevelUpTiming.hold + LevelUpTiming.hitstop), LevelUpTiming.hold),
+      "the card's clock stops for the hitstop")
+let samples = stride(from: 0.0, through: 6, by: 0.01).map { $0 }
+check(zip(samples.dropFirst(), samples).allSatisfy { LevelUpTiming.scene($0) >= LevelUpTiming.scene($1) }
+      && samples.allSatisfy { near(LevelUpTiming.scene(LevelUpTiming.wall($0)), $0) },
+      "the card's clock never runs back and wall inverts it")
 for (name, beats) in [("regular", regular), ("milestone", milestone)] {
     check(beats.map(\.time) == beats.map(\.time).sorted(), "\(name) beats sorted by time")
     check(beats.allSatisfy {
@@ -35,34 +51,42 @@ for (name, beats) in [("regular", regular), ("milestone", milestone)] {
     let impacts = beats.filter { $0.kind == .transient && near($0.time, LevelUpTiming.impact) }
     check(impacts.count == 1 && impacts[0].intensity == 1 && impacts[0].sharpness == 0.75,
           "\(name) has one full-strength impact")
-    check(beats.allSatisfy { end(of: $0) < 2.2 }, "\(name) ends before 2.2 seconds")
+    check(beats.allSatisfy { end(of: $0) < 3.2 }, "\(name) ends before 3.2 seconds")
+    check(beats.allSatisfy { end(of: $0) <= LevelUpTiming.impact - LevelUpTiming.hush || $0.time >= LevelUpTiming.impact },
+          "\(name) is silent through the hush")
 }
-let charges = regular.filter { $0.time < LevelUpTiming.impact }
-check(charges.count == 1 && charges[0].time == 0 && end(of: charges[0]) <= LevelUpTiming.impact
-      && charges[0].kind == .continuous(duration: LevelUpTiming.impact - 0.02),
-      "one charge ends before impact")
+let charges = regular.filter { $0.time < LevelUpTiming.impact && $0.kind != .transient }
+check(charges.count == 1 && charges[0].time == 0
+      && charges[0].kind == .continuous(duration: LevelUpTiming.impact - LevelUpTiming.hush),
+      "one charge hum ends as the hush begins")
 let charge = charges[0]
 check(near(charge.intensity * charge.envelope[0].value, 0.12)
       && near(charge.intensity * charge.envelope[charge.envelope.count - 1].value, 0.6)
       && charge.envelope.map(\.value) == charge.envelope.map(\.value).sorted() && charge.sharpness == 0.25,
       "charge rises from 0.12 to 0.6 with soft sharpness")
-let tails = regular.filter { $0.kind == .continuous(duration: 0.4) && $0.time == LevelUpTiming.impact }
-check(tails.count == 1 && tails[0].intensity == 0.5 && tails[0].sharpness == 0.2
+let beatsOfPulse = regular.filter { $0.kind == .transient && $0.time < LevelUpTiming.impact }
+check(beatsOfPulse.map(\.time) == pulses && beatsOfPulse.map(\.intensity) == beatsOfPulse.map(\.intensity).sorted()
+      && beatsOfPulse.allSatisfy { $0.intensity < 0.7 },
+      "a light tap on each pulse, harder as they quicken")
+let tails = regular.filter { $0.kind == .continuous(duration: 0.5) && $0.time == LevelUpTiming.impact }
+check(tails.count == 1 && tails[0].intensity == 0.55 && tails[0].sharpness == 0.2
       && tails[0].envelope.first?.value == 1 && tails[0].envelope.last?.value == 0
       && tails[0].envelope.map(\.value) == tails[0].envelope.map(\.value).sorted(by: >),
-      "impact tail decays from 0.5 to silence over 0.4 seconds")
-check(regular.count == 4 && regular.contains {
+      "impact tail decays from 0.55 to silence over 0.5 seconds")
+check(regular.count == 1 + pulses.count + 3 && regular.contains {
     $0.kind == .transient && near($0.time, LevelUpTiming.impact + 0.06)
-        && $0.intensity == 0.55 && $0.sharpness == 0.35
-}, "regular pattern contains only charge, double thump and tail")
+        && $0.intensity == 0.6 && $0.sharpness == 0.35
+}, "regular pattern contains only charge, pulses, double thump and tail")
 check(regular.allSatisfy { $0.time < LevelUpTiming.rankReveal }, "regular has no rank reveal beats")
 check(Array(milestone.prefix(regular.count)) == regular, "milestone preserves the regular pattern")
 let reveal = Array(milestone.dropFirst(regular.count))
 check(reveal.count == 4 && reveal.allSatisfy { $0.kind == .transient && $0.time >= LevelUpTiming.rankReveal },
       "milestone adds exactly four rank reveal transients")
-check(reveal[0].time == LevelUpTiming.rankReveal && reveal[0].intensity == 0.9 && reveal[0].sharpness == 0.6
+let revealTime = LevelUpTiming.wall(LevelUpTiming.rankReveal)
+check(near(revealTime, LevelUpTiming.rankReveal + LevelUpTiming.hitstop), "rank reveal is felt after the hitstop")
+check(reveal[0].time == revealTime && reveal[0].intensity == 0.9 && reveal[0].sharpness == 0.6
       && reveal.dropFirst().enumerated().allSatisfy { index, beat in
-          near(beat.time, LevelUpTiming.rankReveal + Double(index + 1) * 0.12)
+          near(beat.time, revealTime + Double(index + 1) * 0.12)
               && beat.intensity == 0.32 && beat.sharpness == 0.9
       }, "rank reveal has three light sparkles spaced 0.12 seconds apart")
 print("\(checks) levelup checks passed")
