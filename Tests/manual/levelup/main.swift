@@ -16,7 +16,7 @@ func end(of beat: LevelUpHapticBeat) -> Double {
 
 let regular = LevelUpTiming.beats(milestone: false)
 let milestone = LevelUpTiming.beats(milestone: true)
-check(LevelUpTiming.impact == 1.3 && LevelUpTiming.rankReveal == 2.65 && LevelUpTiming.hush == 0.22,
+check(LevelUpTiming.impact == 1.6 && LevelUpTiming.rankReveal == 2.95 && LevelUpTiming.hush == 0.24,
       "shared cinematic timing")
 let pulses = LevelUpTiming.pulses
 let gaps = zip(pulses.dropFirst(), pulses).map { $0 - $1 }
@@ -49,9 +49,9 @@ for (name, beats) in [("regular", regular), ("milestone", milestone)] {
         }
     }, "\(name) continuous envelopes valid")
     let impacts = beats.filter { $0.kind == .transient && near($0.time, LevelUpTiming.impact) }
-    check(impacts.count == 1 && impacts[0].intensity == 1 && impacts[0].sharpness == 0.75,
+    check(impacts.count == 1 && impacts[0].intensity == 1 && impacts[0].sharpness == 0.8,
           "\(name) has one full-strength impact")
-    check(beats.allSatisfy { end(of: $0) < 3.2 }, "\(name) ends before 3.2 seconds")
+    check(beats.allSatisfy { end(of: $0) < 3.5 }, "\(name) ends before 3.5 seconds")
     check(beats.allSatisfy { end(of: $0) <= LevelUpTiming.impact - LevelUpTiming.hush || $0.time >= LevelUpTiming.impact },
           "\(name) is silent through the hush")
 }
@@ -68,11 +68,11 @@ let beatsOfPulse = regular.filter { $0.kind == .transient && $0.time < LevelUpTi
 check(beatsOfPulse.map(\.time) == pulses && beatsOfPulse.map(\.intensity) == beatsOfPulse.map(\.intensity).sorted()
       && beatsOfPulse.allSatisfy { $0.intensity < 0.7 },
       "a light tap on each pulse, harder as they quicken")
-let tails = regular.filter { $0.kind == .continuous(duration: 0.5) && $0.time == LevelUpTiming.impact }
-check(tails.count == 1 && tails[0].intensity == 0.55 && tails[0].sharpness == 0.2
+let tails = regular.filter { $0.kind == .continuous(duration: 0.65) && $0.time == LevelUpTiming.impact }
+check(tails.count == 1 && tails[0].intensity == 0.75 && tails[0].sharpness == 0.15
       && tails[0].envelope.first?.value == 1 && tails[0].envelope.last?.value == 0
       && tails[0].envelope.map(\.value) == tails[0].envelope.map(\.value).sorted(by: >),
-      "impact tail decays from 0.55 to silence over 0.5 seconds")
+      "impact rumble decays from 0.75 to silence over 0.65 seconds")
 check(regular.count == 1 + pulses.count + 3 && regular.contains {
     $0.kind == .transient && near($0.time, LevelUpTiming.impact + 0.06)
         && $0.intensity == 0.6 && $0.sharpness == 0.35

@@ -22,8 +22,25 @@ struct LevelUpWarrior: View {
     /// straight line at the figure's frame.
     nonisolated static let overflow: CGFloat = 40
 
+    /// The companion's breath, from -1 (out) to 1 (in). It quickens through
+    /// the charge, is held at the top through the hush and settles back to a
+    /// steady pace after the strike.
+    nonisolated static func breath(_ t: Double) -> Double {
+        let rest = 2.4, quickening = 2.2, start = 0.05
+        let end = LevelUpTiming.impact - LevelUpTiming.hush
+        // The phase is the rate summed over time, so the quickening never jumps.
+        let gained = t <= start ? 0 : min(t - start, end - start) * min(t - start, end - start) / (2 * (end - start))
+        let breathing = sin(rest * t + quickening * gained)
+        let held = LevelUpCurve.easeInOut(LevelUpCurve.hush(t))
+        return breathing * (1 - held) + held
+    }
+
     var body: some View {
-        let lit = LevelUpCurve.ramp(t - LevelUpTiming.impact, 0, 0.15)
+        let post = t - LevelUpTiming.impact
+        let lit = LevelUpCurve.ramp(post, 0, 0.15)
+        let breath = Self.breath(t)
+        // The strike presses the figure down; it springs back.
+        let jolt = post >= 0 ? -0.035 * exp(-post * 8) * cos(post * 12) : 0
         ZStack(alignment: .topLeading) {
             Canvas { context, _ in
                 var c = context.overflowing(); PaladinArt.back(&c, style, t: t, lit: lit)
@@ -36,6 +53,7 @@ struct LevelUpWarrior: View {
             }.padding(-Self.overflow)
         }
         .frame(width: Self.size.width, height: Self.size.height)
+        .scaleEffect(x: 1 + 0.006 * breath, y: 1 + 0.013 * breath + jolt, anchor: .bottom)
     }
 }
 
@@ -76,7 +94,7 @@ private struct WarriorGlass: View, Equatable {
 /// The companion's face as the screen behind the visor: two eyes of light cut
 /// as hard, level-browed slits, the look of a hero at a level-up. They
 /// narrow and gather light during the charge, flare white when the level
-/// lands, then burn steady, blinking only rarely.
+/// lands, then burn steady, blinking every few seconds and sometimes twice.
 private enum WarriorFace {
     static let eye = Color(red: 0.36, green: 0.92, blue: 1)
 
@@ -92,8 +110,13 @@ private enum WarriorFace {
         let flare = post < 0 ? 0 : exp(-post * 5)
         ctx.fill(screen, with: .radialGradient(Gradient(colors: [eye.opacity(0.1 + 0.12 * power + 0.2 * flare), .clear]),
                                                center: CGPoint(x: f.midX, y: f.midY + 2), startRadius: 0, endRadius: f.width * 0.6))
-        let cycle = (t + 2.1).truncatingRemainder(dividingBy: 6.5)
-        let open = 1 - 0.9 * (cycle < 0.12 ? CGFloat(sin(cycle / 0.12 * .pi)) : 0)
+        // A blink every 3.1 s, and every other one a double blink.
+        let period = 3.1, n = ((t + 2.1) / period).rounded(.down), cycle = t + 2.1 - n * period
+        func shut(_ at: Double) -> CGFloat {
+            let u = cycle - at
+            return u >= 0 && u < 0.12 ? CGFloat(sin(u / 0.12 * .pi)) : 0
+        }
+        let open = 1 - 0.9 * (shut(0) + (Int(n).isMultiple(of: 2) ? 0 : shut(0.22)))
         // Narrow during the charge, full once the level lands.
         let h = (post < 0 ? 3.6 + 1.2 * CGFloat(charge) : 5.2) * open
         var eyes = Path()
@@ -540,8 +563,8 @@ private enum PaladinArt {
             let c = CGPoint(x: 90 + CGFloat(cos(a)) * 44, y: 46 + CGFloat(sin(a)) * 44)
             ArmorShade.spark(&ctx, at: c, radius: 4, style.tint, strength)
         }
-        // Wings of light from behind the shoulders, breathing slowly.
-        let flap = sin(t * 1.3) * 0.05
+        // Wings of light from behind the shoulders, rising with each breath.
+        let flap = LevelUpWarrior.breath(t) * 0.06
         for s: CGFloat in [-1, 1] {
             let anchor = S.p(s, 24, 86)
             // Long flight feathers behind, a row of shorter coverts over them.

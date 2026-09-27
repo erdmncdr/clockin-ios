@@ -33,9 +33,26 @@ enum LevelUpCurve {
     /// The stage's jolt after a strike: down first, then a shake that is gone
     /// in half a second.
     static func shake(after post: Double, strength: Double) -> CGSize {
-        guard post >= 0, post < 0.6 else { return .zero }
-        let decay = strength * exp(-post * 7)
-        return CGSize(width: 7 * decay * sin(post * 52), height: 5 * decay * cos(post * 39))
+        guard post >= 0, post < 0.7 else { return .zero }
+        let decay = strength * exp(-post * 6.5)
+        return CGSize(width: 10 * decay * sin(post * 52), height: 7 * decay * cos(post * 39))
+    }
+    /// How dark the screen has gone round the crest, 0 to 1. It closes in
+    /// through the second half of the charge, is deepest at the end of the
+    /// hush and is gone the moment the strike lands.
+    static func dark(_ t: Double) -> Double {
+        guard t < LevelUpTiming.impact else { return 0 }
+        let closing = ramp(t, LevelUpTiming.impact * 0.4, LevelUpTiming.impact - LevelUpTiming.hush)
+        return 0.6 * easeInOut(closing) + 0.4 * easeIn(hush(t))
+    }
+    /// The camera: it pushes slowly in on the crest through the charge, is
+    /// knocked back by the strike and springs home.
+    static func zoom(_ t: Double) -> Double {
+        let post = t - LevelUpTiming.impact
+        guard post >= 0 else {
+            return 1 + 0.045 * easeIn(ramp(t, 0.1, LevelUpTiming.impact - LevelUpTiming.hush)) + 0.015 * easeIn(hush(t))
+        }
+        return 1 - 0.04 * exp(-post * 6) * cos(post * 10)
     }
     /// The same scatter on every run, so a replay looks identical.
     static func noise(_ i: Int, _ salt: Int) -> Double {
@@ -95,17 +112,33 @@ struct LevelUpStage: View {
                         .position(x: layout.floor.x, y: layout.floor.y - 81)
                 }
                 LevelUpCrest(level: level, t: t, radius: layout.crestRadius, moving: moving)
+                    // Where the card's own light (the darkening, the flash)
+                    // is centred.
+                    .anchorPreference(key: LevelUpCrestAnchor.self, value: .center) {
+                        LevelUpCrestAnchor.Crest(center: $0, radius: layout.crestRadius)
+                    }
                     .position(layout.crest)
                 Canvas { context, _ in
                     LevelUpStageArt.front(&context, layout, t: t, style: light, milestone: style.isMilestone)
                 }
                 .modifier(StageLightBounds())
             }
+            .scaleEffect(LevelUpCurve.zoom(t), anchor: UnitPoint(x: 0.5, y: layout.crest.y / max(1, proxy.size.height)))
             .offset(x: jolt.width + second.width, y: jolt.height + second.height)
         }
         .frame(height: companion ? 396 : 300)
         .accessibilityHidden(true)
     }
+}
+
+/// The crest's centre and radius, for light the card draws over the stage.
+struct LevelUpCrestAnchor: PreferenceKey {
+    struct Crest {
+        let center: Anchor<CGPoint>
+        let radius: CGFloat
+    }
+    static let defaultValue: Crest? = nil
+    static func reduce(value: inout Crest?, nextValue: () -> Crest?) { value = value ?? nextValue() }
 }
 
 /// Where the stage's light may reach. Rays and shock rings run past the top
@@ -153,6 +186,7 @@ enum LevelUpStageArt {
         rays(&ctx, l, t: t, post: post, style: style)
         LevelUpAura.draw(&ctx, .under, l, t: t, since: since(t, style), style: style)
         pillar(&ctx, l, t: t, post: post, charge: charge, style: style)
+        arcs(&ctx, l, t: t, style: style)
         sigil(&ctx, l, t: t, post: post, style: style, front: false)
     }
 
@@ -163,7 +197,7 @@ enum LevelUpStageArt {
         gather(&ctx, l, t: t, style: style)
         embers(&ctx, l, t: t, post: post, style: style)
         LevelUpAura.draw(&ctx, .over, l, t: t, since: since(t, style), style: style)
-        burst(&ctx, l, after: post, style: style, sparks: 46, strength: 1, salt: 0)
+        burst(&ctx, l, after: post, style: style, sparks: 60, strength: 1, salt: 0)
         if milestone {
             burst(&ctx, l, after: t - LevelUpTiming.rankReveal, style: style, sparks: 32, strength: 0.8, salt: 100)
         }
@@ -258,6 +292,36 @@ enum LevelUpStageArt {
                 .init(color: .clear, location: 1),
             ]), startPoint: CGPoint(x: rect.minX, y: 0), endPoint: CGPoint(x: rect.maxX, y: 0)))
             fade(&layer, rect)
+        }
+    }
+
+    /// Arcs of energy that crack from the sigil up into the crest during the
+    /// charge: one on every pulse and more as it builds, none in the hush.
+    private static func arcs(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, style: LevelPrestige) {
+        let end = LevelUpTiming.impact - LevelUpTiming.hush, life = 0.09
+        guard t > LevelUpTiming.pulses[0], t < end + life else { return }
+        let target = CGPoint(x: l.crest.x, y: l.crest.y + l.crestRadius * 0.7)
+        let strikes = LevelUpTiming.pulses + (0..<14).map { 0.35 + (end - 0.4) * sqrt(C.noise($0, 41)) }
+        // The bolts fork afresh every 25 ms, so they crackle while they live.
+        let fork = Int(t * 40)
+        for (i, start) in strikes.enumerated() where start < end {
+            let age = t - start
+            guard age >= 0, age < life else { continue }
+            let fade = 1 - age / life
+            let a = C.noise(i, 42) * 2 * .pi
+            let from = CGPoint(x: l.floor.x + cos(a) * l.sigil.width, y: l.floor.y + sin(a) * l.sigil.height)
+            let dx = target.x - from.x, dy = target.y - from.y
+            let length = max(1, hypot(dx, dy))
+            var bolt = Path()
+            bolt.move(to: from)
+            for k in 1..<8 {
+                let f = CGFloat(k) / 8
+                let jitter = (CGFloat(C.noise(i * 31 + k, fork)) - 0.5) * 24 * sin(f * .pi)
+                bolt.addLine(to: CGPoint(x: from.x + dx * f - dy / length * jitter, y: from.y + dy * f + dx / length * jitter))
+            }
+            bolt.addLine(to: target)
+            ctx.stroke(bolt, with: .color(style.tint.opacity(0.4 * fade)), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            ctx.stroke(bolt, with: .color(.white.opacity(0.9 * fade)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
         }
     }
 

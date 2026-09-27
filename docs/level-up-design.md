@@ -4,8 +4,8 @@ Reaching a new level used to open a card with a floating astronaut and a pulse
 of rings. This brief replaces it with a moment staged the way MOBAs and
 MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 `Clockin/Celebrations/LevelUpCard.swift`, `LevelUpStage.swift`,
-`LevelUpCrest.swift`, `LevelUpAura.swift`, `LevelUpWarrior.swift`,
-`LevelUpTiming.swift` and `LevelUpHaptics.swift`.
+`LevelUpBlast.swift`, `LevelUpCrest.swift`, `LevelUpAura.swift`,
+`LevelUpWarrior.swift`, `LevelUpTiming.swift` and `LevelUpHaptics.swift`.
 
 ## What the genre does
 
@@ -25,11 +25,14 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 
 ## Principles
 
-1. **Three beats, with a held breath.** Charge for 1.3 s under a pulse that
-   quickens, go quiet for the last 0.22 s (the scene darkens, the light is
-   drawn into the crest and it stops shaking), then strike. The strike holds
-   for 0.08 s the way a fighting game freezes on a hit, and the stage jolts.
-   After about four seconds only slow light remains.
+1. **Three beats, with a held breath.** Charge for 1.6 s under a pulse that
+   quickens while arcs of energy crack into the crest, the screen darkens
+   round it and the camera pushes in. Go quiet for the last 0.24 s (the
+   darkness closes in, the light is drawn into the crest and it stops
+   shaking), then strike: the whole screen flashes, a shock wave runs off
+   its edges and sparks fly to them. The strike holds for 0.1 s the way a
+   fighting game freezes on a hit, then the stage jolts and the camera is
+   knocked back. After about four seconds only slow light remains.
 2. **One focal point.** The level number, struck into a forged crest, is what
    the eye follows. Everything else points at it: dust spirals into it, the
    column rises through it, rays turn behind it.
@@ -39,7 +42,7 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
    flashes on the impact, then empties and refills to the XP carried into the
    new level.
 5. **A new rank gets its own beat.** A level that opens a rank (every 75)
-   levels up in the old rank's colours; 2.65 s in, the crest re-forges in the
+   levels up in the old rank's colours; 2.95 s in, the crest re-forges in the
    new metal and stone and the new colour floods the scene.
 6. **Each rank has its own light.** The crest takes the rank's metal, face,
    stone cut and a number of points that grows with the rank; the stage adds the
@@ -63,8 +66,11 @@ makes it the companion, looks out through the visor. It is drawn smooth
 rather than as the pixel sprite, so it sits in the shaded plate. The eyes are
 hard slits whose top edge falls toward the nose, the stern look of a hero
 rather than the companion's everyday smile: narrow and gathering light during
-the charge, a white flare when the level lands, then a steady burn with a rare
-blink. Small, dim tongues of magic fire in the rank's colour crawl along the
+the charge, a white flare when the level lands, then a steady burn with a
+blink every 3.1 s, every other one a double blink. It breathes, the whole
+figure rising a little with each breath and the wings lifting with it; the
+breath quickens through the charge, is held through the hush, and the strike
+presses the figure down before it springs back. Small, dim tongues of magic fire in the rank's colour crawl along the
 upper edge of each flight feather and die at the tip, with an ember rising
 off a tip now and then: felt more than seen, never a flare. The plate is the rank's metal made pale, the trim
 (pauldron edges and feathers, helm wings, circlet, scrollwork, couters, cuffs,
@@ -84,12 +90,12 @@ and set aside in favour of this one.
 
 | Time (s) | What happens |
 |---|---|
-| 0 to 1.08 | Dark stage. The floor sigil draws itself round; stardust spirals into the crest, faster as it arrives; the crest, still dark steel with the old level, trembles harder as the charge builds; a pulse at 0.3, 0.58, 0.8, 0.96 and 1.07 s swells the crest, its glow and the sigil; a thread of light finds it from the floor; the XP bar runs to full, faster as it goes |
-| 1.08 to 1.3 | The hush: the scene darkens, the floor's light and the gathering glow are drawn in tight round the crest, the crest shrinks a little and goes still, the old number heats, the thread pulls taut and the full XP bar glows. No haptics |
-| 1.3 | Impact: soft bloom, shock ring, a ring across the floor, sparks thrown out with drag; the column of light shoots off the top of the stage; the stage jolts down and shakes for half a second; the crest lights and the new number, serif numerals struck in the rank's metal and centred optically (by their ink, moved three quarters of the way toward their centre of weight, since a figure like 45 carries its weight on the right), lands from over twice its size. At 1.34 s the whole card holds for 0.08 s, then runs on |
-| 1.4 to 2.1 | The title closes in from wide letter spacing with its rules; rays spin up and settle to a slow turn; the XP bar empties |
-| 2.0 to 2.9 | The XP bar refills; the rank panel (centred, under a titled rule) and the next rank land. The top rank has no next look, so that row is left out |
-| 2.65 (new rank) | Second beat: another bloom, ring and a smaller jolt, the crest re-forges in the new rank, the colours cross-fade, the rank badge lands with its unlock burst |
+| 0 to 1.36 | Dark stage. The floor sigil draws itself round; stardust spirals into the crest, faster as it arrives; the crest, still dark steel with the old level, trembles harder as the charge builds; a pulse at 0.32, 0.64, 0.9, 1.1, 1.24 and 1.33 s swells the crest, its glow and the sigil; arcs of energy crack from the sigil into the crest on each pulse and more often as it builds; a thread of light finds it from the floor; the camera pushes slowly in on the crest; from 0.64 s the screen darkens round the crest, leaving it lit; the XP bar runs to full, faster as it goes |
+| 1.36 to 1.6 | The hush: the darkness closes in, the floor's light and the gathering glow are drawn in tight round the crest, the crest shrinks a little and goes still, the old number heats, the thread pulls taut, the full XP bar glows and the companion holds its breath. No haptics |
+| 1.6 | Impact: the darkness is gone and the whole screen flashes from the crest (a single bloom); a shock wave runs off the edges of the screen; a lens streak crosses it and beams fire to the edges for an instant; sparks fly out to the edges, more from the crest itself; a shock ring and a ring across the floor; the column of light shoots off the top of the stage; the stage jolts down and shakes, the camera is knocked back and springs home, and the companion is pressed down and springs back; the crest lights and the new number, serif numerals struck in the rank's metal and centred optically (by their ink, moved three quarters of the way toward their centre of weight, since a figure like 45 carries its weight on the right), lands from over twice its size. At 1.64 s the whole card holds for 0.1 s, then runs on |
+| 1.7 to 2.4 | The title closes in from wide letter spacing with its rules; rays spin up and settle to a slow turn; the XP bar empties |
+| 2.3 to 3.2 | The XP bar refills; the rank panel (centred, under a titled rule) and the next rank land. The top rank has no next look, so that row is left out |
+| 2.95 (new rank) | Second beat: a smaller strike of the same kind in the new colours (flash, shock wave, streak, sparks, jolt), the crest re-forges in the new rank, the colours cross-fade, the rank badge lands with its unlock burst |
 | After | Embers rise through the column, the sigil turns, the rays breathe, a sheen crosses the number every 4.5 s, and the rank's own light plays |
 
 ## Rank light on the stage

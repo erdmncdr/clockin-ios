@@ -61,11 +61,24 @@ struct LevelUpCard: View {
                         LevelUpBackdrop(stage: LevelPrestige(level: level - 1).stage).equatable()
                     }
                     LevelUpBackdrop(stage: style.stage).equatable().opacity(takeover(t))
-                    // The scene darkens in the hush, so the strike lands out of the dark.
-                    Color.black.opacity(0.45 * C.easeIn(C.hush(t)))
                 }
             }
             .ignoresSafeArea()
+        }
+        .overlayPreferenceValue(LevelUpCrestAnchor.self) { crest in
+            // The darkening and the strike's light reach over the whole screen.
+            if let crest, motion {
+                GeometryReader { proxy in
+                    clock { t in
+                        if LevelUpBlast.active(t, secondBeat: style.isMilestone) {
+                            LevelUpBlast(t: t, center: proxy[crest.center], radius: crest.radius,
+                                         first: shown(LevelUpTiming.impact), second: style.isMilestone ? style : nil)
+                        }
+                    }
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            }
         }
         .onAppear { began = .now }
         .task {
