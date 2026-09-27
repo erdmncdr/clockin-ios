@@ -63,13 +63,7 @@ enum LevelUpCurve {
         return 1 - 0.04 * exp(-post * 6) * cos(post * 10)
     }
     /// The same scatter on every run, so a replay looks identical.
-    static func noise(_ i: Int, _ salt: Int) -> Double {
-        var h = UInt64(truncatingIfNeeded: (i &* 73_856_093) ^ (salt &* 19_349_663) ^ 0x5bd1_e995)
-        h ^= h >> 33; h &*= 0xff51_afd7_ed55_8ccd
-        h ^= h >> 33; h &*= 0xc4ce_b9fe_1a85_ec53
-        h ^= h >> 33
-        return Double(h % 10_000) / 10_000
-    }
+    static func noise(_ i: Int, _ salt: Int) -> Double { LevelUpTiming.scatter(i, salt) }
 }
 
 /// Where the stage's pieces sit. The crest floats over a sigil on the floor;
@@ -310,10 +304,9 @@ enum LevelUpStageArt {
     private static func arcs(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, style: LevelPrestige) {
         let end = LevelUpTiming.impact - LevelUpTiming.hush, life = 0.1
         guard t > LevelUpTiming.pulses[0], t < end + life else { return }
-        let strikes = LevelUpTiming.pulses + (0..<34).map { 0.4 + (end - 0.45) * sqrt(C.noise($0, 41)) }
         // The bolts fork afresh every 25 ms, so they crackle while they live.
         let fork = Int(t * 40)
-        for (i, start) in strikes.enumerated() where start < end {
+        for (i, start) in LevelUpTiming.strikes.enumerated() where start < end {
             let age = t - start
             guard age >= 0, age < life else { continue }
             let fade = 1 - age / life

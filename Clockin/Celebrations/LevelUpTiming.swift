@@ -27,6 +27,19 @@ enum LevelUpTiming {
     static func wall(_ scene: Double) -> Double {
         scene <= hold ? scene : scene + hitstop
     }
+
+    /// When the charge's arcs of energy strike: one on every pulse and ever
+    /// more as it builds. The sound's crackles land on the same moments.
+    static let strikes: [Double] = pulses + (0..<34).map { 0.4 + (impact - hush - 0.45) * sqrt(scatter($0, 41)) }
+
+    /// The same scatter on every run, so a replay looks and sounds identical.
+    static func scatter(_ i: Int, _ salt: Int) -> Double {
+        var h = UInt64(truncatingIfNeeded: (i &* 73_856_093) ^ (salt &* 19_349_663) ^ 0x5bd1_e995)
+        h ^= h >> 33; h &*= 0xff51_afd7_ed55_8ccd
+        h ^= h >> 33; h &*= 0xc4ce_b9fe_1a85_ec53
+        h ^= h >> 33
+        return Double(h % 10_000) / 10_000
+    }
 }
 
 struct LevelUpHapticBeat: Equatable, Sendable {
