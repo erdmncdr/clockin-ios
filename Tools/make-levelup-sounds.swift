@@ -15,6 +15,9 @@ enum Design: String, CaseIterable {
     case a, b, c
     /// The design the app plays. The others stay here to compare against.
     static let shipped = Design.a
+    /// Whether the shipped design plays its dark (minor) weight after the
+    /// strike rather than the heroic one. Both are rendered to compare.
+    static let shippedDark = true
     var name: String {
         switch self {
         case .a: "Cinematic"
@@ -331,17 +334,77 @@ func pad(_ buffer: inout Stereo, start: Double, duration: Double, notes: [Double
     }
 }
 
-func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout Noise) {
+/// A brass-like chord that lands with the weight of the strike: saws through
+/// a filter that snaps open with the blow and slowly closes, three detuned
+/// voices a note, softly saturated.
+func braam(_ buffer: inout Stereo, start: Double, duration: Double, notes: [Double], strength: Double,
+           followsLight: Bool, dark: Bool, swell: Double = 0.035) {
+    for (j, f) in notes.enumerated() {
+        let pan = notes.count == 1 ? 0 : Double(j) / Double(notes.count - 1) * 1.1 - 0.55
+        event(&buffer, start: start, duration: duration, pan: pan) { t, _ in
+            let open = (1 - exp(-t / 0.03)) * exp(-t / 0.85)
+            let cutoff = (dark ? 130 : 170) + (dark ? 1300 : 2000) * open + 420 * (followsLight ? light(start + t) : exp(-t / 0.7))
+            var value = 0.0
+            for n in 1...48 {
+                let harmonic = Double(n) * f
+                guard harmonic * 1.004 < sampleRate * 0.43 else { break }
+                let weight = 1 / Double(n) / sqrt(1 + pow(harmonic / cutoff, 4))
+                guard weight > 0.0003 else { break }
+                for d in [0.996, 1.0, 1.004] { value += weight * sin(2 * .pi * harmonic * d * t + Double(n) * d * 1.7) }
+            }
+            let shape = followsLight ? light(start + t) : exp(-t / 0.9)
+            return strength * shape * envelope(t, duration, attack: swell, release: 0.35) * 1.4 * tanh(value / 2.2)
+        }
+    }
+}
+
+/// A deep gong: inharmonic partials whose upper ones bloom just after the
+/// hit, the way a tam-tam swells, then ring out.
+func gong(_ buffer: inout Stereo, start: Double, duration: Double, base: Double, strength: Double) {
+    let ratios = [1.0, 1.51, 2.03, 2.58, 3.17, 3.91, 4.62, 5.37, 6.24, 7.33]
+    for (p, ratio) in ratios.enumerated() {
+        let pan = (p.isMultiple(of: 2) ? -1.0 : 1.0) * 0.4 * Double(p) / Double(ratios.count)
+        event(&buffer, start: start, duration: duration, pan: pan) { t, _ in
+            let bloom = p < 3 ? 1 : smooth(t / (0.08 + 0.04 * Double(p)))
+            let ring = exp(-t / (1.4 / (1 + Double(p) * 0.22)))
+            let beat = 1 + 0.18 * sin(2 * .pi * (0.6 + 0.35 * Double(p)) * t)
+            return strength / (1 + Double(p) * 0.4) * bloom * ring * beat * sin(2 * .pi * base * ratio * t + Double(p))
+                * envelope(t, duration, attack: 0.003, release: 0.45)
+        }
+    }
+}
+
+/// What falls after a blast: a low rumble that settles and a few dull knocks.
+func rubble(_ buffer: inout Stereo, start: Double, duration: Double, strength: Double, random: inout Noise) {
+    var low = Biquad()
+    low.tune("low", 240)
+    event(&buffer, start: start, duration: duration) { t, i in
+        if i % 64 == 0 { low.tune("low", 240 - 120 * clamp(t / duration)) }
+        return strength * 1.6 * low.tick(random.next()) * smooth(t / 0.05) * exp(-t / 0.55) * envelope(t, duration, release: 0.3)
+    }
+    for k in 0..<8 {
+        let offset = 0.14 + random.unit() * 0.8
+        let high = 150 + random.unit() * 70, pan = random.next() * 0.7
+        let level = strength * (0.55 - 0.035 * Double(k)) * (1 - offset / 1.1)
+        event(&buffer, start: start + offset, duration: 0.12, pan: pan) { t, _ in
+            let phase = 2 * .pi * (70 * t + (high - 70) * 0.02 * (1 - exp(-t / 0.02)))
+            return level * (sin(phase) + 0.3 * sin(2 * phase)) * exp(-t / 0.035) * envelope(t, 0.12, attack: 0.001)
+        }
+    }
+}
+
+func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout Noise, dark: Bool = false) {
     let start = rank ? 0.0 : impact
     let duration = rank ? 1.55 : fadeEnd - impact
     let c = [523.251, 659.255, 783.991, 1046.502]
     if rank {
         switch design {
         case .a:
-            for (i, f) in [783.991, 1046.502, 1318.51, 1567.982, 2093.005].enumerated() {
-                bell(&buffer, start: Double(i) * 0.06, frequency: f, strength: 0.21, duration: 0.9, pan: Double(i) * 0.3 - 0.6)
-            }
-            pad(&buffer, start: 0.1, duration: 1.45, notes: [1046.502, 1318.51, 1567.982], strength: 0.1, design: design, followsLight: false)
+            // The new rank lands a step higher: the chord rises a fifth, on G.
+            let notes = dark ? [48.999, 97.999, 146.832, 233.082] : [48.999, 97.999, 146.832, 195.998]
+            braam(&buffer, start: 0.01, duration: 1.5, notes: notes, strength: 0.2, followsLight: false, dark: dark, swell: 0.06)
+            gong(&buffer, start: 0, duration: 1.5, base: 97.999, strength: dark ? 0.2 : 0.14)
+            rubble(&buffer, start: 0, duration: 1.1, strength: 0.08, random: &random)
         case .b:
             let scale = [440.0, 493.883, 554.365, 659.255, 739.989, 880, 987.767, 1108.731, 1318.51, 1479.978, 1760]
             for (i, f) in scale.enumerated() {
@@ -359,10 +422,12 @@ func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout No
     } else {
         switch design {
         case .a:
-            pad(&buffer, start: start, duration: duration, notes: [130.813] + c + [1318.51], strength: 0.115, design: design, followsLight: true)
-            for (i, f) in (c + [1318.51]).enumerated() {
-                bell(&buffer, start: start + Double(i) * 0.008, frequency: f, strength: 0.12, duration: 1.15, pan: Double(i) * 0.35 - 0.7)
-            }
+            // Weight after the blow: a low power chord, minor when dark, a
+            // gong under it and the rubble settling.
+            let notes = dark ? [65.406, 97.999, 130.813, 155.563, 195.998] : [65.406, 97.999, 130.813, 195.998]
+            braam(&buffer, start: start + 0.015, duration: duration + 0.3, notes: notes, strength: 0.24, followsLight: true, dark: dark)
+            gong(&buffer, start: start, duration: duration + 0.3, base: 65.406, strength: dark ? 0.26 : 0.17)
+            rubble(&buffer, start: start, duration: 1.4, strength: 0.12, random: &random)
         case .b:
             pad(&buffer, start: start, duration: 0.54, notes: [440, 587.33, 659.255], strength: 0.30, design: design, followsLight: true, attack: 0.13)
             pad(&buffer, start: start + 0.27, duration: duration - 0.27, notes: [440, 554.365, 659.255, 880], strength: 0.28, design: design, followsLight: true, attack: 0.12)
@@ -376,8 +441,8 @@ func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout No
             pad(&buffer, start: start + 0.20, duration: duration - 0.20, notes: c, strength: 0.15, design: design, followsLight: true, attack: 0.04)
         }
     }
-    if design != .c {
-        let notes = design == .a ? [1567.982, 2093.005, 2637.02, 3135.964, 4186.009] : [1760.0, 2217.461, 2637.02, 3520]
+    if design == .b {
+        let notes = [1760.0, 2217.461, 2637.02, 3520]
         for _ in 0..<(rank ? 12 : 24) {
             let offset = 0.07 + random.unit() * (rank ? 0.6 : fadeStart - impact + 0.22)
             let f = notes[Int(random.unit() * Double(notes.count)) % notes.count]
@@ -482,12 +547,12 @@ func master(_ input: Stereo, design: Design, isRankBeat: Bool) -> Stereo {
     return output
 }
 
-func synthesize(_ design: Design) -> (Stereo, Stereo) {
+func synthesize(_ design: Design, dark: Bool = false) -> (Stereo, Stereo) {
     let length = impact + 1.8
     var dry = Stereo(seconds: length)
     var random = Noise(seed: design.seed &+ 0x1234)
     explosion(&dry, at: impact, design: design, rank: false, random: &random)
-    reward(&dry, design: design, rank: false, random: &random)
+    reward(&dry, design: design, rank: false, random: &random, dark: dark)
     let wet = reverberate(dry, design: design)
     dry.mix(wet, gain: design == .c ? 0.2 : 0.95)
     dry.mix(charge(design, seconds: length))
@@ -495,7 +560,7 @@ func synthesize(_ design: Design) -> (Stereo, Stereo) {
     var second = Stereo(seconds: 1.8)
     random = Noise(seed: design.seed &+ 0x5678)
     explosion(&second, at: 0, design: design, rank: true, random: &random)
-    reward(&second, design: design, rank: true, random: &random)
+    reward(&second, design: design, rank: true, random: &random, dark: dark)
     second.mix(reverberate(second, design: design), gain: design == .c ? 0.16 : 0.8)
     second = master(second, design: design, isRankBeat: true)
     var rank = Stereo(seconds: rankTime + 1.8)
@@ -604,7 +669,7 @@ func onset(_ audio: Stereo, near expected: Double, isolated: Bool = false) -> Do
     preconditionFailure("No onset near \(expected)")
 }
 
-func verify(_ audio: Stereo, design: Design, rank: Bool) -> String {
+func verify(_ audio: Stereo, design: Design, dark: Bool = false, rank: Bool) -> String {
     let peak = max(audio.left.map(abs).max()!, audio.right.map(abs).max()!)
     precondition(audio.left.allSatisfy(\.isFinite) && audio.right.allSatisfy(\.isFinite))
     precondition(db(peak) <= -1, "Peak exceeds -1 dBFS")
@@ -630,7 +695,7 @@ func verify(_ audio: Stereo, design: Design, rank: Bool) -> String {
     precondition(tail < -60, "Tail has not died: \(tail)")
     let dc = (abs(audio.left.reduce(0, +)) + abs(audio.right.reduce(0, +))) / Double(2 * audio.count)
     precondition(dc < 0.001, "DC offset")
-    var lines = [String(format: "levelup-%@-%@: %.3f s, peak %.2f dBFS, DC %.7f, tail(last 50 ms) %.2f dBFS", design.rawValue, rank ? "rank" : "level", audio.duration, db(peak), dc, tail)]
+    var lines = [String(format: "levelup-%@%@-%@: %.3f s, peak %.2f dBFS, DC %.7f, tail(last 50 ms) %.2f dBFS", design.rawValue, dark ? "-dark" : "", rank ? "rank" : "level", audio.duration, db(peak), dc, tail)]
     lines.append(String(format: "  RMS dBFS: charge first %.2f / second %.2f; hush %.2f (quiet region %.2f); impact %.2f; bright %.2f; fade %.2f", db(first), db(second), db(rms(audio, hushStart, impact)), db(quiet), db(rms(audio, impact, impact + 0.3)), db(rms(audio, impact, fadeStart)), db(rms(audio, fadeStart, fadeEnd))))
     lines.append(String(format: "  Impact energy >150 Hz: %.2f%%; measured impact %.6f s (%+.2f ms)", phone * 100, detectedImpact, (detectedImpact - impact) * 1000))
     lines.append("  Measured pulse onsets s: " + measured.map { String(format: "%.6f", $0) }.joined(separator: ", "))
@@ -643,7 +708,7 @@ func verify(_ audio: Stereo, design: Design, rank: Bool) -> String {
     return lines.joined(separator: "\n")
 }
 
-func preview(_ audio: Stereo, design: Design, rank: Bool, to url: URL) throws {
+func preview(_ audio: Stereo, design: Design, dark: Bool = false, rank: Bool, to url: URL) throws {
     let width = 1800, height = 1000
     let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: height,
         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
@@ -658,7 +723,7 @@ func preview(_ audio: Stereo, design: Design, rank: Bool, to url: URL) throws {
         (text as NSString).draw(at: NSPoint(x: x, y: y), withAttributes: [
             .font: NSFont.monospacedSystemFont(ofSize: size, weight: .regular), .foregroundColor: color])
     }
-    label("CLOCKIN / \(design.rawValue.uppercased()) · \(design.name) / \(rank ? "NEW RANK" : "LEVEL")", 80, 950, size: 25)
+    label("CLOCKIN / \(design.rawValue.uppercased()) · \(design.name)\(dark ? ", dark" : "") / \(rank ? "NEW RANK" : "LEVEL")", 80, 950, size: 25)
     label("44.1 kHz · stereo · 16-bit PCM | waveform (L + R) / 2 | spectrogram: Hann 4096, log 30 Hz–12 kHz", 80, 916)
     let x0 = 100.0, plotWidth = 1620.0, waveY = 610.0, waveHeight = 185.0, specY = 85.0, specHeight = 445.0
     let mono = audio.mono
@@ -779,31 +844,33 @@ struct MakeLevelUpSounds {
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
         var report = ["CLOCKIN / original synthesized level-up candidates", "RMS is per-channel energy averaged in linear power; silence prints as -240 dBFS.",
                       "Bright: impact to fade start. Phone check: stereo rectangular-window FFT, first 300 ms after impact."]
-        for design in Design.allCases {
-            let (level, rank) = synthesize(design)
+        // Design A is rendered twice: with its heroic weight and its dark one.
+        let variants: [(Design, Bool)] = [(.a, false), (.a, true), (.b, false), (.c, false)]
+        for (design, dark) in variants {
+            let (level, rank) = synthesize(design, dark: dark)
             var decodedLevel: Stereo?
             for (isRank, audio) in [(false, level), (true, rank)] {
-                let stem = "levelup-\(design.rawValue)-\(isRank ? "rank" : "level")"
+                let stem = "levelup-\(design.rawValue)\(dark ? "-dark" : "")-\(isRank ? "rank" : "level")"
                 let wav = output.appendingPathComponent(stem + ".wav")
                 try writeWAV(audio, to: wav)
                 let decoded = try readWAV(wav, expectedDuration: audio.duration)
-                let measurements = verify(decoded, design: design, rank: isRank)
+                let measurements = verify(decoded, design: design, dark: dark, rank: isRank)
                 print(measurements)
                 report.append(measurements)
                 if let base = decodedLevel {
                     precondition(Array(decoded.left.prefix(base.count)) == base.left && Array(decoded.right.prefix(base.count)) == base.right,
                                  "Rank must preserve the entire level version")
                 } else { decodedLevel = decoded }
-                try preview(decoded, design: design, rank: isRank, to: output.appendingPathComponent(stem + ".png"))
+                try preview(decoded, design: design, dark: dark, rank: isRank, to: output.appendingPathComponent(stem + ".png"))
             }
-            if design == .shipped {
+            if design == .shipped && dark == Design.shippedDark {
                 let sounds = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("Clockin/Audio/Sounds", isDirectory: true)
                 let lines = try writeResources(level: level, rank: rank, to: sounds)
                 lines.forEach { print($0) }
                 report += lines
             }
         }
-        let conclusion = "ok: 6 stereo PCM WAVs and 6 PNG previews; all rendered-audio preconditions passed. Output: \(output.path); design \(Design.shipped.rawValue) written to Clockin/Audio/Sounds"
+        let conclusion = "ok: 8 stereo PCM WAVs and 8 PNG previews; all rendered-audio preconditions passed. Output: \(output.path); design \(Design.shipped.rawValue)\(Design.shippedDark ? " (dark)" : "") written to Clockin/Audio/Sounds"
         report.append(conclusion)
         try (report.joined(separator: "\n\n") + "\n").write(to: output.appendingPathComponent("measurements.txt"), atomically: true, encoding: .utf8)
         print(conclusion)

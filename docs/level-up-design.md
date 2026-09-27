@@ -69,10 +69,14 @@ octave through an opening filter with a noise riser over it, a heartbeat
 thump on every pulse grows louder, and a burst of crackle sounds on every
 arc. It stops dead for the hush. The strike is a sub boom saturated so it
 still hits on a phone's speaker, a body thump, a crack and an air blast into
-a hall reverb; a C major chord of bells over a soft pad blooms with the
-light, holds while the screen is bright and fades with it, with sparkles
-through the bright part. A new rank's second beat adds a lighter strike and
-a rising bell arpeggio.
+a hall reverb. What follows carries the strike's weight rather than
+sparkling over it: a low brass-like C minor chord (three detuned saws a
+note, softly saturated) whose filter snaps open with the blow and closes as
+the light fades, a deep gong whose upper partials bloom just after the hit,
+and rubble settling, a low rumble and a few dull knocks. An earlier version
+ended on a bright chord of bells with sparkles, which sounded thin after the
+blast. A new rank's second beat adds a lighter strike and the chord again a
+fifth higher, on G, with its own gong.
 
 Three cues ship: the level (4 s), the level that opens a rank (5.8 s) and,
 for a card that opens on its still frame, the strike and chord alone. The
@@ -82,7 +86,8 @@ the card is dismissed early, and can be turned off in Settings (Level-up
 sound, on by default). Regenerate it with the command in
 `docs/implementation-notes.md`; the tool also renders two other designs
 (an arcane choir and an arcade power-up) to `build/levelup-sounds/` for
-comparison, which were set aside in favour of this one.
+comparison, which were set aside in favour of this one, and this design's
+heroic variant (the same weight on open fifths instead of minor).
 
 ## The companion
 
