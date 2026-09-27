@@ -5,7 +5,8 @@ of rings. This brief replaces it with a moment staged the way MOBAs and
 MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 `Clockin/Celebrations/LevelUpCard.swift`, `LevelUpStage.swift`,
 `LevelUpBlast.swift`, `LevelUpCrest.swift`, `LevelUpAura.swift`,
-`LevelUpWarrior.swift`, `LevelUpTiming.swift` and `LevelUpHaptics.swift`.
+`LevelUpWarrior.swift`, `LevelUpTiming.swift`, `LevelUpHaptics.swift` and
+`LevelUpSound.swift`.
 
 ## What the genre does
 
@@ -54,10 +55,34 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 7. **Safe to watch.** One bloom of light per beat, never a strobe. With Reduce
    Motion or Low Power Mode the card opens on its final frame. The title is
    decoration; assistive technologies read "Level up, Level N".
-8. **Felt as well as seen.** The haptic pattern follows the same clock: a hum
-   that builds during the charge with a tap on each pulse, silence through the
-   hush, a heavy double thump on the impact and, on a new rank, a second beat
-   with three light sparkles.
+8. **Felt and heard as well as seen.** The haptic pattern follows the same
+   clock: a hum that builds during the charge with a tap on each pulse,
+   silence through the hush, a heavy double thump on the impact and, on a new
+   rank, a second beat with three light sparkles. So does the sound (below).
+
+## The sound
+
+The sound is synthesized from the same timing as the card, so the thumps
+land on the pulses, the crackles on the arcs and the strike on the impact,
+each within a millisecond. A dark drone of two detuned saws glides up an
+octave through an opening filter with a noise riser over it, a heartbeat
+thump on every pulse grows louder, and a burst of crackle sounds on every
+arc. It stops dead for the hush. The strike is a sub boom saturated so it
+still hits on a phone's speaker, a body thump, a crack and an air blast into
+a hall reverb; a C major chord of bells over a soft pad blooms with the
+light, holds while the screen is bright and fades with it, with sparkles
+through the bright part. A new rank's second beat adds a lighter strike and
+a rising bell arpeggio.
+
+Three cues ship: the level (4 s), the level that opens a rank (5.8 s) and,
+for a card that opens on its still frame, the strike and chord alone. The
+sound plays only while Clockin is open, mixes with other audio, follows the
+silent switch unless Focus radio is playing, stops with a short fade when
+the card is dismissed early, and can be turned off in Settings (Level-up
+sound, on by default). Regenerate it with the command in
+`docs/implementation-notes.md`; the tool also renders two other designs
+(an arcane choir and an arcade power-up) to `build/levelup-sounds/` for
+comparison, which were set aside in favour of this one.
 
 ## The companion
 

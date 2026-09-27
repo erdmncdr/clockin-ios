@@ -176,6 +176,7 @@ final class CelebrationCenter: ObservableObject {
     }
 
     func dismiss() {
+        stopLevelUp()
         dismissal?.cancel()
         dismissal = nil
         queue.finish()
@@ -184,10 +185,17 @@ final class CelebrationCenter: ObservableObject {
     }
 
     private func suspend() {
+        stopLevelUp()
         dismissal?.cancel()
         dismissal = nil
         queue.suspend()
         event = nil
+    }
+
+    /// A level-up's sound and haptics end with its card, not seconds after.
+    private func stopLevelUp() {
+        LevelUpSound.stop()
+        LevelUpHaptics.stop()
     }
 
     private func requestPresentation() {
@@ -207,7 +215,12 @@ final class CelebrationCenter: ObservableObject {
             self.presentationID &+= 1
             self.event = event
             if case .levelUp(let level, _) = event, self.soundedLevels.insert(level).inserted {
-                LevelUpHaptics.play(milestone: LevelPrestige(level: level).isMilestone)
+                let milestone = LevelPrestige(level: level).isMilestone
+                LevelUpHaptics.play(milestone: milestone)
+                // The same test the card uses to open on its still frame.
+                let still = !RollingAnimationPolicy.shared.allowsAnimation(
+                    reduceMotion: UIAccessibility.isReduceMotionEnabled, contentActive: true, sceneActive: true, visible: true)
+                LevelUpSound.play(milestone: milestone, still: still)
             }
             self.persist()
             guard let delay = event.autoDismissDelay else {

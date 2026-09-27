@@ -25,6 +25,7 @@ struct SettingsView: View {
     @AppStorage(WardrobeState.deskKey) private var showHome = true
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     @AppStorage(HapticPolicy.enabledKey) private var hapticsEnabled = true
+    @AppStorage(LevelUpSound.enabledKey) private var levelUpSoundEnabled = true
     @FocusState private var rateIsFocused: Bool
     @State private var rateText = ""
     @State private var pendingRate: RateChangeDraft?
@@ -65,6 +66,7 @@ struct SettingsView: View {
                 paySection
                 Section {
                     Toggle("Haptics", isOn: $hapticsEnabled.hapticSelection($selectionFeedback))
+                    Toggle("Level-up sound", isOn: $levelUpSoundEnabled.hapticSelection($selectionFeedback))
                     Toggle("Focus companion", isOn: $mascotEnabled.hapticSelection($selectionFeedback))
                     if mascotEnabled {
                         companionBehavior
@@ -73,7 +75,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Appearance")
                 } footer: {
-                    Text("Gentle feedback for taps, selections, and completed actions.")
+                    Text("Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.")
                 }
                 NudgeSettingsSection()
                 Section {

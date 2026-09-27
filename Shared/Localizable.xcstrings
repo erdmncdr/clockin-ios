@@ -4969,12 +4969,12 @@
         }
       }
     },
-    "Gentle feedback for taps, selections, and completed actions.": {
+    "Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dokunmalar, seçimler ve tamamlanan işlemler için hafif titreşim."
+            "value": "Dokunmalar, seçimler ve tamamlanan işlemler için hafif titreşim. Seviye atlama sesi Clockin açıkken çalar ve sessiz moda uyar."
           }
         }
       }
@@ -6323,6 +6323,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seviye atladın"
+          }
+        }
+      }
+    },
+    "Level-up sound": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seviye atlama sesi"
           }
         }
       }

@@ -57,6 +57,10 @@ enum LevelUpHaptics {
         }
     }
 
+    static func stop() {
+        stopPlayers()
+    }
+
     private static func stopPlayers() {
         for player in players { try? player.stop(atTime: CHHapticTimeImmediate) }
         players.removeAll()
