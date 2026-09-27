@@ -5,13 +5,13 @@ import Foundation
 /// the impact; `wall(_:)` gives the real seconds for the haptics.
 enum LevelUpTiming {
     /// Seconds from presentation to the impact.
-    static let impact: Double = 1.6
+    static let impact: Double = 2.2
     /// Seconds before the impact when everything draws in and goes quiet.
-    static let hush: Double = 0.24
+    static let hush: Double = 0.3
     /// A pulse that quickens through the charge, ending as the hush begins.
-    static let pulses: [Double] = [0.32, 0.64, 0.9, 1.1, 1.24, 1.33]
+    static let pulses: [Double] = [0.35, 0.72, 1.02, 1.28, 1.5, 1.66, 1.78, 1.86]
     /// Seconds from presentation to the milestone rank reveal.
-    static let rankReveal: Double = 2.95
+    static let rankReveal: Double = 3.9
     /// How long the strike holds, the way a fighting game freezes on a hit.
     static let hitstop: Double = 0.1
     /// The card's time at which the strike holds: the new number is already
@@ -57,11 +57,11 @@ extension LevelUpTiming {
                   envelope: [.init(time: 0, value: 0.2), .init(time: 0.7, value: 0.5), .init(time: 1, value: 1)])
         ]
         for (index, time) in pulses.enumerated() {
-            beats.append(.init(time: time, kind: .transient, intensity: 0.28 + 0.07 * Double(index), sharpness: 0.3))
+            beats.append(.init(time: time, kind: .transient, intensity: 0.26 + 0.05 * Double(index), sharpness: 0.3))
         }
         beats += [
             .init(time: impact, kind: .transient, intensity: 1, sharpness: 0.8),
-            .init(time: impact, kind: .continuous(duration: 0.65), intensity: 0.75, sharpness: 0.15,
+            .init(time: impact, kind: .continuous(duration: 0.9), intensity: 0.75, sharpness: 0.15,
                   envelope: [.init(time: 0, value: 1), .init(time: 1, value: 0)]),
             .init(time: impact + 0.06, kind: .transient, intensity: 0.6, sharpness: 0.35)
         ]

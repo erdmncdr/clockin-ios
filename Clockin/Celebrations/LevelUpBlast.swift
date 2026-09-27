@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// Light the card draws over everything, centred on the crest: the screen
-/// darkening round it through the charge, then the strike's flash, a shock
-/// wave that runs off the screen, a lens streak, beams and sparks thrown to
-/// the edges. A new rank's second beat gets a smaller strike of its own.
+/// darkening round it through the charge, then the strike's light flooding
+/// out until the screen is bright, holding and easing back to the scene, with
+/// a shock wave that runs off the screen, a lens streak, beams and sparks
+/// thrown to the edges. A new rank's second beat gets a smaller strike.
 struct LevelUpBlast: View {
     let t: Double
     let center: CGPoint
@@ -41,7 +42,7 @@ struct LevelUpBlast: View {
 enum LevelUpBlastArt {
     private typealias C = LevelUpCurve
     /// Seconds a strike's light lasts.
-    static let length = 0.9
+    static let length = 1.6
 
     /// A vignette that closes in on the crest, leaving it lit.
     static func darken(_ ctx: inout GraphicsContext, size: CGSize, center: CGPoint, radius: CGFloat, amount: Double) {
@@ -51,8 +52,8 @@ enum LevelUpBlastArt {
         ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .radialGradient(Gradient(stops: [
             .init(color: .clear, location: 0),
             .init(color: .clear, location: lit),
-            .init(color: .black.opacity(0.35 * amount), location: edge),
-            .init(color: .black.opacity(0.62 * amount), location: 1),
+            .init(color: .black.opacity(0.5 * amount), location: edge),
+            .init(color: .black.opacity(0.88 * amount), location: 1),
         ]), center: center, startRadius: 0, endRadius: far))
     }
 
@@ -60,15 +61,18 @@ enum LevelUpBlastArt {
                        style: LevelPrestige, strength: Double, salt: Int) {
         guard post >= 0, post < length else { return }
         let far = farthest(size, c)
-        // The whole screen lights from the crest out and fades at once: one
-        // bloom, never a strobe.
-        let flash = strength * exp(-post * 7)
-        if flash > 0.01 {
+        // The light floods out from the crest until it fills the screen,
+        // holds there bright, then eases back to the scene over a second:
+        // one bloom, never a strobe.
+        let bright = strength * (1 - C.easeInOut(C.ramp(post, 0.35, 1.5)))
+        if bright > 0.005 {
+            let reach = r + far * 1.35 * C.easeOut(C.ramp(post, 0, 0.2))
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .radialGradient(Gradient(stops: [
-                .init(color: .white.opacity(0.75 * flash), location: 0),
-                .init(color: style.tint.opacity(0.5 * flash), location: min(0.5, r * 2.5 / far)),
-                .init(color: style.tint.opacity(0.16 * flash), location: 1),
-            ]), center: c, startRadius: 0, endRadius: far))
+                .init(color: .white.opacity(0.95 * bright), location: 0),
+                .init(color: .white.opacity(0.7 * bright), location: 0.35),
+                .init(color: style.tint.opacity(0.7 * bright), location: 0.75),
+                .init(color: .clear, location: 1),
+            ]), center: c, startRadius: 0, endRadius: reach))
         }
         // A shock wave that runs off the edges of the screen.
         let s = C.ramp(post, 0, 0.7)

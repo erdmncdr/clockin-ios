@@ -46,7 +46,7 @@ struct LevelUpCard: View {
                                        sceneActive: scenePhase == .active, visible: true)
     }
     /// The rank row lands after the level, or on its own beat for a new rank.
-    private var rankBeat: Double { style.isMilestone ? LevelUpTiming.rankReveal : LevelUpTiming.impact + 0.95 }
+    private var rankBeat: Double { style.isMilestone ? LevelUpTiming.rankReveal : LevelUpTiming.impact + 1.3 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -135,9 +135,10 @@ struct LevelUpCard: View {
 
     private func banner(_ t: Double) -> some View {
         let post = t - LevelUpTiming.impact
-        let p = C.ramp(post, 0.06, 0.5)
+        // The title comes up out of the light as it fades.
+        let p = C.ramp(post, 0.45, 0.95)
         let e = C.easeOut(p)
-        let rule = C.easeOut(C.ramp(post, 0.2, 0.75))
+        let rule = C.easeOut(C.ramp(post, 0.6, 1.15))
         let title = String(localized: "Level up", bundle: .app).uppercased(with: AppLanguage.locale)
         let colors = shown(t)
         return VStack(spacing: 6) {
@@ -152,7 +153,7 @@ struct LevelUpCard: View {
             }
             Text(hours == 1 ? "1 hour of focus" : "\(hours.formatted(.number.locale(AppLanguage.formatLocale))) hours of focus")
                 .font(.subheadline).foregroundStyle(.white.opacity(0.6))
-                .opacity(C.ramp(post, 0.4, 0.85))
+                .opacity(C.ramp(post, 0.8, 1.25))
         }
         .opacity(p > 0 ? min(1, p * 4) : 0)
         .multilineTextAlignment(.center)
@@ -186,7 +187,7 @@ struct LevelUpCard: View {
         let carried = LevelPrestige.progress(xp: xp)
         let start = 0.6
         // A new rank holds the full bar until its own beat.
-        let refill = style.isMilestone ? LevelUpTiming.rankReveal + 0.1 - LevelUpTiming.impact : 0.65
+        let refill = style.isMilestone ? LevelUpTiming.rankReveal + 0.1 - LevelUpTiming.impact : 1.0
         let fill: Double
         let barLevel: Int
         if post < 0 {

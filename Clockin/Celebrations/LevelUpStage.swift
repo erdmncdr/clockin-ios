@@ -4,7 +4,7 @@ import SwiftUI
 /// still card (Reduce Motion, Low Power Mode) is drawn at `still`, where every
 /// entrance has finished and only the resting light is left.
 enum LevelUpCurve {
-    static let still = 6.0
+    static let still = 7.0
     static func ramp(_ t: Double, _ from: Double, _ to: Double) -> Double {
         max(0, min(1, (t - from) / (to - from)))
     }
@@ -42,8 +42,16 @@ enum LevelUpCurve {
     /// hush and is gone the moment the strike lands.
     static func dark(_ t: Double) -> Double {
         guard t < LevelUpTiming.impact else { return 0 }
-        let closing = ramp(t, LevelUpTiming.impact * 0.4, LevelUpTiming.impact - LevelUpTiming.hush)
-        return 0.6 * easeInOut(closing) + 0.4 * easeIn(hush(t))
+        let closing = ramp(t, LevelUpTiming.impact * 0.25, LevelUpTiming.impact - LevelUpTiming.hush)
+        return 0.65 * easeInOut(closing) + 0.35 * easeIn(hush(t))
+    }
+    /// The stage trembling under the charge: a jitter that grows as it
+    /// builds and stops dead for the hush.
+    static func rumble(_ t: Double) -> CGSize {
+        let build = ramp(t, 0.4, LevelUpTiming.impact - LevelUpTiming.hush)
+        guard build > 0, build < 1 else { return .zero }
+        let step = Int(t * 30), reach = 3.2 * build * build
+        return CGSize(width: (noise(step, 71) - 0.5) * 2 * reach, height: (noise(step, 72) - 0.5) * 1.2 * reach)
     }
     /// The camera: it pushes slowly in on the crest through the charge, is
     /// knocked back by the strike and springs home.
@@ -101,6 +109,7 @@ struct LevelUpStage: View {
             let post = t - LevelUpTiming.impact
             let jolt = LevelUpCurve.shake(after: post, strength: 1)
             let second = style.isMilestone ? LevelUpCurve.shake(after: t - LevelUpTiming.rankReveal, strength: 0.6) : .zero
+            let rumble = LevelUpCurve.rumble(t)
             ZStack {
                 Canvas { context, _ in LevelUpStageArt.back(&context, layout, t: t, style: light) }
                     .modifier(StageLightBounds())
@@ -124,7 +133,7 @@ struct LevelUpStage: View {
                 .modifier(StageLightBounds())
             }
             .scaleEffect(LevelUpCurve.zoom(t), anchor: UnitPoint(x: 0.5, y: layout.crest.y / max(1, proxy.size.height)))
-            .offset(x: jolt.width + second.width, y: jolt.height + second.height)
+            .offset(x: jolt.width + second.width + rumble.width, y: jolt.height + second.height + rumble.height)
         }
         .frame(height: companion ? 396 : 300)
         .accessibilityHidden(true)
@@ -295,13 +304,13 @@ enum LevelUpStageArt {
         }
     }
 
-    /// Arcs of energy that crack from the sigil up into the crest during the
-    /// charge: one on every pulse and more as it builds, none in the hush.
+    /// Arcs of energy that crack into the crest during the charge, from the
+    /// sigil and out of the air round it: one on every pulse and ever more as
+    /// it builds, some of them forking, none in the hush.
     private static func arcs(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, style: LevelPrestige) {
-        let end = LevelUpTiming.impact - LevelUpTiming.hush, life = 0.09
+        let end = LevelUpTiming.impact - LevelUpTiming.hush, life = 0.1
         guard t > LevelUpTiming.pulses[0], t < end + life else { return }
-        let target = CGPoint(x: l.crest.x, y: l.crest.y + l.crestRadius * 0.7)
-        let strikes = LevelUpTiming.pulses + (0..<14).map { 0.35 + (end - 0.4) * sqrt(C.noise($0, 41)) }
+        let strikes = LevelUpTiming.pulses + (0..<34).map { 0.4 + (end - 0.45) * sqrt(C.noise($0, 41)) }
         // The bolts fork afresh every 25 ms, so they crackle while they live.
         let fork = Int(t * 40)
         for (i, start) in strikes.enumerated() where start < end {
@@ -309,7 +318,14 @@ enum LevelUpStageArt {
             guard age >= 0, age < life else { continue }
             let fade = 1 - age / life
             let a = C.noise(i, 42) * 2 * .pi
-            let from = CGPoint(x: l.floor.x + cos(a) * l.sigil.width, y: l.floor.y + sin(a) * l.sigil.height)
+            // Every third bolt cracks out of the air onto the crest's rim.
+            let fromAir = i % 3 == 2
+            let from = fromAir
+                ? CGPoint(x: l.crest.x + cos(a) * l.crestRadius * 2.2, y: l.crest.y + sin(a) * l.crestRadius * 2.2)
+                : CGPoint(x: l.floor.x + cos(a) * l.sigil.width, y: l.floor.y + sin(a) * l.sigil.height)
+            let target = fromAir
+                ? CGPoint(x: l.crest.x + cos(a) * l.crestRadius * 1.05, y: l.crest.y + sin(a) * l.crestRadius * 1.05)
+                : CGPoint(x: l.crest.x, y: l.crest.y + l.crestRadius * 0.7)
             let dx = target.x - from.x, dy = target.y - from.y
             let length = max(1, hypot(dx, dy))
             var bolt = Path()
@@ -320,6 +336,18 @@ enum LevelUpStageArt {
                 bolt.addLine(to: CGPoint(x: from.x + dx * f - dy / length * jitter, y: from.y + dy * f + dx / length * jitter))
             }
             bolt.addLine(to: target)
+            // Half of the long bolts throw a short fork off their middle.
+            if !fromAir, i.isMultiple(of: 2) {
+                let f: CGFloat = 0.45, side: CGFloat = C.noise(i, 43) > 0.5 ? 1 : -1
+                var p = CGPoint(x: from.x + dx * f, y: from.y + dy * f)
+                bolt.move(to: p)
+                for k in 1...3 {
+                    let jitter = (CGFloat(C.noise(i * 17 + k, fork)) - 0.5) * 10
+                    p = CGPoint(x: p.x - dy / length * 9 * side + dx / length * (7 + jitter),
+                                y: p.y + dx / length * 9 * side + dy / length * (7 + jitter))
+                    bolt.addLine(to: p)
+                }
+            }
             ctx.stroke(bolt, with: .color(style.tint.opacity(0.4 * fade)), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             ctx.stroke(bolt, with: .color(.white.opacity(0.9 * fade)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
         }
@@ -440,7 +468,7 @@ enum LevelUpStageArt {
     private static func gather(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, style: LevelPrestige) {
         let end = LevelUpTiming.impact - LevelUpTiming.hush / 2
         guard t < end else { return }
-        for i in 0..<58 {
+        for i in 0..<80 {
             let p = C.ramp(t, 0.5 * end * C.noise(i, 1), end)
             guard p > 0, p < 1 else { continue }
             let r0 = l.crestRadius * (1.6 + 1.5 * C.noise(i, 2))
@@ -511,14 +539,17 @@ enum LevelUpStageArt {
         }
     }
 
-    /// Motes rising through the column and off the sigil after the impact.
+    /// Motes rising through the column and off the sigil: dragged up fast
+    /// through the charge, gone in the hush, then drifting after the impact.
     private static func embers(_ ctx: inout GraphicsContext, _ l: LevelUpStageLayout, t: Double, post: Double, style: LevelPrestige) {
-        let fade = C.ramp(post, 0.15, 0.9)
+        let fade = post < 0 ? 0.8 * C.ramp(t, 0.5, LevelUpTiming.impact - LevelUpTiming.hush) * (1 - C.hush(t))
+            : C.ramp(post, 0.15, 0.9)
         guard fade > 0 else { return }
+        let pace = post < 0 ? 2.4 : 1
         let bottom = l.floor.y - 4
         for i in 0..<32 {
             let period = 2.4 + 2.2 * C.noise(i, 11)
-            let phase = (t / period + C.noise(i, 12)).truncatingRemainder(dividingBy: 1)
+            let phase = (t * pace / period + C.noise(i, 12)).truncatingRemainder(dividingBy: 1)
             // Motes near the middle rise the whole height; outer ones stay low.
             let spread = pow(C.noise(i, 13), 1.6)
             let side = C.noise(i, 14) > 0.5 ? 1.0 : -1.0
