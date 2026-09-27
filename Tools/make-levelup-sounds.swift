@@ -12,17 +12,19 @@ let rankTime = LevelUpTiming.wall(LevelUpTiming.rankReveal)
 let peakLimit = pow(10.0, -1.05 / 20)
 
 enum Design: String, CaseIterable {
-    case a, b, c
+    case a, b, c, f, g
     /// The design the app plays. The others stay here to compare against.
-    static let shipped = Design.a
-    /// Whether the shipped design plays its dark (minor) weight after the
-    /// strike rather than the heroic one. Both are rendered to compare.
-    static let shippedDark = true
+    static let shipped = Design.g
+    /// Whether the shipped design is A's dark (minor) variant; A is rendered
+    /// with both its heroic and dark weight to compare.
+    static let shippedDark = false
     var name: String {
         switch self {
         case .a: "Cinematic"
         case .b: "Arcane"
         case .c: "Arcade power-up"
+        case .f: "Dark, remastered"
+        case .g: "Storm"
         }
     }
     var seed: UInt64 {
@@ -30,6 +32,8 @@ enum Design: String, CaseIterable {
         case .a: 0xC10C_A001
         case .b: 0xC10C_B002
         case .c: 0xC10C_C003
+        case .f: 0xC10C_F006
+        case .g: 0xC10C_6007
         }
     }
 }
@@ -176,6 +180,7 @@ func charge(_ design: Design, seconds: Double) -> Stereo {
         case .a: frequency = 55 * pow(2, glide)
         case .b: frequency = 110 * pow(2, glide)
         case .c: frequency = 110 * pow(8, glide)
+        case .f, .g: preconditionFailure("Drawn by synthesizeRich")
         }
         tremolo += (3 + 11 * u * u) / sampleRate
         vibrato += (4 + 13 * u) / sampleRate
@@ -206,6 +211,7 @@ func charge(_ design: Design, seconds: Double) -> Stereo {
         case .c:
             l = 0.36 * square(phaseL, stepL) + 0.5 * triangle(phaseL, f)
             r = 0.36 * square(phaseR, stepR) + 0.5 * triangle(phaseR, f)
+        case .f, .g: preconditionFailure("Drawn by synthesizeRich")
         }
         // Brief anticipation dips leave each haptic pulse audible in the dense charge.
         var duck = 1.0
@@ -253,6 +259,7 @@ func charge(_ design: Design, seconds: Double) -> Stereo {
                 if i % (5 + j % 5) == 0 { held = (random.next() * 7).rounded() / 7 }
                 return low.tick(held) * strength * envelope(t, 0.065) * exp(-t / 0.023)
             }
+        case .f, .g: preconditionFailure("Drawn by synthesizeRich")
         }
     }
     for i in buffer.left.indices {
@@ -418,6 +425,7 @@ func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout No
             bell(&buffer, start: 0.23, frequency: 2637.02, strength: 0.13, duration: 0.45)
             bell(&buffer, start: 0.30, frequency: 3951.066, strength: 0.10, duration: 0.4)
             pad(&buffer, start: 0.15, duration: 1.25, notes: c.map { $0 * 2 }, strength: 0.08, design: design, followsLight: false, attack: 0.03)
+        case .f, .g: preconditionFailure("Drawn by synthesizeRich")
         }
     } else {
         switch design {
@@ -439,6 +447,7 @@ func reward(_ buffer: inout Stereo, design: Design, rank: Bool, random: inout No
                 bell(&buffer, start: start + Double(i) * 0.07, frequency: f, strength: 0.28, duration: 0.65, pan: Double(i) * 0.3 - 0.45)
             }
             pad(&buffer, start: start + 0.20, duration: duration - 0.20, notes: c, strength: 0.15, design: design, followsLight: true, attack: 0.04)
+        case .f, .g: preconditionFailure("Drawn by synthesizeRich")
         }
     }
     if design == .b {
@@ -548,6 +557,7 @@ func master(_ input: Stereo, design: Design, isRankBeat: Bool) -> Stereo {
 }
 
 func synthesize(_ design: Design, dark: Bool = false) -> (Stereo, Stereo) {
+    if design == .f || design == .g { return synthesizeRich(design) }
     let length = impact + 1.8
     var dry = Stereo(seconds: length)
     var random = Noise(seed: design.seed &+ 0x1234)
@@ -794,6 +804,378 @@ func preview(_ audio: Stereo, design: Design, dark: Bool = false, rank: Bool, to
     try bitmap.representation(using: .png, properties: [:])!.write(to: url)
 }
 
+// MARK: - Rich designs
+
+// F and G trade the stable partials and comb reverb above for things that
+// move: voices that drift, noise inside the tones, many scattered modes, a
+// convolution hall and saturation that glues the layers together.
+
+/// A slow random wander between -1 and 1: smoothed noise for drift and jitter.
+struct Wander {
+    var random: Noise
+    var value = 0.0, target = 0.0, count = 0
+    let every: Int, smoothing: Double
+    init(seed: UInt64, rate: Double) {
+        random = Noise(seed: seed)
+        every = max(1, Int(sampleRate / rate))
+        smoothing = 1 - exp(-2 * .pi * rate / sampleRate)
+    }
+    mutating func tick() -> Double {
+        if count % every == 0 { target = random.next() }
+        count += 1
+        value += smoothing * (target - value)
+        return value
+    }
+}
+
+/// Warm, slightly asymmetric saturation: even harmonics as well as odd.
+func warm(_ x: Double, _ drive: Double) -> Double {
+    (tanh(drive * (x + 0.12)) - tanh(drive * 0.12)) / tanh(drive)
+}
+
+/// One note played by a stack of sawtooth voices, each drifting a little in
+/// pitch and level, with breath inside the tone, a pitch scoop into the note
+/// and a two-pole filter per voice, saturated after the filter.
+func stack(_ buffer: inout Stereo, start: Double, duration: Double, note: Double, voices: Int, cents: Double,
+           seed: UInt64, gain: Double, scoop: Double, drive: Double, breath: Double, width: Double = 0.8,
+           cutoff: @escaping (Double) -> Double, level: @escaping (Double) -> Double) {
+    var random = Noise(seed: seed)
+    for v in 0..<voices {
+        let offset = voices == 1 ? 0 : Double(v) / Double(voices - 1) * 2 - 1
+        let detune = pow(2, (offset * cents + random.next() * cents * 0.15) / 1200)
+        var phase = random.unit()
+        var drift = Wander(seed: seed &+ UInt64(v + 1) &* 7919, rate: 0.5 + random.unit())
+        var jitter = Wander(seed: seed &+ UInt64(v + 1) &* 104_729, rate: 6 + 6 * random.unit())
+        var breathNoise = Noise(seed: seed &+ UInt64(v + 1) &* 31)
+        var air = Biquad(); air.tune("band", 1300 + 500 * random.unit(), q: 0.7)
+        var lowA = Biquad(), lowB = Biquad()
+        event(&buffer, start: start, duration: duration, pan: offset * width) { t, i in
+            let frequency = note * detune * (1 - scoop * exp(-t / 0.07)) * pow(2, drift.tick() * 4 / 1200)
+            let step = frequency / sampleRate
+            phase += step
+            if phase >= 1 { phase -= 1 }
+            if i % 32 == 0 {
+                let c = cutoff(t)
+                lowA.tune("low", c, q: 0.85); lowB.tune("low", c * 1.15, q: 0.6)
+            }
+            let tone = saw(phase, step)
+            let x = lowB.tick(lowA.tick(tone + breath * air.tick(breathNoise.next()) * (0.7 + 0.3 * tone)))
+            return gain * level(t) * (1 + 0.1 * jitter.tick()) * warm(x, drive) / Double(voices).squareRoot()
+        }
+    }
+}
+
+/// A struck body of many modes at scattered frequencies, each with its own
+/// decay and a little bloom, so metal shimmers and rings instead of humming.
+func modes(_ buffer: inout Stereo, start: Double, until end: Double, low: Double, high: Double, count: Int,
+           decay: Double, gain: Double, seed: UInt64, bloom: Double = 0) {
+    var random = Noise(seed: seed)
+    for _ in 0..<count {
+        let frequency = low * pow(high / low, pow(random.unit(), 1.25))
+        let tau = decay * (0.3 + random.unit()) * pow(low / frequency, 0.3)
+        let level = gain * (0.35 + random.unit()) / Double(count).squareRoot() * pow(low / frequency, 0.2)
+        let pan = random.next() * 0.85, phase = random.unit() * 2 * .pi, swell = bloom * random.unit()
+        let duration = min(end - start, tau * 7)
+        event(&buffer, start: start, duration: duration, pan: pan) { t, _ in
+            level * sin(2 * .pi * frequency * t + phase) * exp(-t / tau) * smooth(t / (0.0015 + swell))
+                * envelope(t, duration, attack: 0.0008, release: min(0.3, duration * 0.4))
+        }
+    }
+}
+
+/// Noise through a band-pass whose centre and level follow curves: wind,
+/// risers, the rip and roll of thunder.
+func band(_ buffer: inout Stereo, start: Double, duration: Double, seed: UInt64, pan: Double = 0, q: Double = 0.7,
+          centre: @escaping (Double) -> Double, level: @escaping (Double) -> Double) {
+    var random = Noise(seed: seed)
+    var filter = Biquad(), second = Biquad()
+    event(&buffer, start: start, duration: duration, pan: pan) { t, i in
+        if i % 32 == 0 { let c = centre(t); filter.tune("band", c, q: q); second.tune("band", c, q: q) }
+        return level(t) * second.tick(filter.tick(random.next())) * 3 * envelope(t, duration, attack: 0.002, release: 0.05)
+    }
+}
+
+/// FFT convolution, for the hall.
+func convolve(_ signal: [Double], _ kernel: [Double]) -> [Double] {
+    let length = signal.count + kernel.count - 1
+    let log2n = vDSP_Length(ceil(log2(Double(length))))
+    let size = 1 << Int(log2n), half = size / 2
+    let setup = vDSP_create_fftsetupD(log2n, FFTRadix(kFFTRadix2))!
+    defer { vDSP_destroy_fftsetupD(setup) }
+    func forward(_ x: [Double]) -> ([Double], [Double]) {
+        var real = [Double](repeating: 0, count: half), imag = real
+        let padded = x + [Double](repeating: 0, count: size - x.count)
+        real.withUnsafeMutableBufferPointer { r in
+            imag.withUnsafeMutableBufferPointer { m in
+                var split = DSPDoubleSplitComplex(realp: r.baseAddress!, imagp: m.baseAddress!)
+                padded.withUnsafeBufferPointer { p in
+                    p.baseAddress!.withMemoryRebound(to: DSPDoubleComplex.self, capacity: half) {
+                        vDSP_ctozD($0, 2, &split, 1, vDSP_Length(half))
+                    }
+                }
+                vDSP_fft_zripD(setup, &split, 1, log2n, FFTDirection(FFT_FORWARD))
+            }
+        }
+        return (real, imag)
+    }
+    var (ar, ai) = forward(signal)
+    let (br, bi) = forward(kernel)
+    // Bin 0 packs the DC and Nyquist terms, both real.
+    ar[0] *= br[0]; ai[0] *= bi[0]
+    for k in 1..<half {
+        let r = ar[k] * br[k] - ai[k] * bi[k], m = ar[k] * bi[k] + ai[k] * br[k]
+        ar[k] = r; ai[k] = m
+    }
+    var output = [Double](repeating: 0, count: size)
+    ar.withUnsafeMutableBufferPointer { r in
+        ai.withUnsafeMutableBufferPointer { m in
+            var split = DSPDoubleSplitComplex(realp: r.baseAddress!, imagp: m.baseAddress!)
+            vDSP_fft_zripD(setup, &split, 1, log2n, FFTDirection(FFT_INVERSE))
+            output.withUnsafeMutableBufferPointer { o in
+                o.baseAddress!.withMemoryRebound(to: DSPDoubleComplex.self, capacity: half) {
+                    vDSP_ztocD(&split, 1, $0, 2, vDSP_Length(half))
+                }
+            }
+        }
+    }
+    // Two forward transforms at twice scale and an unscaled inverse.
+    let scale = 1 / Double(4 * size)
+    return (0..<signal.count).map { output[$0] * scale }
+}
+
+/// A hall's impulse response: early reflections, then noise that decays
+/// slower in the lows than in the highs, different in each ear.
+func hall(seconds: Double, low: Double, mid: Double, high: Double, seed: UInt64) -> Stereo {
+    var ir = Stereo(seconds: seconds)
+    for channel in 0..<2 {
+        var random = Noise(seed: seed &+ UInt64(channel + 1) &* 977)
+        var lows = Biquad(); lows.tune("low", 320)
+        var highs = Biquad(); highs.tune("high", 3000)
+        var channelIR = [Double](repeating: 0, count: ir.count)
+        let predelay = 0.02
+        for i in 0..<ir.count {
+            let t = Double(i) / sampleRate - predelay
+            let n = random.next()
+            let l = lows.tick(n), h = highs.tick(n), m = n - l - h
+            guard t > 0 else { continue }
+            channelIR[i] = (l * exp(-t * 6.9 / low) + m * exp(-t * 6.9 / mid) + h * exp(-t * 6.9 / high)) * smooth(t / 0.04) * 0.5
+        }
+        for k in 0..<12 {
+            let at = Int((0.006 + random.unit() * 0.07) * sampleRate)
+            channelIR[at] += (random.unit() > 0.5 ? 1 : -1) * 0.5 * pow(0.82, Double(k))
+        }
+        let energy = sqrt(channelIR.reduce(0) { $0 + $1 * $1 })
+        channelIR = channelIR.map { $0 / energy }
+        if channel == 0 { ir.left = channelIR } else { ir.right = channelIR }
+    }
+    return ir
+}
+
+func reverbRich(_ dry: Stereo, ir: Stereo) -> Stereo {
+    let mono = dry.mono
+    var wet = Stereo(seconds: dry.duration)
+    wet.left = convolve(mono, ir.left)
+    wet.right = convolve(mono, ir.right)
+    return wet
+}
+
+/// Glue for the rich designs: parallel compression, so quiet detail comes up
+/// under the peaks, then tape-like saturation on the whole mix.
+func glue(_ input: Stereo, drive: Double) -> Stereo {
+    var output = input
+    var detector = 0.0
+    let attack = exp(-1 / (0.004 * sampleRate)), release = exp(-1 / (0.09 * sampleRate))
+    for i in 0..<input.count {
+        let level = max(abs(input.left[i]), abs(input.right[i]))
+        detector = level > detector ? level + attack * (detector - level) : level + release * (detector - level)
+        let over = max(0, db(detector) + 26)
+        let squashed = gain(-over * 0.75)
+        for channel in 0..<2 {
+            let x = channel == 0 ? input.left[i] : input.right[i]
+            let y = warm(x + 1.2 * x * squashed, drive) * 0.62
+            if channel == 0 { output.left[i] = y } else { output.right[i] = y }
+        }
+    }
+    return output
+}
+
+/// A thunderclap: a sharp crack, the rip of the bolt's length arriving in
+/// bursts, then a roll that rumbles unevenly and dies away.
+func thunder(_ buffer: inout Stereo, at start: Double, until end: Double, strength: Double, seed: UInt64) {
+    var random = Noise(seed: seed)
+    band(&buffer, start: start, duration: 0.09, seed: seed &+ 1, q: 0.5, centre: { 2600 - 12_000 * $0 }) { t in
+        strength * 1.4 * exp(-t / 0.018) * smooth(t / 0.0006)
+    }
+    for k in 0..<9 {
+        let offset = 0.012 + pow(random.unit(), 1.4) * 0.22
+        let pan = random.next() * 0.7, top = 1800 + 1500 * random.unit()
+        band(&buffer, start: start + offset, duration: 0.16, seed: seed &+ UInt64(k + 2), pan: pan, q: 0.6,
+             centre: { top * exp(-$0 / 0.08) + 180 }) { t in
+            strength * (0.9 - 0.07 * Double(k)) * exp(-t / 0.045) * smooth(t / 0.002)
+        }
+    }
+    var bumps = Wander(seed: seed &+ 99, rate: 5)
+    band(&buffer, start: start + 0.03, duration: end - start - 0.03, seed: seed &+ 50, q: 0.45,
+         centre: { 70 + 190 * exp(-$0 / 0.9) }) { t in
+        strength * 1.25 * smooth(t / 0.08) * exp(-t / 0.75) * (0.75 + 0.25 * bumps.tick())
+    }
+}
+
+func strikeRich(_ buffer: inout Stereo, at start: Double, until end: Double, design: Design, rank: Bool, seed: UInt64) {
+    let strength = rank ? 0.5 : 1.0
+    thump(&buffer, start: start, strength: 0.95 * strength, design: .a, large: true, sub: !rank)
+    if design == .g {
+        thunder(&buffer, at: start, until: end, strength: strength, seed: seed)
+    } else {
+        // The blow itself: a dense noise burst and an air blast falling in pitch.
+        band(&buffer, start: start, duration: 0.25, seed: seed &+ 3, q: 0.45, centre: { 5200 * exp(-$0 / 0.05) + 300 }) { t in
+            strength * 1.3 * exp(-t / 0.05) * smooth(t / 0.0008)
+        }
+        band(&buffer, start: start + 0.004, duration: 0.8, seed: seed &+ 4, pan: -0.4, q: 0.6, centre: { 6500 * pow(0.1, $0 / 0.8) }) { t in
+            strength * 0.55 * exp(-t / 0.28) * smooth(t / 0.004)
+        }
+        band(&buffer, start: start + 0.007, duration: 0.8, seed: seed &+ 5, pan: 0.4, q: 0.6, centre: { 6200 * pow(0.1, $0 / 0.8) }) { t in
+            strength * 0.5 * exp(-t / 0.28) * smooth(t / 0.004)
+        }
+    }
+    // Struck metal under the blow: a gong-like body of scattered modes.
+    modes(&buffer, start: start, until: end, low: design == .g ? 55 : 62, high: 1400, count: 70,
+          decay: rank ? 0.7 : 1.0, gain: (design == .g ? 0.28 : 0.42) * strength, seed: seed &+ 7, bloom: 0.12)
+}
+
+/// The weight after the blow. F: a C minor brass stack; G: a saturated wall
+/// of low fifths, like overdriven guitars through big cabinets.
+func weightRich(_ buffer: inout Stereo, start: Double, until end: Double, design: Design, rank: Bool, seed: UInt64) {
+    let duration = end - start
+    let root = rank ? 48.999 : 65.406
+    let fading: (Double) -> Double = rank ? { t in exp(-t / 0.8) } : { t in light(start + t) }
+    if design == .f {
+        let notes = [root, root * 1.5, root * 2, root * 2.378, root * 3]
+        for (k, note) in notes.enumerated() {
+            stack(&buffer, start: start + 0.01, duration: duration, note: note, voices: 7, cents: 16,
+                  seed: seed &+ UInt64(k) &* 131, gain: (k == 0 ? 0.3 : 0.24) * (rank ? 0.85 : 1), scoop: 0.035,
+                  drive: 2.4, breath: 0.35, width: 0.7,
+                  cutoff: { t in 180 + 2300 * (1 - exp(-t / 0.03)) * exp(-t / 0.8) + 520 * fading(t) },
+                  level: { t in fading(t) * smooth(t / 0.03) * (1 + 0.18 * sin(2 * .pi * 34 * t) * exp(-t / 0.35)) })
+        }
+    } else {
+        let notes = [root, root * 1.5, root * 2]
+        for (k, note) in notes.enumerated() {
+            stack(&buffer, start: start + 0.005, duration: duration, note: note, voices: 5, cents: 11,
+                  seed: seed &+ UInt64(k) &* 173, gain: 0.3 * (rank ? 0.85 : 1), scoop: 0.02,
+                  drive: 5, breath: 0.12, width: 0.9,
+                  cutoff: { t in 1400 + 1800 * exp(-t / 0.25) },
+                  level: { t in fading(t) * smooth(t / 0.012) })
+        }
+    }
+    // Rubble settling, low and dull.
+    band(&buffer, start: start + 0.05, duration: min(duration, 1.4), seed: seed &+ 11, q: 0.5,
+         centre: { 160 - 60 * clamp($0 / 1.2) }) { t in
+        (rank ? 0.3 : 0.5) * smooth(t / 0.06) * exp(-t / 0.5)
+    }
+}
+
+func chargeRich(_ design: Design, seconds: Double, seed: UInt64) -> Stereo {
+    var buffer = Stereo(seconds: seconds)
+    let rise: (Double) -> Double = { t in pow(clamp(t / hushStart), 1.6) }
+    if design == .f {
+        // A dark cluster rising an octave, a stack of drifting voices per note.
+        for (k, ratio) in [1.0, 1.5, 2.0].enumerated() {
+            stack(&buffer, start: 0, duration: hushStart, note: 55 * ratio, voices: 7, cents: 20,
+                  seed: seed &+ UInt64(k) &* 211, gain: 0.22, scoop: 0, drive: 1.8, breath: 0.5, width: 0.9,
+                  cutoff: { t in 220 + 2600 * rise(t) },
+                  level: { t in (0.12 + 0.88 * rise(t)) * smooth(t / 0.3) })
+        }
+        // The stack rises in pitch: a second, octave-gliding layer fades in over it.
+        stack(&buffer, start: 0.2, duration: hushStart - 0.2, note: 110, voices: 5, cents: 25,
+              seed: seed &+ 999, gain: 0.18, scoop: -0.5, drive: 2, breath: 0.4,
+              cutoff: { t in 400 + 3000 * rise(t + 0.2) }, level: { t in rise(t + 0.2) })
+        band(&buffer, start: 0.1, duration: hushStart - 0.1, seed: seed &+ 20, q: 0.9,
+             centre: { t in 300 * pow(18, clamp(t / (hushStart - 0.1))) }) { t in 0.35 * rise(t + 0.1) }
+    } else {
+        // Wind that rises and gusts, and thunder far off.
+        var gust = Wander(seed: seed &+ 30, rate: 1.3)
+        band(&buffer, start: 0, duration: hushStart, seed: seed &+ 31, pan: -0.5, q: 1.4,
+             centre: { t in 350 + 1500 * rise(t) }) { t in (0.15 + 0.6 * rise(t)) * (0.7 + 0.3 * gust.tick()) * smooth(t / 0.3) }
+        var gust2 = Wander(seed: seed &+ 32, rate: 1.1)
+        band(&buffer, start: 0, duration: hushStart, seed: seed &+ 33, pan: 0.5, q: 1.4,
+             centre: { t in 500 + 2000 * rise(t) }) { t in (0.12 + 0.5 * rise(t)) * (0.7 + 0.3 * gust2.tick()) * smooth(t / 0.3) }
+        var roll = Wander(seed: seed &+ 34, rate: 2)
+        band(&buffer, start: 0, duration: hushStart, seed: seed &+ 35, q: 0.5, centre: { _ in 110 }) { t in
+            0.35 * (0.3 + 0.7 * rise(t)) * max(0, roll.tick()) * smooth(t / 0.3)
+        }
+        // A low drone of fifths under the storm, swelling with it.
+        for (k, ratio) in [1.0, 1.5].enumerated() {
+            stack(&buffer, start: 0, duration: hushStart, note: 55 * ratio, voices: 5, cents: 14,
+                  seed: seed &+ UInt64(k) &* 223, gain: 0.2, scoop: 0, drive: 3, breath: 0.2,
+                  cutoff: { t in 200 + 1600 * rise(t) }, level: { t in rise(t) * smooth(t / 0.3) })
+        }
+    }
+    var random = Noise(seed: seed &+ 40)
+    for (j, strike) in LevelUpTiming.strikes.enumerated() where strike < hushStart {
+        let strength = 0.05 + 0.2 * pow(strike / hushStart, 2)
+        let pan = random.next() * 0.9
+        // An electric zap: a crack falling fast in pitch, then fizz.
+        band(&buffer, start: strike, duration: 0.1, seed: seed &+ UInt64(j + 100), pan: pan, q: 1.2,
+             centre: { t in 5200 * exp(-t / 0.02) + 900 }) { t in strength * exp(-t / 0.03) * smooth(t / 0.0008) }
+        for burst in 0..<5 {
+            let at = strike + random.unit() * 0.09
+            band(&buffer, start: at, duration: 0.012, seed: seed &+ UInt64(j * 10 + burst + 400), pan: pan, q: 0.8,
+                 centre: { _ in 3500 }) { t in strength * 0.8 * exp(-t / 0.003) }
+        }
+    }
+    return buffer
+}
+
+/// The heartbeat. Each beat ducks whatever is already sounding for a moment
+/// before it, the previous beat's tail included, the way a mix makes room
+/// for a kick.
+func pulsesRich(_ buffer: inout Stereo, seed: UInt64) {
+    for (j, pulse) in LevelUpTiming.pulses.enumerated() {
+        let at = LevelUpTiming.wall(pulse)
+        for i in max(0, Int((at - 0.02) * sampleRate))..<min(buffer.count, Int((at + 0.03) * sampleRate)) {
+            let u = Double(i) / sampleRate - at
+            let duck = 1 - 0.75 * smooth((u + 0.02) / 0.012) * smooth((0.03 - u) / 0.025)
+            buffer.left[i] *= duck; buffer.right[i] *= duck
+        }
+        let strength = 0.7 + 0.55 * Double(j) / Double(LevelUpTiming.pulses.count - 1)
+        thump(&buffer, start: at, strength: strength, design: .a)
+        // A drum's skin under each beat.
+        band(&buffer, start: at, duration: 0.09, seed: seed &+ UInt64(j + 50), q: 0.6, centre: { _ in 180 }) { t in
+            strength * 0.5 * exp(-t / 0.025) * smooth(t / 0.001)
+        }
+    }
+}
+
+func synthesizeRich(_ design: Design) -> (Stereo, Stereo) {
+    let probe = convolve([1] + [Double](repeating: 0, count: 99), [0.5, -0.25, 0.125])
+    precondition(abs(probe[0] - 0.5) < 1e-9 && abs(probe[1] + 0.25) < 1e-9 && abs(probe[2] - 0.125) < 1e-9, "Convolution is misscaled")
+    let seed = design.seed
+    let length = impact + 1.8
+    let room = hall(seconds: 2.4, low: 2.4, mid: 1.7, high: 0.8, seed: seed &+ 77)
+    var dry = Stereo(seconds: length)
+    strikeRich(&dry, at: impact, until: length - 0.25, design: design, rank: false, seed: seed &+ 1000)
+    weightRich(&dry, start: impact, until: fadeEnd + 0.1, design: design, rank: false, seed: seed &+ 2000)
+    var charged = chargeRich(design, seconds: length, seed: seed &+ 3000)
+    charged.mix(reverbRich(charged, ir: room), gain: 0.5)
+    pulsesRich(&charged, seed: seed &+ 3500)
+    dry.mix(reverbRich(dry, ir: room), gain: 0.7)
+    dry.mix(charged)
+    let level = master(glue(dry, drive: design == .g ? 1.9 : 1.5), design: design, isRankBeat: false)
+    var second = Stereo(seconds: 1.8)
+    strikeRich(&second, at: 0, until: 1.55, design: design, rank: true, seed: seed &+ 4000)
+    weightRich(&second, start: 0, until: 1.5, design: design, rank: true, seed: seed &+ 5000)
+    second.mix(reverbRich(second, ir: room), gain: 0.6)
+    second = master(glue(second, drive: design == .g ? 1.9 : 1.5), design: design, isRankBeat: true)
+    var rank = Stereo(seconds: rankTime + 1.8)
+    rank.mix(level)
+    let offset = Int((rankTime * sampleRate).rounded())
+    for i in 0..<second.count where i + offset < rank.count {
+        rank.left[i + offset] += second.left[i]; rank.right[i + offset] += second.right[i]
+    }
+    return (level, rank)
+}
+
 /// The app's cues: the level, the level that opens a rank, and the strike
 /// alone for a card that opens on its still frame (Reduce Motion, Low Power
 /// Mode), which starts at the impact.
@@ -845,7 +1227,7 @@ struct MakeLevelUpSounds {
         var report = ["CLOCKIN / original synthesized level-up candidates", "RMS is per-channel energy averaged in linear power; silence prints as -240 dBFS.",
                       "Bright: impact to fade start. Phone check: stereo rectangular-window FFT, first 300 ms after impact."]
         // Design A is rendered twice: with its heroic weight and its dark one.
-        let variants: [(Design, Bool)] = [(.a, false), (.a, true), (.b, false), (.c, false)]
+        let variants: [(Design, Bool)] = [(.a, false), (.a, true), (.b, false), (.c, false), (.f, false), (.g, false)]
         for (design, dark) in variants {
             let (level, rank) = synthesize(design, dark: dark)
             var decodedLevel: Stereo?
@@ -870,7 +1252,7 @@ struct MakeLevelUpSounds {
                 report += lines
             }
         }
-        let conclusion = "ok: 8 stereo PCM WAVs and 8 PNG previews; all rendered-audio preconditions passed. Output: \(output.path); design \(Design.shipped.rawValue)\(Design.shippedDark ? " (dark)" : "") written to Clockin/Audio/Sounds"
+        let conclusion = "ok: 12 stereo PCM WAVs and 12 PNG previews; all rendered-audio preconditions passed. Output: \(output.path); design \(Design.shipped.rawValue)\(Design.shippedDark ? " (dark)" : "") written to Clockin/Audio/Sounds"
         report.append(conclusion)
         try (report.joined(separator: "\n\n") + "\n").write(to: output.appendingPathComponent("measurements.txt"), atomically: true, encoding: .utf8)
         print(conclusion)

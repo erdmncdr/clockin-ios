@@ -112,14 +112,18 @@ the animation. Regenerate from the repository root:
 swiftc -O -swift-version 6 -module-cache-path build/sound-cache Tools/make-levelup-sounds.swift Clockin/Celebrations/LevelUpTiming.swift -o build/make-levelup-sounds && build/make-levelup-sounds
 ```
 
-It renders three candidate designs as 44.1 kHz stereo 16-bit WAVs with
+It renders every candidate design as 44.1 kHz stereo 16-bit WAVs with
 waveform and spectrogram previews into `build/levelup-sounds/`, measures the
 rendered audio (pulse and impact onsets within 5 ms of the timing, a silent
 hush, at least 40% of the impact's energy above 150 Hz, peak at most
 -1 dBFS, zero endpoints, identical runs) and writes the shipped design as
 `clockin-levelup.caf`, `clockin-levelup-rank.caf` and
 `clockin-levelup-still.caf` into `Clockin/Audio/Sounds/`, bit for bit the
-same samples as its WAVs. Rerun it whenever `LevelUpTiming` changes.
+same samples as its WAVs. Rerun it whenever `LevelUpTiming` changes. The
+shipped design (`Design.shipped`, the storm) is drawn by `synthesizeRich`,
+which adds drifting unison voices, modal metal, band-passed noise textures,
+an FFT convolution hall and a glue stage; it checks the convolution's
+scaling against an impulse before it runs.
 
 Sound ids are stored in `Clockin.ChimeSound`. Existing ids remain unchanged;
 legacy `Glass` becomes `glass`; missing, unknown and all other legacy names

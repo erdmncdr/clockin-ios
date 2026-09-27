@@ -63,31 +63,42 @@ MMORPGs stage a level-up, kept in Clockin's space setting. The code is in
 ## The sound
 
 The sound is synthesized from the same timing as the card, so the thumps
-land on the pulses, the crackles on the arcs and the strike on the impact,
-each within a millisecond. A dark drone of two detuned saws glides up an
-octave through an opening filter with a noise riser over it, a heartbeat
-thump on every pulse grows louder, and a burst of crackle sounds on every
-arc. It stops dead for the hush. The strike is a sub boom saturated so it
-still hits on a phone's speaker, a body thump, a crack and an air blast into
-a hall reverb. What follows carries the strike's weight rather than
-sparkling over it: a low brass-like C minor chord (three detuned saws a
-note, softly saturated) whose filter snaps open with the blow and closes as
-the light fades, a deep gong whose upper partials bloom just after the hit,
-and rubble settling, a low rumble and a few dull knocks. An earlier version
-ended on a bright chord of bells with sparkles, which sounded thin after the
-blast. A new rank's second beat adds a lighter strike and the chord again a
-fifth higher, on G, with its own gong.
+land on the pulses, the zaps on the arcs and the strike on the impact, each
+within a millisecond. It is a storm, to match the arcs and the flood of
+light. Through the charge, wind rises and gusts in two bands, thunder
+rolls far off, a low drone of fifths swells under it, every arc cracks as an
+electric zap with fizz, and a heartbeat thump with a drum's skin lands on
+every pulse; everything else ducks for a moment before each beat, the way a
+mix makes room for a kick. It stops dead for the hush. The strike is a
+thunderclap: a sharp crack, the rip of the bolt arriving in bursts, then a
+roll that rumbles unevenly and dies away, over a sub boom and struck metal
+made of seventy scattered modes. Then a wall of low fifths, five drifting
+saw voices a note, overdriven like guitars through big cabinets, holds while
+the screen is bright and fades with the light, with rubble settling. A new
+rank's second beat is a smaller thunderclap and the wall again a fifth
+higher.
+
+To keep it from sounding synthetic, every sustained voice drifts a little in
+pitch and level and has breath inside it, the hall is a convolution with a
+synthesized impulse response (early reflections, then noise decaying slower
+in the lows than the highs, different in each ear), and the mix goes through
+parallel compression and tape-like saturation before the limiter.
 
 Three cues ship: the level (4 s), the level that opens a rank (5.8 s) and,
-for a card that opens on its still frame, the strike and chord alone. The
-sound plays only while Clockin is open, mixes with other audio, follows the
-silent switch unless Focus radio is playing, stops with a short fade when
-the card is dismissed early, and can be turned off in Settings (Level-up
-sound, on by default). Regenerate it with the command in
-`docs/implementation-notes.md`; the tool also renders two other designs
-(an arcane choir and an arcade power-up) to `build/levelup-sounds/` for
-comparison, which were set aside in favour of this one, and this design's
-heroic variant (the same weight on open fifths instead of minor).
+for a card that opens on its still frame, the strike and what follows
+alone. The sound plays only while Clockin is open, mixes with other audio,
+follows the silent switch unless Focus radio is playing, stops with a short
+fade when the card is dismissed early, and can be turned off in Settings
+(Level-up sound, on by default). Regenerate it with the command in
+`docs/implementation-notes.md`.
+
+The tool keeps the designs that were tried along the way, rendered to
+`build/levelup-sounds/` for comparison: A, a cinematic drone and boom, first
+with a bright bell chord (thin after the blast) and then with a low brass
+chord, gong and rubble in heroic and dark variants (still too synthetic); B,
+an arcane choir; C, an arcade power-up; and F, A's dark variant rebuilt with
+the storm's production. Two more, a trailer braam and an epic choir with
+taiko, were rendered in a separate branch and not kept.
 
 ## The companion
 
