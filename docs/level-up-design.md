@@ -84,6 +84,15 @@ synthesized impulse response (early reflections, then noise decaying slower
 in the lows than the highs, different in each ear), and the mix goes through
 parallel compression and tape-like saturation before the limiter.
 
+A phone's speaker barely plays anything under 150 to 200 Hz, where the boom,
+the heartbeat and the wall live, so the lows are also given overtones the
+ear hears the missing fundamental from: the low band is normalised by its
+envelope and shaped into its second to fourth harmonics, and the deepest sub
+is halved so it stops using up the limiter; the heartbeat carries its own
+second and third harmonics on its falling pitch. Through a fourth-order
+200 Hz high-pass, standing in for a phone speaker, the heartbeat comes up by
+about 3 dB, the strike by 2 dB and the wall after it by 9 dB.
+
 Three cues ship: the level (4 s), the level that opens a rank (5.8 s) and,
 for a card that opens on its still frame, the strike and what follows
 alone. The sound plays only while Clockin is open, mixes with other audio,

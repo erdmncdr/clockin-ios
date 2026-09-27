@@ -1127,6 +1127,37 @@ func chargeRich(_ design: Design, seconds: Double, seed: UInt64) -> Stereo {
     return buffer
 }
 
+/// Overtones of the lows for small speakers, which barely play anything
+/// under 150 to 200 Hz: the ear hears a missing fundamental from its
+/// harmonics, so the boom, the heartbeat and the wall still land on a phone.
+/// The low band is normalised by its own envelope, shaped by Chebyshev
+/// polynomials into its second to fourth harmonics, put back to its level
+/// and kept to the band a phone speaker plays. The deepest sub, which a
+/// phone cannot play at all, is halved so it stops using up the limiter.
+func phoneBass(_ input: Stereo, amount: Double) -> Stereo {
+    var output = input
+    var lowA = Biquad(), lowB = Biquad(), highA = Biquad(), highB = Biquad(), top = Biquad()
+    var subL = Biquad(), subR = Biquad()
+    subL.tune("low", 80); subR.tune("low", 80)
+    lowA.tune("low", 130, q: 0.5412); lowB.tune("low", 130, q: 1.3066)
+    highA.tune("high", 150, q: 0.5412); highB.tune("high", 150, q: 1.3066)
+    top.tune("low", 1100)
+    var envelope = 0.0
+    let attack = exp(-1 / (0.004 * sampleRate)), release = exp(-1 / (0.06 * sampleRate))
+    for i in 0..<input.count {
+        let low = lowB.tick(lowA.tick((input.left[i] + input.right[i]) * 0.5))
+        let level = abs(low)
+        envelope = level > envelope ? level + attack * (envelope - level) : level + release * (envelope - level)
+        let x = max(-1, min(1, low / max(envelope, 1e-5)))
+        let x2 = x * x
+        let shaped = 0.55 * (2 * x2 - 1) + 0.35 * (4 * x2 * x - 3 * x) + 0.2 * (8 * x2 * x2 - 8 * x2 + 1)
+        let overtones = top.tick(highB.tick(highA.tick(envelope * shaped))) * amount
+        output.left[i] += overtones - 0.5 * subL.tick(input.left[i])
+        output.right[i] += overtones - 0.5 * subR.tick(input.right[i])
+    }
+    return output
+}
+
 /// The heartbeat. Each beat ducks whatever is already sounding for a moment
 /// before it, the previous beat's tail included, the way a mix makes room
 /// for a kick.
@@ -1144,6 +1175,12 @@ func pulsesRich(_ buffer: inout Stereo, seed: UInt64) {
         band(&buffer, start: at, duration: 0.09, seed: seed &+ UInt64(j + 50), q: 0.6, centre: { _ in 180 }) { t in
             strength * 0.5 * exp(-t / 0.025) * smooth(t / 0.001)
         }
+        // The thump's own second and third harmonics on its falling pitch,
+        // too short for phoneBass to catch, so the beat is felt on a phone.
+        event(&buffer, start: at, duration: 0.12) { t, _ in
+            let phase = 2 * .pi * (48 * t + 47 * 0.022 * (1 - exp(-t / 0.022)))
+            return strength * 1.5 * (0.8 * sin(2 * phase) + 0.6 * sin(3 * phase)) * exp(-t / 0.045) * envelope(t, 0.12, attack: 0.001)
+        }
     }
 }
 
@@ -1158,15 +1195,19 @@ func synthesizeRich(_ design: Design) -> (Stereo, Stereo) {
     weightRich(&dry, start: impact, until: fadeEnd + 0.1, design: design, rank: false, seed: seed &+ 2000)
     var charged = chargeRich(design, seconds: length, seed: seed &+ 3000)
     charged.mix(reverbRich(charged, ir: room), gain: 0.5)
+    // The heartbeat carries its own overtones, so it joins after phoneBass
+    // and keeps its full sub on headphones.
+    charged = phoneBass(charged, amount: 3)
     pulsesRich(&charged, seed: seed &+ 3500)
     dry.mix(reverbRich(dry, ir: room), gain: 0.7)
+    dry = phoneBass(dry, amount: 3)
     dry.mix(charged)
     let level = master(glue(dry, drive: design == .g ? 1.9 : 1.5), design: design, isRankBeat: false)
     var second = Stereo(seconds: 1.8)
     strikeRich(&second, at: 0, until: 1.55, design: design, rank: true, seed: seed &+ 4000)
     weightRich(&second, start: 0, until: 1.5, design: design, rank: true, seed: seed &+ 5000)
     second.mix(reverbRich(second, ir: room), gain: 0.6)
-    second = master(glue(second, drive: design == .g ? 1.9 : 1.5), design: design, isRankBeat: true)
+    second = master(glue(phoneBass(second, amount: 3), drive: design == .g ? 1.9 : 1.5), design: design, isRankBeat: true)
     var rank = Stereo(seconds: rankTime + 1.8)
     rank.mix(level)
     let offset = Int((rankTime * sampleRate).rounded())
