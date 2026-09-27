@@ -446,14 +446,16 @@ private enum PaladinArt {
         ctx.stroke(path, with: .color(.black.opacity(0.62)), lineWidth: 0.8)
     }
 
-    static func runes() -> Path {
+    static func runes() -> Path { runePath }
+
+    private static let runePath: Path = {
         var path = Path()
         for i in 0..<5 {
             let y = 152 + CGFloat(i) * 8
             path.addPath(S.poly([CGPoint(x: 90, y: y - 2.4), CGPoint(x: 91.4, y: y), CGPoint(x: 90, y: y + 2.4), CGPoint(x: 88.6, y: y)]))
         }
         return path
-    }
+    }()
 
     static func guardAndGrip(_ ctx: inout GraphicsContext, _ style: LevelPrestige, trim: R, rim: Color) {
         let leather = R(R.rgb(0.42, 0.28, 0.18), R.rgb(0.28, 0.18, 0.11), R.rgb(0.1, 0.06, 0.04), R.rgb(0.18, 0.11, 0.07))

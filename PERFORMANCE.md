@@ -507,3 +507,34 @@ Wardrobe checkout verification:
 Logs: `/tmp/clockin-wardrobe-checks/summary.txt`,
 `/tmp/clockin-wardrobe-checks/wardrobe.log`, `/tmp/clockin-wardrobe-typecheck.log`,
 `/tmp/clockin-wardrobe-widget-typecheck.log`, `/tmp/clockin-wardrobe-build.log`.
+
+## Level-up card at 120 fps
+
+The level-up stage asked for at most 60 frames a second, so ProMotion phones
+drew the strike at half their rate. It now asks for 120 during the entrance
+and keeps 30 once settled; the panel clocks keep 60 and stop when settled, and
+a pinned DEBUG preview pauses every clock. Reduce Motion and Low Power Mode
+still open on the still frame with no timeline running.
+
+To make room, the floor sigil no longer rebuilds its rings each frame: the
+solid rings are unit paths built once for every entrance step and both halves
+and drawn through an affine transform (the floor's squash), the dashed ring
+reuses 721 precomputed samples, and each dash's clearance from the star marks
+is tested once per dash instead of once per sample. The sword's rune path is
+built once, and the floor glow draws into a transformed copy of the context
+instead of an isolated layer. The pillar fade, the blur glows and the
+animated shadows were left as they are.
+
+`--benchmark-level-frames` renders 2,400 stage frames offscreen (see
+`docs/level-up-design.md`). On the iPhone 17 Pro simulator on an Apple
+silicon Mac, with the new charge and strike in place:
+
+| | Mean | p95 |
+|---|---|---|
+| Before | 2.85 ms | 4.15 ms |
+| After | 1.90 ms | 3.01 ms |
+
+The companion adds about 0.8 ms a frame (its blur glows). Frames captured at
+the same pinned times before and after matched to within one level in 255 on
+every channel. This is offscreen rendering time, not display cadence;
+`--measure-level-cadence` measures the cadence on a phone.

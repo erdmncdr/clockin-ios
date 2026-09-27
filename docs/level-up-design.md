@@ -121,3 +121,12 @@ card at one moment, `--preview-clean` to hide the controls, and
 variants. `--warrior-portrait` shows the companion's armour large on a lit
 stage instead of the card. `--feedback-review overlay` shows the card inside
 the real celebration overlay.
+
+Launch a DEBUG build with `--benchmark-level-frames` to render 240 evenly
+spaced scene times from 0 through 6 seconds for levels 1, 150, 450, 451 and
+600, each with and without the companion. The fixture renders the stage at
+402 pt wide, 300 or 396 pt high, at scale 3. It prints `LEVEL_FRAMES` mean,
+p95 and maximum milliseconds for each case and all 2,400 frames, then exits.
+Measurements include view creation, layout and synchronous image rendering,
+including cold cache creation. Compare the same device and build settings;
+this is an offscreen rendering benchmark, not a measurement of display cadence.

@@ -34,6 +34,13 @@ struct LevelUpCard: View {
     private func takeover(_ t: Double) -> Double {
         style.isMilestone ? C.ramp(t, LevelUpTiming.rankReveal, LevelUpTiming.rankReveal + 0.35) : 1
     }
+    private var pinned: Bool {
+        #if DEBUG
+        pinnedTime != nil
+        #else
+        false
+        #endif
+    }
     private var motion: Bool {
         animationPolicy.allowsAnimation(reduceMotion: reduceMotion, contentActive: moving,
                                        sceneActive: scenePhase == .active, visible: true)
@@ -105,7 +112,7 @@ struct LevelUpCard: View {
     /// Seconds since the card appeared, for the text and panels. They stop
     /// updating once everything has landed; the stage keeps its own clock.
     private func clock<Content: View>(@ViewBuilder _ content: @escaping (Double) -> Content) -> some View {
-        TimelineView(.animation(minimumInterval: 1 / 60, paused: !motion || settled)) { context in
+        TimelineView(.animation(minimumInterval: 1 / 60, paused: !motion || settled || pinned)) { context in
             content(time(at: context.date, settled: settled))
         }
     }
@@ -118,7 +125,7 @@ struct LevelUpCard: View {
     }
 
     private var stage: some View {
-        TimelineView(.animation(minimumInterval: settled ? 1 / 30 : 1 / 60, paused: !motion)) { context in
+        TimelineView(.animation(minimumInterval: settled ? 1 / 30 : 1 / 120, paused: !motion || pinned)) { context in
             LevelUpStage(level: level, t: time(at: context.date, settled: false), companion: companionEnabled,
                          moving: motion)
         }

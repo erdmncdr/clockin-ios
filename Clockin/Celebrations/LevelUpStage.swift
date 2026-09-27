@@ -343,16 +343,24 @@ enum LevelUpStageArt {
         func visible(_ a: Double) -> Bool { (sin(a) >= 0) == front }
         let start = -Double.pi / 2
         func ring(_ r: CGFloat, width: CGFloat, keep: ((Double) -> Bool)? = nil) {
-            var path = Path()
-            var open = false
-            let steps = keep == nil ? 180 : 720, end = Int(Double(steps) * drawn)
-            for i in 0...end {
-                let a = start + Double(i) / Double(steps) * 2 * .pi
-                if visible(a) && keep?(a) != false {
-                    if open { path.addLine(to: p(a, r)) } else { path.move(to: p(a, r)); open = true }
-                } else {
-                    open = false
+            let path: Path
+            if let keep {
+                var dashes = Path()
+                var open = false
+                let end = Int(720 * drawn)
+                for sample in LevelUpSigilGeometry.dashSamples.prefix(end + 1) {
+                    if (sample.point.y >= 0) == front && keep(sample.angle) {
+                        let point = CGPoint(x: l.floor.x + sample.point.x * r,
+                                            y: l.floor.y + sample.point.y * r * squash)
+                        if open { dashes.addLine(to: point) } else { dashes.move(to: point); open = true }
+                    } else {
+                        open = false
+                    }
                 }
+                path = dashes
+            } else {
+                path = LevelUpSigilGeometry.ring(drawn: drawn, front: front)
+                    .applying(CGAffineTransform(a: r, b: 0, c: 0, d: r * squash, tx: l.floor.x, ty: l.floor.y))
             }
             ctx.stroke(path, with: .color(glow), lineWidth: width * 4)
             ctx.stroke(path, with: .color(color), lineWidth: width)
@@ -362,15 +370,19 @@ enum LevelUpStageArt {
         let markCount = 12
         let markAngles = (0..<markCount).map { start + innerTurn + Double($0) / Double(markCount) * 2 * .pi }
         func markSize(_ k: Int) -> CGFloat { k.isMultiple(of: 3) ? 3.4 : 2.2 }
+        let markCenters = markAngles.map { p($0, rx * 0.7) }
         /// How close a line may come to a mark, on screen, so marks always sit
         /// in clear space even where the floor's perspective squeezes the ring.
         func clear(of point: CGPoint) -> Bool {
-            for (k, a) in markAngles.enumerated() {
-                let c = p(a, rx * 0.7), d = hypot(point.x - c.x, point.y - c.y)
+            for (k, c) in markCenters.enumerated() {
+                let d = hypot(point.x - c.x, point.y - c.y)
                 if d < markSize(k) + 2.2 { return false }
             }
             return true
         }
+        // Every sample in a dash has the same clearance decision. Keep the
+        // exact turn and screen-space test, but do it only once per dash.
+        var dashClearance: [Double: Bool] = [:]
         ring(rx, width: front ? 1.3 : 1)
         // Dashes every tenth of a mark step, with a gap centred on every
         // multiple of ten degrees, so each mark (every thirty) sits in the
@@ -382,8 +394,11 @@ enum LevelUpStageArt {
             // A dash is kept or dropped whole, so none is left as a sliver
             // beside a mark.
             let dash = (degrees / 10).rounded(.down) * 10
+            if let clear = dashClearance[dash] { return clear }
             let ends = [3.0, 5.0, 7.0].map { start + innerTurn + (dash + $0) * .pi / 180 }
-            return ends.allSatisfy { clear(of: p($0, rx * 0.7)) }
+            let clear = ends.allSatisfy { clear(of: p($0, rx * 0.7)) }
+            dashClearance[dash] = clear
+            return clear
         }
         ring(rx * 0.38, width: front ? 1.1 : 0.9)
         var ticks = Path()
@@ -534,11 +549,10 @@ enum LevelUpStageArt {
     /// A radial glow flattened into an ellipse, so it lies on the floor
     /// without a hard edge.
     private static func ellipseGlow(_ ctx: inout GraphicsContext, center: CGPoint, radius: CGFloat, squash: CGFloat, colors: [Color]) {
-        ctx.drawLayer { layer in
-            layer.translateBy(x: center.x, y: center.y)
-            layer.scaleBy(x: 1, y: squash)
-            layer.fill(circle(.zero, radius), with: .radialGradient(Gradient(colors: colors), center: .zero,
-                                                                    startRadius: 0, endRadius: radius))
-        }
+        var layer = ctx
+        layer.translateBy(x: center.x, y: center.y)
+        layer.scaleBy(x: 1, y: squash)
+        layer.fill(circle(.zero, radius), with: .radialGradient(Gradient(colors: colors), center: .zero,
+                                                                startRadius: 0, endRadius: radius))
     }
 }

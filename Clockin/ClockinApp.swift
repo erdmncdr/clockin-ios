@@ -22,7 +22,9 @@ struct ClockinApp: App {
     @ViewBuilder
     private var entryView: some View {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--feedback-review") {
+        if ProcessInfo.processInfo.arguments.contains("--benchmark-level-frames") {
+            LevelFrameBenchmark()
+        } else if ProcessInfo.processInfo.arguments.contains("--feedback-review") {
             LevelFeedbackReview()
         } else if ProcessInfo.processInfo.arguments.contains("--level-effects-preview") {
             LevelEffectsPreview()
