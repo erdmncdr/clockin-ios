@@ -47,10 +47,10 @@ final class CelebrationCenter: ObservableObject {
     }
 
     #if DEBUG
-    func previewLevelForReview() {
-        var seed = CelebrationState(); seed.level = 499
+    func previewLevelForReview(_ level: Int = 500) {
+        var seed = CelebrationState(); seed.level = level - 1
         queue.ingest(seed, now: 0, canReact: false)
-        seed.level = 500; seed.focusHours = 2495
+        seed.level = level; seed.focusHours = (level - 1) * 5
         queue.ingest(seed, now: 1, canReact: false)
         setActive(true)
     }

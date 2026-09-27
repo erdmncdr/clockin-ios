@@ -164,7 +164,9 @@ card at one moment, `--preview-clean` to hide the controls, and
 `--preview-no-companion`, `--preview-large-text` or `--preview-still` for the
 variants. `--warrior-portrait` shows the companion's armour large on a lit
 stage instead of the card. `--feedback-review overlay` shows the card inside
-the real celebration overlay.
+the real celebration overlay, with its sound and haptics; add
+`--review-level N` for the jump to another level than 500 (a multiple of 75
+opens a rank and plays the rank cue).
 
 Launch a DEBUG build with `--benchmark-level-frames` to render 240 evenly
 spaced scene times from 0 through 6 seconds for levels 1, 150, 450, 451 and

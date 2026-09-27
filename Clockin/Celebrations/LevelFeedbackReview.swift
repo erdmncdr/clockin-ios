@@ -9,12 +9,16 @@ struct LevelFeedbackReview: View {
     @State private var shortcut: DashboardShortcut?
     @State private var result = "Checking…"
     private let mode: String
+    /// `--review-level N` shows the jump to level N; a multiple of 75 opens a rank.
+    private let level: Int
     init() {
         let args = ProcessInfo.processInfo.arguments
         let i = args.firstIndex(of: "--feedback-review")!
         mode = args.indices.contains(i + 1) ? args[i + 1] : "gallery"
+        let l = args.firstIndex(of: "--review-level")
+        level = l.flatMap { args.indices.contains($0 + 1) ? Int(args[$0 + 1]) : nil }.map { max(2, $0) } ?? 500
         let defaults = UserDefaults(suiteName: "Clockin.Review.\(UUID().uuidString)")!
-        defaults.set(499, forKey: CelebrationRules.levelKey)
+        defaults.set(level - 1, forKey: CelebrationRules.levelKey)
         defaults.set([], forKey: CelebrationRules.badgesKey)
         _center = StateObject(wrappedValue: CelebrationCenter(defaults: defaults))
     }
@@ -56,7 +60,7 @@ struct LevelFeedbackReview: View {
                 }
                 .task {
                     if mode == "banners" { center.previewBannersForReview(); return }
-                    center.previewLevelForReview()
+                    center.previewLevelForReview(level)
                     do { try await Task.sleep(for: .seconds(7)) } catch { return }
                     result = center.event?.autoDismissDelay == nil && center.event != nil ? "PASS: level card remains after 7 seconds" : "FAIL: card dismissed"
                     print(result)
