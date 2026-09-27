@@ -98,6 +98,7 @@ struct CompanionHomeView: View {
             }
             if enabled || stateOverride != nil {
                 companion(room)
+                if activity == .sleeping { asleep(room) }
             }
             CompanionHomeAtmosphere(state: state, room: room, light: light, moving: moving)
                 .frame(width: 360, height: 240).allowsHitTesting(false)
@@ -133,12 +134,13 @@ struct CompanionHomeView: View {
         let center = activity.center(in: room, layout: state.homeLayout, furniture: state.furniture, roomID: state.room, arrangement: state.homeArrangement)
         return Group {
             if activity == .sleeping {
+                // Only the head shows, upright on the pillow; the blanket
+                // covers the rest (asleep(_:)).
                 ClockinMascotStill(mood: .tired, maxPixelSize: 314, outfit: sleepingOutfit)
                     .mask {
                         Ellipse().frame(width: activity.side * 98 / 314, height: activity.side * 84 / 314)
                             .position(x: activity.side * 166 / 314, y: activity.side * 112 / 314)
                     }
-                    .rotationEffect(.degrees(state.homeLayout.mirrored ? 90 : -90))
             } else {
                 ClockinMotionMascot(mood: activity == .idle ? mood : activity.mood, tap: reaction, outfitOverride: stateOverride)
             }
@@ -147,6 +149,98 @@ struct CompanionHomeView: View {
         .scaleEffect(x: HomeSceneLayout.mirrorsCompanion(activity, layout: state.homeLayout) ? -1 : 1, y: 1)
         .position(x: center.x, y: center.y)
         .environment(\.clockinContentActive, moving)
+    }
+}
+
+extension CompanionHomeView {
+    /// The companion tucked in: the bed's blanket drawn again over it up to
+    /// the chin, rising and falling slowly, and Zs drifting up off the pillow.
+    @ViewBuilder fileprivate func asleep(_ room: WardrobeRoom) -> some View {
+        if let item = WardrobeArt.home.items["companion-bed"], let image = images[item.file] {
+            let rect = HomeSceneLayout.furnitureRect(item, in: room,
+                imageSize: CGSize(width: image.width, height: image.height), layout: state.homeLayout,
+                roomID: state.room, arrangement: state.homeArrangement)
+            let mirrored = state.homeLayout.mirrored
+            Image(decorative: image, scale: 1).resizable().interpolation(.none)
+                .scaleEffect(x: mirrored ? -1 : 1, y: 1)
+                .mask(CompanionBlanket(mirrored: mirrored))
+                .modifier(CompanionBreathing(active: moving))
+                .frame(width: rect.width, height: rect.height)
+                .offset(x: rect.minX, y: rect.minY)
+                .allowsHitTesting(false)
+            let head = CompanionHomeActivity.sleepingHead(in: room, layout: state.homeLayout,
+                                                          roomID: state.room, arrangement: state.homeArrangement)
+            CompanionSleepZs(head: CGPoint(x: head.x, y: head.y), mirrored: mirrored, moving: moving)
+                .frame(width: 360, height: 240)
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+/// The companion bed's blanket, in the bed image's own pixels (106 × 60):
+/// from the pillow's edge to the footboard, down to the gold trim.
+private struct CompanionBlanket: Shape {
+    let mirrored: Bool
+    func path(in rect: CGRect) -> Path {
+        let points: [(Double, Double)] = [(22, 26), (40, 21.5), (80, 21.5), (94, 34), (94, 47), (22, 47)]
+        var path = Path()
+        for (i, point) in points.enumerated() {
+            let x = (mirrored ? 106 - point.0 : point.0) / 106 * rect.width, y = point.1 / 60 * rect.height
+            if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// A slow breath under the blanket: its top edge rises about a pixel.
+private struct CompanionBreathing: ViewModifier {
+    let active: Bool
+    @State private var inhale = false
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(x: 1, y: inhale ? 1.035 : 1, anchor: .bottom)
+            .animation(active ? .easeInOut(duration: 1.7).repeatForever(autoreverses: true) : .default, value: inhale)
+            .onAppear { inhale = active }
+            .onChange(of: active) { _, now in inhale = now }
+    }
+}
+
+/// Pixel Zs rising from the sleeping head and fading, snapped to whole
+/// points so they stay crisp. Still, two of them hang in place.
+private struct CompanionSleepZs: View {
+    let head: CGPoint
+    let mirrored: Bool
+    let moving: Bool
+    private static let period = 2.7
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 12, paused: !moving)) { context in
+            let t = moving ? context.date.timeIntervalSinceReferenceDate : 0
+            Canvas { canvas, _ in
+                let phases = moving
+                    ? (0..<3).map { ((t / Self.period) + Double($0) / 3).truncatingRemainder(dividingBy: 1) }
+                    : [0.35, 0.72]
+                for p in phases { draw(&canvas, progress: p, fade: moving ? sin(p * .pi) : 0.9) }
+            }
+        }
+    }
+
+    private func draw(_ canvas: inout GraphicsContext, progress p: Double, fade: Double) {
+        // Up and away from the headboard, growing as they rise.
+        let side: Double = mirrored ? -1 : 1
+        let size = p > 0.5 ? 7 : 5
+        let x = (head.x + side * (9 + 12 * p) - Double(size) / 2).rounded()
+        let y = (head.y - 13 - 20 * p - Double(size) / 2).rounded()
+        // A Z: top row, bottom row and the diagonal between them.
+        var cells: [(Int, Int)] = (0..<size).map { ($0, 0) } + (0..<size).map { ($0, size - 1) }
+        cells += (1..<(size - 1)).map { (size - 1 - $0, $0) }
+        for (shade, offset) in [(Color(red: 0.15, green: 0.19, blue: 0.29), 1.0), (Color(red: 0.8, green: 0.86, blue: 0.93), 0.0)] {
+            for (cx, cy) in cells {
+                let r = CGRect(x: x + Double(cx) + offset, y: y + Double(cy) + offset, width: 1, height: 1)
+                canvas.fill(Path(r), with: .color(shade.opacity(fade)))
+            }
+        }
     }
 }
 

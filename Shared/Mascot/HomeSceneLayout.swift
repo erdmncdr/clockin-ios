@@ -68,10 +68,11 @@ enum HomeSceneLayout {
     }
 
     static func mirrorsCompanion(_ activity: CompanionHomeActivity, layout: CompanionHomeLayout) -> Bool {
-        // Typing art faces right; the seated rest art faces left.
+        // Typing art faces right; the seated rest art faces left; the
+        // sleeping head turns with the bed.
         switch activity {
         case .working: return !layout.mirrored
-        case .relaxing: return layout.mirrored
+        case .relaxing, .sleeping: return layout.mirrored
         default: return false
         }
     }

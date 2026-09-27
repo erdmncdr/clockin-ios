@@ -28,6 +28,8 @@ struct ClockinApp: App {
             LevelFeedbackReview()
         } else if ProcessInfo.processInfo.arguments.contains("--level-effects-preview") {
             LevelEffectsPreview()
+        } else if ProcessInfo.processInfo.arguments.contains("--companion-sleep-preview") {
+            CompanionSleepPreview()
         } else { RootView() }
         #else
         RootView()

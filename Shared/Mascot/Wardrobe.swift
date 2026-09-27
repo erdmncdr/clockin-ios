@@ -276,11 +276,27 @@ enum CompanionHomeActivity: String, CaseIterable, Sendable {
         case .relaxing:
             return HomeSceneLayout.seatedCenter(in: room, layout: layout, side: side, feet: mood.feet, furniture: furniture, roomID: roomID, arrangement: arrangement)
         case .sleeping:
-            let bed = room.slots["floorRight"] ?? .init(302,224)
-            let delta = HomeSceneLayout.attachmentOffset("companion-bed",in:room,layout:layout,roomID:roomID,arrangement:arrangement)
-            return .init(layout.x(bed.x - 7) + delta.x, bed.y - 28 + delta.y)
+            // The frame is placed so its head lands on the pillow; it is
+            // mirrored with the room, so the head's offset turns with it.
+            let head = Self.sleepingHead(in: room, layout: layout, roomID: roomID, arrangement: arrangement)
+            return .init(head.x - (layout.mirrored ? -1 : 1) * Self.headInFrame.x * side, head.y - Self.headInFrame.y * side)
         }
         return .init(layout.x(point.x), point.y)
+    }
+
+    /// Where the sleepy frame's head sits in it, from its centre, as a share
+    /// of its side; the view masks the frame to this head.
+    static let headInFrame = WardrobePoint(166.0 / 314 - 0.5, 112.0 / 314 - 0.5)
+
+    /// The sleeping head's centre, on the bed's pillow. It stays upright, so
+    /// the sleepy slit eyes read as closed; the blanket is drawn over the rest.
+    static func sleepingHead(in room: WardrobeRoom, layout: CompanionHomeLayout, roomID: String = "",
+                             arrangement: RoomArrangement = .init()) -> WardrobePoint {
+        let bed = room.slots["floorRight"] ?? .init(302,224)
+        let delta = HomeSceneLayout.attachmentOffset("companion-bed",in:room,layout:layout,roomID:roomID,arrangement:arrangement)
+        // The bed's pivot is its image's (52, 52); the head rests at (33, 17),
+        // eyes just above the blanket's edge and its lower half under it.
+        return .init(layout.x(bed.x - 19) + delta.x, bed.y - 35 + delta.y)
     }
 }
 

@@ -394,6 +394,13 @@ In desk mode the room sits low with its edges faded, so the companion watches th
 timer from the bottom edge instead of sitting under the earnings. A debug build
 launched with `--desk-preview` draws desk mode turned onto the portrait screen, for
 simulators that cannot rotate.
+When the companion rests (tired, or a session paused for four hours, with the
+companion bed placed), its sleepy `z01` head lies upright on the pillow, so the
+slit eyes read as closed, and the bed's blanket is drawn again over it up to
+the chin, masked to the blanket in the bed image's own pixels, rising a pixel
+with each slow breath; pixel Zs drift up off the pillow. In the mirrored layout
+the head turns with the bed. `--companion-sleep-preview` shows it in every
+room and both layouts.
 Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss it,
 switch tabs, cover Today, and background the app: all live motion must stop. Compare
 Today idle CPU with the existing baseline using PERFORMANCE.md's 120-second runs;

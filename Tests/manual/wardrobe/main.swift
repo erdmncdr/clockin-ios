@@ -415,11 +415,26 @@ for (roomID, room) in realHome.rooms {
     context.saveGState()
     context.translateBy(x:center.x,y:center.y)
     if activity == .sleeping {
-        context.rotate(by:layout.mirrored ? .pi/2:-.pi/2)
-        context.addEllipse(in:CGRect(x:-side/2+117*side/314,y:-side/2+70*side/314,width:98*side/314,height:84*side/314)); context.clip()
+        let left = layout.mirrored ? 314 - 117 - 98 : 117.0
+        context.addEllipse(in:CGRect(x:-side/2+left*side/314,y:-side/2+70*side/314,width:98*side/314,height:84*side/314)); context.clip()
     }
     draw(robot,x:-side/2,y:-side/2,w:side,h:side,mirror:HomeSceneLayout.mirrorsCompanion(activity, layout:layout))
     context.restoreGState()
+    if activity == .sleeping {
+        // The blanket over the sleeper, as CompanionHomeView draws it.
+        let item = realHome.items["companion-bed"]!, image = realImage("Home/"+item.file)
+        let rect = HomeSceneLayout.furnitureRect(item, in: room, imageSize: CGSize(width: image.width, height: image.height), layout: layout)
+        let points: [(Double, Double)] = [(22, 26), (40, 21.5), (80, 21.5), (94, 34), (94, 47), (22, 47)]
+        context.saveGState()
+        context.beginPath()
+        for (i, point) in points.enumerated() {
+            let x = rect.minX + (layout.mirrored ? 106 - point.0 : point.0) / 106 * rect.width, y = rect.minY + point.1 / 60 * rect.height
+            if i == 0 { context.move(to: CGPoint(x: x, y: y)) } else { context.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        context.closePath(); context.clip()
+        draw(image,x:rect.minX,y:rect.minY,w:rect.width,h:rect.height,mirror:layout.mirrored)
+        context.restoreGState()
+    }
     savePNG(context.makeImage()!, "/tmp/clockin-home-"+roomID+"-"+activity.rawValue+"-"+layout.rawValue+"-"+deskID+".png")
 }
 for roomID in realHome.rooms.keys.sorted() {
