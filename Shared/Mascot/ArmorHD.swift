@@ -248,7 +248,7 @@ private final class ArmorHDGeometryStore: @unchecked Sendable {
 }
 
 enum ArmorHD {
-  static let rendererVersion = "armorhd-6"
+  static let rendererVersion = "armorhd-7"
   static let frameSize = 480
   // The source antenna is preserved as part of the reconstructed helmet.
   static let hidesAntenna = false
@@ -281,7 +281,7 @@ enum ArmorHD {
     context.scaleBy(x: 1, y: -1)
     let parts = ArmorHDParts(
       context: context, style: style, anchors: anchors, frame: frame,
-      shoulders: resources.manifest.shoulders[frame] ?? [:])
+      shoulders: resources.manifest.shoulders[frame] ?? [:], headFit: geometry.headFit)
     parts.back()
     geometry.draw(in: context, style: style)
     parts.front()

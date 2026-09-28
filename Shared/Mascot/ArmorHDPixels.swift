@@ -94,12 +94,13 @@ struct ArmorHDPixels {
         }
       }
     }
-    // Expressions can be grey or white as well as cyan. Keep every enclosed stroke emissive.
+    // Erase enclosed source expressions into the glass mask before tracing.
+    // Grey, white and cyan eyes/mouths must not become additional contours.
     for y in 0..<n {
       let row = (0..<n).filter { cells[y * n + $0].kind == 6 }
       if let left = row.first, let right = row.last, right > left {
         for x in left...right where cells[y * n + x].kind != 6 && cells[y * n + x].kind != 0 {
-          cells[y * n + x].kind = 4
+          cells[y * n + x].kind = 6
         }
       }
     }
@@ -190,7 +191,14 @@ struct ArmorHDPixels {
       }
       symbol = rect
     }
-    let silhouette = labels.map { $0 == 0 ? UInt8(0) : UInt8(1) }
+    var silhouette = labels.map { $0 == 0 ? UInt8(0) : UInt8(1) }
+    // Detached emissive notes need their glow, not a second dark joint surface.
+    for region in Self.components(silhouette, width: w)
+    where region.contains(where: { labels[$0] == 4 })
+      && !region.contains(where: { labels[$0] == 2 || labels[$0] == 3 })
+    {
+      for i in region { silhouette[i] = 0 }
+    }
     // The source's dark outline, and the shading along it, would stand round
     // the plates as a thick black band, a dark backdrop in a light room. Peel
     // the dark cells that touch empty space next to a plate, twice, so the
@@ -218,12 +226,50 @@ struct ArmorHDPixels {
         if nearPlate { inner[i] = 0 }
       }
     }
-    let base = Self.paths(inner, width: w, tolerance: 0.85)
-    let outline = Self.paths(silhouette, width: w, tolerance: 0.85)
-    let parts = Self.paths(labels, width: w, tolerance: 0.85)
+    let sourceParts = Self.paths(labels, width: w, tolerance: 0.85)
+    let fit = ArmorHDHeadFit(parts: sourceParts, anchors: anchors, frame: frame)
+    var headCells = labels.indices.map {
+      fit.contains(CGPoint(x: $0 % w * 2 + 1, y: $0 / w * 2 + 1))
+    }
+    // Protect actual arm cells, not their bounding rectangles: the diagonal
+    // overhead arms' rectangles overlap the helmet even when their pixels don't.
+    if fit.scale != 1 {
+      for region in Self.components(labels, width: w)
+      where labels[region[0]] == 2 || labels[region[0]] >= 10 {
+        let xs = region.map { $0 % w * 2 }
+        let centerX = CGFloat(xs.min()! + xs.max()!) / 2
+        guard centerX < fit.helmet.minX || centerX > fit.helmet.maxX else { continue }
+        for i in region {
+          headCells[i] = false
+          for j in [i - 1, i + 1, i - w, i + w]
+          where j >= 0 && j < labels.count && abs(j % w - i % w) <= 1 && labels[j] == 1 {
+            headCells[j] = false
+          }
+        }
+      }
+    }
+    // Separate before contour fitting: a raised cup can join helmet and chest
+    // pixels, and fitting their combined convex hull would stretch the helmet.
+    func fitted(_ mask: [UInt8]) -> [Part] {
+      if fit.scale == 1 { return Self.paths(mask, width: w, tolerance: 0.85) }
+      var tagged = mask
+      for i in mask.indices where mask[i] != 0 {
+        if headCells[i] { tagged[i] += 20 }
+      }
+      return Self.paths(tagged, width: w, tolerance: 0.85, headTransform: fit.transform)
+    }
+    let base = fitted(inner)
+    let parts = fit.scale == 1 ? sourceParts : fitted(labels)
+    let face = ArmorHDVisor(parts: sourceParts, anchors: anchors, fit: fit, frame: frame)
     return ArmorHDGeometry(
-      base: base.map(\.path), outline: outline.map(\.path), parts: parts, hands: hands,
-      symbol: symbol, frame: frame, mug: mug)
+      base: base.map(\.path), parts: parts, hands: hands,
+      symbol: symbol, frame: frame,
+      mug: mug.map { rect in
+        guard ArmorHDMug.raised(frame) else { return rect }
+        let rim = CGPoint(x: rect.midX, y: rect.minY)
+        let contact = rim.applying(fit.transform)
+        return rect.offsetBy(dx: contact.x - rim.x, dy: contact.y - rim.y)
+      }, headFit: fit, visor: face)
   }
 
   static func components(_ labels: [UInt8], width w: Int) -> [[Int]] {
@@ -255,11 +301,20 @@ struct ArmorHDPixels {
   }
   // Trace directed cell edges, simplify the staircase, then fit a continuous
   // cubic contour. All this is resolution and skin independent and cached.
-  static func paths(_ labels: [UInt8], width w: Int, tolerance: CGFloat) -> [Part] {
+  static func paths(
+    _ labels: [UInt8], width w: Int, tolerance: CGFloat,
+    headTransform: CGAffineTransform = .identity
+  ) -> [Part] {
     var result = [Part]()
     let stride = w + 1
     for region in components(labels, width: w) {
-      let kind = labels[region[0]]
+      let tag = labels[region[0]]
+      let kind = tag > 20 ? tag - 20 : tag
+      func fitted(_ path: CGPath) -> CGPath {
+        guard tag > 20 else { return path }
+        var transform = headTransform
+        return path.copy(using: &transform)!
+      }
       guard region.count >= (kind == 4 ? 1 : 3) else { continue }
       var edges = [Int: [Int]]()
       func edge(_ a: Int, _ b: Int) { edges[a, default: []].append(b) }
@@ -267,10 +322,10 @@ struct ArmorHDPixels {
         let x = i % w
         let y = i / w
         let a = y * stride + x
-        if y == 0 || labels[i - w] != kind { edge(a, a + 1) }
-        if x == w - 1 || labels[i + 1] != kind { edge(a + 1, a + stride + 1) }
-        if y == w - 1 || labels[i + w] != kind { edge(a + stride + 1, a + stride) }
-        if x == 0 || labels[i - 1] != kind { edge(a + stride, a) }
+        if y == 0 || labels[i - w] != tag { edge(a, a + 1) }
+        if x == w - 1 || labels[i + 1] != tag { edge(a + 1, a + stride + 1) }
+        if y == w - 1 || labels[i + w] != tag { edge(a + stride + 1, a + stride) }
+        if x == 0 || labels[i - 1] != tag { edge(a + stride, a) }
       }
       // Plates are formed, convex shells. Their source holes are painted
       // grime or highlights, not dents. Keep separate connected plates but
@@ -282,7 +337,8 @@ struct ArmorHDPixels {
         let hull = convexHull(vertices)
         if hull.count > 2 {
           result.append(
-            Part(kind: kind >= 10 ? 2 : kind, path: ArmorHDShape.smooth(hull, tension: 0.45)))
+            Part(
+              kind: kind >= 10 ? 2 : kind, path: fitted(ArmorHDShape.smooth(hull, tension: 0.45))))
         }
         continue
       }
@@ -320,7 +376,7 @@ struct ArmorHDPixels {
           path.addPath(ArmorHDShape.smooth(Array(points), tension: kind == 4 ? 0.35 : 0.5))
         }
       }
-      result.append(Part(kind: kind, path: path))
+      result.append(Part(kind: kind, path: fitted(path)))
     }
     return result
   }
@@ -369,37 +425,39 @@ struct ArmorHDPixels {
 
 struct ArmorHDGeometry {
   let base: [CGPath]
-  /// The whole source silhouette, which plates and their shadows stay inside.
-  let outline: [CGPath]
   let parts: [ArmorHDPixels.Part]
   let hands: [[Double]]
   let symbol: CGRect?
   let frame: String
   let mug: CGRect?
+  let headFit: ArmorHDHeadFit
+  let visor: ArmorHDVisor
 
   func draw(in c: CGContext, style: ArmorHDStyle) {
     let s = ArmorHDShade(c: c, rim: style.light)
-    for p in base {
-      let b = p.boundingBoxOfPath
+    let joints = CGMutablePath()
+    for path in base { joints.addPath(path) }
+    if !joints.isEmpty {
+      let b = joints.boundingBoxOfPath
       s.gradient(
-        p,
-        [
-          style.joints.metal(0.9).cg,
-          style.joints.metal(0.04).cg,
-        ],
+        joints, [style.joints.metal(0.9).cg, style.joints.metal(0.04).cg],
         [0, 1], CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY))
-      s.stroke(p, ArmorHDColor.black.alpha(0.85), 0.8)
+      s.stroke(joints, ArmorHDColor.black.alpha(0.85), 0.8)
     }
-    // Plates and the shadows they cast stay on the body: on a light room the
-    // shadows falling past the silhouette read as a dark backdrop.
-    c.saveGState()
-    for p in outline { c.addPath(p) }
-    c.clip()
-    defer { c.restoreGState() }
+    // Bound each reflection to its own shell, avoiding a complex articulated
+    // silhouette clip on every lighting pass. Broad helmets retain speculars.
     for part in parts where part.kind == 2 || part.kind == 3 {
-      s.part(
-        part.path, part.kind == 3 ? style.trim : style.plate, polish: 1.2,
-        shadow: 0.45, softRelief: style.design.helm == .paladin)
+      let b = part.path.boundingBoxOfPath
+      let tone = part.kind == 3 ? style.trim : style.plate
+      if b.width > 65 && b.height > 55 {
+        c.saveGState()
+        c.addPath(part.path)
+        c.clip()
+        s.part(part.path, tone, polish: 1.2, shadow: 0.45, softRelief: false)
+        c.restoreGState()
+      } else {
+        s.plate(part.path, tone)
+      }
     }
     if style.design.chest == .circuit {
       for part in parts where part.kind == 2 {
@@ -419,22 +477,22 @@ struct ArmorHDGeometry {
         c.restoreGState()
       }
     }
-    for part in parts where part.kind == 6 {
-      let b = part.path.boundingBoxOfPath
-      s.gradient(
-        part.path,
-        [
-          ArmorHDColor(r: 0.065, g: 0.13, b: 0.18).cg,
-          ArmorHDColor(r: 0.008, g: 0.015, b: 0.026).cg,
-        ],
-        [0, 1], CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.midX, y: b.maxY))
-      s.stroke(part.path, ArmorHDColor.black.alpha(0.9), 1)
-    }
+    visor.draw(in: c, style: style)
+    // Source emissive pixels outside the face (music notes, antenna lights)
+    // keep their original location. No source expression survives in the glass.
+    let accents = CGMutablePath()
     for part in parts where part.kind == 4 {
+      let center = CGPoint(x: part.path.boundingBoxOfPath.midX, y: part.path.boundingBoxOfPath.midY)
+      guard !visor.sourceRegion.contains(center.applying(headFit.transform.inverted())) else {
+        continue
+      }
+      accents.addPath(part.path)
+    }
+    if !accents.isEmpty {
       c.saveGState()
       c.setShadow(offset: .zero, blur: 3, color: style.light.alpha(0.7))
-      s.fill(part.path, style.eyeColor.cg)
-      s.stroke(part.path, style.eyeColor.cg, 0.9)
+      s.fill(accents, style.eyeColor.cg)
+      s.stroke(accents, style.eyeColor.cg, 0.9)
       c.restoreGState()
     }
   }
@@ -449,7 +507,7 @@ struct ArmorHDGeometry {
           (x - 10, y - 7), (x - 5, y - 11), (x + 6, y - 9), (x + 11, y - 3), (x + 9, y + 8),
           (x - 4, y + 10), (x - 11, y + 4),
         ]))
-      s.part(gauntlet, style.plate, polish: 1.3, shadow: 0.6)
+      s.part(gauntlet, style.plate, polish: 1.3, shadow: 0.6, softRelief: false)
       let ridge = CGMutablePath()
       ridge.move(to: CGPoint(x: x - 8, y: y - 3))
       ridge.addQuadCurve(to: CGPoint(x: x + 8, y: y - 3), control: CGPoint(x: x, y: y - 9))
@@ -523,5 +581,163 @@ enum ArmorHDMug {
     if ["c10", "c11"].contains(frame) { return [[138, 214], [201, 214]] }
     if ["c06", "c13"].contains(frame) { return [[89, 211], [189, 229]] }
     return nil
+  }
+}
+
+/// Source-space fitting, shared by reconstructed pixels and authored ornaments.
+/// Widths are measured before fitting. Seated torso references use the unobscured
+/// rest plate: gripping hands/cup and typing forearms otherwise merge into it.
+struct ArmorHDHeadFit {
+  static let standingRatio: CGFloat = 93.4650463498487 / 64.91442744001057
+  let helmet: CGRect
+  let torsoWidth: CGFloat
+  let neck: CGPoint
+  let scale: CGFloat
+  let fixedHands: [CGPoint]
+  let typing: Bool
+  var sourceRatio: CGFloat { helmet.width / torsoWidth }
+  var fittedRatio: CGFloat { sourceRatio * scale }
+  var transform: CGAffineTransform {
+    CGAffineTransform(translationX: neck.x, y: neck.y)
+      .scaledBy(x: scale, y: scale).translatedBy(x: -neck.x, y: -neck.y)
+  }
+  init(parts: [ArmorHDPixels.Part], anchors: ArmorHDAnchors, frame: String) {
+    fixedHands = frame == "pose2" ? [CGPoint(x: 134, y: 49), CGPoint(x: 161, y: 54)] : []
+    typing = frame.hasPrefix("t")
+    let neck = anchors.point(anchors.neck)
+    self.neck = neck
+    let v = anchors.point(anchors.visor)
+    let plates = parts.filter { $0.kind == 2 }.map { $0.path.boundingBoxOfPath }
+    var shell =
+      plates.filter { $0.minY < v.y && $0.minX < v.x && $0.maxX > v.x }
+      .max { $0.width < $1.width }
+      ?? CGRect(x: v.x - 46, y: anchors.head[1], width: 93.4650463498487, height: 74)
+    // Headphones cover the pale side shell, but do not change the anatomy.
+    if frame == "acc-headphones" {
+      shell = CGRect(x: 119.775, y: 71.775, width: 93.4650463498487, height: 72.45)
+    }
+    helmet = shell
+    if frame.hasPrefix("c") {
+      torsoWidth = 59.16729223504913  // c01, before any head or prop transform
+    } else if frame.hasPrefix("t") {
+      torsoWidth = 54.81015543374589  // t01, forearms separate from chest
+    } else {
+      torsoWidth =
+        plates.filter {
+          $0.minY > v.y + 10 && $0.minX < neck.x && $0.maxX > neck.x && $0.width > 28
+        }.min { abs($0.minY - neck.y) < abs($1.minY - neck.y) }?.width ?? 64.91442744001057
+    }
+    let correction = Self.standingRatio * torsoWidth / helmet.width
+    // Preserve the standing source exactly within the 3% contour tolerance.
+    scale = abs(correction - 1) < 0.03 ? 1 : correction
+  }
+  func contains(_ p: CGPoint) -> Bool {
+    // Include ears and antenna, but leave the shoulder/neck joint and raised
+    // forearms in body space. The split ends two source cells above the neck.
+    // Typing turns the head three-quarters, so its far ear cup sits well left
+    // of the shell; a narrower margin left its rim behind, unscaled.
+    p.y < neck.y - 4 && p.x >= helmet.minX - (typing ? 34 : 12) && p.x <= helmet.maxX + 12
+      && !fixedHands.contains { hypot(p.x - $0.x, p.y - $0.y) < 22 }
+  }
+}
+
+/// CoreGraphics port of WarriorFace's five-point slits (tension 0.22).
+/// The source contributes placement/tilt and blink state, never a mouth glyph.
+struct ArmorHDVisor {
+  let screen: CGPath
+  let eyes: [CGPath]
+  let cores: [CGPath]
+  let sourceRegion: CGRect
+  let closed: Bool
+  let sleepy: Bool
+  let angry: Bool
+  let toWorld: CGAffineTransform
+  let localBounds: CGRect
+
+  init(parts: [ArmorHDPixels.Part], anchors: ArmorHDAnchors, fit: ArmorHDHeadFit, frame: String) {
+    let v = anchors.point(anchors.visor)
+    let bounds =
+      parts.filter { $0.kind == 6 }.map { $0.path.boundingBoxOfPath }
+      .max { $0.width * $0.height < $1.width * $1.height }
+      ?? CGRect(x: v.x - 32, y: v.y - 23, width: 64, height: 46)
+    sourceRegion = bounds.insetBy(dx: -3, dy: -3)
+    sleepy = frame.hasPrefix("z")
+    angry = frame.hasPrefix("a") && !frame.hasPrefix("acc-")
+    // Closed source frames, including both steps of the blink + antenna clips.
+    closed =
+      sleepy
+      || ["h10", "h11", "a10", "a11", "p10", "p11", "c04", "t08", "t09", "e08", "e09", "pose4"]
+        .contains(frame)
+    let f = CGRect(
+      x: -bounds.width / 2, y: -bounds.height / 2,
+      width: bounds.width, height: bounds.height)
+    localBounds = f
+    // Keep the measured glass contour, already tilted by the source artwork.
+    var headTransform = fit.transform
+    screen =
+      parts.filter { $0.kind == 6 }.max {
+        $0.path.boundingBoxOfPath.width < $1.path.boundingBoxOfPath.width
+      }?.path.copy(using: &headTransform)
+      ?? CGPath(roundedRect: bounds, cornerWidth: 12, cornerHeight: 12, transform: &headTransform)
+    toWorld = CGAffineTransform(translationX: v.x, y: v.y)
+      .rotated(by: anchors.tilt * .pi / 180).concatenating(fit.transform)
+    let unit = min(f.width / 64, f.height / 44)
+    let h: CGFloat = closed ? (sleepy ? 0.65 : 0.85) : (angry ? 4.6 : 5.2)
+    var slits = [CGPath]()
+    var hot = [CGPath]()
+    for side: CGFloat in [-1, 1] {
+      let cx = side * 13.5 * unit
+      let cy = 0.5 * unit
+      func q(_ out: CGFloat, _ down: CGFloat) -> CGPoint {
+        CGPoint(x: cx + side * out * unit, y: cy + down * unit)
+      }
+      let points: [CGPoint]
+      if closed {
+        points = [q(7, -h / 2), q(-6.5, -h / 2), q(-6.5, h / 2), q(7, h / 2)]
+      } else {
+        points = [
+          q(7, -h * (angry ? 0.85 : 0.55)), q(-6.5, h * (angry ? 0.36 : 0.2)),
+          q(-5.5, h * 0.6), q(0, h * 0.66), q(6.2, h * 0.25),
+        ]
+      }
+      let path =
+        closed
+        ? ArmorHDShape.poly(points) : ArmorHDShape.smooth(points, tension: angry ? 0.12 : 0.22)
+      var transform = toWorld
+      slits.append(path.copy(using: &transform)!)
+      var core = CGAffineTransform(translationX: cx, y: cy)
+        .scaledBy(x: 0.82, y: 0.45).translatedBy(x: -cx, y: -cy).concatenating(toWorld)
+      hot.append(path.copy(using: &core)!)
+    }
+    eyes = slits
+    cores = hot
+  }
+  func draw(in c: CGContext, style: ArmorHDStyle) {
+    let s = ArmorHDShade(c: c, rim: style.eyeColor)
+    let b = screen.boundingBoxOfPath
+    s.gradient(
+      screen,
+      [
+        ArmorHDColor(r: 0.04, g: 0.09, b: 0.16).cg,
+        ArmorHDColor(r: 0.01, g: 0.02, b: 0.05).cg,
+      ], [0, 1],
+      CGPoint(x: b.midX, y: b.minY), CGPoint(x: b.midX, y: b.maxY))
+    s.stroke(screen, ArmorHDColor.black.alpha(0.9), 1)
+    c.saveGState()
+    c.addPath(screen)
+    c.clip()
+    // Soft reflected light on the upper glass, below the eye brightness.
+    s.gradient(
+      screen, [ArmorHDColor.white.alpha(0.10), ArmorHDColor.white.alpha(0)], [0, 0.48],
+      CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY))
+    let power = sleepy ? 0.46 : 1.0
+    c.setBlendMode(.plusLighter)
+    for (eye, core) in zip(eyes, cores) {
+      c.setShadow(offset: .zero, blur: sleepy ? 2 : 3, color: style.eyeColor.alpha(0.7 * power))
+      s.fill(eye, style.eyeColor.alpha(power))
+      c.setShadow(offset: .zero, blur: 0.8, color: ArmorHDColor.white.alpha(0.5 * power))
+      s.fill(core, ArmorHDColor.white.alpha(0.5 * power))
+    }
+    c.restoreGState()
   }
 }

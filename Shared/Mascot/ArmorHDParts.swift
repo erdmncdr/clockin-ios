@@ -80,7 +80,7 @@ struct ArmorHDShade {
   }
   func part(
     _ path: CGPath, _ tone: ArmorHDTone, pale: Bool = false, polish: Double = 1,
-    shadow: CGFloat = 1, softRelief: Bool = true
+    shadow: CGFloat = 1, softRelief: Bool = false
   ) {
     let b = path.boundingBoxOfPath
     let tall = b.height > b.width * 1.6
@@ -159,6 +159,39 @@ struct ArmorHDShade {
     c.restoreGState()
     stroke(path, ArmorHDColor.black.alpha(0.62), 0.8)
   }
+  // Reconstructed shells already have a separate joint backing. Their narrow
+  // contact edge and directional reflection need no per-plate shadow bitmap.
+  func plate(_ path: CGPath, _ tone: ArmorHDTone) {
+    let b = path.boundingBoxOfPath
+    let tall = b.height > b.width * 1.6
+    let wide = b.width > b.height * 1.6
+    let start =
+      tall
+      ? CGPoint(x: b.minX, y: b.midY - b.width * 0.3)
+      : wide ? CGPoint(x: b.midX - b.height * 0.3, y: b.minY) : CGPoint(x: b.minX, y: b.minY)
+    let end =
+      tall
+      ? CGPoint(x: b.maxX, y: b.midY + b.width * 0.3)
+      : wide ? CGPoint(x: b.midX + b.height * 0.3, y: b.maxY) : CGPoint(x: b.maxX, y: b.maxY)
+    var colors = [0.66, 0.98, 0.66, 0.2, 0.45].map { tone.metal($0) }
+    if tone.prismatic {
+      colors[1] = colors[1].mix(.hsv(0.52, 0.5, 1), 0.28)
+      colors[2] = colors[2].mix(.hsv(0.94, 0.4, 1), 0.24)
+    }
+    gradient(path, colors.map(\.cg), [0, 0.2, 0.42, 0.8, 1], start, end)
+    if b.width * b.height < 160 {
+      stroke(path, ArmorHDColor.black.alpha(0.62), 0.7)
+      return
+    }
+    c.saveGState()
+    c.addPath(path)
+    c.clip()
+    stroke(translated(path, 0.8, 1), ArmorHDColor.white.alpha(0.26), 0.9)
+    c.setBlendMode(.plusLighter)
+    stroke(translated(path, -1.1, 0.2), rim.alpha(0.6), 1.5)
+    c.restoreGState()
+    stroke(path, ArmorHDColor.black.alpha(0.62), 0.8)
+  }
   func edge(_ path: CGPath, _ tone: ArmorHDTone, width: CGFloat = 2.5) {
     c.saveGState()
     c.addPath(path)
@@ -198,6 +231,7 @@ struct ArmorHDParts {
   let anchors: ArmorHDAnchors
   let frame: String
   let shoulders: [String: [Double]]
+  let headFit: ArmorHDHeadFit
   var shade: ArmorHDShade { .init(c: context, rim: style.light) }
   func placed(_ name: String, _ point: [Double], rotate: Bool = false, _ body: () -> Void) {
     // HD fitting belongs to the renderer, independent of removable pixel skins.
@@ -210,6 +244,7 @@ struct ArmorHDParts {
     }
     let offset = offsets[frame] ?? offsets[String(frame.prefix(1))] ?? [0, 0]
     context.saveGState()
+    if name == "helm" || name == "halo" { context.concatenate(headFit.transform) }
     context.translateBy(x: point[0] + offset[0], y: point[1] + offset[1])
     if rotate { context.rotate(by: anchors.tilt * .pi / 180) }
     body()

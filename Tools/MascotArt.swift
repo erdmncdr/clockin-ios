@@ -1410,6 +1410,12 @@ func makeHD() throws {
     let directory = root.appendingPathComponent("build/hd-previews")
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let reviewCache = ArmorHDCache(directory: directory.appendingPathComponent("render-cache"))
+    // Review sheets must reflect local shader edits even before another version
+    // bump. Only this tool's generated cache for the current renderer is cleared.
+    let reviewVersion = reviewCache.directory.appendingPathComponent(ArmorHD.rendererVersion)
+    if FileManager.default.fileExists(atPath: reviewVersion.path) {
+        try FileManager.default.removeItem(at: reviewVersion)
+    }
     func render(_ frame: String, _ style: ArmorHDStyle, _ size: Int) -> Bitmap {
         guard let image = try! ArmorHD.render(frame: frame, style: style, size: size, cache: reviewCache) else { fatalError("HD render failed: \(frame)") }
         var bitmap = Bitmap(width: size,height: size)
@@ -1464,6 +1470,21 @@ func makeHD() throws {
             let row = i / 7 + background * 2
             label(i < 9 ? rankLabels[i] + " Paladin" : style.name, &allSmall, i % 7 * 144 + 5, row * 116 + 8, 1, background == 0 ? paper : ink)
             allSmall.blit(tiny, i % 7 * 144 + 32, row * 116 + 28)
+        }
+    }
+    let proportionFrames = ["h01", "c01", "c05", "t01", "t05", "e01", "z01", "a01", "pose4"]
+    var proportion = Bitmap(width: 9 * 408, height: 2 * 440, fill: color("111725"))
+    for (row, style) in [ArmorHDStyle.gold, ArmorHDStyle.named("obsidian")!].enumerated() {
+        for (column, frame) in proportionFrames.enumerated() {
+            label((row == 0 ? "Solar Paladin" : style.name) + " / " + frame,
+                  &proportion, column * 408 + 12, row * 440 + 10, 2)
+            proportion.blit(render(frame, style, 408), column * 408, row * 440 + 28)
+        }
+    }
+    proportion.write(directory.appendingPathComponent("proportion.png"))
+    for (key, style) in [("solar", ArmorHDStyle.gold), ("obsidian", ArmorHDStyle.named("obsidian")!)] {
+        for frame in ["c07", "pose2"] {
+            render(frame, style, 408).write(directory.appendingPathComponent(key + "-" + frame + ".png"))
         }
     }
     all.write(directory.appendingPathComponent("all-skins.png"))
@@ -1618,7 +1639,9 @@ func makeHD() throws {
         c.draw(image,in:CGRect(x:0,y:0,width:480,height:480))
         precondition(c.makeImage() != nil)
     }
-    for (id, style) in designs {
+    var overBudget = [String]()
+    let timedStyles = (0..<9).map { ("paladin-rank-" + String($0), ArmorHDStyle.rank($0)) } + designs
+    for (id, style) in timedStyles {
         report += measure(id + " 480 px cold decoded h01", count: 25) {
             ArmorHD.clearGeometryCache()
             precondition(ArmorHD.render(source: decoded, frame: "h01", style: style, size: 480) != nil)
@@ -1650,6 +1673,7 @@ func makeHD() throws {
         report += String(format: "%@ 480 px interleaved 330 cold renders: median %.2f ms, p95 %.2f ms, max %.2f ms\n",
           id, rawTimes[165], rawTimes[313], rawTimes.last!)
         let worst = frameMedians.max { $0.1 < $1.1 }!
+        if worst.1 > 12 { overBudget.append(id + "/" + worst.0) }
         let times = frameMedians.map { $0.1 }.sorted()
         report += String(format: "%@ 480 px cold, 5 samples per pose: median %.2f ms, p95 %.2f ms, worst pose %@ %.2f ms; 12 ms budget %@\n",
           id, times[33], times[62], worst.0, worst.1, worst.1 <= 12 ? "PASS" : "EXCEEDED")
@@ -1672,5 +1696,6 @@ func makeHD() throws {
     try report.write(to:directory.appendingPathComponent("timing.txt"),atomically:true,encoding:.utf8)
     print(report)
     print("HD review sheets: \(directory.path)")
+    precondition(overBudget.isEmpty, "12 ms render budget exceeded: " + overBudget.joined(separator: ", "))
 }
 if ["hd", "skins", "hd-timing"].contains(CommandLine.arguments.last ?? "") { try makeHD() }

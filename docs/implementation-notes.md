@@ -472,7 +472,8 @@ authored manifest or recreates pixel pieces.
 ## HD companion designs and rank Paladins
 
 `ArmorHD` reconstructs all 63 animation frames and three fixed poses into smooth
-plates, preserving the original expression, pose, fingers and props. CoreGraphics
+plates, preserving the pose, fingers and props. Every skin uses a stern glass
+visor with two glowing slits and no source mouth or cartoon expression. CoreGraphics
 handles reconstruction, lighting and composition; ImageIO handles PNGs and
 CryptoKit hashes the complete cache identity. There is no SwiftUI or UIKit
 dependency in the renderer. UIKit asset-catalog decoding remains the app's job.
@@ -493,16 +494,19 @@ boundaries reconstructed. Only the darkest greys (below 118) count as recessed
 joints; the lighter shading greys are part of the plate. The source's dark
 outline, and the shading along it, is peeled two cells deep where it touches
 empty space next to a plate (not above the helmet, where it is the antenna's
-stem), and plates and their cast shadows are clipped to the full silhouette.
+stem). Reconstructed plates use a five-stop directional reflection and fine
+contact/rim edges, clipped to each shell; broad helmets retain radial speculars.
+Joint backing and source accents are each drawn as one compound path.
 Otherwise the dark backing stood round the plates as a thick black band that
 read as a dark backdrop in the light rooms; check light grounds with
-`--skin-preview --light`. The visor and emissive expression remain separate from
-plate and trim. Every broad plate has a bright upper-left reflection, dark core,
-far-edge bounce, radial specular and contact edge. The new designs use drawn
-subpixel contact relief to avoid a separate blurred bitmap for every small plate.
+`--skin-preview --light`. The glass and vector slits remain separate from plate and trim. Plates have a
+bright upper-left reflection, dark core, far-edge bounce and contact edge.
+Authored armour uses drawn subpixel contact relief to avoid a separate blurred
+bitmap for every small plate.
 Thin leaves and ornaments use reflective gradients; each Seraph wing fan shares
 one iridescent reflection with individual overlapping edges, shafts and tips.
-The paladin's existing soft relief remains available.
+The optional soft-relief shader remains available; the HD defaults use vector
+contact relief to keep all fourteen skins within the render budget.
 
 Capes and the mantle hang from the shoulder line at `anchors.neck`, behind the
 body, with long folds and lit edges. Coffee and typing frames broaden the cloth
@@ -521,6 +525,55 @@ The mug follows lift, sip and return with its ceramic glaze, coffee and orange
 seal. The laptop retains its formed deck, cyan keys and screen. Source-only
 sleep, anger, sparkle and music symbols remain above the ornaments.
 
+### Head proportion and stern visor
+
+`ArmorHDHeadFit` measures helmet-shell width against torso-plate width. The
+standing h01 reference is 93.465 / 64.914 = 1.440. Coffee uses the unobscured c01
+torso width (59.167), and typing uses t01 (54.810) throughout each family. A raised
+cup hides the chest, and forearms join the chest mask during typing; measuring
+those merged components as new torsos would make the head pulse during a clip.
+Every frame still measures its own helmet width. Other poses measure their own
+torso. `acc-headphones` uses the original shell extent beneath its headphones.
+
+The uniform transform fixes `anchors.neck`, including the off-centre typing
+head. Head cells are tagged before contour reconstruction; ears and antenna
+move with the shell, while neck/shoulder joints, arm plates and overhead fists
+remain in body space. Helm, crest and halo use the same transform followed by
+the existing tilt. Corrections below 3% leave standing geometry unchanged.
+Fixed poses also normalize to the reference, including modest enlargement of
+the narrower fixed-pose shells. Checks measure the resulting shell paths, with
+a 5% tolerance. The sip mug keeps its dimensions and tracks its original rim
+contact through the head transform; wrist anchors remain fixed.
+
+Measured width ratios, before and after, across every frame in each family:
+
+| Family | Frames | Before | After |
+| --- | ---: | ---: | ---: |
+| h, a, p, z | 7 each | 1.440 | 1.440 |
+| accessory templates | 4 | 1.440 | 1.440 |
+| coffee c | 13 | 2.143 to 2.188 | 1.439 to 1.440 |
+| typing t | 11 | 2.131 to 2.171 | 1.440 |
+| celebration e | 7 | 1.477 to 1.520 | 1.440 to 1.477 |
+| pose2 | 1 | 1.151 | 1.440 |
+| pose3 | 1 | 1.500 | 1.440 |
+| pose4 | 1 | 1.277 | 1.440 |
+
+`ArmorHDVisor` ports `WarriorFace`'s five points and 0.22 curve tension to
+CoreGraphics. The top edge slopes down toward the nose and the lower edge is a
+shallow curve. The source glass contour, visor anchor and tilt preserve placement
+in three-quarter and tilted poses. A dark blue-black screen has a soft reflection;
+the skin's eye colour supplies the glow, with a compressed white hot core inside
+each slit. Source expressions are filled into the glass mask before tracing.
+There is no mouth. Music notes and the source-only mood symbols retain their
+positions and rendering.
+
+Open is the default. h10/h11, their a10/a11 and p10/p11 mood variants, c04,
+t08/t09, e08/e09 and pose4 have thin closed slits. e07 is the open transition
+in the celebration blink clip. All z frames
+have still narrower, dimmer closed slits. Angry a frames use a steeper top edge
+and reduced curve tension, retaining their anger mark. Accessory frame IDs
+beginning with `acc-` are not angry frames.
+
 ### Shared pipeline and cache
 
 Both `WardrobeFrameCache.image` overloads recognize all fourteen IDs and produce
@@ -537,7 +590,7 @@ let image = try ArmorHD.render(source: sourceCGImage, frame: "pose3",
 let rankPreview = ArmorHD.render(frame: "h01", style: .gold, size: 408)
 ```
 
-`ArmorHD.rendererVersion` is `armorhd-6`. The disk layout is
+`ArmorHD.rendererVersion` is `armorhd-7`. The disk layout is
 `Caches/Clockin/ArmorHD/version/designAndMaterialDigest/frame-size.png`.
 The SHA256 digest includes all four design choices, plate/trim/joint/cloth hue,
 saturation, exposure and prismatic flags, light and effective eye colour. Names
@@ -559,8 +612,10 @@ swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/wardrobeart/
 ```
 
 Also run the wardrobe compile-and-run command in README's Checks section.
-Armor checks cover 924 cached 408 px renders, expressions, unoccluded eyes and
-raised fists for all 330 new design/pose combinations, props, distinct 80 px
+Armor checks cover 924 cached 408 px renders, two luminous slits inside each
+visor, open/closed geometry against the source clips, unoccluded slits across
+all fourteen skins, raised fists for all 330 new design/pose combinations,
+66 measured head/torso ratios, fixed necks, sipping contact, props, distinct 80 px
 silhouettes, alpha, source injection, deterministic output and cache failure
 paths. Skin checks cover 924 shared-pipeline misses and fresh disk hits at 480 px,
 including 42 fixed poses, after leaving the repository so that fixed poses must
@@ -574,35 +629,51 @@ Review outputs in `build/hd-previews/`:
   `skin-obsidian-frames.png`, `skin-seraph-frames.png`: h01, a01, e01, e02, p01,
   z01, c01, t01, pose2, pose3 and pose4, each at 408 px.
 - The corresponding `skin-<name>-closeup.png` files: h01 at 816 px.
+- `before-proportion/proportion.png`: renderer-6 Solar Paladin and Obsidian
+  Knight, captured before renderer edits, with individual 408 px PNGs alongside.
+- `proportion.png`: the same two skins after fitting, at 408 px, in the order
+  h01, c01, c05, t01, t05, e01, z01, a01, pose4.
 - `all-skins.png`: all fourteen h01 skins at 408 px.
 - `all-skins-80px.png`: all fourteen reduced from cached 480 px output onto
   dark and light backgrounds.
 - Existing `paladin-*.png` sheets remain available. `pixel-before/` preserves
   the supplied five pixel references.
-- `timing.txt`: optimized Swift measurements, including each new design over
+- `timing.txt`: optimized Swift measurements, including all fourteen skins over
   all 66 poses with decoded sources and cold geometry at 480 px, warm geometry
   composition, and disk-hit decode plus draw. Sheet layout/export is excluded.
 
-Measured on this Mac with optimized Swift, 2026-09-28. Cold renders below use
-caller-decoded sources at 480 px and clear geometry before every render. Five
-interleaved sweeps cover all 66 poses, so each pose has five independent samples.
-The budget column is the slowest pose's median, rather than the fastest sample.
+Measured on this Mac with optimized Swift, 2026-09-29, renderer `armorhd-7`.
+Cold renders use caller-decoded sources at 480 px and clear geometry before every
+render. Five interleaved sweeps cover all 66 poses for each of fourteen skins,
+4,620 cold samples. The budget uses the slowest pose's five-sample median. The
+cold sample columns below include every sample, including scheduling outliers.
 
-| Design | Cold median | Cold p95 | Slowest pose median | Warm h01 median | Disk hit median |
+| Skin | Cold sample median | Cold sample p95 | Slowest pose median | Warm h01 median | Disk hit median |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Nova | 7.36 ms | 7.73 ms | 8.43 ms | 6.06 ms | 1.37 ms |
-| Aurora | 8.42 ms | 8.84 ms | 9.51 ms | 7.01 ms | 1.28 ms |
-| Celestial | 8.36 ms | 8.75 ms | 9.36 ms | 7.02 ms | 1.25 ms |
-| Obsidian | 8.99 ms | 9.96 ms | 10.11 ms | 7.63 ms | 1.22 ms |
-| Seraph | 10.31 ms | 10.76 ms | 11.45 ms | 8.96 ms | 1.56 ms |
+| Spark Paladin | 9.01 ms | 10.09 ms | 11.15 ms | 7.40 ms | 1.68 ms |
+| Orbit Paladin | 9.10 ms | 10.32 ms | 11.27 ms | 7.55 ms | 1.62 ms |
+| Nebula Paladin | 9.12 ms | 10.19 ms | 11.52 ms | 7.45 ms | 1.67 ms |
+| Solar Paladin | 8.95 ms | 9.74 ms | 11.12 ms | 7.56 ms | 1.65 ms |
+| Nova Paladin | 8.96 ms | 10.56 ms | 11.11 ms | 7.40 ms | 1.77 ms |
+| Aurora Paladin | 9.13 ms | 10.25 ms | 11.33 ms | 7.53 ms | 1.67 ms |
+| Sovereign Paladin | 9.01 ms | 9.91 ms | 11.08 ms | 7.44 ms | 1.66 ms |
+| Celestial Paladin | 9.01 ms | 9.87 ms | 11.08 ms | 7.38 ms | 1.62 ms |
+| Eternal Paladin | 9.08 ms | 10.07 ms | 11.28 ms | 7.39 ms | 1.59 ms |
+| Nova | 6.49 ms | 7.20 ms | 8.47 ms | 4.80 ms | 1.35 ms |
+| Aurora | 7.50 ms | 8.21 ms | 9.56 ms | 5.78 ms | 1.26 ms |
+| Celestial | 7.45 ms | 8.10 ms | 9.47 ms | 5.81 ms | 1.19 ms |
+| Obsidian | 7.97 ms | 8.70 ms | 10.04 ms | 6.32 ms | 1.19 ms |
+| Seraph | 9.36 ms | 10.07 ms | 11.47 ms | 7.71 ms | 1.48 ms |
 
-All per-pose medians and cold p95s are below the 12 ms render budget. Individual
-wall-clock outliers remain in the full report, including a 17.17 ms Obsidian
-sample; these measurements do not establish a hard real-time bound. Cold disk
-misses include PNG encoding and atomic writing and are a separate workload:
-11.04, 12.13, 11.99, 12.79 and 15.11 ms median respectively. Cache-hit numbers
-include PNG decoding and drawing. `hd-timing` runs measurements without rebuilding
-the sheets. The original paladin benchmark remains in the report for comparison.
+All fourteen skins pass the 12 ms per-pose median budget, and all raw cold p95s
+are also below 12 ms. The slowest pose median is 11.52 ms. Individual
+wall-clock outliers reach 41.07 ms in the full report; this is not a hard
+real-time guarantee. PNG encoding/atomic writes are measured separately from
+the render budget. Disk-hit numbers include PNG decoding and drawing.
+`hd-timing` runs measurements without rebuilding sheets. Both timing modes now
+exit non-zero if any skin's worst pose median exceeds 12 ms. Review generation
+clears only its own current-version cache so local shader edits cannot leave
+stale sheets. All cold measurements bypass rendered-image caches.
 
 These are local Mac rendering and cache measurements. They do not verify iPhone
 animation playback, widget memory or a release build. The shared effects metadata
