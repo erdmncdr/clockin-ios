@@ -60,7 +60,7 @@ struct ArmorHDPixels {
       } else if hi < 80 {
         cells[i].kind = 1
       } else if sat < 0.55 {
-        cells[i].kind = hi < 135 ? 7 : 2
+        cells[i].kind = hi < 118 ? 7 : 2
       } else if p.r > p.g && p.r > p.b {
         cells[i].kind = 3
       } else {
@@ -191,10 +191,39 @@ struct ArmorHDPixels {
       symbol = rect
     }
     let silhouette = labels.map { $0 == 0 ? UInt8(0) : UInt8(1) }
-    let base = Self.paths(silhouette, width: w, tolerance: 0.85)
+    // The source's dark outline, and the shading along it, would stand round
+    // the plates as a thick black band, a dark backdrop in a light room. Peel
+    // the dark cells that touch empty space next to a plate, twice, so the
+    // plates' own fine outline bounds the figure. Dark joints inside the body
+    // and thin dark parts away from the plates (the antenna's stem) stay.
+    func metal(_ k: UInt8) -> Bool { k == 2 || k == 3 || k >= 10 }
+    var inner = silhouette
+    for _ in 0..<2 {
+      let old = inner
+      for i in old.indices where old[i] == 1 && labels[i] == 1 {
+        let x = i % w
+        let y = i / w
+        let open = [i - 1, i + 1, i - w, i + w].contains { j in
+          j < 0 || j >= old.count || abs(j % w - x) > 1 || old[j] == 0
+        }
+        // Above the helmet's top only the antenna's stem is dark.
+        guard open, Double(y * 2) >= anchors.head[1] + 2 else { continue }
+        var nearPlate = false
+        for dy in -2...2 where !nearPlate && y + dy >= 0 && y + dy < w {
+          for dx in -2...2 where x + dx >= 0 && x + dx < w && metal(labels[(y + dy) * w + x + dx]) {
+            nearPlate = true
+            break
+          }
+        }
+        if nearPlate { inner[i] = 0 }
+      }
+    }
+    let base = Self.paths(inner, width: w, tolerance: 0.85)
+    let outline = Self.paths(silhouette, width: w, tolerance: 0.85)
     let parts = Self.paths(labels, width: w, tolerance: 0.85)
     return ArmorHDGeometry(
-      base: base.map(\.path), parts: parts, hands: hands, symbol: symbol, frame: frame, mug: mug)
+      base: base.map(\.path), outline: outline.map(\.path), parts: parts, hands: hands,
+      symbol: symbol, frame: frame, mug: mug)
   }
 
   static func components(_ labels: [UInt8], width w: Int) -> [[Int]] {
@@ -340,6 +369,8 @@ struct ArmorHDPixels {
 
 struct ArmorHDGeometry {
   let base: [CGPath]
+  /// The whole source silhouette, which plates and their shadows stay inside.
+  let outline: [CGPath]
   let parts: [ArmorHDPixels.Part]
   let hands: [[Double]]
   let symbol: CGRect?
@@ -359,6 +390,12 @@ struct ArmorHDGeometry {
         [0, 1], CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY))
       s.stroke(p, ArmorHDColor.black.alpha(0.85), 0.8)
     }
+    // Plates and the shadows they cast stay on the body: on a light room the
+    // shadows falling past the silhouette read as a dark backdrop.
+    c.saveGState()
+    for p in outline { c.addPath(p) }
+    c.clip()
+    defer { c.restoreGState() }
     for part in parts where part.kind == 2 || part.kind == 3 {
       s.part(
         part.path, part.kind == 3 ? style.trim : style.plate, polish: 1.2,

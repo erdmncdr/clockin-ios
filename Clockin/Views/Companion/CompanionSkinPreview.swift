@@ -1,14 +1,15 @@
 #if DEBUG
 import SwiftUI
 
-/// Every skin on the moving companion, in its room and large on its own, with
-/// its sheen and aura. Launch with `--skin-preview`; add `--skin <id>` to show
-/// one skin in several moods.
+/// Every skin on the moving companion, with its sheen and aura. Launch with
+/// `--skin-preview`; add `--skin <id>` to show one skin in several moods and
+/// `--light` to show them on a light ground, as in the cozy room.
 struct CompanionSkinPreview: View {
     private var only: String? {
         let arguments = ProcessInfo.processInfo.arguments
         return arguments.firstIndex(of: "--skin").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
     }
+    private let light = ProcessInfo.processInfo.arguments.contains("--light")
     private var skins: [WardrobeItem] {
         WardrobeCatalog.items.filter { $0.slot == .skin && (only == nil || $0.id == only) }
     }
@@ -30,11 +31,12 @@ struct CompanionSkinPreview: View {
                     VStack(spacing: 4) {
                         ClockinMotionMascot(mood: tile.mood, outfitOverride: outfit(tile.item.id))
                             .frame(width: 150, height: 150)
-                        Text(tile.item.name).font(.caption.bold()).foregroundStyle(.white)
+                        Text(tile.item.name).font(.caption.bold()).foregroundStyle(light ? .black : .white)
                     }
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
-                    .background(Color(red: 0.09, green: 0.11, blue: 0.17), in: RoundedRectangle(cornerRadius: 12))
+                    .background(light ? Color(red: 0.93, green: 0.87, blue: 0.78) : Color(red: 0.09, green: 0.11, blue: 0.17),
+                                in: RoundedRectangle(cornerRadius: 12))
                 }
             }
             .padding(12)

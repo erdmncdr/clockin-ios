@@ -489,7 +489,14 @@ another material without changing the part functions. Rank hues still follow
 gold, platinum, emerald, gold/ruby, silver/midnight and prismatic white gold.
 
 The source is classified on a 157 by 157 grid, tiny islands merged and connected
-boundaries reconstructed. The visor and emissive expression remain separate from
+boundaries reconstructed. Only the darkest greys (below 118) count as recessed
+joints; the lighter shading greys are part of the plate. The source's dark
+outline, and the shading along it, is peeled two cells deep where it touches
+empty space next to a plate (not above the helmet, where it is the antenna's
+stem), and plates and their cast shadows are clipped to the full silhouette.
+Otherwise the dark backing stood round the plates as a thick black band that
+read as a dark backdrop in the light rooms; check light grounds with
+`--skin-preview --light`. The visor and emissive expression remain separate from
 plate and trim. Every broad plate has a bright upper-left reflection, dark core,
 far-edge bounce, radial specular and contact edge. The new designs use drawn
 subpixel contact relief to avoid a separate blurred bitmap for every small plate.
@@ -530,7 +537,7 @@ let image = try ArmorHD.render(source: sourceCGImage, frame: "pose3",
 let rankPreview = ArmorHD.render(frame: "h01", style: .gold, size: 408)
 ```
 
-`ArmorHD.rendererVersion` is `armorhd-5`. The disk layout is
+`ArmorHD.rendererVersion` is `armorhd-6`. The disk layout is
 `Caches/Clockin/ArmorHD/version/designAndMaterialDigest/frame-size.png`.
 The SHA256 digest includes all four design choices, plate/trim/joint/cloth hue,
 saturation, exposure and prismatic flags, light and effective eye colour. Names
