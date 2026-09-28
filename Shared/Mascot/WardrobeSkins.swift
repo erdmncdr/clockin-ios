@@ -7,29 +7,22 @@ struct WardrobeSkinEffects: Codable, Sendable, Equatable {
     let glow: String
 }
 
-struct WardrobeSkinPiece: Codable, Sendable {
-    let id: String
-    let anchorPoint: String
-    let pivot: WardrobePoint
-    let layer: String
-    let poseOffsets: [String: WardrobePoint]?
-    let motion: String?
-    let omittedFrames: [String]?
-}
-
 struct WardrobeSkin: Codable, Sendable {
     let id: String
     let name: String
-    /// Rank key for a complete HD render. Missing in legacy pixel manifests.
+    /// Material key; design selects the independently authored silhouette.
     let hd: String?
+    let design: String
     var hdStyle: ArmorHDStyle? {
-        guard let hd, let stage = Self.rankKeys.firstIndex(of: hd) else { return nil }
-        return .rank(stage)
+        guard let hd, let shape = ArmorHDDesign.named(design) else { return nil }
+        var style: ArmorHDStyle?
+        if design == "paladin", let stage = Self.rankKeys.firstIndex(of: hd) { style = .rank(stage) }
+        else { style = .named(hd) }
+        style?.design = shape
+        return style
     }
     static let rankKeys = ["spark", "orbit", "nebula", "solar", "nova", "aurora", "sovereign", "celestial", "eternal"]
-    let material: WardrobeColorway
     let hidesAntenna: Bool
-    let pieces: [WardrobeSkinPiece]
     let effects: WardrobeSkinEffects
 }
 
@@ -46,17 +39,6 @@ enum WardrobeSkins {
 
     static func skin(for outfit: WardrobeState) -> WardrobeSkin? {
         outfit.equipped[WardrobeSlot.skin.rawValue].flatMap { all[$0] }
-    }
-
-    static func placement(_ piece: WardrobeSkinPiece, frame: String, anchors: WardrobeAnchors) -> WardrobePoint? {
-        guard piece.omittedFrames?.contains(frame) != true else { return nil }
-        guard ["front", "back"].contains(piece.layer) else { return nil }
-        let point = piece.anchorPoint.hasPrefix("shoulder")
-            ? shoulders[frame]?[piece.anchorPoint] : anchors.point(piece.anchorPoint)
-        guard let point else { return nil }
-        let offset = piece.poseOffsets?[frame] ?? piece.poseOffsets?[String(frame.prefix(1))] ?? .init(0, 0)
-        return WardrobeGeometry.origin(pivot: piece.pivot, anchor: .init(point.x + offset.x, point.y + offset.y),
-                                       degrees: piece.anchorPoint == "head" ? anchors.tilt : 0)
     }
 }
 

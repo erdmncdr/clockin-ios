@@ -1,0 +1,52 @@
+{
+  "skin-aurora": {
+    "aura": "motes",
+    "auraColors": [
+      "#55D49C",
+      "#A4FFE2",
+      "#ECFFF4"
+    ],
+    "glow": "#A4FFE2",
+    "sheen": "#FFFFFF"
+  },
+  "skin-celestial": {
+    "aura": "stars",
+    "auraColors": [
+      "#83C6FF",
+      "#C9F0FF",
+      "#FFFFFF"
+    ],
+    "glow": "#C9F0FF",
+    "sheen": "#FFFFFF"
+  },
+  "skin-nova": {
+    "aura": "sparks",
+    "auraColors": [
+      "#E357C6",
+      "#67F3FF",
+      "#F0FFFF"
+    ],
+    "glow": "#67F3FF",
+    "sheen": "#C3EAF6"
+  },
+  "skin-obsidian": {
+    "aura": "embers",
+    "auraColors": [
+      "#D32448",
+      "#FF5871",
+      "#FFE2DA"
+    ],
+    "glow": "#FF5871",
+    "sheen": "#756587"
+  },
+  "skin-seraph": {
+    "aura": "feathers",
+    "auraColors": [
+      "#FFB8E8",
+      "#AAFAF2",
+      "#FFFFFF"
+    ],
+    "glow": "#AAFAF2",
+    "sheen": "#FFFFFF"
+  }
+}

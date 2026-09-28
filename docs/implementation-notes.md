@@ -423,167 +423,126 @@ Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss i
 switch tabs, cover Today, and background the app: all live motion must stop. Compare
 Today idle CPU with the existing baseline using PERFORMANCE.md's 120-second runs;
 source/type checks do not establish the CPU or visual result.
+
 ## Premium companion skins
 
-A purchased `skin` is a complete material and layered armour look. `outfit.look`
-resolves to the skin id while it is equipped, otherwise to the saved colorway.
-The five garment selections remain stored and return when `equipped["skin"]`
-is cleared, using the existing shop removal path. The Skins category comes first.
-Equipping or previewing a garment or colorway clears the skin so that selection
-is visible, retaining the other saved garments. Unowned equip attempts and home
-selections leave the skin in place; a preview never changes the saved outfit.
-Nine HD Paladins come first, in rank order, at 2,000, 2,500, 3,000, 4,000,
-5,000, 6,000, 7,500, 9,000 and 12,000 coins. Five pixel looks follow: Nova Pilot,
-Aurora Warden, Celestial Guardian, Obsidian Knight and Eternal Seraph. The
-unshipped pixel `skin-paladin` and its six PNG pieces have been removed. The
-HD `skin-paladin-solar` reuses the existing Solar Paladin localization.
+All fourteen skins are complete `ArmorHD` renders. Nine rank Paladins come first
+at 2,000, 2,500, 3,000, 4,000, 5,000, 6,000, 7,500, 9,000 and 12,000 coins.
+Nova Pilot (3,500), Aurora Warden (4,000), Celestial Guardian (5,000), Obsidian
+Knight (6,000) and Eternal Seraph (10,000) keep their existing IDs, names,
+localizations, prices and effects.
 
-`Shared/Mascot/Skins/skins.json` contains the material, pieces, effects and
-per-frame shoulder anchors. Material rules accept three to five `stops`; legacy
-`targets` retain the original two-stop interpolation. Every skin has a clear
-visor, shaded plates and gems. Wings declare `flap` and flap like the garment
-wings; capes declare `sway` and swing slowly about where they hang. Each skin's
-effects are drawn by `MascotSkinEffects` in the mascot's canvas: a soft glow
-behind the figure, a sheen swept across the robot's own pixels every five
-seconds, and a few aura particles (embers and sparks rise from the feet,
-feathers drift down, stars and motes appear round the figure). The sheen and
-particles run only while the mascot moves, so they stop offscreen, with Reduce
-Motion and in the widgets, which show the still composite. The bed keeps the
-colorway: the companion sleeps out of its armour.
+`Shared/Mascot/Skins/skins.json` names a `design` and an `hd` material key for
+each skin, alongside effects and the shared per-frame shoulder anchors. A
+purchased skin overrides the five garments and colorway without deleting those
+selections. `outfit.look`, `WardrobeSkins.skin(for:)` and `isHD` keep their existing
+interfaces. Old state JSON, including an owned and equipped `skin-nova`, decodes
+without migration. Removing a skin restores the saved garments and colorway;
+unknown IDs fall back to the colorway. Garment/colorway equip and preview clear
+the skin; home choices and unsuccessful unowned equip attempts preserve it.
 
-A debug build launched with `--skin-preview` shows every skin on the moving
-companion; add `--skin <id>` for one skin in five moods. `--companion-shop`
-opens the companion screen directly.
+The five designs are authored separately:
 
-Shoulder anchors start from measured neck offsets and snap to nearby dark joint
-pixels. Coffee omits the far left plate, typing omits the far right plate, and
-`pose2` omits both because the arms are lifted over the helmet. The other plates
-follow each frame's joints. Helm and halo rotate with head tilt. Seated backs
-and fixed poses have authored fitting offsets; chest plates stay below the neck.
-Head adornments declare `omittedFrames: ["pose2"]` so the raised fists remain
-uncovered; halos stay behind the robot. Production placement and review rendering
-both honor this metadata, with rendered fist-pixel checks for all five pixel skins.
+- Nova uses gunmetal plates with inset cyan circuits and magenta diodes, an open
+  angular HUD, vented pauldrons, a flat V-lit chest and twin blue-violet thrusters.
+- Aurora uses bright silver over emerald joints, silver leaf antlers and layered
+  leaf pauldrons, an emerald chest leaf and a green/teal/violet mantle with a
+  restrained pink reflection and a brighter folded hem.
+- Celestial uses silver over midnight-blue joints, a moon crest, crescent
+  pauldrons with little stars, an eight-point medallion and a constellation cape.
+- Obsidian uses black violet-reflecting plates, ruby trim and crimson eyes,
+  outward horns and spikes, a ruby gorget, a tattered crimson cape and black blade.
+- Seraph uses pearl and white gold with pink/cyan reflections, two halos, a pearl
+  circlet with a winged ornament, small feather pauldrons, a winged pearl clasp
+  and three distinct pairs of wings with pearl tips.
 
-Regenerate the 26 pixel piece PNGs and pixel review sheets from the root. The
-generator preserves the nine authored HD manifest entries:
+The existing `MascotSkinEffects` consumes unchanged sheen, glow and aura metadata.
+Nova has sparks, Aurora motes, Celestial stars, Obsidian embers and Seraph
+prismatic feathers. The renderer supplies sparse deterministic accents; the
+app's particle and sheen animation retains its Reduce Motion/offscreen policy.
+The bed still uses the saved colorway.
 
-```bash
-swift -module-cache-path /tmp/clockin-art-module-cache Tools/run-art.swift Tools/MascotArt.swift skins
-swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/skins/run.swift
-```
+Pixel skin PNGs, piece placement/overlays/preloading, the tool's pixel skin
+builder and review compositor, and multi-stop recolouring are retired. Ordinary
+garments and the six two-stop colorways remain pixel art. All 396 historical
+colorway/frame RGBA SHA256 baselines still match byte for byte. The `skins` tool
+command now generates the same HD review sheets as `hd`; it never rewrites the
+authored manifest or recreates pixel pieces.
 
-`build/skin-previews/skin-<name>-dark.png` and `-light.png` show eleven poses at
-2x with nearest-neighbor sampling; `all.png` compares all five pixel idle looks at 3x,
-and `at-80px.png` checks their everyday size. Each `closeup-skin-<name>.png`
-shows `h01` at exactly 4x (1256 square). These review files are ignored.
+## HD companion designs and rank Paladins
 
-The second art pass uses curved, round-tipped feather vanes with overlapping
-coverts, separated upper/middle/lower Seraph wings, longitudinal iridescence and
-pearl tips. Seraph has pearl clasps and a separate pearl circlet. Nova's
-flat gunmetal chest plate with cyan V lights and a magenta point, Aurora's emerald
-leaf clasp, Celestial's eight-point medallion and Obsidian's ruby gorget each have
-their own shoulder silhouette. Aurora's plate is
-silver with emerald joints and a green/teal/violet/pink curtain mantle. Swords
-are omitted from Obsidian rather than leaving hidden fragments.
-Plate bevels and cast shadows, gem facets/glints and cloth folds supply depth.
-The checks compile `Tests/manual/skins/main.swift` with Swift 6 strict concurrency
-and bundle actual assets to exercise production resource loading, overlays and
-caches. They also compare all 396 old colorway/frame outputs against SHA256
-baselines captured before the palette change. The existing wardrobe test only
-changes skin pricing, manifest lookup and the catalog asset union expectations.
+`ArmorHD` reconstructs all 63 animation frames and three fixed poses into smooth
+plates, preserving the original expression, pose, fingers and props. CoreGraphics
+handles reconstruction, lighting and composition; ImageIO handles PNGs and
+CryptoKit hashes the complete cache identity. There is no SwiftUI or UIKit
+dependency in the renderer. UIKit asset-catalog decoding remains the app's job.
+`Clockin/` is unchanged by this renderer work.
 
-## HD rank Paladins
+### Designs, materials and fitting
 
-`ArmorHD` reconstructs all 63 motion frames and the three fixed poses as smooth,
-separately lit materials. This section replaces `docs/hd-prototype-b.md`.
-The renderer and shared skin pipeline live in `Shared/Mascot/`. They do not
-require SwiftUI or AppKit. Geometry, shading and composition use Foundation and
-CoreGraphics; PNG persistence uses ImageIO at the renderer boundary. The existing
-app decoder supplies UIKit asset-catalog images. No view wiring is done here.
+`ArmorHDDesign` is data selecting helm, pauldrons, chest and back functions.
+Paladin is one preset alongside Nova, Aurora, Celestial, Obsidian and Seraph.
+`ArmorHDStyle` supplies plate, trim, joints, cloth, light and eye colour; metal
+exposure and prismatic reflections are material properties. A design can use
+another material without changing the part functions. Rank hues still follow
+`ForgeTone`, `RankMaterial` and `LevelPrestige`: steel, bronze, violet silver,
+gold, platinum, emerald, gold/ruby, silver/midnight and prismatic white gold.
 
-### Rank metals and reconstruction
+The source is classified on a 157 by 157 grid, tiny islands merged and connected
+boundaries reconstructed. The visor and emissive expression remain separate from
+plate and trim. Every broad plate has a bright upper-left reflection, dark core,
+far-edge bounce, radial specular and contact edge. The new designs use drawn
+subpixel contact relief to avoid a separate blurred bitmap for every small plate.
+Thin leaves and ornaments use reflective gradients; each Seraph wing fan shares
+one iridescent reflection with individual overlapping edges, shafts and tips.
+The paladin's existing soft relief remains available.
 
-Rank hues come from `ForgeTone`, `RankMaterial` and `LevelPrestige`. The plate
-now carries the rank metal, with saturation raised where the small companion
-would otherwise look grey: Spark blued steel, Orbit bronze, Nebula violet silver,
-Solar gold, Nova platinum, Aurora emerald, Sovereign gold with ruby trim and
-cloth, Celestial silver with midnight-blue trim and cloth, and Eternal white
-gold with a cyan/violet/rose reflection band. Trim contrasts with the plate.
-Every plate retains the bright upper-left reflection, lit surface, deep core,
-far-edge bounce, radial near-white specular, contact shadow and crisp outline.
-The visor remains dark glass; the expression uses luminous rank-coloured strokes.
-The source antenna is retained, so HD skins do not request antenna removal.
+Capes and the mantle hang from the shoulder line at `anchors.neck`, behind the
+body, with long folds and lit edges. Coffee and typing frames broaden the cloth
+into a pooled floor hem at canvas y=275. Seraph wings follow the seated paladin
+rule: roots at the shoulder blades and raised fans beside the helmet. Their
+reach is fitted independently to each side's available canvas space, including
+the off-centre fixed poses. Standing wings have upper raised, middle outstretched
+and lower small downward fans. Thrusters shorten when seated; the blade remains
+behind the body.
 
-The renderer classifies the source on a 157 by 157 grid, filters isolated plate
-pixels, merges tiny material islands and traces continuous boundaries. Connected
-plate and trim regions get smooth convex outlines. Visor and emissive strokes
-are reconstructed separately. Semantic cuts separate touching seated legs and
-the overhead stretch. Source shadows never become separate raised surfaces.
-Recessed joints use dark blue-black leather; closed fists have rounded gauntlets,
-a reflective knuckle ridge and fine finger seams. The overhead pose has explicit
-hand positions because its source anchors omit them.
-
-The sword is shortened to 70 percent of its original scale and sits behind the
-wings and body. Pauldrons sit outside and above the shoulder joints. The tabard
-has drawn folds and a metallic border. Wings have layered flight feathers,
-coverts and small deterministic tongues of rank-coloured fire. Seated (coffee
-and typing), the body sits near the floor, so the wings grow from the shoulder
-blades at the neck rather than the back anchor, a little shorter and raised,
-spreading out beside the helmet instead of low and wide. The renderer owns
-its wings/chest fitting offsets and pose2 helm omission; it has no dependency on
-the retired pixel paladin or its pieces. Shared shoulder anchors remain in the
-skins manifest.
-
-The mug follows the full lift, sip and return sequence, with ceramic glaze,
-coffee, rim, orange maker's seal, handle and smooth steam. The laptop has a formed
-metal deck, lit keys and a dark luminous screen. Sleep, anger, sparkle and music
-symbols are smooth strokes drawn above the head ornaments. Source-only glyphs
-and prop colours remain regression checked.
+Shoulder maps retain the authored missing far shoulder in coffee/typing and both
+missing shoulders in the overhead stretch. Helms are omitted in `pose2`; hands
+are drawn above the armour. Head ornaments follow tilt, and the HUD remains
+outside the eyes. The original antenna is retained for every HD skin.
+The mug follows lift, sip and return with its ceramic glaze, coffee and orange
+seal. The laptop retains its formed deck, cyan keys and screen. Source-only
+sleep, anger, sparkle and music symbols remain above the ornaments.
 
 ### Shared pipeline and cache
 
-Each HD manifest entry has an `hd` rank key, no pieces, an identity material and
-rank-coloured sheen, glow and aura metadata. Solar uses embers, Celestial stars,
-and Eternal feathers. Names use the existing English and Turkish rank names.
-`WardrobeSkins.isHD(outfit)` exposes the sampling choice to views. Old state JSON
-continues to decode; an unknown or retired skin id falls back to its colorway.
+Both `WardrobeFrameCache.image` overloads recognize all fourteen IDs and produce
+480 px renders. The actor has no suspension point during lookup/render/store;
+concurrent requests reuse one image. Decoded sources are shared across styles.
+HD bypasses pixel recolouring, seated pixel legs, antenna clearing and garment
+overlays. `composite` returns the complete cached image at 480 px or a smoothly
+resampled still. Hidden garment changes do not split the HD still cache.
 
 ```swift
-// The app/cache already decoded the frame, including UIImage(named:) fixed poses.
 let image = try ArmorHD.render(source: sourceCGImage, frame: "pose3",
-                              style: .gold, size: 480, cache: .application)
-// Repository-loading conveniences remain for tools and manual checks.
-let preview = ArmorHD.render(frame: "h01", style: .steel, size: 408)
+                              style: ArmorHDStyle.named("seraph")!, size: 480,
+                              cache: .application)
+let rankPreview = ArmorHD.render(frame: "h01", style: .gold, size: 408)
 ```
 
-Both `WardrobeFrameCache.image` overloads recognize HD skin ids and render at
-480 px. The actor has no suspension points during lookup/render/store, so
-concurrent requests for the same frame and style share an image. It reuses the
-decoded source across styles. HD frames bypass pixel recolouring, seated pixel
-leg composition and antenna clearing. `WardrobeArt.overlays` returns an empty
-array for HD. `WardrobeFrameCache.composite` returns the complete HD image at
-480 px, or a smoothly resampled still at the requested size, ignoring garments.
-Hidden garment changes do not create separate HD still-cache entries.
+`ArmorHD.rendererVersion` is `armorhd-5`. The disk layout is
+`Caches/Clockin/ArmorHD/version/designAndMaterialDigest/frame-size.png`.
+The SHA256 digest includes all four design choices, plate/trim/joint/cloth hue,
+saturation, exposure and prismatic flags, light and effective eye colour. Names
+are not identity. Version, frame, style and size all invalidate the cache.
+A lock protects the bounded 24-frame immutable geometry store; each render owns
+its context. The cache rejects traversal, validates decoded dimensions, repairs
+corrupt PNGs and writes atomically. Direct disk errors propagate; the shared
+pipeline falls back to an in-memory HD render. The app owns cache retention.
 
-`ArmorHDCache.application` resolves an application Caches subdirectory:
-`Caches/Clockin/ArmorHD/rendererVersion/fullMaterialIdentity/frame-size.png`.
-The directory can be injected in tests. Identity includes all nine material and
-light values plus the prismatic flags. Version `armorhd-3` invalidates round-two
-white-plate renders. Frame ids identify immutable source art; bump the renderer
-version when source art, fitting or shading changes. A lock protects at most 24
-immutable frame geometries, independent of style and output resolution. Contexts
-and output images belong to each call. `clearGeometryCache()` supports profiling
-and memory-pressure handling.
+### Checks, sheets and timing
 
-PNG reads validate dimensions and rebuild corrupt files. Foundation writes are
-atomic and keys reject traversal. Direct renderer calls propagate filesystem
-errors; the shared pipeline keeps the HD appearance with an in-memory fallback
-if disk access fails. The app owns disk retention. Separate cache instances can
-compute simultaneous misses, but the shared actor serializes app requests and
-readers only see complete PNGs. No new raw fixed-pose PNG resources are required:
-the shared cache passes the caller-decoded `CGImage` into the renderer.
-
-### Review and checks
+Run from the root:
 
 ```bash
 swift -module-cache-path /tmp/clockin-art-module-cache Tools/run-art.swift Tools/MascotArt.swift hd
@@ -592,61 +551,74 @@ swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/skins/run.sw
 swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/wardrobeart/main.swift
 ```
 
-Run the wardrobe compile-and-run command in README's Checks section too. The
-manual suites compile in Swift 6 strict concurrency mode. Armor checks exercise
-nine ranks over all 66 poses through the PNG cache, expression coverage,
-premultiplied alpha, props, source handoff, distinct plate colours, prismatic
-80 px sheen, sizes, invalid keys, corrupt PNGs, concurrent calls and disk errors.
-Skin checks package real resources and exercise every HD rank/frame through both
-shared image overloads and composite. They change out of the repository before
-the HD matrix, so all fixed poses must use the injected decoded images. They
-also check fresh disk hits, localization/catalog/manifest agreement, exact prices
-and order, overlay and antenna policy, old state JSON, the five pixel skins and
-all 396 legacy colorway/frame SHA256 baselines.
+Also run the wardrobe compile-and-run command in README's Checks section.
+Armor checks cover 924 cached 408 px renders, expressions, unoccluded eyes and
+raised fists for all 330 new design/pose combinations, props, distinct 80 px
+silhouettes, alpha, source injection, deterministic output and cache failure
+paths. Skin checks cover 924 shared-pipeline misses and fresh disk hits at 480 px,
+including 42 fixed poses, after leaving the repository so that fixed poses must
+come from the injected decoder. They also cover old Nova ownership/equipment,
+prices/order, effects/localizations and the 396 old colorway hashes. Wardrobe-art
+checks exercise another 924 cached renders at 80 px.
 
-Review files in `build/hd-previews/`:
+Review outputs in `build/hd-previews/`:
 
-- `paladin-ranks.png`: all nine metals, each rendered at 408 px.
-- `paladin-frames.png`: steel, gold and Eternal in eleven poses at 408 px each.
-- `paladin-80px.png`: all nine reduced from 480 px to 80 px on dark and light backgrounds.
-- `paladin-closeup.png`, `paladin-sizes.png`, `paladin-symbols.png` and
-  `paladin-all-poses.png`: detail, scale, symbol and full motion-frame reviews.
-- `paladin-before-after.png` and `paladin-warrior-comparison.png`: optional historical
-  references when the preserved before sheet and warrior portraits exist.
-- `timing.txt`: optimized cold, warm, mixed-pose and disk measurements at 408 px,
-  plus decoded-source cold, disk miss and disk hit measurements at 480 px.
+- `skin-nova-frames.png`, `skin-aurora-frames.png`, `skin-celestial-frames.png`,
+  `skin-obsidian-frames.png`, `skin-seraph-frames.png`: h01, a01, e01, e02, p01,
+  z01, c01, t01, pose2, pose3 and pose4, each at 408 px.
+- The corresponding `skin-<name>-closeup.png` files: h01 at 816 px.
+- `all-skins.png`: all fourteen h01 skins at 408 px.
+- `all-skins-80px.png`: all fourteen reduced from cached 480 px output onto
+  dark and light backgrounds.
+- Existing `paladin-*.png` sheets remain available. `pixel-before/` preserves
+  the supplied five pixel references.
+- `timing.txt`: optimized Swift measurements, including each new design over
+  all 66 poses with decoded sources and cold geometry at 480 px, warm geometry
+  composition, and disk-hit decode plus draw. Sheet layout/export is excluded.
 
-The reference portrait tool remains `Tools/make-hd-reference.swift`. It compiles
-the unmodified `LevelUpWarrior.swift` at levels 150, 300 and 450 with dependencies
-extracted into `build/hd-reference/`; it does not build or launch the app.
-The earlier renderer took about 217 to 221 ms per warm render. Reconstruction
-removed its two-million-pixel normal/height pipeline. Timing here excludes sheet
-layout and export; disk misses include PNG encoding and atomic writes, and disk
-hits force PNG decode and drawing. Measurements are local Mac results, not
-physical iPhone or widget performance claims.
+Measured on this Mac with optimized Swift, 2026-09-28. Cold renders below use
+caller-decoded sources at 480 px and clear geometry before every render. Five
+interleaved sweeps cover all 66 poses, so each pose has five independent samples.
+The budget column is the slowest pose's median, rather than the fastest sample.
 
-Round-three measurements on this Mac (optimized Swift, 2026-09-28):
+| Design | Cold median | Cold p95 | Slowest pose median | Warm h01 median | Disk hit median |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Nova | 7.36 ms | 7.73 ms | 8.43 ms | 6.06 ms | 1.37 ms |
+| Aurora | 8.42 ms | 8.84 ms | 9.51 ms | 7.01 ms | 1.28 ms |
+| Celestial | 8.36 ms | 8.75 ms | 9.36 ms | 7.02 ms | 1.25 ms |
+| Obsidian | 8.99 ms | 9.96 ms | 10.11 ms | 7.63 ms | 1.22 ms |
+| Seraph | 10.31 ms | 10.76 ms | 11.45 ms | 8.96 ms | 1.56 ms |
 
-| Workload | Median | p95 |
-| --- | ---: | ---: |
-| 408 px cold geometry and composition | 11.60 ms | 12.01 ms |
-| 408 px warm geometry, fresh composition | 9.64 ms | 9.84 ms |
-| 480 px decoded source, cold geometry and composition | 12.01 ms | 12.65 ms |
-| 480 px disk miss, including encode and write | 16.56 ms | 16.89 ms |
-| 480 px disk hit, including decode and draw | 1.65 ms | 1.80 ms |
+All per-pose medians and cold p95s are below the 12 ms render budget. Individual
+wall-clock outliers remain in the full report, including a 17.17 ms Obsidian
+sample; these measurements do not establish a hard real-time bound. Cold disk
+misses include PNG encoding and atomic writing and are a separate workload:
+11.04, 12.13, 11.99, 12.79 and 15.11 ms median respectively. Cache-hit numbers
+include PNG decoding and drawing. `hd-timing` runs measurements without rebuilding
+the sheets. The original paladin benchmark remains in the report for comparison.
 
-The full 594-image shared-pipeline miss/hit matrix including assertions took
-10.71 seconds. All 2,896 wardrobe checks passed; wardrobeart passed unchanged.
+These are local Mac rendering and cache measurements. They do not verify iPhone
+animation playback, widget memory or a release build. The shared effects metadata
+and `WardrobeSkins.isHD` sampling contract are unchanged.
 
-App-side handoff: use `WardrobeSkins.isHD(outfit)` to select linear minification
-and magnification for HD layers/images, including fixed poses, previews, effect
-masks and still displays. Keep nearest sampling for pixel skins. Continue passing
-fixed poses through the existing `UIImage(named:)` decoder and use the shared
-composite for widgets/stills. The existing effects layer can consume the manifest
-unchanged. Verify animation playback and physical iPhone/widget performance;
-these checks cover rendering and cache behavior, not an app/device release.
-The geometry remains a reconstruction of low-resolution art, with stylized 2D
-lighting and deterministic fire/steam rather than physical reflections or fluids.
+### App-side cleanup handoff
+
+No files under `Clockin/` were edited. In
+`Clockin/Views/Mascot/MascotAsset.swift`, the following now have no skin consumers:
+
+- The `skinPieces` dictionary and the skin-piece fallback in `hinge(_:motion:)`.
+- The `motion: "sway"` dispatch to `configureSway` in overlay setup.
+- The entire `configureSway` function.
+- The `movingPieces("sway")`/`capes` branch of `updateWingMotion`, including the
+  `capeSway` animation loop and the cape term in its early-exit condition.
+- Skin-specific comments and skin-wing participation in `hinge`/flap lookup.
+
+Keep the ordinary `wings` garment's hinge, `configureWings`, flap task and motion
+updates. Keep whole-body sway, `MascotSkinEffects`, linear HD sampling and the
+UIImage fixed-pose decoder. `WardrobeSkin.pieces` currently returns an empty
+array of a minimal compatibility type solely so the untouched app's dictionary
+still compiles. Once its owner removes that dictionary/fallback, remove this
+empty property and `WardrobeSkinPiece` together; no renderer or manifest uses them.
 
 ## Companion wardrobe and home artwork
 

@@ -353,8 +353,8 @@ struct ArmorHDGeometry {
       s.gradient(
         p,
         [
-          ArmorHDColor(r: 0.065, g: 0.085, b: 0.12).cg,
-          ArmorHDColor(r: 0.014, g: 0.02, b: 0.032).cg,
+          style.joints.metal(0.9).cg,
+          style.joints.metal(0.04).cg,
         ],
         [0, 1], CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY))
       s.stroke(p, ArmorHDColor.black.alpha(0.85), 0.8)
@@ -362,7 +362,25 @@ struct ArmorHDGeometry {
     for part in parts where part.kind == 2 || part.kind == 3 {
       s.part(
         part.path, part.kind == 3 ? style.trim : style.plate, polish: 1.2,
-        shadow: 0.45)
+        shadow: 0.45, softRelief: style.design.helm == .paladin)
+    }
+    if style.design.chest == .circuit {
+      for part in parts where part.kind == 2 {
+        let b = part.path.boundingBoxOfPath
+        guard b.width > 16, b.height > 22, b.width < 75 else { continue }
+        c.saveGState()
+        c.addPath(part.path)
+        c.clip()
+        let trace = CGMutablePath()
+        trace.move(to: .init(x: b.minX + b.width * 0.24, y: b.minY + b.height * 0.23))
+        trace.addLine(to: .init(x: b.minX + b.width * 0.24, y: b.minY + b.height * 0.58))
+        trace.addLine(to: .init(x: b.minX + b.width * 0.4, y: b.minY + b.height * 0.7))
+        s.stroke(trace, ArmorHDColor.black.alpha(0.85), 3)
+        s.stroke(trace, style.light.cg, 1.1)
+        let diode = ArmorHDShape.oval(b.minX + b.width * 0.4, b.minY + b.height * 0.7, 2, 3)
+        s.fill(diode, ArmorHDColor(r: 1, g: 0.15, b: 0.73).cg)
+        c.restoreGState()
+      }
     }
     for part in parts where part.kind == 6 {
       let b = part.path.boundingBoxOfPath
@@ -378,8 +396,8 @@ struct ArmorHDGeometry {
     for part in parts where part.kind == 4 {
       c.saveGState()
       c.setShadow(offset: .zero, blur: 3, color: style.light.alpha(0.7))
-      s.fill(part.path, style.light.mix(.white, 0.8).cg)
-      s.stroke(part.path, style.light.mix(.white, 0.8).cg, 0.9)
+      s.fill(part.path, style.eyeColor.cg)
+      s.stroke(part.path, style.eyeColor.cg, 0.9)
       c.restoreGState()
     }
   }

@@ -1,4 +1,5 @@
 import CoreGraphics
+import CryptoKit
 import Foundation
 import ImageIO
 
@@ -33,10 +34,44 @@ struct ArmorHDColor: Sendable {
 struct ArmorHDTone: Sendable {
   let hue: Double, saturation: Double
   var prismatic: Bool = false
+  var exposure: Double = 1
   // ForgeTone's exposure curve, independent of the application's UI module.
   func metal(_ e: Double) -> ArmorHDColor {
     let e = max(0, min(1, e))
-    return .hsv(hue, (0.8 - 0.62 * e) * saturation, 0.16 + 0.84 * e)
+    return .hsv(hue, (0.8 - 0.62 * e) * saturation, (0.16 + 0.84 * e) * exposure)
+  }
+}
+
+/// Silhouette choices are independent of the materials lighting them.
+struct ArmorHDDesign: Sendable {
+  enum Helm: String, Sendable { case paladin, hud, leaves, moon, horns, pearl }
+  enum Pauldrons: String, Sendable { case paladin, vents, leaves, crescents, spikes, feathers }
+  enum Chest: String, Sendable { case paladin, circuit, leaf, star, ruby, pearl }
+  enum Back: String, Sendable { case paladin, thrusters, mantle, constellation, bladeCape, seraph }
+  let helm: Helm
+  let pauldrons: Pauldrons
+  let chest: Chest
+  let back: Back
+  static let paladin = Self(helm: .paladin, pauldrons: .paladin, chest: .paladin, back: .paladin)
+  static let nova = Self(helm: .hud, pauldrons: .vents, chest: .circuit, back: .thrusters)
+  static let aurora = Self(helm: .leaves, pauldrons: .leaves, chest: .leaf, back: .mantle)
+  static let celestial = Self(
+    helm: .moon, pauldrons: .crescents, chest: .star, back: .constellation)
+  static let obsidian = Self(helm: .horns, pauldrons: .spikes, chest: .ruby, back: .bladeCape)
+  static let seraph = Self(helm: .pearl, pauldrons: .feathers, chest: .pearl, back: .seraph)
+  static func named(_ key: String) -> Self? {
+    switch key {
+    case "paladin": .paladin
+    case "nova": .nova
+    case "aurora": .aurora
+    case "celestial": .celestial
+    case "obsidian": .obsidian
+    case "seraph": .seraph
+    default: nil
+    }
+  }
+  var identity: String {
+    [helm.rawValue, pauldrons.rawValue, chest.rawValue, back.rawValue].joined(separator: "-")
   }
 }
 
@@ -46,6 +81,51 @@ struct ArmorHDStyle: Sendable {
   let trim: ArmorHDTone
   let cloth: ArmorHDTone
   let light: ArmorHDColor
+  var design: ArmorHDDesign = .paladin
+  var joints = ArmorHDTone(hue: 0.61, saturation: 0.7, exposure: 0.13)
+  var eyes: ArmorHDColor? = nil
+  var eyeColor: ArmorHDColor { eyes ?? light.mix(.white, 0.8) }
+
+  static let otherKeys = ["nova", "aurora", "celestial", "obsidian", "seraph"]
+  static func named(_ key: String) -> Self? {
+    let silver = ArmorHDTone(hue: 0.57, saturation: 0.16)
+    switch key {
+    case "nova":
+      return .init(
+        name: "Nova Pilot", plate: .init(hue: 0.61, saturation: 0.65, exposure: 0.65),
+        trim: .init(hue: 0.54, saturation: 0.8), cloth: .init(hue: 0.7, saturation: 1),
+        light: .init(r: 0.05, g: 0.88, b: 1), design: .nova)
+    case "aurora":
+      return .init(
+        name: "Aurora Warden", plate: silver,
+        trim: .init(hue: 0.43, saturation: 1.2), cloth: .init(hue: 0.44, saturation: 1),
+        light: .init(r: 0.35, g: 1, b: 0.75), design: .aurora,
+        joints: .init(hue: 0.43, saturation: 1.3, exposure: 0.4))
+    case "celestial":
+      return .init(
+        name: "Celestial Guardian", plate: silver,
+        trim: .init(hue: 0.6, saturation: 0.5),
+        cloth: .init(hue: 0.65, saturation: 1.2, exposure: 0.45),
+        light: .init(r: 0.64, g: 0.84, b: 1), design: .celestial,
+        joints: .init(hue: 0.65, saturation: 1.2, exposure: 0.19))
+    case "obsidian":
+      return .init(
+        name: "Obsidian Knight", plate: .init(hue: 0.76, saturation: 0.8, exposure: 0.29),
+        trim: .init(hue: 0.97, saturation: 1.35, exposure: 0.7),
+        cloth: .init(hue: 0.98, saturation: 1.4, exposure: 0.65),
+        light: .init(r: 1, g: 0.12, b: 0.25), design: .obsidian,
+        joints: .init(hue: 0.75, saturation: 0.8, exposure: 0.08),
+        eyes: .init(r: 1, g: 0.13, b: 0.22))
+    case "seraph":
+      return .init(
+        name: "Eternal Seraph", plate: .init(hue: 0.12, saturation: 0.12, prismatic: true),
+        trim: .init(hue: 0.12, saturation: 0.48, prismatic: true),
+        cloth: .init(hue: 0.78, saturation: 0.3),
+        light: .init(r: 0.65, g: 0.98, b: 0.94), design: .seraph,
+        joints: .init(hue: 0.76, saturation: 0.35, exposure: 0.4))
+    default: return nil
+    }
+  }
 
   static func rank(_ stage: Int) -> Self {
     let i = max(0, min(8, stage))
@@ -68,9 +148,11 @@ struct ArmorHDStyle: Sendable {
       ][
         i],
       // RankMaterial hues, with stronger plate saturation for the small companion.
-      plate: .init(hue: metals[i].0,
+      plate: .init(
+        hue: metals[i].0,
         saturation: [0.95, 1.2, 0.85, 1.2, 0.3, 1.25, 1.05, 0.32, 0.28][i], prismatic: i == 8),
-      trim: .init(hue: faces[i].0, saturation: [0.18, 0.5, 1.1, 0.9, 1.0, 0.25, 1.2, 1.25, 0.75][i]),
+      trim: .init(
+        hue: faces[i].0, saturation: [0.18, 0.5, 1.1, 0.9, 1.0, 0.25, 1.2, 1.25, 0.75][i]),
       cloth: .init(hue: faces[i].0, saturation: faces[i].1),
       light: .hsv(stones[i].0, 0.62 * max(0.2, stones[i].1), 0.96))
   }
@@ -81,10 +163,14 @@ struct ArmorHDStyle: Sendable {
   static let whiteGold = rank(8)
 
   var cacheIdentity: String {
-    [
-      plate.hue, plate.saturation, trim.hue, trim.saturation, cloth.hue, cloth.saturation,
-      light.r, light.g, light.b,
-    ].map { String($0.bitPattern, radix: 16) }.joined(separator: "-") + "-" + [plate, trim, cloth].map { $0.prismatic ? "1" : "0" }.joined()
+    let tones = [plate, trim, joints, cloth]
+    let values =
+      tones.flatMap { [$0.hue, $0.saturation, $0.exposure] }
+      + [light.r, light.g, light.b, eyeColor.r, eyeColor.g, eyeColor.b]
+    let identity =
+      design.identity + ":" + values.map { String($0.bitPattern, radix: 16) }.joined(separator: "-")
+      + tones.map { $0.prismatic ? "1" : "0" }.joined()
+    return SHA256.hash(data: Data(identity.utf8)).map { String(format: "%02x", $0) }.joined()
   }
 
 }
@@ -162,7 +248,7 @@ private final class ArmorHDGeometryStore: @unchecked Sendable {
 }
 
 enum ArmorHD {
-  static let rendererVersion = "armorhd-4"
+  static let rendererVersion = "armorhd-5"
   static let frameSize = 480
   // The source antenna is preserved as part of the reconstructed helmet.
   static let hidesAntenna = false
@@ -183,7 +269,9 @@ enum ArmorHD {
     guard let source = ArmorHDResources.image(frame) else { return nil }
     return render(source: source, frame: frame, style: style, size: size)
   }
-  static func render(source: CGImage, frame: String, style: ArmorHDStyle = .gold, size: Int) -> CGImage? {
+  static func render(source: CGImage, frame: String, style: ArmorHDStyle = .gold, size: Int)
+    -> CGImage?
+  {
     guard (32...2048).contains(size), let resources = ArmorHDResources.shared,
       let anchors = resources.anchors[frame],
       let geometry = geometry(source: source, frame: frame), let context = context(size)
@@ -210,8 +298,10 @@ enum ArmorHD {
     guard let source = ArmorHDResources.image(frame) else { return nil }
     return try render(source: source, frame: frame, style: style, size: size, cache: cache)
   }
-  static func render(source: CGImage, frame: String, style: ArmorHDStyle = .gold,
-                     size: Int, cache: ArmorHDCache) throws -> CGImage? {
+  static func render(
+    source: CGImage, frame: String, style: ArmorHDStyle = .gold,
+    size: Int, cache: ArmorHDCache
+  ) throws -> CGImage? {
     guard (32...2048).contains(size), ArmorHDResources.shared?.anchors[frame] != nil else {
       return nil
     }
@@ -224,7 +314,9 @@ enum ArmorHD {
     {
       return image
     }
-    guard let image = render(source: source, frame: frame, style: style, size: size) else { return nil }
+    guard let image = render(source: source, frame: frame, style: style, size: size) else {
+      return nil
+    }
     let data = NSMutableData()
     guard let destination = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil)
     else { return nil }

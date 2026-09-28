@@ -125,9 +125,8 @@ for item in WardrobeCatalog.items {
     case .skin:
         let skin = realSkins[item.id]
         check(skin != nil, "catalog skin manifest \(item.id)")
-        for piece in skin?.pieces ?? [] {
-            check(FileManager.default.fileExists(atPath: artRoot.appendingPathComponent("Skins/" + piece.id + ".png").path), "catalog skin piece \(piece.id)")
-        }
+        check(skin?.hdStyle != nil, "catalog skin HD design and material \(item.id)")
+        check(skin?.hdStyle != nil, "HD skin \(item.id)")
         continue
     case .colorway:
         check(realColors[item.id] != nil, "catalog colorway \(item.id)")

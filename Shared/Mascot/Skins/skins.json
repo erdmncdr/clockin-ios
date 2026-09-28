@@ -1,1963 +1,799 @@
 {
-  "shoulders" : {
-    "a01" : {
-      "shoulderL" : [
+  "shoulders": {
+    "a01": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a02" : {
-      "shoulderL" : [
+    "a02": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a06" : {
-      "shoulderL" : [
+    "a06": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a07" : {
-      "shoulderL" : [
+    "a07": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a08" : {
-      "shoulderL" : [
+    "a08": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a10" : {
-      "shoulderL" : [
+    "a10": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "a11" : {
-      "shoulderL" : [
+    "a11": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "acc-antenna" : {
-      "shoulderL" : [
+    "acc-antenna": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "acc-cape" : {
-      "shoulderL" : [
+    "acc-cape": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "acc-headphones" : {
-      "shoulderL" : [
+    "acc-headphones": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "acc-mug" : {
-      "shoulderL" : [
+    "acc-mug": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "c01" : {
-      "shoulderR" : [
+    "c01": {
+      "shoulderR": [
         228,
         188
       ]
     },
-    "c02" : {
-      "shoulderR" : [
+    "c02": {
+      "shoulderR": [
         228,
         188
       ]
     },
-    "c03" : {
-      "shoulderR" : [
+    "c03": {
+      "shoulderR": [
         228,
         188
       ]
     },
-    "c04" : {
-      "shoulderR" : [
+    "c04": {
+      "shoulderR": [
         228,
         188
       ]
     },
-    "c05" : {
-      "shoulderR" : [
+    "c05": {
+      "shoulderR": [
         228,
         188
       ]
     },
-    "c06" : {
-      "shoulderR" : [
+    "c06": {
+      "shoulderR": [
         222,
         184
       ]
     },
-    "c07" : {
-      "shoulderR" : [
+    "c07": {
+      "shoulderR": [
         226,
         186
       ]
     },
-    "c08" : {
-      "shoulderR" : [
+    "c08": {
+      "shoulderR": [
         226,
         186
       ]
     },
-    "c09" : {
-      "shoulderR" : [
+    "c09": {
+      "shoulderR": [
         226,
         186
       ]
     },
-    "c10" : {
-      "shoulderR" : [
+    "c10": {
+      "shoulderR": [
         222,
         188
       ]
     },
-    "c11" : {
-      "shoulderR" : [
+    "c11": {
+      "shoulderR": [
         222,
         188
       ]
     },
-    "c12" : {
-      "shoulderR" : [
+    "c12": {
+      "shoulderR": [
         226,
         186
       ]
     },
-    "c13" : {
-      "shoulderR" : [
+    "c13": {
+      "shoulderR": [
         222,
         184
       ]
     },
-    "e01" : {
-      "shoulderL" : [
+    "e01": {
+      "shoulderL": [
         128,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         198,
         136
       ]
     },
-    "e02" : {
-      "shoulderL" : [
+    "e02": {
+      "shoulderL": [
         130,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         202,
         136
       ]
     },
-    "e06" : {
-      "shoulderL" : [
+    "e06": {
+      "shoulderL": [
         128,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         198,
         136
       ]
     },
-    "e07" : {
-      "shoulderL" : [
+    "e07": {
+      "shoulderL": [
         124,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         136
       ]
     },
-    "e08" : {
-      "shoulderL" : [
+    "e08": {
+      "shoulderL": [
         124,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         136
       ]
     },
-    "e09" : {
-      "shoulderL" : [
+    "e09": {
+      "shoulderL": [
         124,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         136
       ]
     },
-    "e15" : {
-      "shoulderL" : [
+    "e15": {
+      "shoulderL": [
         128,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         198,
         136
       ]
     },
-    "h01" : {
-      "shoulderL" : [
+    "h01": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h02" : {
-      "shoulderL" : [
+    "h02": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h06" : {
-      "shoulderL" : [
+    "h06": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h07" : {
-      "shoulderL" : [
+    "h07": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h08" : {
-      "shoulderL" : [
+    "h08": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h10" : {
-      "shoulderL" : [
+    "h10": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "h11" : {
-      "shoulderL" : [
+    "h11": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p01" : {
-      "shoulderL" : [
+    "p01": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p02" : {
-      "shoulderL" : [
+    "p02": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p06" : {
-      "shoulderL" : [
+    "p06": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p07" : {
-      "shoulderL" : [
+    "p07": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p08" : {
-      "shoulderL" : [
+    "p08": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p10" : {
-      "shoulderL" : [
+    "p10": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "p11" : {
-      "shoulderL" : [
+    "p11": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "pose2" : {
-
-    },
-    "pose3" : {
-      "shoulderL" : [
+    "pose2": {},
+    "pose3": {
+      "shoulderL": [
         128,
         136
       ],
-      "shoulderR" : [
+      "shoulderR": [
         198,
         134
       ]
     },
-    "pose4" : {
-      "shoulderL" : [
+    "pose4": {
+      "shoulderL": [
         94,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         152,
         142
       ]
     },
-    "t01" : {
-      "shoulderL" : [
+    "t01": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t02" : {
-      "shoulderL" : [
+    "t02": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t03" : {
-      "shoulderL" : [
+    "t03": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t04" : {
-      "shoulderL" : [
+    "t04": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t05" : {
-      "shoulderL" : [
+    "t05": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t06" : {
-      "shoulderL" : [
+    "t06": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t07" : {
-      "shoulderL" : [
+    "t07": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t08" : {
-      "shoulderL" : [
+    "t08": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t09" : {
-      "shoulderL" : [
+    "t09": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t11" : {
-      "shoulderL" : [
+    "t11": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "t14" : {
-      "shoulderL" : [
+    "t14": {
+      "shoulderL": [
         102,
         182
       ]
     },
-    "z01" : {
-      "shoulderL" : [
+    "z01": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z02" : {
-      "shoulderL" : [
+    "z02": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z06" : {
-      "shoulderL" : [
+    "z06": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z07" : {
-      "shoulderL" : [
+    "z07": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z08" : {
-      "shoulderL" : [
+    "z08": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z10" : {
-      "shoulderL" : [
+    "z10": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     },
-    "z11" : {
-      "shoulderL" : [
+    "z11": {
+      "shoulderL": [
         136,
         140
       ],
-      "shoulderR" : [
+      "shoulderR": [
         196,
         140
       ]
     }
   },
-  "skins" : {
-    "skin-aurora" : {
-      "effects" : {
-        "aura" : "motes",
-        "auraColors" : [
+  "skins": {
+    "skin-aurora": {
+      "design": "aurora",
+      "effects": {
+        "aura": "motes",
+        "auraColors": [
           "#55D49C",
           "#A4FFE2",
           "#ECFFF4"
         ],
-        "glow" : "#A4FFE2",
-        "sheen" : "#FFFFFF"
+        "glow": "#A4FFE2",
+        "sheen": "#FFFFFF"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-aurora",
-      "material" : {
-        "identity" : false,
-        "name" : "Aurora Warden",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#113934",
-              "#1B826B",
-              "#55D49C",
-              "#A4FFE2",
-              "#ECFFF4"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#0A302D",
-              "#12644F",
-              "#229F76",
-              "#6CE2B0",
-              "#D7FFF1"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#0A302D",
-              "#12644F",
-              "#229F76"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#263549",
-              "#637385",
-              "#AFBCC9"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#263549",
-              "#637385",
-              "#AFBCC9",
-              "#E0E9F1",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#AFBCC9",
-              "#E0E9F1",
-              "#FFFFFF"
-            ]
-          }
-        ]
-      },
-      "name" : "Aurora Warden",
-      "pieces" : [
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-aurora-cape",
-          "layer" : "back",
-          "motion" : "sway",
-          "pivot" : [
-            74,
-            6
-          ],
-          "poseOffsets" : {
-            "c" : [
-              12,
-              -8
-            ],
-            "pose2" : [
-              -6,
-              0
-            ],
-            "pose4" : [
-              -8,
-              0
-            ],
-            "t" : [
-              -12,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-aurora-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            62,
-            38
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-aurora-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            36,
-            8
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-aurora-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            16,
-            8
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-aurora-chest",
-          "layer" : "front",
-          "pivot" : [
-            22,
-            2
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "hd": "aurora",
+      "hidesAntenna": false,
+      "id": "skin-aurora",
+      "name": "Aurora Warden"
     },
-    "skin-celestial" : {
-      "effects" : {
-        "aura" : "stars",
-        "auraColors" : [
+    "skin-celestial": {
+      "design": "celestial",
+      "effects": {
+        "aura": "stars",
+        "auraColors": [
           "#83C6FF",
           "#C9F0FF",
           "#FFFFFF"
         ],
-        "glow" : "#C9F0FF",
-        "sheen" : "#FFFFFF"
+        "glow": "#C9F0FF",
+        "sheen": "#FFFFFF"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-celestial",
-      "material" : {
-        "identity" : false,
-        "name" : "Celestial Guardian",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#162D65",
-              "#366BB9",
-              "#83C6FF",
-              "#C9F0FF",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#13182D",
-              "#28385D",
-              "#536B9A",
-              "#93BCE0",
-              "#E1F8FF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#25304F",
-              "#25304F",
-              "#596788"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#25304F",
-              "#596788",
-              "#A5B6D0"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#25304F",
-              "#596788",
-              "#A5B6D0",
-              "#DAE7F5",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#A5B6D0",
-              "#DAE7F5",
-              "#FFFFFF"
-            ]
-          }
-        ]
-      },
-      "name" : "Celestial Guardian",
-      "pieces" : [
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-celestial-cape",
-          "layer" : "back",
-          "motion" : "sway",
-          "pivot" : [
-            74,
-            6
-          ],
-          "poseOffsets" : {
-            "c" : [
-              12,
-              -8
-            ],
-            "pose2" : [
-              -6,
-              0
-            ],
-            "pose4" : [
-              -8,
-              0
-            ],
-            "t" : [
-              -12,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-celestial-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            38,
-            42
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-celestial-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            30,
-            14
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-celestial-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            20,
-            14
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-celestial-chest",
-          "layer" : "front",
-          "pivot" : [
-            26,
-            2
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "hd": "celestial",
+      "hidesAntenna": false,
+      "id": "skin-celestial",
+      "name": "Celestial Guardian"
     },
-    "skin-nova" : {
-      "effects" : {
-        "aura" : "sparks",
-        "auraColors" : [
+    "skin-nova": {
+      "design": "nova",
+      "effects": {
+        "aura": "sparks",
+        "auraColors": [
           "#E357C6",
           "#67F3FF",
           "#F0FFFF"
         ],
-        "glow" : "#67F3FF",
-        "sheen" : "#C3EAF6"
+        "glow": "#67F3FF",
+        "sheen": "#C3EAF6"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-nova",
-      "material" : {
-        "identity" : false,
-        "name" : "Nova Pilot",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#161448",
-              "#8133AD",
-              "#E357C6",
-              "#67F3FF",
-              "#F0FFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#092635",
-              "#086578",
-              "#15A4BF",
-              "#55ECF6",
-              "#D8FFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#10182B",
-              "#10182B",
-              "#25334C"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#10182B",
-              "#25334C",
-              "#495D79"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#10182B",
-              "#25334C",
-              "#495D79",
-              "#829AAE",
-              "#C3EAF6"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#495D79",
-              "#829AAE",
-              "#C3EAF6"
-            ]
-          }
-        ]
-      },
-      "name" : "Nova Pilot",
-      "pieces" : [
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-nova-thrusters",
-          "layer" : "back",
-          "pivot" : [
-            70,
-            40
-          ],
-          "poseOffsets" : {
-            "c" : [
-              12,
-              -6
-            ],
-            "pose2" : [
-              -6,
-              0
-            ],
-            "t" : [
-              -12,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-nova-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            52,
-            12
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-nova-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            34,
-            16
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-nova-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            24,
-            16
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-nova-chest",
-          "layer" : "front",
-          "pivot" : [
-            26,
-            0
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "hd": "nova",
+      "hidesAntenna": false,
+      "id": "skin-nova",
+      "name": "Nova Pilot"
     },
-    "skin-obsidian" : {
-      "effects" : {
-        "aura" : "embers",
-        "auraColors" : [
+    "skin-obsidian": {
+      "design": "obsidian",
+      "effects": {
+        "aura": "embers",
+        "auraColors": [
           "#D32448",
           "#FF5871",
           "#FFE2DA"
         ],
-        "glow" : "#FF5871",
-        "sheen" : "#756587"
+        "glow": "#FF5871",
+        "sheen": "#756587"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-obsidian",
-      "material" : {
-        "identity" : false,
-        "name" : "Obsidian Knight",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#330B20",
-              "#7F102E",
-              "#D32448",
-              "#F72C46",
-              "#FF3D56"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#240E21",
-              "#601C37",
-              "#A72B45",
-              "#ED5E70",
-              "#FFC4BE"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#080812",
-              "#080812",
-              "#141224"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#080812",
-              "#141224",
-              "#211A31"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#080812",
-              "#141224",
-              "#211A31",
-              "#392D4D",
-              "#756587"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#211A31",
-              "#392D4D",
-              "#756587"
-            ]
-          }
-        ]
-      },
-      "name" : "Obsidian Knight",
-      "pieces" : [
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-obsidian-cape",
-          "layer" : "back",
-          "motion" : "sway",
-          "pivot" : [
-            74,
-            6
-          ],
-          "poseOffsets" : {
-            "c" : [
-              12,
-              -8
-            ],
-            "pose2" : [
-              -6,
-              0
-            ],
-            "pose4" : [
-              -8,
-              0
-            ],
-            "t" : [
-              -12,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-obsidian-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            52,
-            38
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-obsidian-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            38,
-            26
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-obsidian-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            20,
-            26
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-obsidian-chest",
-          "layer" : "front",
-          "pivot" : [
-            30,
-            8
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "hd": "obsidian",
+      "hidesAntenna": false,
+      "id": "skin-obsidian",
+      "name": "Obsidian Knight"
     },
-    "skin-paladin-aurora" : {
-      "effects" : {
-        "aura" : "motes",
-        "auraColors" : [
+    "skin-paladin-aurora": {
+      "design": "paladin",
+      "effects": {
+        "aura": "motes",
+        "auraColors": [
           "#48E397",
           "#75EECF",
           "#DCFFF0"
         ],
-        "glow" : "#75EECF",
-        "sheen" : "#DCFFF0"
+        "glow": "#75EECF",
+        "sheen": "#DCFFF0"
       },
-      "hd" : "aurora",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-aurora",
-      "material" : {
-        "identity" : true,
-        "name" : "Aurora Paladin",
-        "rules" : []
-      },
-      "name" : "Aurora Paladin",
-      "pieces" : []
+      "hd": "aurora",
+      "hidesAntenna": false,
+      "id": "skin-paladin-aurora",
+      "name": "Aurora Paladin"
     },
-    "skin-paladin-celestial" : {
-      "effects" : {
-        "aura" : "stars",
-        "auraColors" : [
+    "skin-paladin-celestial": {
+      "design": "paladin",
+      "effects": {
+        "aura": "stars",
+        "auraColors": [
           "#536BEF",
           "#A4BFFF",
           "#F1F4FF"
         ],
-        "glow" : "#A4BFFF",
-        "sheen" : "#F1F4FF"
+        "glow": "#A4BFFF",
+        "sheen": "#F1F4FF"
       },
-      "hd" : "celestial",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-celestial",
-      "material" : {
-        "identity" : true,
-        "name" : "Celestial Paladin",
-        "rules" : []
-      },
-      "name" : "Celestial Paladin",
-      "pieces" : []
+      "hd": "celestial",
+      "hidesAntenna": false,
+      "id": "skin-paladin-celestial",
+      "name": "Celestial Paladin"
     },
-    "skin-paladin-eternal" : {
-      "effects" : {
-        "aura" : "feathers",
-        "auraColors" : [
+    "skin-paladin-eternal": {
+      "design": "paladin",
+      "effects": {
+        "aura": "feathers",
+        "auraColors": [
           "#AEEBFA",
           "#D9BAF4",
           "#FFF5DB"
         ],
-        "glow" : "#D9BAF4",
-        "sheen" : "#FFF5DB"
+        "glow": "#D9BAF4",
+        "sheen": "#FFF5DB"
       },
-      "hd" : "eternal",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-eternal",
-      "material" : {
-        "identity" : true,
-        "name" : "Eternal Paladin",
-        "rules" : []
-      },
-      "name" : "Eternal Paladin",
-      "pieces" : []
+      "hd": "eternal",
+      "hidesAntenna": false,
+      "id": "skin-paladin-eternal",
+      "name": "Eternal Paladin"
     },
-    "skin-paladin-nebula" : {
-      "effects" : {
-        "aura" : "motes",
-        "auraColors" : [
+    "skin-paladin-nebula": {
+      "design": "paladin",
+      "effects": {
+        "aura": "motes",
+        "auraColors": [
           "#976AE0",
           "#DA90F5",
           "#F6EFFF"
         ],
-        "glow" : "#DA90F5",
-        "sheen" : "#F6EFFF"
+        "glow": "#DA90F5",
+        "sheen": "#F6EFFF"
       },
-      "hd" : "nebula",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-nebula",
-      "material" : {
-        "identity" : true,
-        "name" : "Nebula Paladin",
-        "rules" : []
-      },
-      "name" : "Nebula Paladin",
-      "pieces" : []
+      "hd": "nebula",
+      "hidesAntenna": false,
+      "id": "skin-paladin-nebula",
+      "name": "Nebula Paladin"
     },
-    "skin-paladin-nova" : {
-      "effects" : {
-        "aura" : "sparks",
-        "auraColors" : [
+    "skin-paladin-nova": {
+      "design": "paladin",
+      "effects": {
+        "aura": "sparks",
+        "auraColors": [
           "#68CFE5",
           "#A5EDFF",
           "#F3FDFF"
         ],
-        "glow" : "#A5EDFF",
-        "sheen" : "#F3FDFF"
+        "glow": "#A5EDFF",
+        "sheen": "#F3FDFF"
       },
-      "hd" : "nova",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-nova",
-      "material" : {
-        "identity" : true,
-        "name" : "Nova Paladin",
-        "rules" : []
-      },
-      "name" : "Nova Paladin",
-      "pieces" : []
+      "hd": "nova",
+      "hidesAntenna": false,
+      "id": "skin-paladin-nova",
+      "name": "Nova Paladin"
     },
-    "skin-paladin-orbit" : {
-      "effects" : {
-        "aura" : "motes",
-        "auraColors" : [
+    "skin-paladin-orbit": {
+      "design": "paladin",
+      "effects": {
+        "aura": "motes",
+        "auraColors": [
           "#C9834C",
           "#64DEC6",
           "#FFF1DC"
         ],
-        "glow" : "#64DEC6",
-        "sheen" : "#FFF1DC"
+        "glow": "#64DEC6",
+        "sheen": "#FFF1DC"
       },
-      "hd" : "orbit",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-orbit",
-      "material" : {
-        "identity" : true,
-        "name" : "Orbit Paladin",
-        "rules" : []
-      },
-      "name" : "Orbit Paladin",
-      "pieces" : []
+      "hd": "orbit",
+      "hidesAntenna": false,
+      "id": "skin-paladin-orbit",
+      "name": "Orbit Paladin"
     },
-    "skin-paladin-solar" : {
-      "effects" : {
-        "aura" : "embers",
-        "auraColors" : [
+    "skin-paladin-solar": {
+      "design": "paladin",
+      "effects": {
+        "aura": "embers",
+        "auraColors": [
           "#FFA924",
           "#FFE67D",
           "#FFFFE4"
         ],
-        "glow" : "#FFE67D",
-        "sheen" : "#FFFFE4"
+        "glow": "#FFE67D",
+        "sheen": "#FFFFE4"
       },
-      "hd" : "solar",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-solar",
-      "material" : {
-        "identity" : true,
-        "name" : "Solar Paladin",
-        "rules" : []
-      },
-      "name" : "Solar Paladin",
-      "pieces" : []
+      "hd": "solar",
+      "hidesAntenna": false,
+      "id": "skin-paladin-solar",
+      "name": "Solar Paladin"
     },
-    "skin-paladin-sovereign" : {
-      "effects" : {
-        "aura" : "embers",
-        "auraColors" : [
+    "skin-paladin-sovereign": {
+      "design": "paladin",
+      "effects": {
+        "aura": "embers",
+        "auraColors": [
           "#F52D56",
           "#EFC54D",
           "#FFF1B9"
         ],
-        "glow" : "#EFC54D",
-        "sheen" : "#FFF1B9"
+        "glow": "#EFC54D",
+        "sheen": "#FFF1B9"
       },
-      "hd" : "sovereign",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-sovereign",
-      "material" : {
-        "identity" : true,
-        "name" : "Sovereign Paladin",
-        "rules" : []
-      },
-      "name" : "Sovereign Paladin",
-      "pieces" : []
+      "hd": "sovereign",
+      "hidesAntenna": false,
+      "id": "skin-paladin-sovereign",
+      "name": "Sovereign Paladin"
     },
-    "skin-paladin-spark" : {
-      "effects" : {
-        "aura" : "sparks",
-        "auraColors" : [
+    "skin-paladin-spark": {
+      "design": "paladin",
+      "effects": {
+        "aura": "sparks",
+        "auraColors": [
           "#6697D8",
           "#A8D8EF",
           "#EFF8FF"
         ],
-        "glow" : "#A8D8EF",
-        "sheen" : "#EFF8FF"
+        "glow": "#A8D8EF",
+        "sheen": "#EFF8FF"
       },
-      "hd" : "spark",
-      "hidesAntenna" : false,
-      "id" : "skin-paladin-spark",
-      "material" : {
-        "identity" : true,
-        "name" : "Spark Paladin",
-        "rules" : []
-      },
-      "name" : "Spark Paladin",
-      "pieces" : []
+      "hd": "spark",
+      "hidesAntenna": false,
+      "id": "skin-paladin-spark",
+      "name": "Spark Paladin"
     },
-    "skin-seraph" : {
-      "effects" : {
-        "aura" : "feathers",
-        "auraColors" : [
+    "skin-seraph": {
+      "design": "seraph",
+      "effects": {
+        "aura": "feathers",
+        "auraColors": [
           "#FFB8E8",
           "#AAFAF2",
           "#FFFFFF"
         ],
-        "glow" : "#AAFAF2",
-        "sheen" : "#FFFFFF"
+        "glow": "#AAFAF2",
+        "sheen": "#FFFFFF"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-seraph",
-      "material" : {
-        "identity" : false,
-        "name" : "Eternal Seraph",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#4B346A",
-              "#B786D0",
-              "#FFB8E8",
-              "#AAFAF2",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#514453",
-              "#A78C6F",
-              "#DCC9A0",
-              "#FFF1CF",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#5C536C",
-              "#5C536C",
-              "#A9A1B7"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#5C536C",
-              "#A9A1B7",
-              "#E9CCE6"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#5C536C",
-              "#A9A1B7",
-              "#E9CCE6",
-              "#CDF7F3",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#E9CCE6",
-              "#CDF7F3",
-              "#FFFFFF"
-            ]
-          }
-        ]
-      },
-      "name" : "Eternal Seraph",
-      "pieces" : [
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-seraph-halo",
-          "layer" : "back",
-          "pivot" : [
-            66,
-            36
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-seraph-wings",
-          "layer" : "back",
-          "motion" : "flap",
-          "pivot" : [
-            120,
-            114
-          ],
-          "poseOffsets" : {
-            "c" : [
-              -16,
-              -2
-            ],
-            "pose2" : [
-              6,
-              0
-            ],
-            "pose4" : [
-              8,
-              0
-            ],
-            "t" : [
-              4,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-seraph-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            38,
-            24
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-seraph-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            30,
-            8
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-seraph-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            16,
-            8
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-seraph-chest",
-          "layer" : "front",
-          "pivot" : [
-            30,
-            4
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "hd": "seraph",
+      "hidesAntenna": false,
+      "id": "skin-seraph",
+      "name": "Eternal Seraph"
     }
   }
 }

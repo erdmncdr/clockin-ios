@@ -9,11 +9,11 @@ let source = root.appendingPathComponent(CommandLine.arguments[1])
 let main = temporary.appendingPathComponent("main.swift")
 try FileManager.default.copyItem(at: source, to: main)
 let binary = temporary.appendingPathComponent("art")
-let hdSources = source.lastPathComponent == "MascotArt.swift"
+let hdSources = (source.lastPathComponent == "MascotArt.swift" || source.path.contains("/wardrobeart/"))
     ? ["ArmorHD.swift", "ArmorHDPixels.swift", "ArmorHDParts.swift", "ArmorHDCache.swift"] : []
 let compile = Process()
 compile.executableURL = URL(fileURLWithPath: "/usr/bin/swiftc")
-compile.arguments = ["-O", "-swift-version", "6", "-module-cache-path", "/tmp/clockin-art-module-cache",
+compile.arguments = ["-O", "-swift-version", "6", "-strict-concurrency=complete", "-module-cache-path", "/tmp/clockin-art-module-cache",
     root.appendingPathComponent("Shared/Mascot/WardrobePalette.swift").path]
     + hdSources.map { root.appendingPathComponent("Shared/Mascot/" + $0).path }
     + [main.path, "-o", binary.path]

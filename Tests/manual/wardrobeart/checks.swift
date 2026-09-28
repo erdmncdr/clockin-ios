@@ -190,3 +190,27 @@ for (id,item) in home.items {
 }
 print("ok: \(home.rooms.count) rooms, \(home.items.count) items, slot/pivot placement and unclipped furniture in every room")
 print("ok: wardrobe art contract")
+
+// Skin art is now a complete vector render; garment PNGs above stay pixel art.
+struct HDSkin: Decodable { let id: String, design: String, hd: String }
+struct HDSkins: Decodable { let skins: [String: HDSkin], shoulders: [String: [String: [Double]]] }
+let skins = try decode(HDSkins.self, mascot.appendingPathComponent("Skins/skins.json"))
+require(skins.skins.count == 14 && skins.shoulders.count == 66, "fourteen HD skins and retained shoulder anchors")
+let skinPNGs = try fm.contentsOfDirectory(atPath: mascot.appendingPathComponent("Skins").path).filter { $0.hasSuffix(".png") }
+require(skinPNGs.isEmpty, "retired pixel skin PNGs")
+let hdCacheURL = fm.temporaryDirectory.appendingPathComponent("wardrobeart-hd-" + UUID().uuidString)
+let hdCache = ArmorHDCache(directory: hdCacheURL)
+defer { try? fm.removeItem(at: hdCacheURL) }
+var hdRenders = 0
+let rankKeys = ["spark", "orbit", "nebula", "solar", "nova", "aurora", "sovereign", "celestial", "eternal"]
+for skin in skins.skins.values.sorted(by: { $0.id < $1.id }) {
+    require(ArmorHDDesign.named(skin.design) != nil, "known HD design")
+    let style = skin.design == "paladin" ? rankKeys.firstIndex(of: skin.hd).map { ArmorHDStyle.rank($0) } : ArmorHDStyle.named(skin.hd)
+    require(style != nil, "known HD material")
+    for frame in skins.shoulders.keys.sorted() {
+        let rendered = try ArmorHD.render(frame: frame, style: style!, size: 80, cache: hdCache)
+        require(rendered?.width == 80 && rendered?.height == 80, "HD cached art: \(skin.id)/\(frame)")
+        hdRenders += 1
+    }
+}
+print("ok: \(hdRenders) HD cached 80 px renders, all fourteen skins over 66 frames/fixed poses; no skin PNGs")

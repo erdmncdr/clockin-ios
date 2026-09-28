@@ -80,6 +80,8 @@ Commercial use needs permission. The full terms are in `LICENSE`.
 ## Checks
 
 Each check prints `ok` lines and exits non-zero on the first failure. Run from this folder.
+The skin and armour suites cover all fourteen HD skins across 66 frames and fixed poses;
+wardrobe-art also checks their cached 80 px output.
 
 ```bash
 swiftc -swift-version 6 -strict-concurrency=complete -D WIDGET_EXTENSION -module-cache-path /tmp/clockin-wardrobe-cache Shared/Core/AppLanguage.swift Shared/Mascot/MascotMotion.swift Shared/Mascot/MascotFrames.swift Shared/Mascot/ArmorHD.swift Shared/Mascot/ArmorHDPixels.swift Shared/Mascot/ArmorHDParts.swift Shared/Mascot/ArmorHDCache.swift Shared/Mascot/WardrobeArt.swift Shared/Mascot/CompanionAccessory.swift Clockin/Celebrations/CelebrationRules.swift Shared/Core/Models.swift Shared/Core/WardrobeBackup.swift Shared/Mascot/Wardrobe.swift Shared/Mascot/WardrobePalette.swift Shared/Mascot/WardrobeSkins.swift Shared/Mascot/WardrobeCatalog.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Companion/WardrobeEarnings.swift Shared/Mascot/RoomArrangement.swift Shared/Mascot/RoomPlacement.swift Shared/Mascot/HomeSceneLayout.swift Shared/Mascot/HeritageArt.swift Tests/manual/wardrobe/main.swift -o /tmp/clockin-wardrobe-tests && /tmp/clockin-wardrobe-tests

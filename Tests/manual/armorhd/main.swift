@@ -23,52 +23,99 @@ check(ArmorHD.render(frame: "h01", size: 0) == nil, "Reject zero size")
 check(ArmorHD.render(frame: "h01", size: 2049) == nil, "Bound allocations")
 var expressions = 0
 var matches = 0
-let matrixDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("armorhd-matrix-" + UUID().uuidString)
+let matrixDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(
+  "armorhd-matrix-" + UUID().uuidString)
 let matrixCache = ArmorHDCache(directory: matrixDirectory)
 defer { try? FileManager.default.removeItem(at: matrixDirectory) }
+let styles =
+  (0..<9).map { ArmorHDStyle.rank($0) } + ArmorHDStyle.otherKeys.map { ArmorHDStyle.named($0)! }
 for frame in resources.anchors.keys.sorted() {
   let source = ArmorHDResources.image(frame)!
-  for rank in 0..<9 {
-  guard let rendered = try ArmorHD.render(source: source, frame: frame, style: .rank(rank), size: 408, cache: matrixCache)
-  else { fatalError("\(frame)/\(rank)") }
-  check(rendered.width == 408 && rendered.height == 408, "Output dimensions: \(frame)")
-  let result = bytes(rendered, size: 314)
-  let original = bytes(source, size: 314)
-  let a = resources.anchors[frame]!
-  var samples = 0
-  var visible = 0
-  for y in max(0, Int(a.visor[1]) - 24)..<min(314, Int(a.visor[1]) + 25) {
-    for x in max(0, Int(a.visor[0]) - 45)..<min(314, Int(a.visor[0]) + 46) {
-      let i = (y * 314 + x) * 4
-      let r = Int(original[i])
-      let g = Int(original[i + 1])
-      let b = Int(original[i + 2])
-      if original[i + 3] > 240 && g - r > 45 && b - r > 45 && g > 140 {
-        samples += 1
-        if result[i + 3] > 240 && max(result[i], result[i + 1], result[i + 2]) > 150 {
-          visible += 1
+  for (rank, style) in styles.enumerated() {
+    guard
+      let rendered = try ArmorHD.render(
+        source: source, frame: frame, style: style, size: 408, cache: matrixCache)
+    else { fatalError("\(frame)/\(rank)") }
+    check(rendered.width == 408 && rendered.height == 408, "Output dimensions: \(frame)")
+    let result = bytes(rendered, size: 314)
+    let original = bytes(source, size: 314)
+    let a = resources.anchors[frame]!
+    var samples = 0
+    var visible = 0
+    for y in max(0, Int(a.visor[1]) - 24)..<min(314, Int(a.visor[1]) + 25) {
+      for x in max(0, Int(a.visor[0]) - 45)..<min(314, Int(a.visor[0]) + 46) {
+        let i = (y * 314 + x) * 4
+        let r = Int(original[i])
+        let g = Int(original[i + 1])
+        let b = Int(original[i + 2])
+        if original[i + 3] > 240 && g - r > 45 && b - r > 45 && g > 140 {
+          samples += 1
+          if result[i + 3] > 240 && max(result[i], result[i + 1], result[i + 2]) > 150 {
+            visible += 1
+          }
         }
       }
     }
+    // Boundary cells can move during contour reconstruction; the bulk of every glyph must survive.
+    if samples > 0 {
+      check(
+        Double(visible) / Double(samples) > 0.7,
+        "Expression covered or lost: \(frame), \(visible)/\(samples)")
+      expressions += samples
+      matches += visible
+    }
+    if rank >= 9 {
+      let hit = try ArmorHD.render(
+        source: source, frame: frame, style: style, size: 408, cache: matrixCache)!
+      check(bytes(hit, size: 314) == result, "Every new design's disk hit preserves pixels")
+      for edge in 0..<314 {
+        for offset in [
+          (edge * 4), ((313 * 314 + edge) * 4), (edge * 314 * 4), ((edge * 314 + 313) * 4),
+        ] {
+          check(result[offset + 3] < 4, "Design clips canvas edge: \(style.name)/\(frame)")
+        }
+      }
+      // Test the authored front parts alone at source eye samples. A bright
+      // ornament cannot fool the luminous-expression test by covering the eyes.
+      let c = ArmorHD.context(314)!
+      c.translateBy(x: 0, y: 314)
+      c.scaleBy(x: 1, y: -1)
+      ArmorHDParts(
+        context: c, style: style, anchors: a, frame: frame,
+        shoulders: resources.manifest.shoulders[frame] ?? [:]
+      ).front()
+      let front = bytes(c.makeImage()!, size: 314)
+      var covered = 0
+      for y in max(0, Int(a.visor[1]) - 24)..<min(314, Int(a.visor[1]) + 25) {
+        for x in max(0, Int(a.visor[0]) - 38)..<min(314, Int(a.visor[0]) + 39) {
+          let i = (y * 314 + x) * 4
+          if original[i + 3] > 240 && Int(original[i + 1]) - Int(original[i]) > 45
+            && Int(original[i + 2]) - Int(original[i]) > 45 && original[i + 1] > 140
+            && front[i + 3] > 32
+          {
+            covered += 1
+          }
+        }
+      }
+      check(covered == 0, "Authored front covers eyes: \(frame)/\(style.name), \(covered)")
+      if frame == "pose2" {
+        for y in 32..<59 {
+          for x in 110..<177 {
+            check(front[(y * 314 + x) * 4 + 3] == 0, "Raised fists covered by front armour")
+          }
+        }
+      }
+    }
+    for i in stride(from: 0, to: result.count, by: 4) {
+      check(
+        result[i] <= result[i + 3] && result[i + 1] <= result[i + 3]
+          && result[i + 2] <= result[i + 3],
+        "Premultiplied alpha: \(frame)")
+    }
   }
-  // Boundary cells can move during contour reconstruction; the bulk of every glyph must survive.
-  if samples > 0 {
-    check(
-      Double(visible) / Double(samples) > 0.7,
-      "Expression covered or lost: \(frame), \(visible)/\(samples)")
-    expressions += samples
-    matches += visible
-  }
-  for i in stride(from: 0, to: result.count, by: 4) {
-    check(
-      result[i] <= result[i + 3] && result[i + 1] <= result[i + 3]
-        && result[i + 2] <= result[i + 3],
-      "Premultiplied alpha: \(frame)")
-  }
-}
 }
 print(
-  "ok: 594 cached renders, nine ranks over 66 poses at 408 px; \(matches)/\(expressions) source expression samples remain luminous"
+  "ok: 924 cached renders, fourteen skins over 66 poses at 408 px; \(matches)/\(expressions) source expression samples remain luminous"
 )
 for stage in 0..<9 {
   check(ArmorHD.render(frame: "h01", style: .rank(stage), size: 180) != nil, "Rank \(stage)")
@@ -180,22 +227,68 @@ print("ok: coffee lift/sip placement, no duplicate prop, source-only mood symbol
 // Injecting a decoded image must control reconstruction; no repository lookup is needed.
 ArmorHD.clearGeometryCache()
 let blankSource = ArmorHD.context(314)!.makeImage()!
-let injected = ArmorHD.render(source:blankSource,frame:"pose3",size:408)!
+let injected = ArmorHD.render(source: blankSource, frame: "pose3", size: 408)!
 ArmorHD.clearGeometryCache()
-let originalPose = ArmorHD.render(frame:"pose3",size:408)!
-check(bytes(injected,size:408) != bytes(originalPose,size:408), "Renderer consumes caller's CGImage")
-let noPrism = ArmorHDStyle(name:"White gold",plate:.init(hue:ArmorHDStyle.whiteGold.plate.hue,
-  saturation:ArmorHDStyle.whiteGold.plate.saturation),trim:ArmorHDStyle.whiteGold.trim,
-  cloth:ArmorHDStyle.whiteGold.cloth,light:ArmorHDStyle.whiteGold.light)
-check(noPrism.cacheIdentity != ArmorHDStyle.whiteGold.cacheIdentity, "Prismatic material invalidates cache")
-check(bytes(ArmorHD.render(frame:"h01",style:noPrism,size:80)!,size:80) !=
-  bytes(ArmorHD.render(frame:"h01",style:.whiteGold,size:80)!,size:80), "Prismatic sheen visible at 80 px")
+let originalPose = ArmorHD.render(frame: "pose3", size: 408)!
+check(
+  bytes(injected, size: 408) != bytes(originalPose, size: 408), "Renderer consumes caller's CGImage"
+)
+let noPrism = ArmorHDStyle(
+  name: "White gold",
+  plate: .init(
+    hue: ArmorHDStyle.whiteGold.plate.hue,
+    saturation: ArmorHDStyle.whiteGold.plate.saturation), trim: ArmorHDStyle.whiteGold.trim,
+  cloth: ArmorHDStyle.whiteGold.cloth, light: ArmorHDStyle.whiteGold.light)
+check(
+  noPrism.cacheIdentity != ArmorHDStyle.whiteGold.cacheIdentity,
+  "Prismatic material invalidates cache")
+check(
+  bytes(ArmorHD.render(frame: "h01", style: noPrism, size: 80)!, size: 80)
+    != bytes(ArmorHD.render(frame: "h01", style: .whiteGold, size: 80)!, size: 80),
+  "Prismatic sheen visible at 80 px")
 var plateSamples = Set<[UInt8]>()
 for rank in 0..<9 {
-  let image = bytes(ArmorHD.render(frame:"h01",style:.rank(rank),size:314)!,size:314)
+  let image = bytes(ArmorHD.render(frame: "h01", style: .rank(rank), size: 314)!, size: 314)
   // Bare forearm and chest, away from visor, gems and wing light.
   let offsets = [(123, 123), (160, 168), (167, 181)]
-  plateSamples.insert(offsets.flatMap { x,y in Array(image[(y*314+x)*4..<(y*314+x)*4+3]) })
+  plateSamples.insert(
+    offsets.flatMap { x, y in Array(image[(y * 314 + x) * 4..<(y * 314 + x) * 4 + 3]) })
 }
 check(plateSamples.count == 9, "All nine plates have distinct metal colours")
 print("ok: decoded CGImage source handoff, nine distinct plate metals and prismatic 80 px sheen")
+
+for style in styles.suffix(5) {
+  for (frame, x, y) in [("c01", 82, 248), ("t01", 242, 233)] {
+    let expected = bytes(ArmorHD.render(frame: frame, size: 408)!, size: 314)
+    let actual = bytes(
+      try ArmorHD.render(frame: frame, style: style, size: 408, cache: matrixCache)!, size: 314)
+    let i = (y * 314 + x) * 4
+    check(Array(expected[i..<i + 4]) == Array(actual[i..<i + 4]), "Prop identity across designs")
+  }
+}
+let silhouettes = Set(
+  styles.suffix(5).map { style in
+    bytes(ArmorHD.render(frame: "h01", style: style, size: 80)!, size: 80).enumerated().compactMap {
+      i, byte in i % 4 == 3 ? byte : nil
+    }
+  })
+check(silhouettes.count == 5, "Five distinct silhouettes at 80 px")
+var eyeVariant = ArmorHDStyle.gold
+eyeVariant.eyes = .init(r: 1, g: 0, b: 0)
+var jointVariant = ArmorHDStyle.gold
+jointVariant.joints.exposure = 0.5
+var designVariant = ArmorHDStyle.gold
+designVariant.design = .nova
+let darkVariant = ArmorHDStyle(
+  name: "Dark",
+  plate: .init(
+    hue: ArmorHDStyle.gold.plate.hue, saturation: ArmorHDStyle.gold.plate.saturation, exposure: 0.4),
+  trim: ArmorHDStyle.gold.trim, cloth: ArmorHDStyle.gold.cloth, light: ArmorHDStyle.gold.light)
+check(
+  Set(
+    [ArmorHDStyle.gold, eyeVariant, jointVariant, designVariant, darkVariant].map(\.cacheIdentity)
+  ).count == 5,
+  "Design, eye colour, joints and exposure invalidate cache")
+print(
+  "ok: five distinct 80 px silhouettes, unobstructed eyes and raised fists in all 330 design/pose pairs, props and full design/material cache identity"
+)

@@ -6,23 +6,6 @@ struct WardrobeColorRule: Codable, Sendable {
     let saturation: [Double]
     let luminance: [Double]
     let targets: [String]
-    let stops: [String]?
-
-    init(kind: String, hue: [Double], saturation: [Double], luminance: [Double],
-         targets: [String] = [], stops: [String]? = nil) {
-        self.kind = kind; self.hue = hue; self.saturation = saturation
-        self.luminance = luminance; self.targets = targets; self.stops = stops
-    }
-    private enum CodingKeys: String, CodingKey { case kind, hue, saturation, luminance, targets, stops }
-    init(from decoder: any Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        kind = try values.decode(String.self, forKey: .kind)
-        hue = try values.decode([Double].self, forKey: .hue)
-        saturation = try values.decode([Double].self, forKey: .saturation)
-        luminance = try values.decode([Double].self, forKey: .luminance)
-        targets = try values.decodeIfPresent([String].self, forKey: .targets) ?? []
-        stops = try values.decodeIfPresent([String].self, forKey: .stops)
-    }
 }
 
 struct WardrobeColorway: Codable, Sendable {
@@ -78,8 +61,8 @@ enum WardrobePalette {
             guard rule.hue.count == 2, rule.saturation.count == 2, rule.luminance.count == 2,
                   (rule.hue + rule.saturation + rule.luminance).allSatisfy(\.isFinite),
                   rule.luminance[1] > rule.luminance[0] else { return nil }
-            let ramp = rule.stops ?? rule.targets
-            guard rule.stops == nil ? ramp.count == 2 : (3...5).contains(ramp.count) else { return nil }
+            let ramp = rule.targets
+            guard ramp.count == 2 else { return nil }
             let colors = ramp.compactMap(rgb)
             guard colors.count == ramp.count else { return nil }
             return (rule, colors.map { Tone(hex: $0) })

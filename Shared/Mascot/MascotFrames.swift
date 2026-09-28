@@ -97,7 +97,6 @@ final class MascotFrames {
     func preloadOutfit() async {
         if let task = outfitLoading { return await task.value }
         let resources = WardrobeArt.sprites.keys.map { ($0, "Wardrobe") }
-            + WardrobeSkins.all.values.flatMap { $0.pieces.map { ($0.id, "Skins") } }
         let task = Task {
             let decoded = await Task.detached(priority: .utility) {
                 resources.compactMap { id, folder in
