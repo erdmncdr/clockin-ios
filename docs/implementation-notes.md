@@ -423,6 +423,71 @@ Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss i
 switch tabs, cover Today, and background the app: all live motion must stop. Compare
 Today idle CPU with the existing baseline using PERFORMANCE.md's 120-second runs;
 source/type checks do not establish the CPU or visual result.
+## Premium companion skins
+
+A purchased `skin` is a complete material and layered armour look. `outfit.look`
+resolves to the skin id while it is equipped, otherwise to the saved colorway.
+The five garment selections remain stored and return when `equipped["skin"]`
+is cleared, using the existing shop removal path. The Skins category comes first.
+Equipping or previewing a garment or colorway clears the skin so that selection
+is visible, retaining the other saved garments. Unowned equip attempts and home
+selections leave the skin in place; a preview never changes the saved outfit.
+Six looks cost 3,000 to 10,000 coins: Solar Paladin, Nova Pilot, Aurora Warden,
+Celestial Guardian, Obsidian Knight and Eternal Seraph.
+
+`Shared/Mascot/Skins/skins.json` contains the material, pieces, effects and
+per-frame shoulder anchors. Material rules accept three to five `stops`; legacy
+`targets` retain the original two-stop interpolation. Every skin has a clear
+visor, shaded plates and gems. Wings declare `flap` and flap like the garment
+wings; capes declare `sway` and swing slowly about where they hang. Each skin's
+effects are drawn by `MascotSkinEffects` in the mascot's canvas: a soft glow
+behind the figure, a sheen swept across the robot's own pixels every five
+seconds, and a few aura particles (embers and sparks rise from the feet,
+feathers drift down, stars and motes appear round the figure). The sheen and
+particles run only while the mascot moves, so they stop offscreen, with Reduce
+Motion and in the widgets, which show the still composite. The bed keeps the
+colorway: the companion sleeps out of its armour.
+
+A debug build launched with `--skin-preview` shows every skin on the moving
+companion; add `--skin <id>` for one skin in five moods. `--companion-shop`
+opens the companion screen directly.
+
+Shoulder anchors start from measured neck offsets and snap to nearby dark joint
+pixels. Coffee omits the far left plate, typing omits the far right plate, and
+`pose2` omits both because the arms are lifted over the helmet. The other plates
+follow each frame's joints. Helm and halo rotate with head tilt. Seated backs
+and fixed poses have authored fitting offsets; chest plates stay below the neck.
+Head adornments declare `omittedFrames: ["pose2"]` so the raised fists remain
+uncovered; halos stay behind the robot. Production placement and review rendering
+both honor this metadata, with rendered fist-pixel checks for all six skins.
+
+Regenerate all 32 piece PNGs, the manifest and the review sheets from the root:
+
+```bash
+swift -module-cache-path /tmp/clockin-art-module-cache Tools/run-art.swift Tools/MascotArt.swift skins
+swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/skins/run.swift
+```
+
+`build/skin-previews/skin-<name>-dark.png` and `-light.png` show eleven poses at
+2x with nearest-neighbor sampling; `all.png` compares all six idle looks at 3x,
+and `at-80px.png` checks their everyday size. Each `closeup-skin-<name>.png`
+shows `h01` at exactly 4x (1256 square). These review files are ignored.
+
+The second art pass uses curved, round-tipped feather vanes with overlapping
+coverts, separated upper/middle/lower Seraph wings, longitudinal iridescence and
+pearl tips. Paladin has a sun-embroidered linen tabard, gold-edged plate lames and
+a feathered circlet; Seraph has pearl clasps and a separate pearl circlet. Nova's
+hex reactor, Aurora's emerald leaf clasp, Celestial's eight-point medallion and
+Obsidian's ruby gorget each have their own shoulder silhouette. Aurora's plate is
+silver with emerald joints and a green/teal/violet/pink curtain mantle. Swords
+are omitted from both Paladin and Obsidian rather than leaving hidden fragments.
+Plate bevels and cast shadows, gem facets/glints and cloth folds supply depth.
+The checks compile `Tests/manual/skins/main.swift` with Swift 6 strict concurrency
+and bundle actual assets to exercise production resource loading, overlays and
+caches. They also compare all 396 old colorway/frame outputs against SHA256
+baselines captured before the palette change. The existing wardrobe test only
+changes skin pricing, manifest lookup and the catalog asset union expectations.
+
 ## Companion wardrobe and home artwork
 
 The wardrobe art contract lives in `Shared/Mascot/Frames/mascot-anchors.json`,

@@ -30,6 +30,10 @@ struct ClockinApp: App {
             LevelEffectsPreview()
         } else if ProcessInfo.processInfo.arguments.contains("--companion-sleep-preview") {
             CompanionSleepPreview()
+        } else if ProcessInfo.processInfo.arguments.contains("--skin-preview") {
+            CompanionSkinPreview()
+        } else if ProcessInfo.processInfo.arguments.contains("--companion-shop") {
+            CompanionView()
         } else { RootView() }
         #else
         RootView()

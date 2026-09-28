@@ -37,6 +37,9 @@ enum WardrobeArt {
 
     static func available(_ item: WardrobeItem) -> Bool {
         switch item.slot {
+        case .skin:
+            guard let skin = WardrobeSkins.all[item.id], !skin.pieces.isEmpty, !anchors.isEmpty else { return false }
+            return skin.pieces.allSatisfy { url($0.id + ".png", folder: "Skins") != nil }
         case .colorway: return item.id == "classic" || colorways[item.id] != nil
         case .room: return home.rooms[item.id].flatMap { url($0.file, folder: "Home") } != nil
         default:
@@ -59,6 +62,7 @@ enum WardrobeArt {
     }
 
     static func hidesAntenna(_ outfit: WardrobeState, spriteManifest: [String: WardrobeSprite] = sprites) -> Bool {
+        if let skin = WardrobeSkins.skin(for: outfit) { return skin.hidesAntenna }
         guard let id = outfit.equipped["head"] else { return false }
         return spriteManifest[id]?.slot == "head"
     }
@@ -117,7 +121,7 @@ enum WardrobeArt {
     }
 
     static func recolor(_ image: CGImage, colorway: String) -> CGImage {
-        guard colorway != "classic", let rules = colorways[colorway] else { return image }
+        guard colorway != "classic", let rules = WardrobeSkins.all[colorway]?.material ?? colorways[colorway] else { return image }
         return recolor(image, colorway: rules)
     }
 
@@ -158,6 +162,14 @@ enum WardrobeArt {
                          anchorManifest: [String: WardrobeAnchors] = anchors,
                          spriteManifest: [String: WardrobeSprite] = sprites) -> [WardrobeOverlay] {
         guard let anchors = anchorManifest[frame] else { return [] }
+        if let skin = WardrobeSkins.skin(for: outfit) {
+            return skin.pieces.compactMap { piece in
+                guard let image = images[piece.id],
+                      let origin = WardrobeSkins.placement(piece, frame: frame, anchors: anchors) else { return nil }
+                return WardrobeOverlay(id: piece.id, image: image, origin: origin,
+                                       tilt: piece.anchorPoint == "head" ? anchors.tilt : 0, behind: piece.layer == "back")
+            }
+        }
         return WardrobeSlot.outfit.compactMap { slot in
             guard let id = outfit.equipped[slot.rawValue], let sprite = spriteManifest[id], sprite.slot == slot.rawValue,
                   ["front", "back"].contains(sprite.layer), let image = images[id],
@@ -213,17 +225,23 @@ actor WardrobeFrameCache {
     }) { self.decode = decode }
 
     func composite(frame: String, outfit: WardrobeState, size: Int) -> CGImage? {
-        let key = "\(size)/\(frame)/\(outfit.colorway)/" + outfit.equipped.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value }.joined(separator: ";")
+        let key = "\(size)/\(frame)/\(outfit.look)/" + outfit.equipped.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value }.joined(separator: ";")
         if let image = stills[key] { return image }
-        guard let robot = image(frame, colorway: outfit.colorway, hidingAntenna: WardrobeArt.hidesAntenna(outfit)) else { return nil }
-        let images = outfit.equipped.values.reduce(into: [String: CGImage]()) { result, id in
-            result[id] = WardrobeArt.decode(id + ".png", folder: "Wardrobe")
+        guard let robot = image(frame, outfit: outfit, fixedPose: frame.hasPrefix("pose")) else { return nil }
+        let skin = WardrobeSkins.skin(for: outfit)
+        let ids = skin?.pieces.map(\.id) ?? Array(outfit.equipped.values)
+        let images = ids.reduce(into: [String: CGImage]()) { result, id in
+            result[id] = WardrobeArt.decode(id + ".png", folder: skin == nil ? "Wardrobe" : "Skins")
         }
         let parts = WardrobeArt.overlays(frame: frame, outfit: outfit, images: images)
         let result = WardrobeArt.composite(robot: robot, parts: parts, size: size)
         if stills.count >= 32 { stills.removeAll() }
         stills[key] = result
         return result
+    }
+
+    func image(_ id: String, outfit: WardrobeState, fixedPose: Bool = false) -> CGImage? {
+        image(id, colorway: outfit.look, fixedPose: fixedPose, hidingAntenna: WardrobeArt.hidesAntenna(outfit))
     }
 
     func image(_ id: String, colorway: String, fixedPose: Bool = false, hidingAntenna: Bool = false) -> CGImage? {

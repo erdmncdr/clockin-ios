@@ -6,6 +6,23 @@ struct WardrobeColorRule: Codable, Sendable {
     let saturation: [Double]
     let luminance: [Double]
     let targets: [String]
+    let stops: [String]?
+
+    init(kind: String, hue: [Double], saturation: [Double], luminance: [Double],
+         targets: [String] = [], stops: [String]? = nil) {
+        self.kind = kind; self.hue = hue; self.saturation = saturation
+        self.luminance = luminance; self.targets = targets; self.stops = stops
+    }
+    private enum CodingKeys: String, CodingKey { case kind, hue, saturation, luminance, targets, stops }
+    init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try values.decode(String.self, forKey: .kind)
+        hue = try values.decode([Double].self, forKey: .hue)
+        saturation = try values.decode([Double].self, forKey: .saturation)
+        luminance = try values.decode([Double].self, forKey: .luminance)
+        targets = try values.decodeIfPresent([String].self, forKey: .targets) ?? []
+        stops = try values.decodeIfPresent([String].self, forKey: .stops)
+    }
 }
 
 struct WardrobeColorway: Codable, Sendable {
@@ -57,12 +74,15 @@ enum WardrobePalette {
     // Duz RGBA girer; alfa ve vizor tonlari aynen kalir.
     static func recolor(_ rgba: inout [UInt8], colorway: WardrobeColorway) {
         guard !colorway.identity else { return }
-        let rules = colorway.rules.compactMap { rule -> (WardrobeColorRule, Tone, Tone)? in
+        let rules = colorway.rules.compactMap { rule -> (WardrobeColorRule, [Tone])? in
             guard rule.hue.count == 2, rule.saturation.count == 2, rule.luminance.count == 2,
                   (rule.hue + rule.saturation + rule.luminance).allSatisfy(\.isFinite),
-                  rule.luminance[1] > rule.luminance[0], rule.targets.count == 2,
-                  let a = rgb(rule.targets[0]), let b = rgb(rule.targets[1]) else { return nil }
-            return (rule, Tone(hex: a), Tone(hex: b))
+                  rule.luminance[1] > rule.luminance[0] else { return nil }
+            let ramp = rule.stops ?? rule.targets
+            guard rule.stops == nil ? ramp.count == 2 : (3...5).contains(ramp.count) else { return nil }
+            let colors = ramp.compactMap(rgb)
+            guard colors.count == ramp.count else { return nil }
+            return (rule, colors.map { Tone(hex: $0) })
         }
         for i in stride(from: 0, to: rgba.count - rgba.count % 4, by: 4) where rgba[i + 3] > 0 {
             let r = Double(rgba[i]), g = Double(rgba[i + 1]), b = Double(rgba[i + 2])
@@ -71,7 +91,7 @@ enum WardrobePalette {
             let tone = Tone(r / 255, g / 255, b / 255)
             let saturation = (hi - lo) / hi
             let shellLuminance = (r + g + b) / 3
-            for (rule, a, z) in rules {
+            for (rule, ramp) in rules {
                 let luminance = ["glow", "accents"].contains(rule.kind) ? hi : shellLuminance
                 let inHue = rule.hue[0] <= rule.hue[1]
                     ? (rule.hue[0]...rule.hue[1]).contains(tone.h)
@@ -79,7 +99,11 @@ enum WardrobePalette {
                 guard inHue, saturation >= rule.saturation[0], saturation <= rule.saturation[1],
                       luminance >= rule.luminance[0], luminance <= rule.luminance[1] else { continue }
                 // Pikselin aralik icindeki aydinligi hedef rampada korunur.
-                let t = (luminance - rule.luminance[0]) / (rule.luminance[1] - rule.luminance[0])
+                let position = (luminance - rule.luminance[0]) / (rule.luminance[1] - rule.luminance[0])
+                let segment = position * Double(ramp.count - 1)
+                let index = min(ramp.count - 2, Int(segment))
+                let t = segment - Double(index)
+                let a = ramp[index], z = ramp[index + 1]
                 let dh = (z.h - a.h + 540).truncatingRemainder(dividingBy: 360) - 180
                 let h = (a.h + dh * t + 360).truncatingRemainder(dividingBy: 360)
                 let channels = Tone.channels(h: h, s: a.s + (z.s - a.s) * t, l: a.l + (z.l - a.l) * t)

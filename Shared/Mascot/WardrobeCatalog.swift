@@ -3,6 +3,12 @@ import Foundation
 // Kimlikler sanat dosyalarinin kok adlariyla aynidir.
 enum WardrobeCatalog {
     static let items: [WardrobeItem] = [
+        .init(id: "skin-paladin", name: "Solar Paladin", slot: .skin, unlock: .coins(3000)),
+        .init(id: "skin-nova", name: "Nova Pilot", slot: .skin, unlock: .coins(3500)),
+        .init(id: "skin-aurora", name: "Aurora Warden", slot: .skin, unlock: .coins(4000)),
+        .init(id: "skin-celestial", name: "Celestial Guardian", slot: .skin, unlock: .coins(5000)),
+        .init(id: "skin-obsidian", name: "Obsidian Knight", slot: .skin, unlock: .coins(6000)),
+        .init(id: "skin-seraph", name: "Eternal Seraph", slot: .skin, unlock: .coins(10000)),
         .init(id: "ataturk-portrait", name: "Atatürk portrait", slot: .wallLeft, unlock: .free),
         .init(id: "turkish-flag", name: "Turkish flag", slot: .wallRight, unlock: .free),
         .init(id: "cap", name: "Cap", slot: .head, unlock: .free),
@@ -62,12 +68,13 @@ enum WardrobeCatalog {
 
 /// Shopping categories describe the object, independently of its placement slot.
 enum WardrobeCategory: String, CaseIterable, Identifiable, Sendable {
-    case headwear, eyewear, neckwear, back, handheld, colors
+    case skins, headwear, eyewear, neckwear, back, handheld, colors
     case rooms, furniture, plants, lighting, decor
 
     var id: String { rawValue }
     var title: String {
         switch self {
+        case .skins: String(localized: "Skins", bundle: .app)
         case .headwear: String(localized: "Headwear", bundle: .app)
         case .eyewear: String(localized: "Eyewear", bundle: .app)
         case .neckwear: String(localized: "Neck accessories", bundle: .app)
@@ -83,6 +90,7 @@ enum WardrobeCategory: String, CaseIterable, Identifiable, Sendable {
     }
     var symbol: String {
         switch self {
+        case .skins: "shield.lefthalf.filled"
         case .headwear: "graduationcap"
         case .eyewear: "eyeglasses"
         case .neckwear: "medal"
@@ -114,6 +122,7 @@ extension WardrobeItem {
         default: break
         }
         switch slot {
+        case .skin: return .skins
         case .head: return .headwear
         case .face: return .eyewear
         case .neck: return .neckwear

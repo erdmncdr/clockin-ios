@@ -126,13 +126,18 @@ private struct WardrobeThumbnail: View {
     var body: some View {
         Group {
             if let image { Image(decorative: image, scale: 1).resizable().interpolation(.none).scaledToFit() }
-            else { Image(systemName: item.slot == .colorway ? "paintpalette" : "square.dashed").foregroundStyle(.secondary) }
+            else { Image(systemName: item.slot == .colorway ? "paintpalette" : (item.slot == .skin ? "shield.lefthalf.filled" : "square.dashed")).foregroundStyle(.secondary) }
         }
         .task(id: item.id) {
             let item = item
             let decoded = await Task.detached(priority: .utility) {
                 if item.slot == .colorway {
                     return await WardrobeFrameCache.shared.image("h01", colorway: item.id)
+                }
+                if item.slot == .skin {
+                    var outfit = WardrobeState()
+                    outfit.equipped[WardrobeSlot.skin.rawValue] = item.id
+                    return await WardrobeFrameCache.shared.composite(frame: "h01", outfit: outfit, size: 132)
                 }
                 if item.slot == .room { return WardrobeArt.home.rooms[item.id].flatMap { WardrobeArt.decode($0.file, folder: "Home") } }
                 if WardrobeSlot.furniture.contains(item.slot) { return WardrobeArt.home.items[item.id].flatMap { WardrobeArt.decode($0.file, folder: "Home") } }

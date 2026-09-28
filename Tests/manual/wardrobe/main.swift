@@ -43,7 +43,7 @@ let allBadges = Set(InsightsSnapshot(sessions: [], sessionEarnings: [:], now: st
 for item in WardrobeCatalog.items {
     switch item.unlock {
     case .free: check(true, "\(item.id) free rule")
-    case .coins(let n): check((50...1500).contains(n), "\(item.id) valid price")
+    case .coins(let n): check((item.slot == .skin ? 3000...10000 : 50...1500).contains(n), "\(item.id) valid price")
     case .hours(let n), .level(let n), .streak(let n): check(n > 0, "\(item.id) valid milestone")
     case .badge(let id): check(allBadges.contains(id), "\(item.id) valid badge")
     }
@@ -106,6 +106,8 @@ let realColors = real("Frames/colorways.json", [String: WardrobeColorway].self)
 let realAnchors = real("Frames/mascot-anchors.json", [String: WardrobeAnchors].self)
 let realSprites = real("Wardrobe/wardrobe-sprites.json", [String: WardrobeSprite].self)
 let realHome = real("Home/home-items.json", WardrobeHome.self)
+struct SkinManifest: Decodable { let skins: [String: WardrobeSkin] }
+let realSkins = real("Skins/skins.json", SkinManifest.self).skins
 check((try! Data(contentsOf: artRoot.appendingPathComponent("Frames/colorways.json"))).count < 20_000, "real colorway file under 20 KB")
 for (id, way) in realColors {
     check(Set(way.rules.map(\.kind)) == Set(["shell", "highlights", "grays", "joints", "accents", "glow"]), "\(id) has all six classes")
@@ -120,6 +122,13 @@ for (id, way) in realColors {
 for item in WardrobeCatalog.items {
     let file: String
     switch item.slot {
+    case .skin:
+        let skin = realSkins[item.id]
+        check(skin != nil, "catalog skin manifest \(item.id)")
+        for piece in skin?.pieces ?? [] {
+            check(FileManager.default.fileExists(atPath: artRoot.appendingPathComponent("Skins/" + piece.id + ".png").path), "catalog skin piece \(piece.id)")
+        }
+        continue
     case .colorway:
         check(realColors[item.id] != nil, "catalog colorway \(item.id)")
         continue
@@ -249,7 +258,7 @@ for frame in realAnchors.keys.sorted() {
 }
 let fixedAnchors = real("Frames/fixed-pose-anchors.json", [String: WardrobeAnchors].self)
 check(Set(fixedAnchors.keys) == Set(["pose2", "pose3", "pose4"]), "all fixed poses have anchors")
-let allArtIDs = Set(realSprites.keys).union(realColors.keys).union(realHome.rooms.keys).union(realHome.items.keys)
+let allArtIDs = Set(realSprites.keys).union(realColors.keys).union(realHome.rooms.keys).union(realHome.items.keys).union(realSkins.keys)
 check(Set(WardrobeCatalog.items.map(\.id)) == allArtIDs, "every art item is accessible in the catalog")
 for id in ["pose2", "pose3", "pose4"] {
     let poseURL = artRoot.deletingLastPathComponent().deletingLastPathComponent()

@@ -1404,3 +1404,531 @@ if CommandLine.arguments.last == "fixed-anchors" {
     }
     try saveJSON(fixed, framesDir.appendingPathComponent("fixed-pose-anchors.json"))
 }
+
+// Armour uses five hard tones on the same two-pixel cells as the garments.
+struct SkinMetal {
+    let tones: [Pixel]
+    init(_ hexes: [String]) { tones = hexes.map(color) }
+    subscript(_ index: Int) -> Pixel { tones[index] }
+}
+struct SkinDesign {
+    let id: String, name: String
+    let plate: SkinMetal, trim: SkinMetal, energy: SkinMetal
+    let aura: String
+}
+enum SkinArt {
+    static let designs: [SkinDesign] = [
+        .init(id: "skin-paladin", name: "Solar Paladin",
+              plate: SkinMetal(["514137", "A79A79", "DEDBC8", "FFF4D9", "FFFFFF"]),
+              trim: SkinMetal(["4A291F", "98602B", "DDA73D", "FFE594", "FFFBE6"]),
+              energy: SkinMetal(["50290C", "C37218", "FFA924", "FFE67D", "FFFFE4"]), aura: "embers"),
+        .init(id: "skin-nova", name: "Nova Pilot",
+              plate: SkinMetal(["10182B", "25334C", "495D79", "829AAE", "C3EAF6"]),
+              trim: SkinMetal(["092635", "086578", "15A4BF", "55ECF6", "D8FFFF"]),
+              energy: SkinMetal(["161448", "8133AD", "E357C6", "67F3FF", "F0FFFF"]), aura: "sparks"),
+        .init(id: "skin-aurora", name: "Aurora Warden",
+              plate: SkinMetal(["263549", "637385", "AFBCC9", "E0E9F1", "FFFFFF"]),
+              trim: SkinMetal(["0A302D", "12644F", "229F76", "6CE2B0", "D7FFF1"]),
+              energy: SkinMetal(["113934", "1B826B", "55D49C", "A4FFE2", "ECFFF4"]), aura: "motes"),
+        .init(id: "skin-celestial", name: "Celestial Guardian",
+              plate: SkinMetal(["25304F", "596788", "A5B6D0", "DAE7F5", "FFFFFF"]),
+              trim: SkinMetal(["13182D", "28385D", "536B9A", "93BCE0", "E1F8FF"]),
+              energy: SkinMetal(["162D65", "366BB9", "83C6FF", "C9F0FF", "FFFFFF"]), aura: "stars"),
+        .init(id: "skin-obsidian", name: "Obsidian Knight",
+              plate: SkinMetal(["080812", "141224", "211A31", "392D4D", "756587"]),
+              trim: SkinMetal(["240E21", "601C37", "A72B45", "ED5E70", "FFC4BE"]),
+              energy: SkinMetal(["330B20", "7F102E", "D32448", "FF5871", "FFE2DA"]), aura: "embers"),
+        .init(id: "skin-seraph", name: "Eternal Seraph",
+              plate: SkinMetal(["5C536C", "A9A1B7", "E9CCE6", "CDF7F3", "FFFFFF"]),
+              trim: SkinMetal(["514453", "A78C6F", "DCC9A0", "FFF1CF", "FFFFFF"]),
+              energy: SkinMetal(["4B346A", "B786D0", "FFB8E8", "AAFAF2", "FFFFFF"]), aura: "feathers")
+    ]
+}
+extension Art {
+    mutating func plate(_ points: [(Int, Int)], _ metal: SkinMetal, cast: Bool = true) {
+        var mask = Art(); mask.poly(points, paper)
+        let pixels = (0..<(b.width * b.height)).filter { mask.b[$0 % b.width, $0 / b.width].a > 0 }
+        guard !pixels.isEmpty else { return }
+        let r = bounds(pixels, width: b.width)
+        func inside(_ x: Int, _ y: Int) -> Bool {
+            x >= 0 && y >= 0 && x < mask.b.width && y < mask.b.height && mask.b[x,y].a > 0
+        }
+        if cast { for i in pixels { rect(i % b.width + 1, i / b.width + 2, 1, 1, metal[0]) } }
+        for i in pixels {
+            let x = i % b.width, y = i / b.width
+            let f = Double(x - r.x0) / Double(max(1, r.width)) + Double(y - r.y0) / Double(max(1, r.height)) * 0.6
+            var tone = f < 0.58 ? 3 : (f < 1.04 ? 2 : 1)
+            if !inside(x, y + 1) || !inside(x + 1, y) { tone = 0 }
+            if !inside(x - 1, y) || !inside(x, y - 1) { tone = 4 }
+            if inside(x-1,y) && inside(x+1,y) && inside(x,y-1) && inside(x,y+1), abs(f - 0.38) < 0.045 { tone = 4 }
+
+            rect(x,y,1,1,metal[tone])
+        }
+    }
+    // A curved feather has a broad vane and a rounded tip, with its own
+    // shadow, lit edge and shaft. Sample the curve on the native art grid.
+    mutating func feather(_ base: (Int,Int), _ bend: (Int,Int), _ tip: (Int,Int),
+                          _ width: Double, _ metal: SkinMetal, pearl: Bool = false) {
+        var left = [(Int,Int)](), right = [(Int,Int)]()
+        var spine = [(Double,Double,Double,Double,Double)]()
+        for step in 0...32 {
+            let t = Double(step)/32, u = 1-t
+            let x = u*u*Double(base.0)+2*u*t*Double(bend.0)+t*t*Double(tip.0)
+            let y = u*u*Double(base.1)+2*u*t*Double(bend.1)+t*t*Double(tip.1)
+            let dx = 2*u*Double(bend.0-base.0)+2*t*Double(tip.0-bend.0)
+            let dy = 2*u*Double(bend.1-base.1)+2*t*Double(tip.1-bend.1)
+            let length = max(1,hypot(dx,dy)), nx = -dy/length, ny = dx/length
+            let radius = width * sqrt(max(0,1-pow(2*t-1,2))) / 2
+            left.append((Int((x+nx*radius).rounded()),Int((y+ny*radius).rounded())))
+            right.append((Int((x-nx*radius).rounded()),Int((y-ny*radius).rounded())))
+            spine.append((x,y,nx,ny,t))
+        }
+        var mask = Art(); mask.poly(left + right.reversed(),paper)
+        let points = (0..<(b.width*b.height)).filter { mask.b[$0%b.width,$0/b.width].a > 0 }
+        func inside(_ x: Int,_ y: Int) -> Bool {
+            x >= 0 && y >= 0 && x < b.width && y < b.height && mask.b[x,y].a > 0
+        }
+        for i in points { rect(i%b.width+1,i/b.width+1,1,1,metal[0]) }
+        for i in points {
+            let x=i%b.width, y=i/b.width
+            let near = spine.min { hypot($0.0-Double(x),$0.1-Double(y)) < hypot($1.0-Double(x),$1.1-Double(y)) }!
+            let across = (Double(x)-near.0)*near.2+(Double(y)-near.1)*near.3
+            var tone = across < -0.7 ? 1 : (across < 0.8 ? 2 : 3)
+            if !inside(x+1,y) || !inside(x,y+1) { tone=0 }
+            if !inside(x-1,y) || !inside(x,y-1) { tone=4 }
+            var pigment = metal[tone]
+            if pearl && tone > 0 {
+                // Rose at the root, lavender mid-vane, cyan toward pearl tips.
+                let ramp = [color("E8ABCF"),color("D3B9E6"),color("A5E6EB"),color("FFFFFF")]
+                let stop = min(3,Int(near.4*4))
+                pigment = tone == 4 || near.4 > 0.86 ? paper : ramp[stop]
+                if tone == 1 { pigment = color(stop < 2 ? "917C9E" : "689FAF") }
+            }
+            rect(x,y,1,1,pigment)
+        }
+        for point in spine where point.4 > 0.15 && point.4 < 0.78 {
+            rect(Int(point.0),Int(point.1),1,1,pearl ? color("EFFAF5") : metal[3])
+        }
+    }
+    mutating func pearl(_ x: Int, _ y: Int, _ r: Int) {
+        let tones = ["59465F","93869F","D9C7DD","DDF5F1","FFFFFF"].map(color)
+        ellipse(x-r-1,y-r-1,r*2+3,r*2+3,tones[0])
+        ellipse(x-r,y-r,r*2+1,r*2+1,tones[1])
+        ellipse(x-r,y-r,r*2,r*2-1,tones[2])
+        ellipse(x-r+1,y-r+1,max(2,r+1),max(2,r),tones[3])
+        rect(x-1,y-r+1,2,1,tones[4])
+    }
+    mutating func starMedallion(_ x: Int, _ y: Int, _ radius: Int, _ metal: SkinMetal) {
+        let points = (0..<16).map { i -> (Int,Int) in
+            let angle = Double(i)*Double.pi/8-Double.pi/2
+            let r = Double(i%2 == 0 ? (i%4 == 0 ? radius : radius-3) : radius/3)
+            return (x+Int((cos(angle)*r).rounded()),y+Int((sin(angle)*r).rounded()))
+        }
+        plate(points,metal)
+    }
+    mutating func gem(_ x: Int, _ y: Int, _ radius: Int, _ metal: SkinMetal) {
+        poly([(x,y-radius-1),(x+radius+1,y),(x,y+radius+1),(x-radius-1,y)],ink)
+        poly([(x,y-radius),(x+radius,y),(x,y+radius),(x-radius,y)],metal[2])
+        poly([(x,y-radius),(x,y),(x-radius,y)],metal[4])
+        poly([(x,y),(x+radius,y),(x,y+radius)],metal[0])
+        rect(x-1,y-1,2,2,metal[3]); rect(x-1,y-radius+1,1,1,paper)
+    }
+}
+
+func makeSkins() throws {
+    let directory = root.appendingPathComponent("Shared/Mascot/Skins")
+    let reviews = root.appendingPathComponent("build/skin-previews")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: reviews, withIntermediateDirectories: true)
+    let anchors = try json(framesDir.appendingPathComponent("mascot-anchors.json"))
+        .merging(json(framesDir.appendingPathComponent("fixed-pose-anchors.json"))) { a, _ in a }
+    var sources = [String: Bitmap]()
+    for id in anchors.keys.sorted() {
+        let url = id.hasPrefix("pose")
+            ? root.appendingPathComponent("Clockin/Assets.xcassets/\(id).imageset/\(id).png")
+            : framesDir.appendingPathComponent(id + ".png")
+        let original = Bitmap(url: url)
+        var frame = Bitmap(width: 314, height: 314)
+        frame.blit(original, 0, 0, width: 314, height: 314)
+        sources[id] = frame
+    }
+    var shoulders = [String: [String: [Int]]]()
+    for id in anchors.keys.sorted() {
+        let a = anchors[id] as! [String: Any], neck = a["neck"] as! [Int], frame = sources[id]!
+        let family = id == "pose3" ? "e" : String(id.prefix(1))
+        // Measured joint offsets, then snap to the closest dark connection pixel.
+        // The far arm is hidden by the cup or keyboard in seated side views.
+        let offsets: [(String, Int, Int)]
+        if id == "pose2" { offsets = [] }
+        else if family == "c" { offsets = [("shoulderR", 42, 13)] }
+        else if family == "t" { offsets = [("shoulderL", -42, 13)] }
+        else if family == "e" { offsets = [("shoulderL", -29, 10), ("shoulderR", 34, 12)] }
+        else if id == "pose4" { offsets = [("shoulderL", -32, 8), ("shoulderR", 32, 10)] }
+        else { offsets = [("shoulderL", -31, -5), ("shoulderR", 31, -5)] }
+        var points = [String: [Int]]()
+        for (key, dx, dy) in offsets {
+            let targetX = neck[0] + dx, targetY = neck[1] + dy
+            var candidates = [(Int, Int)]()
+            for y in (targetY-5)...(targetY+5) { for x in (targetX-5)...(targetX+5) where x >= 0 && x < 314 && y >= 0 && y < 314 {
+                if isDark(frame[x,y]) { candidates.append((x,y)) }
+            } }
+            if let p = candidates.min(by: { pow(Double($0.0-targetX),2)+pow(Double($0.1-targetY),2) < pow(Double($1.0-targetX),2)+pow(Double($1.1-targetY),2) }) {
+                points[key] = [p.0 / 2 * 2, p.1 / 2 * 2]
+            } else { points[key] = [targetX / 2 * 2, targetY / 2 * 2] }
+        }
+        shoulders[id] = points
+    }
+    let base = try JSONDecoder().decode([String: WardrobeColorway].self, from: Data(contentsOf: framesDir.appendingPathComponent("colorways.json")))["classic"]!
+    var skins = [String: Any](), rasters = [String: Bitmap]()
+    for design in SkinArt.designs {
+        let id = design.id, plate = design.plate, trim = design.trim, energy = design.energy
+        var pieces = [[String: Any]]()
+        func piece(_ name: String, _ anchor: String, _ pivot: [Int], _ layer: String = "front",
+                   motion: String? = nil, offsets: [String: [Int]] = [:], draw: (inout Art) -> Void) {
+            var art = Art(); draw(&art)
+            let (bitmap, fitted) = art.sprite(pivot: pivot)
+            let key = id + "-" + name
+            bitmap.write(directory.appendingPathComponent(key + ".png")); rasters[key] = bitmap
+            var entry: [String: Any] = ["id": key, "anchorPoint": anchor, "pivot": fitted, "layer": layer, "poseOffsets": offsets]
+            if let motion { entry["motion"] = motion }
+            // The raised fists cross the entire brow in this pose. Keep the
+            // head adornment off; the back-layer halo still shows behind them.
+            if name == "helm" { entry["omittedFrames"] = ["pose2"] }
+            pieces.append(entry)
+        }
+        if ["skin-paladin", "skin-seraph"].contains(id) {
+            piece("halo", "head", [70,50], "back") { art in
+                for ring in 0..<(id == "skin-seraph" ? 2 : 1) {
+                    let rx = 30 - ring * 7, ry = 26 - ring * 6
+                    for step in 0..<240 {
+                        let angle = Double(step) / 240 * .pi * 2
+                        let x = 70 + Int(cos(angle) * Double(rx)), y = 61 + Int(sin(angle) * Double(ry))
+                        art.rect(x,y,1,1,trim[step < 120 ? 2 : 4])
+                    }
+                }
+                for (x,y) in [(40,61),(100,61),(70,35)] { art.gem(x,y,2,energy) }
+            }
+            piece("wings", "back", [75,60], "back", motion: "flap", offsets: ["c": [-16,-2], "t": [4,0], "pose2": [6,0], "pose4": [8,0]]) { art in
+                let seraph = id == "skin-seraph"
+                for side in [-1,1] {
+                    func point(_ x: Int,_ y: Int) -> (Int,Int) { (75+side*x,60+y) }
+                    func feather(_ x: Int,_ y: Int,_ bx: Int,_ by: Int,_ tx: Int,_ ty: Int,_ width: Double) {
+                        art.feather(point(x,y),point(bx,by),point(tx,ty),width,plate,pearl:seraph)
+                    }
+                    if seraph {
+                        // Lower pair: small, hanging down with clear space above the tips.
+                        for i in (0..<4).reversed() {
+                            feather(12+i*3,18+i,28+i*3,32,23+i*5,53-i*3,7)
+                        }
+                        // Middle pair: horizontal sweep; short scalloped trailing edge.
+                        for i in (0..<6).reversed() {
+                            feather(17+i*5,0-i,35+i*4,9+i,36+i*4,25-i*4,8)
+                        }
+                        for i in 0..<5 { feather(15+i*7,-2-i,23+i*7,0-i,27+i*7,7-i,6) }
+                        // Upper pair: raised arm and long rounded primaries.
+                        for i in (0..<5).reversed() {
+                            feather(25+i*5,-32-i*4,37+i*4,-28-i*4,39+i*5,-8-i*10,9)
+                        }
+                        art.feather(point(11,-4),point(20,-48),point(46,-55),8,plate,pearl:true)
+                        for i in 0..<6 { feather(19+i*5,-15-i*6,24+i*5,-14-i*6,29+i*5,-9-i*6,5) }
+                    } else {
+                        // Primaries follow the curved arm; their ends fan DOWN,
+                        // rather than radiating as straight spikes from the back.
+                        for i in (0..<8).reversed() {
+                            feather(18+i*4,-8-i*4,27+i*5,14-i*5,25+i*5,30-i*7,9)
+                        }
+                        for i in (0..<6).reversed() {
+                            feather(15+i*5,-7-i*4,22+i*5,0-i*4,27+i*5,9-i*4,8)
+                        }
+                        art.feather(point(10,4),point(18,-35),point(47,-40),9,plate)
+                        for i in 0..<7 { feather(14+i*5,-5-i*5,18+i*5,-7-i*4,23+i*5,-1-i*4,5) }
+                    }
+                }
+            }
+        } else if id == "skin-nova" {
+            piece("thrusters", "back", [70,48], "back", offsets: ["t": [-12,0], "c": [12,-6], "pose2": [-6,0]]) { art in
+                for side in [-1,1] {
+                    let x = 70 + side*24
+                    art.plate([(x-9,32),(x+6,29),(x+10,36),(x+9,70),(x-8,70),(x-10,39)],plate)
+                    art.plate([(x-7,34),(x+3,33),(x+6,39),(x+5,62),(x-7,62)],trim)
+                    for y in stride(from:40,to:59,by:5) { art.line(x-5,y,x+3,y-1,plate[0],2) }
+                    art.plate([(x-7,67),(x+7,67),(x+5,75),(x-5,75)],plate)
+                    art.poly([(x-5,75),(x+5,75),(x+7,87),(x+2,83),(x,99),(x-3,85),(x-6,88)],energy[1])
+                    art.poly([(x-3,75),(x+3,75),(x+2,86),(x,93),(x-2,84)],trim[3])
+                    art.line(x-1,75,x,85,trim[4],2)
+                    art.rect(x-6,35,2,3,energy[2])
+                }
+                art.plate([(60,43),(80,43),(80,54),(60,54)],plate)
+            }
+        } else {
+            piece("cape", "back", [70,40], "back", motion: "sway", offsets: ["c": [12,-8], "t": [-12,0], "pose2": [-6,0], "pose4": [-8,0]]) { art in
+                let cloth = id == "skin-aurora" ? SkinMetal(["192B48","264A60","337F80","66BBA9","B5E8C8"])
+                    : (id == "skin-celestial" ? SkinMetal(["0D122C","1B284A","30446D","526F96","A4C7E8"]) : trim)
+                let hem: [(Int,Int)] = id == "skin-obsidian"
+                    ? [(107,92),(99,87),(96,96),(87,88),(82,99),(73,92),(63,99),(58,89),(47,96),(43,87),(34,94)]
+                    : [(106,93),(92,97),(75,99),(57,97),(34,93)]
+                art.plate([(52,38),(70,40),(88,38),(98,56)] + hem + [(42,56)],cloth)
+                for fold in 0..<7 {
+                    let x = 44 + fold*8
+                    let end = 91 + (fold%3)*2
+                    art.plate([(60+fold*3,42),(x+3,70),(x+4,end),(x-2,end-1),(x-1,72)],cloth,cast:false)
+                    art.line(x+3,78,x+4,end,cloth[1])
+                    if id == "skin-aurora" {
+                        art.line(x,76,x+1,end-4,color(fold%2 == 0 ? "967EC3" : "63C4C4"),2)
+                        art.line(x-1,83,x,end-2,color("574B91"))
+                    }
+                }
+                if id == "skin-aurora" {
+                    let clothMask = art.b
+                    let curtain = ["153F43","238B78","69EBC1","278EAA","5262A0","9A74CB","DF9EC9"].map(color)
+                    func blend(_ a: Pixel,_ b: Pixel,_ t: Double) -> Pixel {
+                        Pixel(r:UInt8(Double(a.r)*(1-t)+Double(b.r)*t),
+                              g:UInt8(Double(a.g)*(1-t)+Double(b.g)*t),
+                              b:UInt8(Double(a.b)*(1-t)+Double(b.b)*t),a:255)
+                    }
+                    for y in 38...100 { for x in 33...108 where clothMask[x,y].a > 0 {
+                        let wave = Double(x-34)+sin(Double(y)*0.075)*3
+                        let band = (wave/6).truncatingRemainder(dividingBy:6)
+                        let index = max(0,min(5,Int(band)))
+                        let pigment = blend(curtain[index],curtain[index+1],max(0,band-Double(index)))
+                        let fold = (sin(wave*0.66)+1)/2
+                        let rise = max(0,min(1,Double(y-42)/56))
+                        var shade = blend(color("142A40"),pigment,0.22+0.65*rise+0.13*fold)
+                        if fold < 0.18 { shade = blend(shade,color("20223E"),0.55) }
+                        if y > 83 && fold > 0.45 { shade = blend(shade,color("DCFFE5"),Double(y-83)/28) }
+                        art.rect(x,y,1,1,shade)
+                    } }
+                }
+                if id == "skin-celestial" {
+                    let stars = [(43,69),(49,79),(40,88),(90,65),(96,77),(91,89),(78,94)]
+                    for i in 1..<stars.count where i != 3 { art.line(stars[i-1].0,stars[i-1].1,stars[i].0,stars[i].1,cloth[3]) }
+                    for (x,y) in stars { art.star(x-2,y-2,energy[3]); art.rect(x,y,1,1,paper) }
+                }
+                art.line(43,90,58,95,trim[3]); art.line(89,95,101,91,trim[3])
+            }
+        }
+        piece("helm", "head", [70,42]) { art in
+            if id == "skin-paladin" {
+                for side in [-1,1] {
+                    for (tx,ty) in [(36,34),(34,40),(29,45)] {
+                        art.feather((70+side*15,44),(70+side*25,40),
+                                    (70+side*tx,ty),6,trim)
+                    }
+                }
+            } else if id == "skin-seraph" {
+                for side in [-1,1] {
+                    for i in (0..<3).reversed() {
+                        art.feather((70+side*2,39),(70+side*7,37-i*2),(70+side*(10+i*2),34-i),4,plate,pearl:true)
+                    }
+                }
+            } else if id == "skin-obsidian" {
+                for side in [-1,1] {
+                    art.plate([(70+side*15,44),(70+side*24,36),(70+side*25,24),(70+side*19,29),(70+side*19,35),(70+side*11,40)],plate)
+                    art.line(70+side*23,27,70+side*22,36,trim[2])
+                }
+            } else if id == "skin-aurora" {
+                for side in [-1,1] {
+                    art.plate([(70+side*14,44),(70+side*20,35),(70+side*24,25),(70+side*22,40),(70+side*17,47)],trim)
+                    art.plate([(70+side*19,35),(70+side*29,30),(70+side*30,25),(70+side*23,31)],plate)
+                    art.plate([(70+side*18,36),(70+side*15,28),(70+side*16,23),(70+side*21,32)],plate)
+                }
+            } else if id == "skin-celestial" {
+                // An open crescent cut from a separately shaded plate.
+                var moon = Art(); moon.plate([(65,22),(74,23),(69,27),(67,32),(71,37),(77,38),(73,42),(66,41),(61,36),(60,29)],plate)
+                art.b.blit(moon.b,0,0)
+                art.star(74,25,energy[3])
+            } else {
+                for side in [-1,1] {
+                    art.plate([(70+side*14,40),(70+side*23,41),(70+side*25,49),(70+side*20,53),(70+side*18,46)],plate)
+                    art.line(70+side*20,43,70+side*22,48,trim[3],2)
+                }
+            }
+            if id == "skin-seraph" {
+                art.plate([(52,42),(60,43),(70,40),(80,43),(88,42),(87,46),(80,47),(70,44),(60,47),(53,46)],trim)
+                for x in stride(from:55,through:85,by:5) { art.pearl(x,44,1) }
+                art.pearl(70,40,3)
+            } else {
+                art.plate([(52,42),(61,42),(70,37),(79,42),(88,42),(86,47),(77,47),(70,44),(63,47),(54,47)],trim)
+                art.line(55,43,63,43,trim[4]); art.line(77,44,85,44,trim[2])
+                art.gem(70,41,3,energy)
+            }
+        }
+
+        for (side, name) in [(-1,"shoulderL"),(1,"shoulderR")] {
+            piece(name, name, [70,50]) { art in
+                func p(_ x: Int,_ y: Int) -> (Int,Int) { (70+side*x,y) }
+                switch id {
+                case "skin-paladin":
+                    for row in 0..<3 {
+                        let y=41+row*4
+                        art.plate([p(-10,y+5),p(-8,y+1),p(-2,y-1),p(6,y),p(12,y+4),p(13,y+8),p(8,y+11),p(-7,y+10)],trim)
+                        art.plate([p(-8,y+5),p(-6,y+2),p(0,y+1),p(6,y+3),p(10,y+6),p(9,y+9),p(-7,y+9)],plate,cast:false)
+                    }
+                    art.rect(66,43,2,1,paper)
+                case "skin-nova":
+                    art.plate([p(-11,44),p(-5,39),p(11,40),p(16,48),p(10,58),p(-8,55)],plate)
+                    art.plate([p(-7,44),p(-3,42),p(8,43),p(11,48),p(-5,49)],trim)
+                    for i in 0..<3 { art.line(65+i*4,44,67+i*4,47,plate[0],2) }
+                    art.line(62,52,79,54,trim[0],2); art.line(63,52,78,53,trim[3]); art.rect(63,52,3,1,trim[4])
+                case "skin-aurora":
+                    for i in (0..<3).reversed() {
+                        let x = -7+i*6
+                        art.plate([p(x,43),p(x+6,45),p(x+10,50),p(x+12,58-i),p(x+4,57-i),p(x,51)],plate)
+                        art.line(70+side*(x+2),46,70+side*(x+9),54-i,trim[2])
+                        art.rect(70+side*(x+3),46,1,1,paper)
+                    }
+                case "skin-celestial":
+                    art.plate([p(-9,42),p(-3,40),p(6,41),p(13,47),p(14,55),p(9,60),p(1,59),p(-5,55),p(-9,48),p(-3,51),p(3,53),p(7,50),p(6,46),p(1,43)],plate)
+                    art.starMedallion(70+side*8,51,4,energy)
+                case "skin-obsidian":
+                    art.plate([p(-9,48),p(-4,43),p(3,44),p(9,33),p(12,45),p(18,37),p(17,52),p(10,60),p(-6,56)],plate)
+                    art.plate([p(-7,49),p(1,46),p(12,49),p(11,53),p(-4,53)],trim)
+                    art.gem(70+side*4,50,2,energy)
+                default:
+                    for i in (0..<3).reversed() {
+                        art.feather(p(-7+i*4,44),p(3+i*4,47),p(4+i*4,56+i),6,plate,pearl:true)
+                    }
+                    art.pearl(70,46,2)
+                }
+                let fitted = art.b
+                art.b = Bitmap(width:180,height:140)
+                art.b.blit(fitted,0,4)
+            }
+        }
+        piece("chest", "neck", [70,43], offsets: ["c": [0,2], "t": [0,2], "pose2": [0,2]]) { art in
+            switch id {
+            case "skin-paladin":
+                // Gold-edged linen falls from the breast to the knees.
+                let cloth = SkinMetal(["6B6574","AEA7B0","E5E0DD","FFF9EE","FFFFFF"])
+                art.plate([(60,43),(80,43),(79,58),(82,78),(71,83),(58,78),(61,58)],trim)
+                art.plate([(62,44),(78,44),(77,59),(80,76),(71,80),(60,76),(63,58)],cloth)
+                art.poly([(63,48),(65,57),(63,76),(60,76)],cloth[1])
+                art.poly([(74,48),(73,60),(77,78),(80,76),(77,58)],cloth[1])
+                art.line(67,61,66,77,cloth[4]); art.line(72,63,73,78,cloth[3])
+                for i in 0..<12 {
+                    let a=Double(i)*Double.pi/6
+                    art.line(70+Int(cos(a)*5),54+Int(sin(a)*5),70+Int(cos(a)*8),54+Int(sin(a)*8),trim[2])
+                }
+                art.ellipse(66,50,9,9,trim[0]); art.ellipse(66,50,8,8,trim[2]); art.ellipse(67,51,5,5,trim[3])
+                art.rect(68,51,2,1,trim[4]); art.line(62,75,70,78,trim[3])
+            case "skin-nova":
+                art.plate([(62,43),(77,43),(84,52),(78,63),(62,63),(56,53)],plate)
+                art.plate([(63,46),(76,46),(81,53),(76,60),(63,60),(59,53)],trim)
+                art.ellipse(61,45,18,17,plate[0]); art.ellipse(62,46,16,15,trim[1])
+                art.ellipse(63,47,14,13,trim[3]); art.ellipse(65,49,10,9,plate[0])
+                art.ellipse(66,50,8,7,plate[1]); art.ellipse(67,51,5,4,energy[2]); art.rect(68,51,2,2,energy[4])
+                art.line(64,48,68,47,trim[4],2); art.line(73,59,76,56,trim[2])
+            case "skin-aurora":
+                art.plate([(70,43),(80,45),(79,51),(75,57),(67,63),(60,59),(60,51),(65,47)],trim)
+                art.plate([(70,44),(77,46),(76,52),(66,60),(62,58),(63,51)],plate)
+                art.line(65,57,73,48,trim[2]); art.gem(70,52,4,energy)
+            case "skin-celestial":
+                art.line(58,43,64,48,trim[3],2); art.line(82,43,76,48,trim[3],2)
+                art.starMedallion(70,54,13,plate)
+                art.starMedallion(70,54,9,trim)
+                art.gem(70,54,4,energy)
+            case "skin-obsidian":
+                art.plate([(56,43),(61,46),(64,43),(69,47),(75,44),(79,47),(84,43),(82,54),(76,58),(70,61),(62,56),(58,53)],plate)
+                art.plate([(60,47),(66,49),(70,48),(76,49),(80,47),(77,54),(70,58),(63,54)],trim)
+                art.plate([(57,44),(56,39),(64,48),(61,51)],plate)
+                art.plate([(78,47),(84,39),(82,52),(78,53)],plate)
+                art.gem(70,52,5,energy)
+            default:
+                for side in [-1,1] {
+                    for i in (0..<3).reversed() {
+                        art.feather((70+side*2,48),(70+side*8,47+i),(70+side*(14-i*2),43+i*5),5,plate,pearl:true)
+                    }
+                }
+                art.plate([(66,43),(74,43),(76,48),(73,54),(67,54),(64,48)],trim)
+                art.pearl(70,48,4)
+            }
+        }
+        let glow = id == "skin-obsidian" ? ["330B20","7F102E","D32448","F72C46","FF3D56"].map(color) : energy.tones
+        let ramps = ["glow": glow, "accents": trim.tones,
+                     "joints": id == "skin-aurora" ? [trim[0],trim[1],trim[2]] : [plate[0],plate[0],plate[1]], "grays": [plate[0],plate[1],plate[2]],
+                     "shell": plate.tones, "highlights": [plate[2],plate[3],plate[4]]]
+        let rules: [[String: Any]] = base.rules.map { rule in
+            ["kind": rule.kind, "hue": rule.hue, "saturation": rule.saturation,
+             "luminance": rule.luminance, "stops": ramps[rule.kind]!.map(hex)]
+        }
+        skins[id] = ["id": id, "name": design.name, "material": ["name": design.name, "identity": false, "rules": rules],
+                     "hidesAntenna": true, "pieces": pieces,
+                     "effects": ["sheen": hex(plate[4]), "aura": design.aura,
+                                 "auraColors": [hex(energy[2]),hex(energy[3]),hex(energy[4])], "glow": hex(energy[3])]]
+    }
+    try saveJSON(["skins": skins, "shoulders": shoulders], directory.appendingPathComponent("skins.json"))
+    try skinReviews(skins: skins, shoulders: shoulders, anchors: anchors, sources: sources, rasters: rasters, directory: reviews)
+    print("ok: \(skins.count) skins, \(rasters.count) pieces, \(shoulders.count) shoulder maps; build/skin-previews")
+}
+
+func skinReviews(skins: [String: Any], shoulders: [String: [String: [Int]]], anchors: [String: Any],
+                 sources: [String: Bitmap], rasters: [String: Bitmap], directory: URL) throws {
+    let ids = ["h01","a01","e01","e02","p01","z01","c01","t01","pose2","pose3","pose4"]
+    func composite(_ id: String, _ frame: String) throws -> Bitmap {
+        let skin = skins[id] as! [String: Any], a = anchors[frame] as! [String: Any]
+        let material = try JSONDecoder().decode(WardrobeColorway.self, from: JSONSerialization.data(withJSONObject: skin["material"]!))
+        var robot = sources[frame]!, out = Bitmap(width:314,height:314)
+        if frame.hasPrefix("t") {
+            let coffee = sources["c01"]!
+            for y in 0..<54 { for x in 0..<132 { out[x+87,y+246] = coffee[124+131-x,224+y] } }
+            out.blit(robot,0,0); robot = out; out = Bitmap(width:314,height:314)
+        }
+        let rect: [Int]
+        switch frame {
+        case "pose2": rect = [149,59,10,18]
+        case "pose3": rect = [176,29,22,26]
+        case "pose4": rect = [90,25,19,27]
+        default:
+            switch frame.first {
+            case "t": rect = [108,51,19,28]
+            case "c": rect = [189,35,24,31]
+            case "e": rect = [frame == "e02" ? 179 : 176,29,22,26]
+            default: rect = [165,47,17,24]
+            }
+        }
+        robot.rect(rect[0],rect[1],rect[2],rect[3],.clear)
+        WardrobePalette.recolor(&robot.bytes,colorway:material)
+        let pieces = skin["pieces"] as! [[String:Any]]
+        func overlay(_ piece: [String:Any]) {
+            if (piece["omittedFrames"] as? [String])?.contains(frame) == true { return }
+            let anchorKey = piece["anchorPoint"] as! String
+            guard let point = anchorKey.hasPrefix("shoulder") ? shoulders[frame]?[anchorKey] : a[anchorKey] as? [Int] else { return }
+            let sprite = rasters[piece["id"] as! String]!, pivot = piece["pivot"] as! [Int]
+            let offsets = piece["poseOffsets"] as! [String:[Int]]
+            let offset = offsets[frame] ?? offsets[String(frame.prefix(1))] ?? [0,0]
+            let angle = anchorKey == "head" ? (a["tilt"] as! Double) * .pi / 180 : 0
+            for y in 0..<314 { for x in 0..<314 {
+                let dx = Double(x)+0.5-Double(point[0]+offset[0]), dy = Double(y)+0.5-Double(point[1]+offset[1])
+                let sx = Int(floor(dx*cos(angle)+dy*sin(angle)+Double(pivot[0])))
+                let sy = Int(floor(-dx*sin(angle)+dy*cos(angle)+Double(pivot[1])))
+                if sx >= 0 && sx < sprite.width && sy >= 0 && sy < sprite.height && sprite[sx,sy].a > 0 { out[x,y] = sprite[sx,sy] }
+            } }
+        }
+        for piece in pieces where piece["layer"] as! String == "back" { overlay(piece) }
+        out.blit(robot,0,0)
+        for piece in pieces where piece["layer"] as! String == "front" { overlay(piece) }
+        return out
+    }
+    var all = Bitmap(width:6*942,height:990,fill:color("111725"))
+    var small = Bitmap(width:6*120,height:150,fill:color("111725"))
+    for (column,design) in SkinArt.designs.enumerated() {
+        let idle = try composite(design.id,"h01")
+        var closeup = Bitmap(width:1256,height:1256,fill:color("111725"))
+        closeup.blit(idle,0,0,width:1256,height:1256)
+        closeup.write(directory.appendingPathComponent("closeup-"+design.id+".png"))
+        all.blit(idle,column*942,40,width:942,height:942); label(design.name,&all,column*942+24,14,3)
+        small.blit(idle,column*120+20,36,width:80,height:80); label(String(design.id.dropFirst(5)),&small,column*120+4,12,1)
+        for (background,fill) in [("dark",color("111725")),("light",color("E9E6DF"))] {
+            var sheet = Bitmap(width:4*628,height:3*660,fill:fill)
+            for (index,frame) in ids.enumerated() {
+                let x = index%4*628, y = index/4*660
+                label(design.name+" / "+frame,&sheet,x+16,y+8,2,background == "dark" ? paper : ink)
+                sheet.blit(try composite(design.id,frame),x,y+28,width:628,height:628)
+            }
+            sheet.write(directory.appendingPathComponent(design.id+"-"+background+".png"))
+        }
+    }
+    all.write(directory.appendingPathComponent("all.png"))
+    small.write(directory.appendingPathComponent("at-80px.png"))
+}
+if CommandLine.arguments.last == "skins" { try makeSkins() }

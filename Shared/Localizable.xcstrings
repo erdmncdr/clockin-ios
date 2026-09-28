@@ -2029,6 +2029,22 @@
         }
       }
     },
+    "Aurora Warden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aurora Warden"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aurora Bekçisi"
+          }
+        }
+      }
+    },
     "Auto": {
       "localizations": {
         "tr": {
@@ -2575,6 +2591,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göksel"
+          }
+        }
+      }
+    },
+    "Celestial Guardian": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celestial Guardian"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Göksel Muhafız"
           }
         }
       }
@@ -4515,6 +4547,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ebedi"
+          }
+        }
+      }
+    },
+    "Eternal Seraph": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eternal Seraph"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ebedi Seraf"
           }
         }
       }
@@ -7607,6 +7655,22 @@
         }
       }
     },
+    "Nova Pilot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nova Pilot"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nova Pilotu"
+          }
+        }
+      }
+    },
     "Now": {
       "localizations": {
         "tr": {
@@ -7633,6 +7697,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Obsidian Knight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obsidian Knight"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obsidyen Şövalye"
           }
         }
       }
@@ -9885,6 +9965,22 @@
         }
       }
     },
+    "Skins": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skins"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostümler"
+          }
+        }
+      }
+    },
     "Skipped duplicate": {
       "localizations": {
         "tr": {
@@ -9931,6 +10027,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güneş"
+          }
+        }
+      }
+    },
+    "Solar Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solar Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güneş Paladini"
           }
         }
       }

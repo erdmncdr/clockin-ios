@@ -22,12 +22,11 @@ struct ClockinMascotImage: View {
             feet: 0.88, moving: false, swaying: false, angry: false, tired: false,
             hop: .init(id: 0, height: 1), pop: 0, wiggle: 0, squash: 0, dark: false)
             .accessibilityHidden(true)
-            .task(id: asset + "/" + wardrobe.state.colorway + "/" + String(WardrobeArt.hidesAntenna(wardrobe.state))) {
+            .task(id: asset + "/" + wardrobe.state.look + "/" + String(WardrobeArt.hidesAntenna(wardrobe.state))) {
                 let asset = asset
-                let colorway = wardrobe.state.colorway
-                let hidingAntenna = WardrobeArt.hidesAntenna(wardrobe.state)
+                let outfit = wardrobe.state
                 await MascotFrames.shared.preloadOutfit()
-                let decoded = await WardrobeFrameCache.shared.image(asset, colorway: colorway, fixedPose: true, hidingAntenna: hidingAntenna)
+                let decoded = await WardrobeFrameCache.shared.image(asset, outfit: outfit, fixedPose: true)
                 guard !Task.isCancelled else { return }
                 image = decoded
             }
@@ -171,7 +170,7 @@ struct ClockinMotionMascot: View {
 
     var body: some View {
         MascotLayerRepresentable(
-            image: displayedFrame.flatMap { MascotFrames.shared.image($0, colorway: outfit.colorway, hidingAntenna: WardrobeArt.hidesAntenna(outfit)) },
+            image: displayedFrame.flatMap { MascotFrames.shared.image($0, colorway: outfit.look, hidingAntenna: WardrobeArt.hidesAntenna(outfit)) },
             frameID: displayedFrame, outfit: outfit,
             feet: mood.feet,
             moving: moving,
@@ -183,7 +182,7 @@ struct ClockinMotionMascot: View {
         .accessibilityHidden(true)
         .onAppear { appeared = true }
         .onDisappear { appeared = false }
-        .task(id: RunKey(mood: mood, moving: moving, lead: leadClip?.id, colorway: outfit.colorway, hidingAntenna: WardrobeArt.hidesAntenna(outfit))) { await run() }
+        .task(id: RunKey(mood: mood, moving: moving, lead: leadClip?.id, colorway: outfit.look, hidingAntenna: WardrobeArt.hidesAntenna(outfit))) { await run() }
         .onChange(of: mood) { _, newMood in
             if moving { pop += 1 }
             if let waiting = clipAfterPoseChange {
@@ -238,7 +237,7 @@ struct ClockinMotionMascot: View {
         frame = clips.rest
         frameMood = mood
         loadedMood = nil
-        await MascotFrames.shared.preload(mood, colorway: outfit.colorway, hidingAntenna: WardrobeArt.hidesAntenna(outfit))
+        await MascotFrames.shared.preload(mood, colorway: outfit.look, hidingAntenna: WardrobeArt.hidesAntenna(outfit))
         guard !Task.isCancelled else { return }
         loadedMood = mood
         guard moving else { return }
@@ -328,6 +327,8 @@ final class MascotLayerView: UIView {
     private let robot = CALayer()
     private let canvas = CALayer()
     private var overlayLayers: [String: CALayer] = [:]
+    private let skinEffects = MascotSkinEffects()
+    private var skinLight: WardrobeSkinEffects?
     private var drawnFrame: String?
     private var drawnEquipment: [String: String] = [:]
     private var feet = 0.88
@@ -356,6 +357,7 @@ final class MascotLayerView: UIView {
         canvas.anchorPoint = .zero
         body.addSublayer(canvas)
         canvas.addSublayer(robot)
+        skinEffects.install(in: canvas)
         shadowLayer.type = .radial
         shadowLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
         shadowLayer.endPoint = CGPoint(x: 1, y: 1)
@@ -374,7 +376,7 @@ final class MascotLayerView: UIView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         let imageChanged = (robot.contents as! CGImage?) !== image
-        if imageChanged { robot.contents = image }
+        if imageChanged { robot.contents = image; skinEffects.mask(image) }
         if imageChanged || drawnFrame != frameID || drawnEquipment != outfit.equipped {
             drawnFrame = frameID
             drawnEquipment = outfit.equipped
@@ -394,7 +396,8 @@ final class MascotLayerView: UIView {
                 overlay.contents = part.image
                 overlay.minificationFilter = .nearest
                 overlay.magnificationFilter = .nearest
-                if part.id == "wings" { configureWings(overlay, image: part.image) }
+                if let hinge = Self.hinge(part.id, motion: "flap") { configureWings(overlay, image: part.image, hinge: hinge) }
+                else if let hinge = Self.hinge(part.id, motion: "sway") { configureSway(overlay, image: part.image, hinge: hinge) }
             }
         }
         if self.feet != feet {
@@ -410,6 +413,8 @@ final class MascotLayerView: UIView {
 
         motionEnabled = moving
         updateWingMotion()
+        skinLight = WardrobeSkins.skin(for: outfit)?.effects
+        skinEffects.update(skinLight, moving: moving && window != nil)
 
         if !moving {
             stopMotion()
@@ -453,10 +458,30 @@ final class MascotLayerView: UIView {
 
     deinit { swayTask?.cancel(); wingTask?.cancel() }
 
-    private func configureWings(_ container: CALayer, image: CGImage) {
+    /// Where a moving piece hinges, in its own pixels: the garment wings, and
+    /// skin pieces marked to flap (wings) or sway (capes).
+    private static func hinge(_ id: String, motion: String) -> WardrobePoint? {
+        if id == "wings" { return motion == "flap" ? WardrobeArt.sprites["wings"]?.pivot : nil }
+        return skinPieces[id].flatMap { $0.motion == motion ? $0.pivot : nil }
+    }
+    private static let skinPieces = Dictionary(WardrobeSkins.all.values.flatMap(\.pieces).map { ($0.id, $0) },
+                                               uniquingKeysWith: { first, _ in first })
+
+    private func configureSway(_ container: CALayer, image: CGImage, hinge: WardrobePoint) {
+        container.contents = nil
+        let cloth = container.sublayers?.first ?? CALayer()
+        if cloth.superlayer == nil { container.addSublayer(cloth) }
+        cloth.bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        cloth.anchorPoint = CGPoint(x: hinge.x / Double(image.width), y: hinge.y / Double(image.height))
+        cloth.position = CGPoint(x: hinge.x, y: hinge.y)
+        cloth.contents = image
+        cloth.minificationFilter = .nearest
+        cloth.magnificationFilter = .nearest
+    }
+
+    private func configureWings(_ container: CALayer, image: CGImage, hinge: WardrobePoint) {
         container.contents = nil
         let width = CGFloat(image.width), height = CGFloat(image.height)
-        let hinge = WardrobeArt.sprites["wings"]?.pivot ?? .init(Double(width / 2), Double(height / 2))
         if container.sublayers?.count != 2 {
             container.sublayers?.forEach { $0.removeFromSuperlayer() }
             container.addSublayer(CALayer())
@@ -476,28 +501,47 @@ final class MascotLayerView: UIView {
         }
     }
 
+    private func movingPieces(_ motion: String) -> [CALayer] {
+        overlayLayers.filter { Self.hinge($0.key, motion: motion) != nil }.map(\.value)
+    }
+
     private func updateWingMotion() {
-        guard motionEnabled, window != nil, overlayLayers["wings"] != nil else {
+        let capes = movingPieces("sway").compactMap(\.sublayers?.first)
+        guard motionEnabled, window != nil, !(movingPieces("flap").isEmpty && capes.isEmpty) else {
             wingTask?.cancel()
             wingTask = nil
-            overlayLayers["wings"]?.sublayers?.forEach { $0.removeAllAnimations() }
+            overlayLayers.values.forEach { $0.sublayers?.forEach { $0.removeAllAnimations() } }
             return
         }
-        guard wingTask == nil else { return }
+        // A cape swings slowly about where it hangs from the shoulders.
+        for cape in capes where cape.animation(forKey: "capeSway") == nil {
+            let swing = CABasicAnimation(keyPath: "transform.rotation.z")
+            swing.fromValue = -1.4 * Double.pi / 180
+            swing.toValue = 1.4 * Double.pi / 180
+            swing.duration = 2.6
+            swing.autoreverses = true
+            swing.repeatCount = .infinity
+            swing.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            MascotAnimationRate.sway.apply(to: swing)
+            cape.add(swing, forKey: "capeSway")
+        }
+        guard wingTask == nil, !movingPieces("flap").isEmpty else { return }
         wingTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
-                guard let wings = self?.overlayLayers["wings"]?.sublayers else { return }
-                for (index, wing) in wings.enumerated() {
-                    let animation = CAKeyframeAnimation(keyPath: "transform")
-                    animation.values = MascotMotion.samples(count: 49) { progress in
-                        let pose = MascotWingMotion.pose(progress: progress)
-                        let rotation = CATransform3DMakeRotation(index == 0 ? pose.radians : -pose.radians, 0, 0, 1)
-                        return NSValue(caTransform3D: CATransform3DScale(rotation, pose.scaleX, 1, 1))
+                guard let pairs = self?.movingPieces("flap"), !pairs.isEmpty else { self?.wingTask = nil; return }
+                for wings in pairs.compactMap(\.sublayers) {
+                    for (index, wing) in wings.enumerated() {
+                        let animation = CAKeyframeAnimation(keyPath: "transform")
+                        animation.values = MascotMotion.samples(count: 49) { progress in
+                            let pose = MascotWingMotion.pose(progress: progress)
+                            let rotation = CATransform3DMakeRotation(index == 0 ? pose.radians : -pose.radians, 0, 0, 1)
+                            return NSValue(caTransform3D: CATransform3DScale(rotation, pose.scaleX, 1, 1))
+                        }
+                        animation.duration = MascotWingMotion.duration
+                        animation.calculationMode = .linear
+                        MascotAnimationRate.sway.apply(to: animation)
+                        wing.add(animation, forKey: "wingFlap")
                     }
-                    animation.duration = MascotWingMotion.duration
-                    animation.calculationMode = .linear
-                    MascotAnimationRate.sway.apply(to: animation)
-                    wing.add(animation, forKey: "wingFlap")
                 }
                 do { try await Task.sleep(for: .seconds(MascotWingMotion.duration + MascotWingMotion.rest)) }
                 catch { return }
@@ -508,7 +552,8 @@ final class MascotLayerView: UIView {
     func stopMotion() {
         wingTask?.cancel()
         wingTask = nil
-        overlayLayers["wings"]?.sublayers?.forEach { $0.removeAllAnimations() }
+        overlayLayers.values.forEach { $0.sublayers?.forEach { $0.removeAllAnimations() } }
+        skinEffects.stop()
         swayTask?.cancel()
         swayTask = nil
         swaying = false
@@ -548,7 +593,7 @@ final class MascotLayerView: UIView {
         let scale = traitCollection.displayScale
         [rig, shadowLayer, sway, popLayer, reactLayer, body].forEach { $0.contentsScale = scale }
         if window == nil { stopMotion() }
-        else { updateWingMotion() }
+        else { updateWingMotion(); skinEffects.update(skinLight, moving: motionEnabled) }
     }
 
     private func restartSwayBursts() {

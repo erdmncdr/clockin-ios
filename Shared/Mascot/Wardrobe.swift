@@ -1,9 +1,9 @@
 import Foundation
 
 enum WardrobeSlot: String, CaseIterable, Codable, Sendable {
-    case head, face, neck, back, hand, colorway, room
+    case head, face, neck, back, hand, skin, colorway, room
     case floorLeft, floorRight, wallLeft, wallRight, window, rug, desk, shelf
-    static let outfit: [Self] = [.head, .face, .neck, .back, .hand, .colorway]
+    static let outfit: [Self] = [.skin, .head, .face, .neck, .back, .hand, .colorway]
     static let furniture: [Self] = [.floorLeft, .floorRight, .wallLeft, .wallRight, .window, .rug, .desk, .shelf]
 }
 
@@ -123,6 +123,9 @@ struct WardrobeState: Codable, Equatable, Sendable {
 
     mutating func equip(_ item: WardrobeItem) {
         guard owned.contains(item.id) else { return }
+        if item.slot != .skin && WardrobeSlot.outfit.contains(item.slot) {
+            equipped.removeValue(forKey: WardrobeSlot.skin.rawValue)
+        }
         if item.slot == .colorway { colorway = item.id }
         else if item.slot == .room { room = item.id }
         else if WardrobeSlot.furniture.contains(item.slot) { furniture[item.slot.rawValue] = item.id }
