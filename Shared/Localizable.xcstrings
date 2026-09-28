@@ -2029,6 +2029,22 @@
         }
       }
     },
+    "Aurora Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aurora Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aurora Paladini"
+          }
+        }
+      }
+    },
     "Aurora Warden": {
       "localizations": {
         "en": {
@@ -2607,6 +2623,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göksel Muhafız"
+          }
+        }
+      }
+    },
+    "Celestial Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celestial Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Göksel Paladini"
           }
         }
       }
@@ -4547,6 +4579,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ebedi"
+          }
+        }
+      }
+    },
+    "Eternal Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eternal Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ebedi Paladini"
           }
         }
       }
@@ -7115,6 +7163,22 @@
         }
       }
     },
+    "Nebula Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nebula Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nebula Paladini"
+          }
+        }
+      }
+    },
     "Neck accessories": {
       "localizations": {
         "tr": {
@@ -7655,6 +7719,22 @@
         }
       }
     },
+    "Nova Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nova Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nova Paladini"
+          }
+        }
+      }
+    },
     "Nova Pilot": {
       "localizations": {
         "en": {
@@ -7973,6 +8053,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yörünge"
+          }
+        }
+      }
+    },
+    "Orbit Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orbit Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yörünge Paladini"
           }
         }
       }
@@ -10107,12 +10203,44 @@
         }
       }
     },
+    "Sovereign Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sovereign Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hükümdar Paladini"
+          }
+        }
+      }
+    },
     "Spark": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Kıvılcım"
+          }
+        }
+      }
+    },
+    "Spark Paladin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark Paladin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kıvılcım Paladini"
           }
         }
       }

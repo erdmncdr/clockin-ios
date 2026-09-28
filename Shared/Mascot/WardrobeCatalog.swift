@@ -3,7 +3,15 @@ import Foundation
 // Kimlikler sanat dosyalarinin kok adlariyla aynidir.
 enum WardrobeCatalog {
     static let items: [WardrobeItem] = [
-        .init(id: "skin-paladin", name: "Solar Paladin", slot: .skin, unlock: .coins(3000)),
+        .init(id: "skin-paladin-spark", name: "Spark Paladin", slot: .skin, unlock: .coins(2000)),
+        .init(id: "skin-paladin-orbit", name: "Orbit Paladin", slot: .skin, unlock: .coins(2500)),
+        .init(id: "skin-paladin-nebula", name: "Nebula Paladin", slot: .skin, unlock: .coins(3000)),
+        .init(id: "skin-paladin-solar", name: "Solar Paladin", slot: .skin, unlock: .coins(4000)),
+        .init(id: "skin-paladin-nova", name: "Nova Paladin", slot: .skin, unlock: .coins(5000)),
+        .init(id: "skin-paladin-aurora", name: "Aurora Paladin", slot: .skin, unlock: .coins(6000)),
+        .init(id: "skin-paladin-sovereign", name: "Sovereign Paladin", slot: .skin, unlock: .coins(7500)),
+        .init(id: "skin-paladin-celestial", name: "Celestial Paladin", slot: .skin, unlock: .coins(9000)),
+        .init(id: "skin-paladin-eternal", name: "Eternal Paladin", slot: .skin, unlock: .coins(12000)),
         .init(id: "skin-nova", name: "Nova Pilot", slot: .skin, unlock: .coins(3500)),
         .init(id: "skin-aurora", name: "Aurora Warden", slot: .skin, unlock: .coins(4000)),
         .init(id: "skin-celestial", name: "Celestial Guardian", slot: .skin, unlock: .coins(5000)),

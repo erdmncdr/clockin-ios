@@ -1418,10 +1418,6 @@ struct SkinDesign {
 }
 enum SkinArt {
     static let designs: [SkinDesign] = [
-        .init(id: "skin-paladin", name: "Solar Paladin",
-              plate: SkinMetal(["514137", "A79A79", "DEDBC8", "FFF4D9", "FFFFFF"]),
-              trim: SkinMetal(["4A291F", "98602B", "DDA73D", "FFE594", "FFFBE6"]),
-              energy: SkinMetal(["50290C", "C37218", "FFA924", "FFE67D", "FFFFE4"]), aura: "embers"),
         .init(id: "skin-nova", name: "Nova Pilot",
               plate: SkinMetal(["10182B", "25334C", "495D79", "829AAE", "C3EAF6"]),
               trim: SkinMetal(["092635", "086578", "15A4BF", "55ECF6", "D8FFFF"]),
@@ -1579,7 +1575,10 @@ func makeSkins() throws {
         shoulders[id] = points
     }
     let base = try JSONDecoder().decode([String: WardrobeColorway].self, from: Data(contentsOf: framesDir.appendingPathComponent("colorways.json")))["classic"]!
-    var skins = [String: Any](), rasters = [String: Bitmap]()
+    // Keep the authored HD entries when regenerating the five pixel skins.
+    let existing = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("skins.json"))) as! [String: Any]
+    var skins = (existing["skins"] as! [String: [String: Any]]).filter { $0.value["hd"] != nil }.mapValues { $0 as Any }
+    var rasters = [String: Bitmap]()
     for design in SkinArt.designs {
         let id = design.id, plate = design.plate, trim = design.trim, energy = design.energy
         var pieces = [[String: Any]]()
@@ -1927,8 +1926,8 @@ func skinReviews(skins: [String: Any], shoulders: [String: [String: [Int]]], anc
         for piece in pieces where piece["layer"] as! String == "front" { overlay(piece) }
         return out
     }
-    var all = Bitmap(width:6*942,height:990,fill:color("111725"))
-    var small = Bitmap(width:6*120,height:150,fill:color("111725"))
+    var all = Bitmap(width:SkinArt.designs.count*942,height:990,fill:color("111725"))
+    var small = Bitmap(width:SkinArt.designs.count*120,height:150,fill:color("111725"))
     for (column,design) in SkinArt.designs.enumerated() {
         let idle = try composite(design.id,"h01")
         var closeup = Bitmap(width:1256,height:1256,fill:color("111725"))
@@ -1950,3 +1949,177 @@ func skinReviews(skins: [String: Any], shoulders: [String: [String: [Int]]], anc
     small.write(directory.appendingPathComponent("at-80px.png"))
 }
 if CommandLine.arguments.last == "skins" { try makeSkins() }
+
+func makeHD() throws {
+    let directory = root.appendingPathComponent("build/hd-previews")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    func render(_ frame: String, _ style: ArmorHDStyle, _ size: Int) -> Bitmap {
+        guard let image = ArmorHD.render(frame: frame, style: style, size: size) else { fatalError("HD render failed: \(frame)") }
+        var bitmap = Bitmap(width: size,height: size)
+        bitmap.bytes.withUnsafeMutableBytes { buffer in
+            let c = CGContext(data: buffer.baseAddress,width:size,height:size,bitsPerComponent:8,bytesPerRow:size*4,
+                              space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue)!
+            c.draw(image,in:CGRect(x:0,y:0,width:size,height:size))
+        }
+        for i in stride(from:0,to:bitmap.bytes.count,by:4) {
+            let a = Int(bitmap.bytes[i+3])
+            if a > 0 && a < 255 { for c in 0..<3 { bitmap.bytes[i+c] = UInt8(min(255,Int(bitmap.bytes[i+c])*255/a)) } }
+        }
+        return bitmap
+    }
+    let frames = ["h01","a01","e01","e02","p01","z01","c01","t01","pose2","pose3","pose4"]
+    var sheet = Bitmap(width:3*408,height:frames.count*440,fill:color("111725"))
+    for (row,frame) in frames.enumerated() {
+        for (column,style) in [ArmorHDStyle.steel, .gold, .whiteGold].enumerated() {
+            label("\(style.name) / \(frame)",&sheet,column*408+18,row*440+12,2)
+            sheet.blit(render(frame,style,408),column*408,row*440+28)
+        }
+    }
+    sheet.write(directory.appendingPathComponent("paladin-frames.png"))
+    var symbols = Bitmap(width:4*408,height:440,fill:color("111725"))
+    for (i,frame) in ["z07","a06","p10","pose4"].enumerated() {
+        label(frame,&symbols,i*408+18,12,2)
+        symbols.blit(render(frame,.gold,408),i*408,28)
+    }
+    symbols.write(directory.appendingPathComponent("paladin-symbols.png"))
+    var allPoses = Bitmap(width:11*180,height:6*202,fill:color("111725"))
+    for (i,frame) in ArmorHDResources.shared!.anchors.keys.sorted().enumerated() {
+        label(frame,&allPoses,i%11*180+8,i/11*202+7,1)
+        allPoses.blit(render(frame,.gold,180),i%11*180,i/11*202+20)
+    }
+    allPoses.write(directory.appendingPathComponent("paladin-all-poses.png"))
+
+
+    var ranks = Bitmap(width:3*408,height:3*440,fill:color("111725"))
+    for i in 0..<9 {
+        let style = ArmorHDStyle.rank(i)
+        label("\(style.name) / \(max(1,i*75))",&ranks,i%3*408+18,i/3*440+12,2)
+        ranks.blit(render("h01",style,408),i%3*408,i/3*440+28)
+    }
+    ranks.write(directory.appendingPathComponent("paladin-ranks.png"))
+    // Review the actual 480 px pipeline output reduced with linear filtering.
+    var small = Bitmap(width:9*112,height:2*116,fill:color("111725"))
+    let names = ["Spark","Orbit","Nebula","Solar","Nova","Aurora","Sovereign","Celestial","Eternal"]
+    for row in 0..<2 {
+        if row == 1 { for y in 116..<232 { for x in 0..<small.width { small[x,y] = color("E9E6DF") } } }
+        for i in 0..<9 {
+            let image = ArmorHD.render(frame:"h01",style:.rank(i),size:480)!
+            var reduced = Bitmap(width:80,height:80)
+            reduced.bytes.withUnsafeMutableBytes { buffer in
+                let c = CGContext(data:buffer.baseAddress,width:80,height:80,bitsPerComponent:8,bytesPerRow:320,
+                    space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue)!
+                c.interpolationQuality = .high
+                c.draw(image,in:CGRect(x:0,y:0,width:80,height:80))
+            }
+            for p in stride(from:0,to:reduced.bytes.count,by:4) {
+                let alpha = Int(reduced.bytes[p+3])
+                if alpha > 0 && alpha < 255 {
+                    for channel in 0..<3 { reduced.bytes[p+channel] = UInt8(min(255,Int(reduced.bytes[p+channel])*255/alpha)) }
+                }
+            }
+            label(names[i],&small,i*112+8,row*116+8,1,row == 0 ? paper : ink)
+            small.blit(reduced,i*112+16,row*116+28)
+        }
+    }
+    small.write(directory.appendingPathComponent("paladin-80px.png"))
+    var closeup = Bitmap(width:816,height:816,fill:color("111725"))
+    closeup.blit(render("h01",.gold,816),0,0)
+    closeup.write(directory.appendingPathComponent("paladin-closeup.png"))
+    var sizes = Bitmap(width:180+408+660,height:692,fill:color("111725"))
+    var offset = 0
+    for size in [180,408,660] {
+        label("\(size / 3) PT / \(size) PX",&sizes,offset+10,12,1)
+        sizes.blit(render("h01",.gold,size),offset,28)
+        offset += size
+    }
+    sizes.write(directory.appendingPathComponent("paladin-sizes.png"))
+    let beforeURL = directory.appendingPathComponent("before/paladin-frames.png")
+    if FileManager.default.fileExists(atPath:beforeURL.path) {
+        let before = Bitmap(url:beforeURL)
+        var comparison = Bitmap(width:3*408,height:2*440,fill:color("111725"))
+        for (column, index) in [0,6,7].enumerated() {
+            var crop = Bitmap(width:408,height:408)
+            for y in 0..<408 { for x in 0..<408 { crop[x,y] = before[index%4*408+x,index/4*440+28+y] } }
+            label(frames[index]+" BEFORE",&comparison,column*408+18,12,2)
+            comparison.blit(crop,column*408,28)
+            label(frames[index]+" AFTER",&comparison,column*408+18,452,2)
+            comparison.blit(render(frames[index],.gold,408),column*408,468)
+        }
+        comparison.write(directory.appendingPathComponent("paladin-before-after.png"))
+    }
+    let references = [150,300,450]
+    if references.allSatisfy({ FileManager.default.fileExists(atPath:directory.appendingPathComponent("warrior-\($0).png").path) }) {
+        var comparison = Bitmap(width:3*408,height:2*440,fill:color("111725"))
+        for (i,level) in references.enumerated() {
+            label("LEVEL UP / \(level)",&comparison,i*408+18,12,2)
+            comparison.blit(Bitmap(url:directory.appendingPathComponent("warrior-\(level).png")),i*408,28)
+            label("HD / \(level)",&comparison,i*408+18,452,2)
+            comparison.blit(render("h01",.rank(level/75),408),i*408,468)
+        }
+        comparison.write(directory.appendingPathComponent("paladin-warrior-comparison.png"))
+    }
+    func measure(_ name: String, count: Int = 15, _ work: () throws -> Void) rethrows -> String {
+        var times = [Double]()
+        for _ in 0..<count {
+            let start = DispatchTime.now().uptimeNanoseconds
+            try work()
+            times.append(Double(DispatchTime.now().uptimeNanoseconds-start)/1_000_000)
+        }
+        return String(format:"%@: median %.2f ms, p95 %.2f ms, range %.2f...%.2f ms (%d samples)\n",
+                      name,times.sorted()[count/2],times.sorted()[min(count-1,Int(Double(count)*0.95))],times.min()!,times.max()!,count)
+    }
+    var report = "Optimised Swift -O, 408 px. No rendered-image memory cache.\n"
+    report += measure("Cold h01 geometry + composition") {
+        ArmorHD.clearGeometryCache()
+        precondition(ArmorHD.render(frame:"h01",size:408) != nil)
+    }
+    report += measure("Cold h01 decode + semantic masks + contours") {
+        ArmorHD.clearGeometryCache()
+        precondition(ArmorHD.geometry(frame:"h01") != nil)
+    }
+    report += measure("Warm geometry, fresh h01 composition") {
+        precondition(ArmorHD.render(frame:"h01",size:408) != nil)
+    }
+    var next = 0
+    report += measure("Cold mixed poses + ranks",count:66) {
+        ArmorHD.clearGeometryCache()
+        let frame = ArmorHDResources.shared!.anchors.keys.sorted()[next]
+        precondition(ArmorHD.render(frame:frame,style:.rank(next%9),size:408) != nil)
+        next += 1
+    }
+    let cacheDirectory = directory.appendingPathComponent("timing-cache-"+UUID().uuidString)
+    let cache = ArmorHDCache(directory:cacheDirectory)
+    defer { try? FileManager.default.removeItem(at:cacheDirectory) }
+    report += try measure("Disk miss including PNG encode + atomic write",count:9) {
+        ArmorHD.clearGeometryCache()
+        _ = try ArmorHD.render(frame:"h01",style:.rank(next%9),size:408,cache:cache)
+        next += 1
+    }
+    report += try measure("Disk hit including PNG decode + draw") {
+        let image = try ArmorHD.render(frame:"h01",size:408,cache:cache)!
+        let c = ArmorHD.context(408)!
+        c.draw(image,in:CGRect(x:0,y:0,width:408,height:408))
+        precondition(c.makeImage() != nil)
+    }
+    let decoded = ArmorHDResources.image("h01")!
+    report += measure("480 px decoded source, cold geometry + composition") {
+        ArmorHD.clearGeometryCache()
+        precondition(ArmorHD.render(source:decoded,frame:"h01",size:480) != nil)
+    }
+    report += try measure("480 px disk miss including encode + write",count:9) {
+        ArmorHD.clearGeometryCache()
+        _ = try ArmorHD.render(source:decoded,frame:"h01",style:.rank(next%9),size:480,cache:cache)
+        next += 1
+    }
+    report += try measure("480 px disk hit including decode + draw") {
+        let image = try ArmorHD.render(source:decoded,frame:"h01",size:480,cache:cache)!
+        let c = ArmorHD.context(480)!
+        c.draw(image,in:CGRect(x:0,y:0,width:480,height:480))
+        precondition(c.makeImage() != nil)
+    }
+    report += "Baseline stage profile: build/hd-profile/baseline.txt. Old warmed total 217-221 ms; original round-one report 265.1 ms.\n"
+    try report.write(to:directory.appendingPathComponent("timing.txt"),atomically:true,encoding:.utf8)
+    print(report)
+    print("HD review sheets: \(directory.path)")
+}
+if CommandLine.arguments.last == "hd" { try makeHD() }

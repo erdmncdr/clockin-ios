@@ -20,6 +20,13 @@ struct WardrobeSkinPiece: Codable, Sendable {
 struct WardrobeSkin: Codable, Sendable {
     let id: String
     let name: String
+    /// Rank key for a complete HD render. Missing in legacy pixel manifests.
+    let hd: String?
+    var hdStyle: ArmorHDStyle? {
+        guard let hd, let stage = Self.rankKeys.firstIndex(of: hd) else { return nil }
+        return .rank(stage)
+    }
+    static let rankKeys = ["spark", "orbit", "nebula", "solar", "nova", "aurora", "sovereign", "celestial", "eternal"]
     let material: WardrobeColorway
     let hidesAntenna: Bool
     let pieces: [WardrobeSkinPiece]
@@ -34,6 +41,8 @@ enum WardrobeSkins {
     private static let manifest = WardrobeArt.read(Manifest.self, "skins.json", folder: "Skins")
     static let all: [String: WardrobeSkin] = manifest?.skins ?? [:]
     static let shoulders: [String: [String: WardrobePoint]] = manifest?.shoulders ?? [:]
+
+    static func isHD(_ outfit: WardrobeState) -> Bool { skin(for: outfit)?.hdStyle != nil }
 
     static func skin(for outfit: WardrobeState) -> WardrobeSkin? {
         outfit.equipped[WardrobeSlot.skin.rawValue].flatMap { all[$0] }

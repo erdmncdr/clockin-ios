@@ -43,7 +43,7 @@ let allBadges = Set(InsightsSnapshot(sessions: [], sessionEarnings: [:], now: st
 for item in WardrobeCatalog.items {
     switch item.unlock {
     case .free: check(true, "\(item.id) free rule")
-    case .coins(let n): check((item.slot == .skin ? 3000...10000 : 50...1500).contains(n), "\(item.id) valid price")
+    case .coins(let n): check((item.slot == .skin ? 2000...12000 : 50...1500).contains(n), "\(item.id) valid price")
     case .hours(let n), .level(let n), .streak(let n): check(n > 0, "\(item.id) valid milestone")
     case .badge(let id): check(allBadges.contains(id), "\(item.id) valid badge")
     }

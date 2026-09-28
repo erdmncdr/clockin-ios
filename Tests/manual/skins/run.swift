@@ -20,6 +20,7 @@ let sources = [
     "Shared/Mascot/WardrobeArt.swift", "Shared/Mascot/CompanionAccessory.swift", "Shared/Mascot/Wardrobe.swift",
     "Shared/Mascot/WardrobePalette.swift", "Shared/Mascot/WardrobeCatalog.swift", "Shared/Mascot/WardrobeSkins.swift",
     "Shared/Mascot/RoomArrangement.swift", "Shared/Mascot/RoomPlacement.swift", "Shared/Mascot/HomeSceneLayout.swift",
+    "Shared/Mascot/ArmorHD.swift", "Shared/Mascot/ArmorHDPixels.swift", "Shared/Mascot/ArmorHDParts.swift", "Shared/Mascot/ArmorHDCache.swift",
     "Shared/Mascot/HeritageArt.swift", "Tests/manual/skins/main.swift"
 ]
 let binary = app.appendingPathComponent("MacOS/checks")

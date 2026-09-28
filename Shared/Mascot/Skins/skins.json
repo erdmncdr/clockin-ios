@@ -1510,7 +1510,139 @@
         }
       ]
     },
-    "skin-paladin" : {
+    "skin-paladin-aurora" : {
+      "effects" : {
+        "aura" : "motes",
+        "auraColors" : [
+          "#48E397",
+          "#75EECF",
+          "#DCFFF0"
+        ],
+        "glow" : "#75EECF",
+        "sheen" : "#DCFFF0"
+      },
+      "hd" : "aurora",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-aurora",
+      "material" : {
+        "identity" : true,
+        "name" : "Aurora Paladin",
+        "rules" : []
+      },
+      "name" : "Aurora Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-celestial" : {
+      "effects" : {
+        "aura" : "stars",
+        "auraColors" : [
+          "#536BEF",
+          "#A4BFFF",
+          "#F1F4FF"
+        ],
+        "glow" : "#A4BFFF",
+        "sheen" : "#F1F4FF"
+      },
+      "hd" : "celestial",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-celestial",
+      "material" : {
+        "identity" : true,
+        "name" : "Celestial Paladin",
+        "rules" : []
+      },
+      "name" : "Celestial Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-eternal" : {
+      "effects" : {
+        "aura" : "feathers",
+        "auraColors" : [
+          "#AEEBFA",
+          "#D9BAF4",
+          "#FFF5DB"
+        ],
+        "glow" : "#D9BAF4",
+        "sheen" : "#FFF5DB"
+      },
+      "hd" : "eternal",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-eternal",
+      "material" : {
+        "identity" : true,
+        "name" : "Eternal Paladin",
+        "rules" : []
+      },
+      "name" : "Eternal Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-nebula" : {
+      "effects" : {
+        "aura" : "motes",
+        "auraColors" : [
+          "#976AE0",
+          "#DA90F5",
+          "#F6EFFF"
+        ],
+        "glow" : "#DA90F5",
+        "sheen" : "#F6EFFF"
+      },
+      "hd" : "nebula",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-nebula",
+      "material" : {
+        "identity" : true,
+        "name" : "Nebula Paladin",
+        "rules" : []
+      },
+      "name" : "Nebula Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-nova" : {
+      "effects" : {
+        "aura" : "sparks",
+        "auraColors" : [
+          "#68CFE5",
+          "#A5EDFF",
+          "#F3FDFF"
+        ],
+        "glow" : "#A5EDFF",
+        "sheen" : "#F3FDFF"
+      },
+      "hd" : "nova",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-nova",
+      "material" : {
+        "identity" : true,
+        "name" : "Nova Paladin",
+        "rules" : []
+      },
+      "name" : "Nova Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-orbit" : {
+      "effects" : {
+        "aura" : "motes",
+        "auraColors" : [
+          "#C9834C",
+          "#64DEC6",
+          "#FFF1DC"
+        ],
+        "glow" : "#64DEC6",
+        "sheen" : "#FFF1DC"
+      },
+      "hd" : "orbit",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-orbit",
+      "material" : {
+        "identity" : true,
+        "name" : "Orbit Paladin",
+        "rules" : []
+      },
+      "name" : "Orbit Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-solar" : {
       "effects" : {
         "aura" : "embers",
         "auraColors" : [
@@ -1519,247 +1651,62 @@
           "#FFFFE4"
         ],
         "glow" : "#FFE67D",
-        "sheen" : "#FFFFFF"
+        "sheen" : "#FFFFE4"
       },
-      "hidesAntenna" : true,
-      "id" : "skin-paladin",
+      "hd" : "solar",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-solar",
       "material" : {
-        "identity" : false,
+        "identity" : true,
         "name" : "Solar Paladin",
-        "rules" : [
-          {
-            "hue" : [
-              160,
-              220
-            ],
-            "kind" : "glow",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.12,
-              1
-            ],
-            "stops" : [
-              "#50290C",
-              "#C37218",
-              "#FFA924",
-              "#FFE67D",
-              "#FFFFE4"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              55
-            ],
-            "kind" : "accents",
-            "luminance" : [
-              0,
-              255
-            ],
-            "saturation" : [
-              0.16,
-              1
-            ],
-            "stops" : [
-              "#4A291F",
-              "#98602B",
-              "#DDA73D",
-              "#FFE594",
-              "#FFFBE6"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "joints",
-            "luminance" : [
-              80,
-              120
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#514137",
-              "#514137",
-              "#A79A79"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "grays",
-            "luminance" : [
-              120,
-              175
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#514137",
-              "#A79A79",
-              "#DEDBC8"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "shell",
-            "luminance" : [
-              175,
-              232
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#514137",
-              "#A79A79",
-              "#DEDBC8",
-              "#FFF4D9",
-              "#FFFFFF"
-            ]
-          },
-          {
-            "hue" : [
-              0,
-              360
-            ],
-            "kind" : "highlights",
-            "luminance" : [
-              232,
-              255
-            ],
-            "saturation" : [
-              0,
-              0.55000000000000004
-            ],
-            "stops" : [
-              "#DEDBC8",
-              "#FFF4D9",
-              "#FFFFFF"
-            ]
-          }
-        ]
+        "rules" : []
       },
       "name" : "Solar Paladin",
-      "pieces" : [
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-paladin-halo",
-          "layer" : "back",
-          "pivot" : [
-            66,
-            36
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "back",
-          "id" : "skin-paladin-wings",
-          "layer" : "back",
-          "motion" : "flap",
-          "pivot" : [
-            128,
-            84
-          ],
-          "poseOffsets" : {
-            "c" : [
-              -16,
-              -2
-            ],
-            "pose2" : [
-              6,
-              0
-            ],
-            "pose4" : [
-              8,
-              0
-            ],
-            "t" : [
-              4,
-              0
-            ]
-          }
-        },
-        {
-          "anchorPoint" : "head",
-          "id" : "skin-paladin-helm",
-          "layer" : "front",
-          "omittedFrames" : [
-            "pose2"
-          ],
-          "pivot" : [
-            74,
-            20
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderL",
-          "id" : "skin-paladin-shoulderL",
-          "layer" : "front",
-          "pivot" : [
-            28,
-            14
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "shoulderR",
-          "id" : "skin-paladin-shoulderR",
-          "layer" : "front",
-          "pivot" : [
-            22,
-            14
-          ],
-          "poseOffsets" : {
-
-          }
-        },
-        {
-          "anchorPoint" : "neck",
-          "id" : "skin-paladin-chest",
-          "layer" : "front",
-          "pivot" : [
-            26,
-            2
-          ],
-          "poseOffsets" : {
-            "c" : [
-              0,
-              2
-            ],
-            "pose2" : [
-              0,
-              2
-            ],
-            "t" : [
-              0,
-              2
-            ]
-          }
-        }
-      ]
+      "pieces" : []
+    },
+    "skin-paladin-sovereign" : {
+      "effects" : {
+        "aura" : "embers",
+        "auraColors" : [
+          "#F52D56",
+          "#EFC54D",
+          "#FFF1B9"
+        ],
+        "glow" : "#EFC54D",
+        "sheen" : "#FFF1B9"
+      },
+      "hd" : "sovereign",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-sovereign",
+      "material" : {
+        "identity" : true,
+        "name" : "Sovereign Paladin",
+        "rules" : []
+      },
+      "name" : "Sovereign Paladin",
+      "pieces" : []
+    },
+    "skin-paladin-spark" : {
+      "effects" : {
+        "aura" : "sparks",
+        "auraColors" : [
+          "#6697D8",
+          "#A8D8EF",
+          "#EFF8FF"
+        ],
+        "glow" : "#A8D8EF",
+        "sheen" : "#EFF8FF"
+      },
+      "hd" : "spark",
+      "hidesAntenna" : false,
+      "id" : "skin-paladin-spark",
+      "material" : {
+        "identity" : true,
+        "name" : "Spark Paladin",
+        "rules" : []
+      },
+      "name" : "Spark Paladin",
+      "pieces" : []
     },
     "skin-seraph" : {
       "effects" : {

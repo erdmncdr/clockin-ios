@@ -58,9 +58,11 @@ func digest(_ bytes: [UInt8]) -> String { SHA256.hash(data: Data(bytes)).map { S
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let frames = root.appendingPathComponent("Shared/Mascot/Frames")
 let baseline = try JSONDecoder().decode([String:String].self, from: Data(contentsOf: root.appendingPathComponent("Tests/manual/skins/colorway-baseline.json")))
-let catalog = WardrobeCatalog.items.filter { $0.slot == .skin }
-require(catalog.count == 6 && Set(catalog.map(\.id)) == Set(WardrobeSkins.all.keys), "catalog and bundled manifest match six skins")
-require(WardrobeCategory.allCases.first == .skins && WardrobeCategory.skins.items.count == 6, "skins category first")
+let allSkins = WardrobeCatalog.items.filter { $0.slot == .skin }
+let catalog = allSkins.filter { WardrobeSkins.all[$0.id]?.hd == nil }
+let hdCatalog = allSkins.filter { WardrobeSkins.all[$0.id]?.hd != nil }
+require(allSkins.count == 14 && catalog.count == 5 && Set(allSkins.map(\.id)) == Set(WardrobeSkins.all.keys), "catalog and bundled manifest match fourteen skins")
+require(WardrobeCategory.allCases.first == .skins && WardrobeCategory.skins.items.count == 14, "skins category first")
 require(WardrobeCategory.skins.symbol == "shield.lefthalf.filled", "skins category symbol")
 require(WardrobeArt.anchors.count == 66 && WardrobeSkins.shoulders.count == 66, "63 frame and three fixed pose anchor maps")
 var sourceImages = [String: CGImage](), originalImages = [String: CGImage]()
@@ -94,7 +96,7 @@ let previous = outfit.equipped
 // Selecting any garment or colorway must reveal that selection immediately.
 for selection in WardrobeCatalog.items where WardrobeSlot.outfit.contains(selection.slot) && selection.slot != .skin {
     var worn = outfit
-    worn.equipped["skin"] = "skin-paladin"
+    worn.equipped["skin"] = "skin-paladin-solar"
     let saved = worn
     let preview = worn.previewing(selection)
     require(preview.equipped["skin"] == nil, "preview removes skin for \(selection.id)")
@@ -111,9 +113,9 @@ for selection in WardrobeCatalog.items where WardrobeSlot.outfit.contains(select
     }
 }
 for selection in WardrobeCatalog.items where selection.isHomeItem {
-    var worn = outfit; worn.equipped["skin"] = "skin-paladin"; worn.owned.insert(selection.id)
+    var worn = outfit; worn.equipped["skin"] = "skin-paladin-solar"; worn.owned.insert(selection.id)
     worn.equip(selection)
-    require(worn.equipped["skin"] == "skin-paladin", "home selection keeps skin")
+    require(worn.equipped["skin"] == "skin-paladin-solar", "home selection keeps skin")
 }
 print("ok: garment/colorway equip and preview remove skin, restore garments; unowned/home selections preserve skin")
 var ledger = [WardrobePurchase]()
@@ -224,11 +226,11 @@ for item in catalog {
     outfit.equipped["skin"] = nil
     require(outfit.look == "mint" && outfit.equipped == previous, "taking skin off restores complete outfit")
 }
-require(ledger.map(\.cost) == [3000,3500,4000,5000,6000,10000], "exact skin prices")
-print("ok: 6 purchasable skins, \(pieceImages.count) shaded 2x2 sprites and effect/motion metadata")
+require(ledger.map(\.cost) == [3500,4000,5000,6000,10000], "exact skin prices")
+print("ok: 5 purchasable pixel skins, \(pieceImages.count) shaded 2x2 sprites and effect/motion metadata")
 print("ok: \(placementCount) unclipped placements over 66 poses; \(absentCount) deliberately omitted shoulders")
 print("ok: \(eyeCount) uncovered expression pixels; all dark visor pixels unchanged")
-require(omittedHelms == 6, "all six pose2 helms omitted")
+require(omittedHelms == 5, "all five pixel pose2 helms omitted")
 print("ok: \(fistPixels) pose2 fist pixels preserved in front; \(omittedHelms) head adornments omitted")
 print("ok: look, skin lookup, buy/equip/remove, preserved garments and old state JSON")
 
@@ -263,4 +265,101 @@ cachedOutfit.equipped["skin"] = nil
 let restored = await cache.composite(frame:"h01",outfit:cachedOutfit,size:80)!
 require(bytes(restored) == bytes(bare), "cached unskinned look restored")
 print("ok: production bundle lookup, skin recolor/frame/still cache, seated boots and fixed poses")
+
+
+let ranks = ["Spark", "Orbit", "Nebula", "Solar", "Nova", "Aurora", "Sovereign", "Celestial", "Eternal"]
+let expectedIDs = ranks.map { "skin-paladin-" + $0.lowercased() }
+require(hdCatalog.map(\.id) == expectedIDs && Array(WardrobeCategory.skins.items.prefix(9)).map(\.id) == expectedIDs,
+        "nine HD skins first, in rank order")
+let prices = [2000,2500,3000,4000,5000,6000,7500,9000,12000]
+let strings = (try JSONSerialization.jsonObject(with: Data(contentsOf: root.appendingPathComponent("Shared/Localizable.xcstrings"))) as! [String:Any])["strings"] as! [String:[String:Any]]
+@MainActor func localized(_ key: String, _ language: String) -> String? {
+    let localizations = strings[key]?["localizations"] as? [String:[String:Any]]
+    return (localizations?[language]?["stringUnit"] as? [String:String])?["value"]
+}
+require(WardrobeSkins.all["skin-paladin"] == nil && !allSkins.contains { $0.id == "skin-paladin" }, "pixel paladin removed")
+let skinFiles = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("Shared/Mascot/Skins").path)
+require(!skinFiles.contains { $0.hasPrefix("skin-paladin-") && $0.hasSuffix(".png") }, "no obsolete paladin PNGs")
+let retired = WardrobeState.decode("{\"equipped\":{\"skin\":\"skin-paladin\",\"head\":\"cap\"},\"colorway\":\"mint\"}")
+require(retired.look == "mint" && !WardrobeSkins.isHD(retired), "removed id falls back safely in old JSON")
+require(!WardrobeSkins.isHD(missing), "old state is not HD")
+require(ArmorHDCache.application.directory.path.contains("/Caches/") && ArmorHDCache.application.directory.lastPathComponent == "ArmorHD", "application Caches subdirectory")
+let hdDirectory = root.appendingPathComponent("build/skin-checks/hd-cache-" + UUID().uuidString)
+let disk = ArmorHDCache(directory: hdDirectory)
+defer { try? FileManager.default.removeItem(at: hdDirectory) }
+var hdLedger = [WardrobePurchase]()
+var hdCount = 0
+// Bundle-only run: a repository fallback cannot accidentally satisfy fixed poses.
+require(FileManager.default.changeCurrentDirectoryPath(FileManager.default.temporaryDirectory.path), "leave repository for production HD matrix")
+defer { _ = FileManager.default.changeCurrentDirectoryPath(root.path) }
+let started = CFAbsoluteTimeGetCurrent()
+for (index,item) in hdCatalog.enumerated() {
+    let skin = WardrobeSkins.all[item.id]!
+    require(skin.id == item.id && skin.name == ranks[index] + " Paladin", "HD identity and rank name")
+    require(localized(skin.name,"en") == skin.name && localized(skin.name,"tr") == localized(ranks[index],"tr")! + " Paladini", "English/Turkish names follow rank translations")
+    require(skin.hd == ranks[index].lowercased() && skin.pieces.isEmpty && skin.hdStyle != nil, "HD manifest rank without pieces")
+    require(WardrobeArt.available(item), "HD skin available")
+    require(([skin.effects.sheen,skin.effects.glow]+skin.effects.auraColors).allSatisfy { WardrobePalette.rgb($0) != nil }, "HD effect colours")
+    require(skin.effects.aura == ["sparks","motes","motes","embers","sparks","motes","embers","stars","feathers"][index], "rank aura")
+    var worn = missing
+    require(worn.buy(item,earned:100_000,ledger:&hdLedger,now:.distantPast), "buy HD skin")
+    require(hdLedger.last?.cost == prices[index], "rank price")
+    require(worn.look == item.id && WardrobeSkins.isHD(worn), "HD look and filtering flag")
+    require(WardrobeState.decode(worn.json) == worn, "HD state roundtrip")
+    require(!WardrobeArt.hidesAntenna(worn) && skin.hidesAntenna == ArmorHD.hidesAntenna, "HD retains source antenna")
+    let pipeline = WardrobeFrameCache(hdCache:disk, decode: { id,fixed in
+        // Fixed poses have no raw resource in this bundle. The caller supplies the decoded CGImage.
+        guard fixed == id.hasPrefix("pose") else { return nil }
+        return originals[id]
+    })
+    for frame in originals.keys.sorted() {
+        let fixed = frame.hasPrefix("pose")
+        guard let image = await pipeline.image(frame,outfit:worn,fixedPose:fixed) else { fatalError("HD cache miss: \(item.id)/\(frame)") }
+        require(image.width == 480 && image.height == 480, "480 px HD frames")
+        let byID = await pipeline.image(frame,colorway:item.id,fixedPose:fixed,hidingAntenna:true)
+        require(image === byID, "outfit and id overloads reuse the same HD render")
+        require(WardrobeArt.overlays(frame:frame,outfit:worn,images:["cap":capImage]).isEmpty, "HD suppresses garments")
+        let composite = await pipeline.composite(frame:frame,outfit:worn,size:480)
+        require(composite === image, "HD composite uses complete cached render")
+        let key = ArmorHDCache.Key(version:ArmorHD.rendererVersion,frame:frame,style:skin.hdStyle!.cacheIdentity,size:480)
+        let png = try disk.read(key)
+        require(png != nil, "every HD frame persisted through ArmorHDCache")
+        hdCount += 1
+    }
+    // A fresh pipeline must decode the persisted result without rewriting it.
+    let fresh = WardrobeFrameCache(hdCache:disk,decode: { id,_ in originals[id] })
+    for frame in originals.keys.sorted() {
+        let key = ArmorHDCache.Key(version:ArmorHD.rendererVersion,frame:frame,style:skin.hdStyle!.cacheIdentity,size:480)
+        let url = try disk.url(for:key)
+        let before = try Data(contentsOf:url)
+        let date = try url.resourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate
+        let image = await fresh.image(frame,colorway:item.id,fixedPose:frame.hasPrefix("pose"))
+        require(image?.width == 480, "fresh pipeline disk hit")
+        let afterDate = try url.resourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate
+        let after = try Data(contentsOf:url)
+        require(date == afterDate && before == after, "disk hit has no rewrite")
+    }
+    let small = await pipeline.composite(frame:"h01",outfit:worn,size:80)!
+    let full = await pipeline.image("h01",outfit:worn)!
+    let c = ArmorHD.context(80)!; c.interpolationQuality = .high
+    c.draw(full,in:CGRect(x:0,y:0,width:80,height:80))
+    require(bytes(small) == bytes(c.makeImage()!), "80 px still linearly filters HD without garments")
+    worn.equipped["head"] = "crown"
+    let same = await pipeline.composite(frame:"h01",outfit:worn,size:80)
+    require(same === small, "hidden garment changes do not split HD still cache")
+}
+print("ok: 9 HD catalog/manifest/localization entries, prices/order, effects, retired paladin and legacy JSON")
+print("ok: \(hdCount) HD frame/style cache misses and disk hits at 480 px, including 27 fixed poses; look, overlays, antenna and linear stills")
+print(String(format:"timing: HD pipeline matrix including validation %.2f s",CFAbsoluteTimeGetCurrent()-started))
+let concurrentCache = WardrobeFrameCache(hdCache:disk,decode: { id,_ in originals[id] })
+let concurrentFrames = await withTaskGroup(of: CGImage?.self, returning: [CGImage].self) { group in
+    for _ in 0..<12 {
+        group.addTask { await concurrentCache.image("h01",colorway:"skin-paladin-eternal") }
+    }
+    var results = [CGImage]()
+    for await result in group { if let result { results.append(result) } }
+    return results
+}
+require(concurrentFrames.count == 12 && concurrentFrames.allSatisfy { $0 === concurrentFrames[0] }, "concurrent HD requests share one image")
+print("ok: concurrent HD requests share one cached image; bundle-only fixed-pose handoff")
 print("All skin checks passed")

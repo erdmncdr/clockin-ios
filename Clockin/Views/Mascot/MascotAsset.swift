@@ -377,6 +377,13 @@ final class MascotLayerView: UIView {
         CATransaction.setDisableActions(true)
         let imageChanged = (robot.contents as! CGImage?) !== image
         if imageChanged { robot.contents = image; skinEffects.mask(image) }
+        // HD skin frames are smooth renders; sampling them nearest would jag
+        // their edges when the view is smaller or larger than the render.
+        let filter: CALayerContentsFilter = WardrobeSkins.isHD(outfit) ? .trilinear : .nearest
+        if robot.minificationFilter != filter {
+            robot.minificationFilter = filter
+            robot.magnificationFilter = filter == .nearest ? .nearest : .linear
+        }
         if imageChanged || drawnFrame != frameID || drawnEquipment != outfit.equipped {
             drawnFrame = frameID
             drawnEquipment = outfit.equipped

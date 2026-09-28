@@ -125,7 +125,11 @@ private struct WardrobeThumbnail: View {
     @State private var image: CGImage?
     var body: some View {
         Group {
-            if let image { Image(decorative: image, scale: 1).resizable().interpolation(.none).scaledToFit() }
+            if let image {
+                // HD skins are smooth renders; the rest is pixel art.
+                Image(decorative: image, scale: 1).resizable()
+                    .interpolation(WardrobeSkins.all[item.id]?.hdStyle == nil ? .none : .high).scaledToFit()
+            }
             else { Image(systemName: item.slot == .colorway ? "paintpalette" : (item.slot == .skin ? "shield.lefthalf.filled" : "square.dashed")).foregroundStyle(.secondary) }
         }
         .task(id: item.id) {

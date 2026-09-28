@@ -38,7 +38,9 @@ enum WardrobeArt {
     static func available(_ item: WardrobeItem) -> Bool {
         switch item.slot {
         case .skin:
-            guard let skin = WardrobeSkins.all[item.id], !skin.pieces.isEmpty, !anchors.isEmpty else { return false }
+            guard let skin = WardrobeSkins.all[item.id], !anchors.isEmpty else { return false }
+            if skin.hdStyle != nil { return ArmorHDResources.shared != nil }
+            guard !skin.pieces.isEmpty else { return false }
             return skin.pieces.allSatisfy { url($0.id + ".png", folder: "Skins") != nil }
         case .colorway: return item.id == "classic" || colorways[item.id] != nil
         case .room: return home.rooms[item.id].flatMap { url($0.file, folder: "Home") } != nil
@@ -62,7 +64,7 @@ enum WardrobeArt {
     }
 
     static func hidesAntenna(_ outfit: WardrobeState, spriteManifest: [String: WardrobeSprite] = sprites) -> Bool {
-        if let skin = WardrobeSkins.skin(for: outfit) { return skin.hidesAntenna }
+        if let skin = WardrobeSkins.skin(for: outfit) { return skin.hdStyle != nil ? ArmorHD.hidesAntenna : skin.hidesAntenna }
         guard let id = outfit.equipped["head"] else { return false }
         return spriteManifest[id]?.slot == "head"
     }
@@ -161,7 +163,7 @@ enum WardrobeArt {
     static func overlays(frame: String, outfit: WardrobeState, images: [String: CGImage],
                          anchorManifest: [String: WardrobeAnchors] = anchors,
                          spriteManifest: [String: WardrobeSprite] = sprites) -> [WardrobeOverlay] {
-        guard let anchors = anchorManifest[frame] else { return [] }
+        guard !WardrobeSkins.isHD(outfit), let anchors = anchorManifest[frame] else { return [] }
         if let skin = WardrobeSkins.skin(for: outfit) {
             return skin.pieces.compactMap { piece in
                 guard let image = images[piece.id],
@@ -212,8 +214,10 @@ actor WardrobeFrameCache {
     private var frames: [String: CGImage] = [:]
     private var stills: [String: CGImage] = [:]
     private let decode: @Sendable (String, Bool) -> CGImage?
+    private let hdCache: ArmorHDCache
+    private var sources: [String: CGImage] = [:]
 
-    init(decode: @escaping @Sendable (String, Bool) -> CGImage? = { id, fixedPose in
+    init(hdCache: ArmorHDCache = .application, decode: @escaping @Sendable (String, Bool) -> CGImage? = { id, fixedPose in
         if fixedPose {
             #if canImport(UIKit)
             return UIImage(named: id)?.cgImage
@@ -222,9 +226,23 @@ actor WardrobeFrameCache {
             #endif
         }
         return MascotResources.decode(id)
-    }) { self.decode = decode }
+    }) { self.decode = decode; self.hdCache = hdCache }
 
     func composite(frame: String, outfit: WardrobeState, size: Int) -> CGImage? {
+        guard size > 0, size <= 2048 else { return nil }
+        if WardrobeSkins.isHD(outfit) {
+            guard let robot = image(frame, outfit: outfit, fixedPose: frame.hasPrefix("pose")) else { return nil }
+            if size == ArmorHD.frameSize { return robot }
+            let key = "hd/\(size)/\(frame)/\(outfit.look)"
+            if let image = stills[key] { return image }
+            guard let context = ArmorHD.context(size) else { return nil }
+            context.interpolationQuality = .high
+            context.draw(robot, in: CGRect(x: 0, y: 0, width: size, height: size))
+            let result = context.makeImage()
+            if stills.count >= 32 { stills.removeAll() }
+            stills[key] = result
+            return result
+        }
         let key = "\(size)/\(frame)/\(outfit.look)/" + outfit.equipped.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value }.joined(separator: ";")
         if let image = stills[key] { return image }
         guard let robot = image(frame, outfit: outfit, fixedPose: frame.hasPrefix("pose")) else { return nil }
@@ -245,6 +263,25 @@ actor WardrobeFrameCache {
     }
 
     func image(_ id: String, colorway: String, fixedPose: Bool = false, hidingAntenna: Bool = false) -> CGImage? {
+        if let style = WardrobeSkins.all[colorway]?.hdStyle {
+            // Canonical key ignores garment/antenna flags. The actor has no suspension
+            // points, so concurrent requests share one render per frame and style.
+            let key = "hd/\(colorway)/\(id)/\(ArmorHD.frameSize)"
+            if let image = frames[key] { return image }
+            let sourceKey = (fixedPose ? "pose/" : "frame/") + id
+            guard let source = sources[sourceKey] ?? decode(id, fixedPose) else { return nil }
+            sources[sourceKey] = source
+            let rendered: CGImage?
+            do {
+                rendered = try ArmorHD.render(source: source, frame: id, style: style,
+                                              size: ArmorHD.frameSize, cache: hdCache)
+            } catch {
+                // A full or unavailable disk must not replace the purchased look with pixels.
+                rendered = ArmorHD.render(source: source, frame: id, style: style, size: ArmorHD.frameSize)
+            }
+            frames[key] = rendered
+            return rendered
+        }
         let key = (fixedPose ? "pose/" : "frame/") + colorway + "/" + id + "/" + String(hidingAntenna)
         if let image = frames[key] { return image }
         guard let source = decode(id, fixedPose) else { return nil }
