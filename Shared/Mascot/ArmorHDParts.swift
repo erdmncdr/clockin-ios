@@ -190,7 +190,7 @@ struct ArmorHDParts {
     guard name != "helm" || frame != "pose2" else { return }
     let offsets: [String: [Double]]
     switch name {
-    case "wings": offsets = ["c": [-16, -2], "t": [4, 0], "pose2": [6, 0], "pose4": [8, 0]]
+    case "wings": offsets = ["pose2": [6, 0], "pose4": [8, 0]]
     case "chest": offsets = ["c": [0, 2], "t": [0, 2], "pose2": [0, 2]]
     default: offsets = [:]
     }
@@ -236,16 +236,19 @@ struct ArmorHDParts {
         style.trim)
       shade.part(S.oval(0, -64, 11, 11), style.trim, polish: 1.5)
     }
-    placed("wings", anchors.back) {
+    // Seated, the body is near the floor: the wings rise folded from the
+    // shoulder blades instead of spreading low and wide behind it.
+    let seated = ["c", "t"].contains(String(frame.prefix(1)))
+    placed("wings", seated ? [anchors.neck[0], anchors.neck[1] + 4] : anchors.back) {
       for side: CGFloat in [-1, 1] {
-        let base = CGPoint(x: side * 22, y: -6)
+        let base = CGPoint(x: side * (seated ? 20 : 22), y: -6)
         for (reach, width, alpha) in [
           (CGFloat(1), CGFloat(19), 0.56), (CGFloat(0.6), CGFloat(14), 0.72),
         ] {
           for i in (0..<7).reversed() {
             let f = CGFloat(i) / 6
-            let angle = -1.3 + 1.48 * f
-            let length = (137 - 43 * f) * reach
+            let angle = seated ? -1.15 + 1.1 * f : -1.3 + 1.48 * f
+            let length = (137 - 43 * f) * reach * (seated ? 0.86 : 1)
             let tip = CGPoint(
               x: base.x + side * cos(angle) * length, y: base.y + sin(angle) * length)
             let feather = S.feather(base, tip, width: width)

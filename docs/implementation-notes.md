@@ -526,7 +526,10 @@ hand positions because its source anchors omit them.
 The sword is shortened to 70 percent of its original scale and sits behind the
 wings and body. Pauldrons sit outside and above the shoulder joints. The tabard
 has drawn folds and a metallic border. Wings have layered flight feathers,
-coverts and small deterministic tongues of rank-coloured fire. The renderer owns
+coverts and small deterministic tongues of rank-coloured fire. Seated (coffee
+and typing), the body sits near the floor, so the wings grow from the shoulder
+blades at the neck rather than the back anchor, a little shorter and raised,
+spreading out beside the helmet instead of low and wide. The renderer owns
 its wings/chest fitting offsets and pose2 helm omission; it has no dependency on
 the retired pixel paladin or its pieces. Shared shoulder anchors remain in the
 skins manifest.

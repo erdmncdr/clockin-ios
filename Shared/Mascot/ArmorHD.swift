@@ -162,7 +162,7 @@ private final class ArmorHDGeometryStore: @unchecked Sendable {
 }
 
 enum ArmorHD {
-  static let rendererVersion = "armorhd-3"
+  static let rendererVersion = "armorhd-4"
   static let frameSize = 480
   // The source antenna is preserved as part of the reconstructed helmet.
   static let hidesAntenna = false
