@@ -67,17 +67,22 @@
       "file" : "companion-bed.png",
       "name" : "Companion bed",
       "pivot" : [
-        78,
+        60,
         76
       ],
       "sleeper" : {
+        "arms" : "companion-bed-arms.png",
         "center" : [
-          22,
-          36
+          40,
+          38
         ],
         "cover" : "companion-bed-cover.png",
-        "head" : "companion-bed-head.png",
-        "scale" : 0.22
+        "figure" : "companion-bed-sleeper.png",
+        "head" : [
+          30,
+          38
+        ],
+        "scale" : 0.28000000000000003
       },
       "slot" : "floorRight"
     },

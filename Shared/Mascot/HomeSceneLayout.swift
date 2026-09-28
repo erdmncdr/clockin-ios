@@ -58,8 +58,8 @@ enum HomeSceneLayout {
     /// The companion bed's image size, floor pivot and where a sleeper's head
     /// goes, in its pixels. The home art tool writes the same numbers into
     /// home-items.json; the wardrobe checks keep the two equal.
-    static let companionBed = (size: CGSize(width: 124, height: 78), pivot: WardrobePoint(78, 76),
-                               head: WardrobePoint(22, 36))
+    static let companionBed = (size: CGSize(width: 106, height: 78), pivot: WardrobePoint(60, 76),
+                               head: WardrobePoint(30, 38))
 
     static func companionBedRect(in room: WardrobeRoom, layout: CompanionHomeLayout,
                                  roomID: String = "", arrangement: RoomArrangement = .init()) -> CGRect {

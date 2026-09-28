@@ -686,9 +686,7 @@ if CommandLine.arguments.last == "wardrobe" { try makeWardrobe() }
 // its top and its front, the headboard its outer face at the left end. The
 // blanket layer is drawn again over a sleeper, raised over its body.
 enum BedLayer { case base, cover }
-let bedFront = 38, bedBack = 26, bedSkew = 0, bedLeft = 12, bedRight = 64
-/// Where the blanket starts, as a share of the mattress's length.
-let bedFold = 0.28
+let bedFront = 38, bedBack = 22, bedSkew = 0, bedLeft = 12, bedRight = 55
 /// A point on the mattress top: `u` along its length from the head end,
 /// `v` across its depth from the front edge, both 0...1.
 func bedTop(_ u: Double, _ v: Double) -> (Int, Int) {
@@ -696,24 +694,20 @@ func bedTop(_ u: Double, _ v: Double) -> (Int, Int) {
     let y = Double(bedFront) - v * Double(bedFront - bedBack)
     return (Int(x.rounded()), Int(y.rounded()))
 }
-/// How high the blanket stands over a body lying on its back, in art cells:
-/// shoulders just under the fold, hips, two legs and the feet turned up.
+/// How high the blanket stands over the sleeper's legs, in art cells: its
+/// hips under the fold, a ridge along each leg and the feet turned up at the
+/// end.
 func bedBodyHeight(_ u: Double, _ v: Double) -> Double {
     func dome(_ uc: Double, _ vc: Double, _ ru: Double, _ rv: Double, _ h: Double) -> Double {
         let d = pow((u - uc) / ru, 2) + pow((v - vc) / rv, 2)
         return d < 1 ? h * sqrt(1 - d) : 0
     }
-    func leg(_ vc: Double) -> Double {
-        let u0 = bedFold + 0.3, u1 = bedFold + 0.56
-        let t = min(1, max(0, (u - u0) / (u1 - u0)))
-        let uc = u0 + t * (u1 - u0)
-        return dome(uc, vc, 0.06, 0.13, 4.2 - 0.6 * t)
-    }
-    return [dome(bedFold + 0.1, 0.5, 0.13, 0.36, 6.5),
-            dome(bedFold + 0.25, 0.5, 0.1, 0.3, 5.2),
-            leg(0.38), leg(0.62),
-            dome(bedFold + 0.6, 0.38, 0.05, 0.12, 5),
-            dome(bedFold + 0.6, 0.62, 0.05, 0.12, 5)].max()!
+    let (fold, feet) = (Sleeper.fold, Sleeper.feet)
+    let t = min(1, max(0, (u - fold) / (feet - fold)))
+    let hips = dome(fold + 0.03, Sleeper.legs.reduce(0, +) / 2, 0.07, 0.36, 1.6)
+    return Sleeper.legs.flatMap { vc in
+        [dome(fold + t * (feet - fold), vc, 0.06, 0.15, 1.8 - 0.4 * t), dome(feet, vc, 0.045, 0.13, 3.0)]
+    }.reduce(hips, max)
 }
 func companionBed(_ a: inout Art, _ layer: BedLayer) {
     let quiltTop = color("8A72BD"), quiltLight = color("B9A4E0"), quiltShade = color("6A5494"), quiltDark = color("4A3A70")
@@ -722,33 +716,41 @@ func companionBed(_ a: inout Art, _ layer: BedLayer) {
     // The blanket: the hanging front first, then its top from back to front,
     // each point lifted by the body under it and shaded by which way it faces.
     func blanket(sleeping: Bool) {
-        let (fx, fy) = bedTop(bedFold, 0), (rx, _) = bedTop(1, 0)
+        let (fx, fy) = bedTop(Sleeper.fold, 0), (rx, _) = bedTop(1, 0)
         a.rect(fx, fy, rx - fx + 1, 5, quiltShade)
         a.rect(fx, fy, rx - fx + 1, 1, quiltLight)
         for x in stride(from: fx, to: rx, by: 5) { a.rect(x + 2, fy + 1, 1, 4, quiltDark) }
         for x in stride(from: fx, through: rx, by: 3) { a.rect(x, fy + 5, 2, 1, quiltShade) }
-        let steps = 90, depth = 40
+        // The top, back to front: each point lifted by the body under it and
+        // filled down to the mattress, the nearer over the farther. It is in
+        // shade where it rises toward the viewer; where a bump stands up
+        // against the blanket behind it, its edge catches the light, and a
+        // crease runs along its foot.
+        let steps = 90, depth = 48
+        var top = [Int: (v: Double, lift: Int, rise: Double)]()
         for j in stride(from: depth, through: 0, by: -1) {
             let v = Double(j) / Double(depth)
             for i in 0...steps {
-                let u = bedFold + Double(i) / Double(steps) * (1 - bedFold)
+                let u = Sleeper.fold + Double(i) / Double(steps) * (1 - Sleeper.fold)
                 let h = sleeping ? bedBodyHeight(u, v) : 0
-                let (x, y) = bedTop(u, v)
-                let lift = Int(h.rounded())
-                // Cells of height per cell of depth: steep toward the viewer is
-                // in shade, the crest along the top catches the light.
-                let rise = sleeping ? (bedBodyHeight(u, v + 0.04) - bedBodyHeight(u, v - 0.04)) / (0.08 * Double(bedFront - bedBack)) : 0
-                var c = quiltTop
-                if rise > 1.1 { c = quiltShade } else if lift > 0 && abs(rise) < 0.25 { c = quiltLight }
-                // Quilting stitches in a grid on the flat part.
-                if lift == 0, i % 9 == 4, j % 10 == 5 { c = quiltLight }
-                // Fill down to the mattress so a steep front leaves no gaps.
-                a.rect(x, y - lift, 1, lift + 1, c)
+                let (x, y) = bedTop(u, v), lift = Int(h.rounded())
+                // Cells of height per cell of depth.
+                let rise = sleeping ? (bedBodyHeight(u, v + 0.03) - bedBodyHeight(u, v - 0.03)) / (0.06 * Double(bedFront - bedBack)) : 0
+                for yy in (y - lift)...y { top[yy * 1000 + x] = (v, lift, rise) }
             }
+        }
+        for (key, p) in top {
+            let x = key % 1000, y = key / 1000
+            var c = p.lift > 0 && p.rise > 0.5 ? quiltShade : quiltTop
+            // Quilting stitches in a grid on the flat part.
+            if p.lift == 0, (x - fx) % 5 == 3, (y - bedBack) % 4 == 2 { c = quiltLight }
+            if let above = top[key - 1000], above.v > p.v + 0.1 { c = quiltLight }
+            if p.lift > 0, let below = top[key + 1000], below.lift == 0 { c = quiltDark }
+            a.rect(x, y, 1, 1, c)
         }
         // The top edge catches the light where the blanket turns over.
         for i in 0...steps {
-            let u = bedFold + Double(i) / Double(steps) * (1 - bedFold)
+            let u = Sleeper.fold + Double(i) / Double(steps) * (1 - Sleeper.fold)
             let (x, y) = bedTop(u, 0)
             a.rect(x, y - 1, 1, 1, quiltLight)
         }
@@ -756,8 +758,8 @@ func companionBed(_ a: inout Art, _ layer: BedLayer) {
         // shoulders when someone lies under it.
         for j in 0...26 {
             let v = Double(j) / 26
-            let h = sleeping ? bedBodyHeight(bedFold + 0.02, v) : 0
-            let (x, y) = bedTop(bedFold, v)
+            let h = sleeping ? bedBodyHeight(Sleeper.fold + 0.02, v) : 0
+            let (x, y) = bedTop(Sleeper.fold, v)
             a.rect(x - 1, y - Int(h.rounded()) - 1, 3, 2, sheet)
             a.rect(x + 1, y - Int(h.rounded()), 1, 1, sheetShade)
         }
@@ -770,7 +772,7 @@ func companionBed(_ a: inout Art, _ layer: BedLayer) {
         a.rect(x + 1, top + 1, 1, floor - top - 2, woodLight)
         a.oval(x - 1, top - 4, 6, 5, woodLight)
     }
-    func footboard() { board(bedRight, bedBack - 4) }
+    func footboard() { board(bedRight, bedBack) }
     if layer == .cover { blanket(sleeping: true); footboard(); return }
 
     // Mattress: its top, then a slim front with a piped edge.
@@ -780,44 +782,125 @@ func companionBed(_ a: inout Art, _ layer: BedLayer) {
     // A thin frame rail under it, a short leg at each end.
     a.box(bedLeft - 1, bedFront + 5, bedRight - bedLeft + 3, 3, wood)
     a.rect(bedLeft, bedFront + 6, bedRight - bedLeft + 1, 1, woodLight)
-    board(bedLeft - 4, bedBack - 12)
-    // The pillow against the headboard: a plump cushion, lit from above,
-    // shaded underneath.
-    let (px, py) = bedTop(0.13, 0.5)
-    a.box(px - 9, py - 6, 19, 11, sheet)
-    for (cx, cy) in [(px - 9, py - 6), (px + 9, py - 6), (px - 9, py + 4), (px + 9, py + 4)] { a.rect(cx, cy, 1, 1, .clear) }
-    a.rect(px - 7, py - 5, 14, 1, color("EDF3FC"))
-    a.rect(px - 8, py + 2, 17, 2, sheetShade)
+    board(bedLeft - 4, bedBack - 8)
+    // The pillow against the headboard, under the head: a plump cushion with
+    // rounded corners and a soft edge, lit along its top.
+    let (hx, hy) = (Int(Sleeper.head.0.rounded()), Int(Sleeper.head.1.rounded()))
+    let (px, py, pw, ph) = (bedLeft + 1, hy - 8, hx - bedLeft + 5, 14)
+    a.rect(px, py + 1, pw, ph - 2, sheetShade)
+    a.rect(px + 1, py, pw - 2, ph, sheetShade)
+    a.rect(px + 1, py + 1, pw - 2, ph - 2, color("EAF0FA"))
+    a.rect(px + 2, py + 1, pw - 4, 1, color("F7FAFE"))
+    a.rect(px + 1, py + ph - 3, pw - 2, 2, color("C3CFE6"))
     blanket(sleeping: false)
     footboard()
 }
 
-/// The sleeping head, from z01: the helmet and antenna alone, its zzz removed,
-/// turned a quarter left so the antenna points at the headboard.
-func sleepingHeadBitmap() -> Bitmap {
-    let frame = Bitmap(url: framesDir.appendingPathComponent("z01.png"))
-    let zzz = color("6992A8")
-    var head = Bitmap(width: frame.width, height: frame.height)
-    for y in 0..<frame.height { for x in 0..<frame.width {
-        let dx = (Double(x) - 166) / 49, dy = (Double(y) - 112) / 42
-        let antenna = x >= 160 && x <= 180 && y >= 44 && y <= 72
-        guard dx * dx + dy * dy <= 1 || antenna else { continue }
-        let p = frame[x, y]
-        let near = abs(Int(p.r) - Int(zzz.r)) + abs(Int(p.g) - Int(zzz.g)) + abs(Int(p.b) - Int(zzz.b)) < 90
-        if x > 196 && y < 94 && near { continue }
-        head[x, y] = p
-    } }
-    let pixels = (0..<(head.width * head.height)).filter { head[$0 % head.width, $0 / head.width].a > 0 }
-    let r = bounds(pixels, width: head.width)
-    let w = r.x1 - r.x0 + 1, h = r.y1 - r.y0 + 1
-    var turned = Bitmap(width: h, height: w)
-    for y in 0..<h { for x in 0..<w { turned[y, w - 1 - x] = head[r.x0 + x, r.y0 + y] } }
-    return turned
+/// The sleeper, from z01, lying on its back with its head toward the
+/// headboard. Its arms, raised over its head in every standing frame, are
+/// swung down about the shoulders to lie along its sides, and the whole figure
+/// is turned a quarter left. Its legs are cut off under the blanket, its arms
+/// lie on top of it, and the frame's zzz is left out; the app draws its own.
+struct SleeperFigure {
+    /// The whole figure, and its arms alone to lie over the blanket.
+    let bitmap: Bitmap, arms: Bitmap
+    /// In the turned bitmap's pixels: the head's centre, the waist and the
+    /// feet as columns, and each leg as a row.
+    let head: (Double, Double), waist: Double, feet: Double, legs: [Double]
+}
+func inside(_ x: Double, _ y: Double, _ polygon: [(Double, Double)]) -> Bool {
+    var hit = false, j = polygon.count - 1
+    for i in polygon.indices {
+        let (xi, yi) = polygon[i], (xj, yj) = polygon[j]
+        if (yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi { hit.toggle() }
+        j = i
+    }
+    return hit
+}
+enum Sleeper {
+    /// The figure's pixels to the bed image's.
+    static let scale = 0.28
+    static let figure: SleeperFigure = {
+        let frame = Bitmap(url: framesDir.appendingPathComponent("z01.png"))
+        let zzz = color("6992A8"), hips = 207, waist = 214, feet = 279
+        // Each arm from the fist to the shoulder joint, the shoulder it swings
+        // about, its fist, and where the fist goes: down beside the hip.
+        let arms: [(outline: [(Double, Double)], shoulder: (Double, Double), fist: (Double, Double), to: (Double, Double))] = [
+            ([(113, 62), (70, 62), (58, 90), (64, 114), (95, 138), (115, 161), (142, 161), (142, 150), (138, 144), (122, 123), (117, 98)],
+             (135, 153), (91, 91), (-12, 75)),
+            ([(222, 62), (265, 62), (277, 90), (271, 114), (240, 138), (220, 161), (193, 161), (193, 150), (197, 144), (213, 123), (218, 98)],
+             (199, 153), (241, 91), (12, 75))]
+        func arm(_ x: Int, _ y: Int) -> Bool { arms.contains { inside(Double(x), Double(y), $0.outline) } }
+        func zz(_ x: Int, _ y: Int) -> Bool {
+            let p = frame[x, y]
+            return x > 196 && y < 94 && abs(Int(p.r) - Int(zzz.r)) + abs(Int(p.g) - Int(zzz.g)) + abs(Int(p.b) - Int(zzz.b)) < 90
+        }
+        var body = Bitmap(width: frame.width, height: frame.height), limbs = body
+        // The legs first, then the arms over them, then the head and body
+        // over the arms' upper ends.
+        for y in (hips + 1)...(waist + 6) { for x in 0..<frame.width where frame[x, y].a > 0 { body[x, y] = frame[x, y] } }
+        for a in arms {
+            let turn = atan2(a.to.1, a.to.0) - atan2(a.fist.1 - a.shoulder.1, a.fist.0 - a.shoulder.0)
+            let (c, s) = (cos(-turn), sin(-turn))
+            for y in 0..<frame.height { for x in 0..<frame.width {
+                let dx = Double(x) - a.shoulder.0, dy = Double(y) - a.shoulder.1
+                let sx = Int((a.shoulder.0 + dx * c - dy * s).rounded()), sy = Int((a.shoulder.1 + dx * s + dy * c).rounded())
+                guard sx >= 0, sy >= 0, sx < frame.width, sy < frame.height, frame[sx, sy].a > 0, !zz(sx, sy),
+                      inside(Double(sx), Double(sy), a.outline) else { continue }
+                body[x, y] = frame[sx, sy]
+                limbs[x, y] = frame[sx, sy]
+            } }
+        }
+        for y in 0...hips { for x in 0..<frame.width where frame[x, y].a > 0 && !arm(x, y) && !zz(x, y) {
+            body[x, y] = frame[x, y]
+            limbs[x, y] = .clear
+        } }
+        let pixels = (0..<(body.width * body.height)).filter { body[$0 % body.width, $0 / body.width].a > 0 }
+        let r = bounds(pixels, width: body.width)
+        let w = r.x1 - r.x0 + 1, h = r.y1 - r.y0 + 1
+        var turned = Bitmap(width: h, height: w), turnedArms = turned
+        for y in 0..<h { for x in 0..<w {
+            turned[y, w - 1 - x] = body[r.x0 + x, r.y0 + y]
+            turnedArms[y, w - 1 - x] = limbs[r.x0 + x, r.y0 + y]
+        } }
+        // Each leg's middle across the shins, as a row of the turned bitmap.
+        var sides: [[Int]] = [[], []]
+        for y in (waist + 20)...(feet - 12) { for x in 0..<frame.width where frame[x, y].a > 0 { sides[x < 167 ? 0 : 1].append(x) } }
+        let legs: [Double] = sides.map { xs in
+            let mean = Double(xs.reduce(0, +)) / Double(xs.count)
+            return Double(w - 1) - (mean - Double(r.x0))
+        }
+        return SleeperFigure(bitmap: turned, arms: turnedArms, head: (Double(110 - r.y0), Double(w - 1) - (167.5 - Double(r.x0))),
+                             waist: Double(waist - r.y0), feet: Double(feet - r.y0), legs: legs)
+    }()
+    /// The head's centre on the pillow, in art cells: the antenna's tip just
+    /// short of the headboard.
+    static let head: (Double, Double) = {
+        let (_, y) = bedTop(0, 0.5)
+        return (Double(bedLeft) + 1.5 + figure.head.0 * scale / 2, Double(y) - 1)
+    }()
+    /// Along the mattress, 0...1, at a column of the turned figure.
+    static func along(_ px: Double) -> Double {
+        let cell = head.0 + (px - figure.head.0) * scale / 2
+        return (cell - Double(bedLeft)) / Double(bedRight - bedLeft)
+    }
+    /// Across the mattress, 0...1 from its front edge, at a row of the turned
+    /// figure lying flat on it.
+    static func across(_ px: Double) -> Double {
+        let cell = head.1 + 1 + (px - figure.head.1) * scale / 2
+        return (Double(bedFront) - cell) / Double(bedFront - bedBack)
+    }
+    /// Where the blanket starts, as a share of the mattress's length: at the
+    /// sleeper's waist, so its head, arms and body lie on the sheet and its
+    /// legs under the blanket.
+    static var fold: Double { along(figure.waist) }
+    static var feet: Double { along(figure.feet) }
+    static var legs: [Double] { figure.legs.map(across) }
 }
 
-/// Bed, cover and sleeping head, cropped alike, with the bed's floor pivot and
-/// where the head's centre goes, in the bed image's pixels.
-func companionBedSprites() -> (base: Bitmap, cover: Bitmap, pivot: [Int], head: [Int]) {
+/// Bed and cover, cropped alike, with the bed's floor pivot and where the
+/// sleeper's centre and head go, in the bed image's pixels.
+func companionBedSprites() -> (base: Bitmap, cover: Bitmap, pivot: [Int], figure: [Int], head: [Int]) {
     var base = Art(); companionBed(&base, .base); base.finishMaterials()
     var cover = Art(); companionBed(&cover, .cover); cover.finishMaterials()
     let (sprite, pivot) = base.sprite(pivot: [bedRight - 18, bedFront + 10])
@@ -834,27 +917,31 @@ func companionBedSprites() -> (base: Bitmap, cover: Bitmap, pivot: [Int], head: 
         guard sx >= 0, sy >= 0, sx < raster.width, sy < raster.height else { continue }
         coverSprite.rect(x * 2, y * 2, 2, 2, raster[sx, sy])
     } }
-    let (hx, hy) = bedTop(0.12, 0.5)
-    return (sprite, coverSprite, pivot, [(hx - x0) * 2, (hy - y0 - 4) * 2])
+    let f = Sleeper.figure, s = Sleeper.scale
+    let head = ((Sleeper.head.0 - Double(x0)) * 2, (Sleeper.head.1 - Double(y0)) * 2)
+    let centre = (head.0 + (Double(f.bitmap.width) / 2 - f.head.0) * s, head.1 + (Double(f.bitmap.height) / 2 - f.head.1) * s)
+    return (sprite, coverSprite, pivot, [Int(centre.0.rounded()), Int(centre.1.rounded())],
+            [Int(head.0.rounded()), Int(head.1.rounded())])
 }
 
 /// The bed with its sleeper, large, to look at while drawing.
 func makeBedPreview() throws {
-    let (base, cover, _, head) = companionBedSprites()
-    let sleeper = sleepingHeadBitmap()
-    let scale = 0.22
-    var canvas = Bitmap(width: base.width + 20, height: base.height + 20, fill: color("293850"))
-    canvas.blit(base, 10, 10)
-    let hw = Int(Double(sleeper.width) * scale), hh = Int(Double(sleeper.height) * scale)
-    canvas.blit(sleeper, 10 + head[0] - hw / 2, 10 + head[1] - hh / 2, width: hw, height: hh)
-    canvas.blit(cover, 10, 10)
-    var big = Bitmap(width: canvas.width * 4, height: canvas.height * 4)
-    for y in 0..<canvas.height { for x in 0..<canvas.width { big.rect(x * 4, y * 4, 4, 4, canvas[x, y]) } }
-    big.write(URL(fileURLWithPath: "/tmp/clockin-bed-preview.png"))
+    let (base, cover, _, figure, _) = companionBedSprites()
+    let sleeper = Sleeper.figure.bitmap, scale = Sleeper.scale
+    // Three pixels a room unit, about what a phone shows.
+    let k = 3
+    var canvas = Bitmap(width: (base.width + 20) * k, height: (base.height + 20) * k, fill: color("293850"))
+    canvas.blit(base, 10 * k, 10 * k, width: base.width * k, height: base.height * k)
+    let hw = Int(Double(sleeper.width) * scale * Double(k)), hh = Int(Double(sleeper.height) * scale * Double(k))
+    canvas.blit(sleeper, (10 + figure[0]) * k - hw / 2, (10 + figure[1]) * k - hh / 2, width: hw, height: hh)
+    canvas.blit(cover, 10 * k, 10 * k, width: cover.width * k, height: cover.height * k)
+    canvas.blit(Sleeper.figure.arms, (10 + figure[0]) * k - hw / 2, (10 + figure[1]) * k - hh / 2, width: hw, height: hh)
+    canvas.write(URL(fileURLWithPath: "/tmp/clockin-bed-preview.png"))
     var empty = Bitmap(width: base.width * 4, height: base.height * 4)
     for y in 0..<base.height { for x in 0..<base.width { empty.rect(x * 4, y * 4, 4, 4, base[x, y]) } }
     empty.write(URL(fileURLWithPath: "/tmp/clockin-bed-empty.png"))
-    print("Bed \(base.width)x\(base.height), head at \(head), sleeper \(sleeper.width)x\(sleeper.height)")
+    sleeper.write(URL(fileURLWithPath: "/tmp/clockin-bed-sleeper.png"))
+    print("Bed \(base.width)x\(base.height), figure at \(figure), sleeper \(sleeper.width)x\(sleeper.height), fold \(Sleeper.fold), feet \(Sleeper.feet)")
 }
 if CommandLine.arguments.last == "bed" { try makeBedPreview() }
 
@@ -1030,15 +1117,18 @@ func makeHome() throws {
         a.line(14,35,25,41,color("493C73"),2); a.line(25,41,43,41,color("493C73"),2)
         a.line(16,27,24,16,color("BCA0DC")); a.box(48,40,6,3,woodLight)
     }
-    // The bed is drawn full size, not fitted, and has two more layers for a
-    // sleeper: the head on the pillow and the blanket raised over its body.
+    // The bed is drawn full size, not fitted, and has three more layers for a
+    // sleeper: its figure lying on the sheet, the blanket over its legs and
+    // its arms over the blanket.
     do {
-        let (base, cover, pivot, head) = companionBedSprites()
+        let (base, cover, pivot, figure, head) = companionBedSprites()
         base.write(homeDir.appendingPathComponent("companion-bed.png"))
         cover.write(homeDir.appendingPathComponent("companion-bed-cover.png"))
-        sleepingHeadBitmap().write(homeDir.appendingPathComponent("companion-bed-head.png"))
+        Sleeper.figure.bitmap.write(homeDir.appendingPathComponent("companion-bed-sleeper.png"))
+        Sleeper.figure.arms.write(homeDir.appendingPathComponent("companion-bed-arms.png"))
         items["companion-bed"]=["name":"Companion bed","file":"companion-bed.png","slot":"floorRight","pivot":pivot,
-            "sleeper":["cover":"companion-bed-cover.png","head":"companion-bed-head.png","center":head,"scale":0.22]]
+            "sleeper":["cover":"companion-bed-cover.png","figure":"companion-bed-sleeper.png","arms":"companion-bed-arms.png",
+                       "center":figure,"head":head,"scale":Sleeper.scale]]
     }
     item("coffee-machine","Coffee machine on stool","floorLeft",[31,61]) { a in
         a.box(12,36,38,5,woodLight); a.box(15,41,5,21,wood); a.box(42,41,5,21,wood)

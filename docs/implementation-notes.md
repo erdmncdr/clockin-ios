@@ -395,22 +395,28 @@ timer from the bottom edge instead of sitting under the earnings. A debug build
 launched with `--desk-preview` draws desk mode turned onto the portrait screen, for
 simulators that cannot rotate.
 When the companion rests (tired, or a session paused for four hours, with the
-companion bed placed), it lies in the bed on its back. The bed is drawn full
-size by `Tools/MascotArt.swift` (`companionBed`): a slim mattress seen a little
-from above, a tall headboard and a low footboard as thin boards with round
-knobs at the ends, a pale blue pillow and a quilted blanket hanging over the
-front. The same tool
-writes two layers for a sleeper, cropped exactly like the bed: the head, taken
-from `z01` (helmet and antenna only, its zzz removed) and turned a quarter so
-the antenna points at the headboard, and the blanket again with the body under
-it drawn as a height map (shoulders, hips, two legs, feet turned up). The app
-draws bed, head (in the companion's colours) and cover in that order, the
-cover rising a pixel with each slow breath, and pixel Zs drift off the pillow.
-`home-items.json` gives the bed's `sleeper` layers, where the head goes and its
-scale; `HomeSceneLayout.companionBed` repeats the bed's size, pivot and head
-point for shared layout code, and the wardrobe checks keep the two equal.
-`swift -module-cache-path /tmp/clockin-art-module-cache Tools/run-art.swift
-Tools/MascotArt.swift bed` draws the bed with its sleeper, large, to
+companion bed placed), it lies in the bed on its back, all of it in view. The
+bed is drawn full size by `Tools/MascotArt.swift` (`companionBed`): a mattress
+seen from above and the front, deep enough for the companion to lie on, a
+tall headboard and a low footboard as thin boards with round knobs, a pale
+blue pillow and a quilted blanket turned down to the sleeper's waist and
+hanging over the front. The same tool builds the sleeper from `z01` (its zzz
+removed): the arms, raised in every standing frame, are cut out and swung
+down about the shoulders to lie along its sides, the legs are cut off at the
+waist, and the figure is turned a quarter so its head lies on the pillow
+with the antenna at the headboard. It writes three layers for a sleeper: the
+figure, the blanket again with the legs under it drawn as a height map (hips,
+a ridge along each leg, the feet turned up), cropped exactly like the bed, and
+the figure's arms alone. The app draws bed, figure, cover and arms in that
+order, so the head, body and arms lie on the sheet and the arms rest on the
+blanket; the figure and arms are in the companion's colours and rise a pixel
+with each slow breath, and pixel Zs drift off the pillow. `home-items.json`
+gives the bed's `sleeper` layers, where the figure's and head's centres go
+and the figure's scale; `HomeSceneLayout.companionBed` repeats the bed's
+size, pivot and head point for shared layout code, and the wardrobe checks
+keep the two equal. `swift -module-cache-path /tmp/clockin-art-module-cache
+Tools/run-art.swift Tools/MascotArt.swift bed` draws the bed with its sleeper
+at three pixels a room unit, about what a phone shows, to
 `/tmp/clockin-bed-preview.png`; `--companion-sleep-preview` shows it in every
 room and both layouts.
 Check VoiceOver and large text. Scroll the Companion header offscreen, dismiss it,

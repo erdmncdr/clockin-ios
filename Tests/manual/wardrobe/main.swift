@@ -406,15 +406,16 @@ for (roomID, room) in realHome.rooms {
         draw(image,x:x,y:p.y,w:rect.width,h:rect.height,mirror:layout.mirrored && !HeritageArt.preservesOrientation(id))
     }
     if activity == .sleeping {
-        // The sleeper's layers, as CompanionHomeView draws them: the head on
-        // the pillow, then the blanket raised over the body.
+        // The sleeper's layers, as CompanionHomeView draws them: the figure on
+        // the sheet, the blanket over its legs, its arms on the blanket.
         let item = realHome.items["companion-bed"]!, sleeper = item.sleeper!, bed = realImage("Home/"+item.file)
         let rect = HomeSceneLayout.furnitureRect(item, in: room, imageSize: CGSize(width: bed.width, height: bed.height), layout: layout)
-        let head = realImage("Home/"+sleeper.head)
-        let w = Double(head.width) * sleeper.scale, h = Double(head.height) * sleeper.scale
+        let figure = realImage("Home/"+sleeper.figure)
+        let w = Double(figure.width) * sleeper.scale, h = Double(figure.height) * sleeper.scale
         let cx = layout.mirrored ? rect.maxX - sleeper.center.x : rect.minX + sleeper.center.x, cy = rect.minY + sleeper.center.y
-        draw(head,x:cx-w/2,y:cy-h/2,w:w,h:h,mirror:layout.mirrored)
+        draw(figure,x:cx-w/2,y:cy-h/2,w:w,h:h,mirror:layout.mirrored)
         draw(realImage("Home/"+sleeper.cover),x:rect.minX,y:rect.minY,w:rect.width,h:rect.height,mirror:layout.mirrored)
+        draw(realImage("Home/"+sleeper.arms),x:cx-w/2,y:cy-h/2,w:w,h:h,mirror:layout.mirrored)
     } else {
         let frame: String = switch activity {case .idle: "h01";case .working: "t01";case .relaxing: "c01";case .sleeping: "z01"}
         let overlays=WardrobeArt.overlays(frame:frame,outfit:outfit,images:artImages,anchorManifest:realAnchors,spriteManifest:realSprites)
@@ -432,8 +433,12 @@ for (roomID, room) in realHome.rooms {
 do {
     let bed = realHome.items["companion-bed"]!, image = realImage("Home/"+bed.file), geometry = HomeSceneLayout.companionBed
     check(geometry.size == CGSize(width: image.width, height: image.height) && geometry.pivot == bed.pivot
-          && geometry.head == bed.sleeper?.center, "companion bed layout matches its art")
-    for file in [bed.sleeper?.cover, bed.sleeper?.head] { check(file.map { realImage("Home/"+$0).width > 0 } == true, "sleeper layer decodes") }
+          && geometry.head == bed.sleeper?.head, "companion bed layout matches its art")
+    for file in [bed.sleeper?.cover, bed.sleeper?.figure, bed.sleeper?.arms] { check(file.map { realImage("Home/"+$0).width > 0 } == true, "sleeper layer decodes") }
+    if let sleeper = bed.sleeper {
+        let figure = realImage("Home/"+sleeper.figure), arms = realImage("Home/"+sleeper.arms)
+        check(figure.width == arms.width && figure.height == arms.height, "sleeper's arms line up with its figure")
+    }
 }
 for roomID in realHome.rooms.keys.sorted() {
     for activity in CompanionHomeActivity.allCases {

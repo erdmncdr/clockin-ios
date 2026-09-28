@@ -80,6 +80,6 @@ for (roomID,room) in home.rooms {
     let collision = RoomPlacement.moved(portrait,translation:CGSize(width:80,height:0),room:room,roomID:roomID,arrangement:.init(),layout:.deskLeft)
     check(RoomPlacement.issue(for:portrait,items:[portrait,shelf],room:room,roomID:roomID,arrangement:collision) != nil,"overlapping furniture rejected")
     check(RoomPlacement.issue(for:rug,items:[rug,bean],room:room,roomID:roomID,arrangement:.init()) == nil,"rug can sit under furniture")
-    check(size("bean-bag") == CGSize(width:90,height:62) && size("companion-bed") == CGSize(width:106,height:60),"attachment authored sizes verified")
+    check(size("bean-bag") == CGSize(width:90,height:62) && size("companion-bed") == CGSize(width:106,height:78),"attachment authored sizes verified")
 }
 print("\(checks) room editor checks passed: migration, save/cancel, backup, bounds, mirrors, collisions, seat attachments")

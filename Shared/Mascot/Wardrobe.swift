@@ -215,13 +215,17 @@ struct WardrobeFurniture: Codable, Sendable {
     /// A bed's layers for a sleeper, drawn over it in this order.
     var sleeper: WardrobeSleeper? = nil
 }
-/// The head that lies on a bed's pillow and the blanket drawn over its body,
-/// both from the home art tool. `center` is where the head's centre goes in
-/// the bed image's pixels; the head image is drawn at `scale`.
+/// The companion lying in a bed, from the home art tool: its figure on the
+/// sheet, the blanket over its legs and its arms over the blanket, drawn in
+/// that order. `center` is where the figure's centre goes and `head` where
+/// its head's centre lies, in the bed image's pixels; the figure and the arms
+/// are drawn at `scale`.
 struct WardrobeSleeper: Codable, Sendable {
     let cover: String
-    let head: String
+    let figure: String
+    let arms: String
     let center: WardrobePoint
+    let head: WardrobePoint
     let scale: Double
 }
 struct WardrobeHome: Codable, Sendable {
@@ -292,8 +296,8 @@ enum CompanionHomeActivity: String, CaseIterable, Sendable {
         return .init(layout.x(point.x), point.y)
     }
 
-    /// The sleeping head's centre, on the bed's pillow. The body lies under
-    /// the blanket, which the bed's cover layer draws raised over it.
+    /// The sleeping head's centre, on the bed's pillow. The body lies on the
+    /// sheet with the blanket, the bed's cover layer, over its legs.
     static func sleepingHead(in room: WardrobeRoom, layout: CompanionHomeLayout, roomID: String = "",
                              arrangement: RoomArrangement = .init()) -> WardrobePoint {
         let bed = HomeSceneLayout.companionBedRect(in: room, layout: layout, roomID: roomID, arrangement: arrangement)
