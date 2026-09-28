@@ -1812,12 +1812,30 @@ func makeSkins() throws {
                 art.ellipse(66,50,9,9,trim[0]); art.ellipse(66,50,8,8,trim[2]); art.ellipse(67,51,5,5,trim[3])
                 art.rect(68,51,2,1,trim[4]); art.line(62,75,70,78,trim[3])
             case "skin-nova":
-                art.plate([(62,43),(77,43),(84,52),(78,63),(62,63),(56,53)],plate)
-                art.plate([(63,46),(76,46),(81,53),(76,60),(63,60),(59,53)],trim)
-                art.ellipse(61,45,18,17,plate[0]); art.ellipse(62,46,16,15,trim[1])
-                art.ellipse(63,47,14,13,trim[3]); art.ellipse(65,49,10,9,plate[0])
-                art.ellipse(66,50,8,7,plate[1]); art.ellipse(67,51,5,4,energy[2]); art.rect(68,51,2,2,energy[4])
-                art.line(64,48,68,47,trim[4],2); art.line(73,59,76,56,trim[2])
+                // A shallow, neck-notched breastplate sits flush with the torso.
+                // Broad facets echo the pauldrons without a raised central housing.
+                art.poly([(58,44),(65,44),(70,46),(75,44),(82,44),(80,53),(75,57),(65,57),(60,53)],plate[0])
+                art.poly([(59,45),(65,45),(70,47),(75,45),(80,45),(78,52),(74,55),(65,55),(61,52)],plate[2])
+                art.poly([(70,47),(75,45),(80,45),(78,52),(74,55),(70,55)],plate[1])
+                art.line(58,44,64,44,plate[4]); art.line(59,45,61,52,plate[3])
+                art.line(65,45,69,47,plate[3]); art.line(75,44,81,44,plate[3])
+                art.line(65,56,74,56,plate[0]); art.line(79,52,75,56,plate[0])
+                // Soft reflected light stays within the metal silhouette.
+                for y in 46...55 { for x in 60...79 where art.b[x,y].a > 0 {
+                    let stripY = 52.0 - abs(Double(x)-70) * 4.0/9.0
+                    let cyanGlow = 0.22 * exp(-pow(Double(y)-stripY,2)/3)
+                    let pinkGlow = 0.38 * exp(-(pow(Double(x)-70,2)+pow(Double(y)-53,2))/6)
+                    let base = art.b[x,y]
+                    func lit(_ value: UInt8,_ cyan: UInt8,_ pink: UInt8) -> UInt8 {
+                        UInt8(Double(value)*(1-cyanGlow-pinkGlow)+Double(cyan)*cyanGlow+Double(pink)*pinkGlow)
+                    }
+                    art.rect(x,y,1,1,Pixel(r:lit(base.r,trim[3].r,energy[2].r),
+                                         g:lit(base.g,trim[3].g,energy[2].g),
+                                         b:lit(base.b,trim[3].b,energy[2].b),a:255))
+                } }
+                art.line(61,48,70,52,trim[3]); art.line(79,48,70,52,trim[3])
+                art.line(61,48,64,49,trim[4])
+                art.rect(69,52,2,2,energy[2])
             case "skin-aurora":
                 art.plate([(70,43),(80,45),(79,51),(75,57),(67,63),(60,59),(60,51),(65,47)],trim)
                 art.plate([(70,44),(77,46),(76,52),(66,60),(62,58),(63,51)],plate)

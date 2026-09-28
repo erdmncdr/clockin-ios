@@ -477,8 +477,9 @@ The second art pass uses curved, round-tipped feather vanes with overlapping
 coverts, separated upper/middle/lower Seraph wings, longitudinal iridescence and
 pearl tips. Paladin has a sun-embroidered linen tabard, gold-edged plate lames and
 a feathered circlet; Seraph has pearl clasps and a separate pearl circlet. Nova's
-hex reactor, Aurora's emerald leaf clasp, Celestial's eight-point medallion and
-Obsidian's ruby gorget each have their own shoulder silhouette. Aurora's plate is
+flat gunmetal chest plate with cyan V lights and a magenta point, Aurora's emerald
+leaf clasp, Celestial's eight-point medallion and Obsidian's ruby gorget each have
+their own shoulder silhouette. Aurora's plate is
 silver with emerald joints and a green/teal/violet/pink curtain mantle. Swords
 are omitted from both Paladin and Obsidian rather than leaving hidden fragments.
 Plate bevels and cast shadows, gem facets/glints and cloth folds supply depth.

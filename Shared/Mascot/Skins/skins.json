@@ -1251,8 +1251,8 @@
           "id" : "skin-nova-chest",
           "layer" : "front",
           "pivot" : [
-            30,
-            2
+            26,
+            0
           ],
           "poseOffsets" : {
             "c" : [
