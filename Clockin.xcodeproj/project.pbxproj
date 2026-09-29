@@ -67,6 +67,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Sync/Cloud/CloudKitAdapter.swift,
+				Sync/Cloud/SyncBounds.swift,
 				Sync/Cloud/SyncBridge.swift,
 				Sync/Cloud/SyncMerge.swift,
 				Sync/Cloud/SyncModel.swift,
