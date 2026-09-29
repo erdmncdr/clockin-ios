@@ -65,9 +65,14 @@ struct SettingsView: View {
                         }
                     }
                 }
+                #if os(macOS)
+                MacSettingsSection()
+                #endif
                 paySection
                 Section {
+                    #if os(iOS)
                     Toggle("Haptics", isOn: $hapticsEnabled.hapticSelection($selectionFeedback))
+                    #endif
                     Toggle("Level-up sound", isOn: $levelUpSoundEnabled.hapticSelection($selectionFeedback))
                     Toggle("Focus companion", isOn: $mascotEnabled.hapticSelection($selectionFeedback))
                     if mascotEnabled {
@@ -77,7 +82,11 @@ struct SettingsView: View {
                 } header: {
                     Text("Appearance")
                 } footer: {
+                    #if os(macOS)
+                    Text("Gentle feedback for completed actions. The level-up sound plays while Clockin is open.")
+                    #else
                     Text("Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.")
+                    #endif
                 }
                 NudgeSettingsSection()
                 Section {
@@ -93,7 +102,11 @@ struct SettingsView: View {
                         }
                     }
                 } footer: {
+                    #if os(macOS)
+                    Text("Automatic follows your Mac's language.")
+                    #else
                     Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
+                    #endif
                 }
                 #if os(iOS)
                 Section {
@@ -118,13 +131,16 @@ struct SettingsView: View {
                 }
             }
             .hapticFeedback(selectionFeedback)
+            #if os(iOS)
             .dismissDecimalKeyboard(isEditing: rateIsFocused || earlierRateIsFocused) {
                 rateIsFocused = false
                 earlierRateIsFocused = false
             }
             .scrollDismissesKeyboard(.interactively)
+            #endif
             .scrollContentBackground(.hidden)
             .background(palette.background)
+            #if os(iOS)
             .navigationTitle("Settings")
             .inlineNavigationTitle()
             .toolbar {
@@ -148,6 +164,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            #endif
             .celebrationBlocked(by: pendingRate != nil || sheet != nil || confirmRemoveSplit || showImporter || showRestoreConfirmation || showExporter)
             .sheet(item: $pendingRate, onDismiss: { syncRateText() }) { draft in
                 RateChangePrompt(value: draft.value)
@@ -219,7 +236,11 @@ struct SettingsView: View {
                     restoreBackup(from: url)
                 }
             } message: {
+                #if os(macOS)
+                Text("This replaces every session and the running timer on this Mac with the selected file. Your current data is kept as a backup first, so it can be restored from Automatic backups.")
+                #else
                 Text("This replaces every session and the running timer on this iPhone with the selected file. Your current data is kept as a backup first, so it can be restored from Automatic backups.")
+                #endif
             }
         }
     }
@@ -352,7 +373,11 @@ struct SettingsView: View {
                 if let latest = store.latestBackupDate {
                     Text("Last automatic backup \(latest.formatted(.relative(presentation: .named).locale(AppLanguage.formatLocale))), \(store.backupCount) saved.")
                 }
+                #if os(macOS)
+                Text("Data is stored only on this Mac.")
+                #else
                 Text("Data is stored only on this iPhone.")
+                #endif
             }
         }
     }
