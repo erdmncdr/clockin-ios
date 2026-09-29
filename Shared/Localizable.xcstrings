@@ -2597,6 +2597,16 @@
         }
       }
     },
+    "By day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güne göre"
+          }
+        }
+      }
+    },
     "CLOCKIN": {
       "localizations": {
         "tr": {
@@ -2989,6 +2999,16 @@
         }
       }
     },
+    "Choose View > Desk Mode (⌃⌘F), or Open Desk Mode in Settings, for a full-screen timer with live earnings, today’s total, your daily goal and session controls. Show home in desk mode adds your companion’s home behind the timer. The display stays awake while a session is running and not paused. Pausing, stopping or closing the window releases that hold. Clocking out shows the session summary in this window. Press Esc or use the window’s close button to leave desk mode; the timer keeps its current state.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canlı kazanç, bugünün toplamı, günlük hedef ve oturum kontrolleri bulunan tam ekran sayacı açmak için Görünüm > Masa Modu (⌃⌘F) veya Ayarlar’daki Masa Modunu aç seçeneğini kullan. Masa modunda evi göster, arkadaşının evini sayacın arkasına ekler. Oturum çalışırken ve duraklatılmamışken ekran açık kalır. Duraklatmak, bitirmek veya pencereyi kapatmak bu zorlamayı kaldırır. Çıkış yaptığında oturum özeti bu pencerede gösterilir. Masa modundan çıkmak için Esc’ye bas veya pencerenin kapatma düğmesini kullan; sayaç mevcut durumunu korur."
+          }
+        }
+      }
+    },
     "Choose a CSV file or paste timecards. You can review new entries, corrections, and duplicates before saving anything.": {
       "localizations": {
         "tr": {
@@ -3045,6 +3065,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klasik"
+          }
+        }
+      }
+    },
+    "Click Clockin in the menu bar to open its panel. Check the session timer, earnings, today’s work and goals, then clock in, pause, resume or clock out without opening the main window. The panel also has radio, pin and minimal-mode controls. Click outside, click the menu bar item again or press Esc to close it. Right-click the menu bar item for Open, Check for Updates and Quit.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paneli açmak için menü çubuğundaki Clockin’e tıkla. Oturum süresini, kazancını, bugünkü çalışmanı ve hedeflerini gör; ana pencereyi açmadan giriş yap, duraklat, devam et veya çıkış yap. Panelde radyo, sabitleme ve minimal mod kontrolleri de bulunur. Kapatmak için dışarıya veya menü çubuğu öğesine tekrar tıkla ya da Esc’ye bas. Aç, Güncellemeleri denetle ve Çık için menü çubuğu öğesine sağ tıkla."
+          }
+        }
+      }
+    },
+    "Click the companion on Today, or open Progress > Badges > Companion, to dress it and decorate its home. Outfit has one item per slot and a body colorway; None removes an item. Work unlocks accessories and earns focus coins. Shop purchases ask for confirmation and equip immediately. Choose home items, then use Edit room to place them; arrows fine-tune, Save keeps the layout, Cancel discards changes and Reset room restores the preset. Each room remembers its layout. Settings > Desk Mode > Show home in desk mode controls the dimmed home behind the large timer. Outfits follow poses, moods and celebrations. Backups include your wardrobe, purchases and home; older backups leave your wardrobe unchanged.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arkadaşını giydirmek ve evini dekore etmek için Bugün’de ona tıkla veya İlerleme > Rozetler > Arkadaş yolunu aç. Kıyafet bölümünde her yuva için bir eşya ve gövde rengi seçebilirsin; Yok eşyayı çıkarır. Çalıştıkça aksesuarlar açılır ve odak jetonları kazanırsın. Mağaza alışverişleri onay ister ve alınan eşya hemen takılır. Ev eşyalarını seçip Odayı düzenle ile yerleştir; oklarla ince ayar yap, Kaydet ile koru, Vazgeç ile değişiklikleri bırak veya Odayı sıfırla ile hazır düzene dön. Her oda düzenini hatırlar. Ayarlar > Masa Modu > Masa modunda evi göster, büyük sayacın arkasındaki loş evi açıp kapatır. Kıyafetler pozlara, ruh hallerine ve kutlamalara uyar. Yedeklere gardırop, alışverişler ve ev dahildir; eski yedekler gardırobunu değiştirmez."
           }
         }
       }
@@ -3135,6 +3175,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mesaiye başla, duraklat ve bitir"
+          }
+        }
+      }
+    },
+    "Clock menu shortcuts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayaç menüsü kısayolları"
           }
         }
       }
@@ -3335,6 +3385,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kahve köşesi"
+          }
+        }
+      }
+    },
+    "Collapsed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
           }
         }
       }
@@ -4279,6 +4339,16 @@
         }
       }
     },
+    "Desk Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masa Modu"
+          }
+        }
+      }
+    },
     "Desk and monitor": {
       "localizations": {
         "tr": {
@@ -5071,6 +5141,16 @@
         }
       }
     },
+    "Expanded": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
     "Explorer flag": {
       "localizations": {
         "tr": {
@@ -5781,6 +5861,16 @@
         }
       }
     },
+    "History list modes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş liste görünümleri"
+          }
+        }
+      }
+    },
     "History starts on this calendar month. Choose Week for days 1–7, 8–14, 15–21, 22–28 or the remaining days of each month, Month for a month starting on the 1st, 6 months for six months with monthly bars, or All. Swipe right over the chart or tap the back arrow for an earlier period; swipe left or tap forward to return, up to the current period. Vertical swipes scroll History. Totals and sessions follow the page. Changing range keeps your place in time. Your range is remembered, but reopening the app starts on its current period. Tap a day, or a month in 6 months, for hours and money. Empty periods say there is no work. USD accounts can switch all History money values to TRY using each session's start calendar day rate or the nearest earlier available rate. The choice is remembered across launches. A small secondary line keeps the other currency visible where available. Missing rates keep affected values in USD and show Some rates are unavailable once. Totals with missing rates stay in USD so currencies are never added together. TRY charts omit days without rates, or months containing those days. With no rates, the chart shows USD. This changes only History's display, not stored entries or the app currency. Today shows the latest USD/TRY rate and its status. Overnight sessions count toward the date they started.": {
       "localizations": {
         "tr": {
@@ -6109,12 +6199,32 @@
         }
       }
     },
+    "In Settings > Focus chime, enable chimes and allow notifications. Choose 1–120 minutes of worked time, a sound and volume. Preview plays immediately; choosing a sound also previews it. Pauses do not count. Starting a session or changing the interval skips past chimes. Pausing, clocking out or cancelling clears pending chimes. While Clockin is open, chimes play with other audio. Background notifications follow your Mac’s notification and Focus settings.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar > Odak sesi bölümünde sesi aç ve bildirimlere izin ver. 1–120 dakika arasında çalışma süresi, ses ve ses düzeyi seç. Önizleme hemen çalar; ses seçmek de önizlemeyi başlatır. Molalar sayılmaz. Oturum başlatmak veya aralığı değiştirmek geçmiş sesleri atlar. Duraklatmak, çıkış yapmak veya iptal etmek bekleyen sesleri temizler. Clockin açıkken sesler diğer seslerle birlikte çalar. Arka plan bildirimleri Mac’inin bildirim ve Odak ayarlarına uyar."
+          }
+        }
+      }
+    },
     "In Settings > Focus chime, turn on Focus chime to request notification permission. Choose 1-120 minutes of worked time and one of eight original sounds: Soft Bell, Glass, Marimba, Chime, Pop, Wood Block, Singing Bowl or Tiny Ping. Chime is the default. Preview plays immediately without notification permission; choosing a sound also previews it. Volume ranges from 10-100%, starts at 75%, and applies while Clockin is open. Background notifications use the system volume and follow silent mode, Focus and iOS delivery timing. Pauses do not count. New sessions and interval or enable changes skip past chimes and use the next worked-time boundary. Up to 45 chimes are queued, refreshed while Clockin is open and when you return. Pausing, clocking out or cancelling clears pending chimes, including from widgets, Live Activities or Shortcuts. While Clockin is open, chimes play without a notification and mix with other audio. Chimes that arrive while it is closed collapse into one group, cleared when you open Clockin. With Focus radio stopped, they respect the silent switch. If Focus radio is playing, chimes remain audible in silent mode.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar > Odak çanı'nda bildirim izni istemek için Odak çanını aç. 1-120 dakikalık çalışma süresi ve sekiz özgün sesten birini seç: Yumuşak Zil, Cam, Marimba, Çan, Pıt, Tahta Tık, Tibet Kasesi ya da Minik Ding. Varsayılan Çan'dır. Önizleme, bildirim izni olmadan hemen çalar; bir ses seçmek de onu önizler. Ses düzeyi %10-100 arasındadır, %75'ten başlar ve Clockin açıkken geçerlidir. Arka plan bildirimleri sistem ses düzeyini kullanır; sessiz moda, Odak'a ve iOS'in teslim zamanlamasına uyar. Duraklamalar sayılmaz. Yeni oturumlar, aralık değişiklikleri ya da açıp kapatma, geçmiş çanları atlar ve bir sonraki çalışma süresi sınırını kullanır. Sırada en fazla 45 çan bekler; Clockin açıkken ve uygulamaya döndüğünde yenilenir. Duraklatmak, mesaiyi bitirmek ya da iptal etmek, araç takımları, Canlı Etkinlikler veya Kestirmeler'den yapılsa bile bekleyen çanları temizler. Clockin açıkken çanlar bildirim göstermeden, diğer seslerle karışarak çalar. Uygulama kapalıyken gelen çanlar tek bir grupta toplanır ve Clockin'i açınca temizlenir. Odak radyosu durmuşken sessiz anahtarına uyarlar. Odak radyosu çalıyorsa çanlar sessiz modda da duyulur."
+          }
+        }
+      }
+    },
+    "In Settings > Focus radio, choose Radio Paradise (Main Mix), Mellow Mix, Global Mix or Serenity (ambient), then press Play. Clockin remembers your station; changing it while playing switches immediately. Today and the menu bar panel provide playback controls. Pause keeps the radio ready to resume; Stop ends playback and clears system media controls. Adjust volume in Settings. Connection errors offer Play to retry. Streaming uses internet data.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar > Odak radyosu bölümünde Radio Paradise (Main Mix), Mellow Mix, Global Mix veya Serenity (ambient) seçip Çal’a bas. Clockin istasyonunu hatırlar; çalarken istasyon değiştirmek hemen geçiş yapar. Bugün ve menü çubuğu panelinde oynatma kontrolleri bulunur. Duraklat radyoyu devam etmeye hazır tutar; Durdur oynatmayı bitirip sistem medya kontrollerini temizler. Ses düzeyini Ayarlar’dan değiştir. Bağlantı hatasında yeniden denemek için Çal’a bas. Yayın internet verisi kullanır."
           }
         }
       }
@@ -7279,6 +7389,16 @@
         }
       }
     },
+    "Menu bar and panel": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu ve panel"
+          }
+        }
+      }
+    },
     "Midnight": {
       "localizations": {
         "tr": {
@@ -7315,6 +7435,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Minimal menü çubuğu modu"
+          }
+        }
+      }
+    },
+    "Minimal mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimal mod"
           }
         }
       }
@@ -8503,6 +8633,16 @@
         }
       }
     },
+    "Open Desk Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masa Modunu aç"
+          }
+        }
+      }
+    },
     "Open Progress > Badges, or tap your level on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Choose a mission tier: Launch, Orbit, Lunar, Solar, Galactic or Eternal. Tap a mission for its goal, progress and reward preview. Eternal holds the four hardest achievements. Collection missions count different purchases, including earlier ones, but exclude free gifts and grant no coins or XP. Current-streak badges lock again when a streak ends.": {
       "localizations": {
         "tr": {
@@ -9137,6 +9277,16 @@
         }
       }
     },
+    "Pinned timer layouts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit sayaç düzenleri"
+          }
+        }
+      }
+    },
     "Pixel shades": {
       "localizations": {
         "tr": {
@@ -9253,6 +9403,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önceki 30 gün"
+          }
+        }
+      }
+    },
+    "Press Command-comma (⌘,) or open Settings in the sidebar, then choose Data > Import timecards. Choose a CSV file or paste a task block or timecards page and select Review. CSV needs Start Time and End Time columns with ISO 8601 dates. Pasted text needs English dates, a status, source, and 24-hour times; include the date range and years when available. Check dates, duration and any Approved total warning. Review New, Matched corrections and Duplicate skipped entries. Deselect any rows you want to leave out. Only selected rows are imported; matched entries are corrected and duplicates are skipped.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar çubuğundan Ayarlar’ı aç veya ⌘, tuşlarına bas, ardından Veri > Zaman kartlarını içe aktar’ı seç. Bir CSV dosyası seç ya da görev bloğunu veya zaman kartı sayfasını yapıştırıp İncele’ye bas. CSV’de ISO 8601 tarihleri içeren Start Time ve End Time sütunları gerekir. Yapıştırılan metinde İngilizce tarihler, durum, kaynak ve 24 saat biçiminde saatler bulunmalı; varsa tarih aralığını ve yılları da ekle. Tarihleri, süreyi ve onaylı toplam uyarısını kontrol et. Yeni kayıtları, eşleşen düzeltmeleri ve atlanan tekrarları incele. Eklemek istemediğin satırların seçimini kaldır. Yalnızca seçili satırlar içe aktarılır; eşleşen kayıtlar düzeltilir, tekrarlar atlanır."
+          }
+        }
+      }
+    },
+    "Press Command-comma (⌘,) or open Settings in the sidebar. It contains pay, appearance, desk mode, menu bar, pinned timer and notification preferences, along with data and backups. In Updates, choose whether Clockin automatically checks for updates. Check for Updates is also in the Clockin menu and the menu bar item’s right-click menu. Follow the updater’s prompts when an update is available.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar çubuğundan Ayarlar’ı aç veya ⌘, tuşlarına bas. Ücret, görünüm, masa modu, menü çubuğu, sabit sayaç ve bildirim tercihleri ile veri ve yedekler buradadır. Güncellemeler bölümünde Clockin’in güncellemeleri otomatik denetleyip denetlemeyeceğini seç. Güncellemeleri denetle komutu Clockin menüsünde ve menü çubuğu öğesinin sağ tık menüsünde de bulunur. Güncelleme varsa güncelleyicinin adımlarını izle."
           }
         }
       }
@@ -10547,6 +10717,16 @@
         }
       }
     },
+    "Session list": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum listesi"
+          }
+        }
+      }
+    },
     "Session log": {
       "localizations": {
         "tr": {
@@ -10673,6 +10853,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar > Görünüm > Titreşim, dokunmalar, seçimler ve tamamlanan işlemler için hafif titreşimi denetler. Clockin'in titreşimlerini susturmak için kapat. Kaydırma ve çalışan sayaç sessiz kalır."
+          }
+        }
+      }
+    },
+    "Settings > Menu bar controls minimal mode and its fields: hours, optional seconds, earnings, the TRY equivalent for USD when a rate is available, and daily and monthly goal progress when goals are set. Minimal mode hides the main and pinned windows and keeps Clockin in the menu bar. Leaving it restores your previous pin choice. You can still open Clockin from the menu bar or with ⌥⌘E.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar > Menü çubuğu bölümünden minimal modu ve alanlarını seç: saat, isteğe bağlı saniye, kazanç, kur varsa USD’nin TL karşılığı ve hedefler ayarlıysa günlük veya aylık hedef ilerlemesi. Minimal mod ana pencereyi ve sabit sayacı gizleyip Clockin’i menü çubuğunda tutar. Çıkarken önceki sabitleme tercihin geri gelir. Clockin’i menü çubuğundan veya ⌥⌘E ile yine açabilirsin."
+          }
+        }
+      }
+    },
+    "Settings and automatic updates": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar ve otomatik güncellemeler"
           }
         }
       }
@@ -11847,6 +12047,16 @@
         }
       }
     },
+    "These shortcuts work while another app is focused: ⌥⌘I clocks in or resumes a paused session, ⌥⌘P pauses or resumes, ⌥⌘O clocks out, and ⌥⌘E opens Clockin. Settings > Global shortcuts reports if a shortcut could not be registered; check other apps for a conflicting shortcut.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulama açıkken de bu kısayollar çalışır: ⌥⌘I giriş yapar veya duraklatılmış oturumu sürdürür, ⌥⌘P duraklatır veya sürdürür, ⌥⌘O çıkış yapar, ⌥⌘E Clockin’i açar. Bir kısayol kaydedilemezse Ayarlar > Genel kısayollar bölümünde belirtilir; diğer uygulamalarda aynı kısayolun kullanılıp kullanılmadığını kontrol et."
+          }
+        }
+      }
+    },
     "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive.": {
       "localizations": {
         "en": {
@@ -12253,6 +12463,16 @@
         }
       }
     },
+    "Turn on Pin timer in Settings or the menu bar panel to keep a floating timer above other windows. Drag it to move and resize it; each layout remembers its size. Money emphasizes session earnings and hourly rate. Compact keeps time and earnings in one row. Goal shows daily and monthly progress. All combines session details, goals and radio controls. Total emphasizes all-time earnings with today and session figures. Minimal mode hides the pinned timer.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer pencerelerin üzerinde duran sayacı açmak için Ayarlar’dan veya menü çubuğu panelinden Sayacı sabitle’yi aç. Sürükleyerek taşı ve boyutunu değiştir; her düzen kendi boyutunu hatırlar. Kazanç oturum kazancını ve saatlik ücreti öne çıkarır. Kompakt süreyi ve kazancı tek satırda tutar. Hedef günlük ve aylık ilerlemeyi gösterir. Tümü oturum ayrıntılarını, hedefleri ve radyo kontrollerini birleştirir. Toplam tüm zamanların kazancını, bugünü ve oturumu gösterir. Minimal mod sabit sayacı gizler."
+          }
+        }
+      }
+    },
     "Turn on if your hourly rate changed. Work before the date uses the earlier rate.": {
       "localizations": {
         "tr": {
@@ -12509,6 +12729,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tüm çalışmalar için tek ücret kullanılsın mı?"
+          }
+        }
+      }
+    },
+    "Use the History toolbar to switch between By day and Sessions. By day starts collapsed; click a day header to show or hide its entries. Expansion lasts while the view is open. Sessions shows one list, newest first, with a date on every row. The list mode is remembered. Both modes use the same period, chart, totals and currency choice.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş araç çubuğundan Güne göre ve Oturumlar arasında geçiş yap. Güne göre görünümü kapalı başlar; kayıtları göstermek veya gizlemek için gün başlığına tıkla. Açık günler yalnızca bu görünüm açıkken hatırlanır. Oturumlar, her satırda tarih bulunan tek bir listeyi yeniden eskiye gösterir. Liste seçimin hatırlanır. İki görünüm de aynı dönemi, grafiği, toplamları ve para birimi seçimini kullanır."
+          }
+        }
+      }
+    },
+    "Use the plus button on Today or History, or Clock > New Entry (⌘N), to add completed work. Choose the day, start and end times, and a note. An end time earlier than the start means the next day. In History, double-click a session or right-click and choose Edit. Choose Delete from its context menu, or select a row and press Delete, then confirm. The editor also has Delete entry.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamladığın çalışmayı eklemek için Bugün veya Geçmiş ekranındaki artı düğmesini ya da Sayaç > Yeni kayıt (⌘N) komutunu kullan. Günü, başlangıç ve bitiş saatlerini seç, istersen not ekle. Başlangıçtan erken bir bitiş saati ertesi gün anlamına gelir. Geçmiş’te bir kayda çift tıkla veya sağ tıklayıp Düzenle’yi seç. Silmek için sağ tık menüsünden Sil’i seç ya da bir satırı seçip Delete tuşuna bas ve onayla. Düzenleyicide Kaydı sil seçeneği de bulunur."
           }
         }
       }
@@ -12879,6 +13119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kanatlar"
+          }
+        }
+      }
+    },
+    "With Clockin active, use Clock > Clock In (⇧⌘I), Clock Out (⇧⌘O), or Pause / Resume (⇧⌘P). Clock In is available when no session is open. Start with elapsed time uses ⌃⌘I; New Entry uses ⌘N. The View menu opens Today (⌘1), History (⌘2), Progress (⌘3), Settings (⌘4) and Desk Mode (⌃⌘F).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin etkin durumdayken Sayaç > Giriş yap (⇧⌘I), Çıkış yap (⇧⌘O) veya Duraklat / Devam et (⇧⌘P) komutlarını kullan. Giriş yap yalnızca açık oturum yokken kullanılabilir. Geçen süreyle başlat için ⌃⌘I, Yeni kayıt için ⌘N kullanılır. Görünüm menüsü Bugün (⌘1), Geçmiş (⌘2), İlerleme (⌘3), Ayarlar (⌘4) ve Masa Modu’nu (⌃⌘F) açar."
           }
         }
       }
