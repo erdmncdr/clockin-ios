@@ -9,11 +9,26 @@ enum MacSection: Hashable {
 
 struct MacRootView: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
+    @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
+    @EnvironmentObject private var store: ClockStore
     @ObservedObject private var navigation = MacNavigation.shared
+    @ObservedObject private var services = MacAppServices.shared
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    @ObservedObject private var nudges = NudgeController.shared
+    @ObservedObject private var reminder = LongSessionReminderController.shared
     @State private var progressSection: ProgressSection = .goals
     @State private var goalEditorRequest = false
+    @State private var showCompanion = false
+    @State private var celebrationShare: StatsShareSnapshot?
+    @State private var shareBlocker = UUID()
+    @State private var celebrationFading = false
 
     private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+
+    private var showsCelebration: Bool {
+        celebrations.event.map { !$0.isReaction } ?? false
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -25,26 +40,39 @@ struct MacRootView: View {
             }
             .navigationSplitViewColumnWidth(min: 160, ideal: 180)
         } detail: {
-            switch navigation.section ?? .today {
-            case .today:
-                DashboardView(isSelected: navigation.section == .today, showHistory: { navigation.section = .history }, showInsights: {
-                    progressSection = .goals
-                    navigation.section = .progress
-                }, setGoals: {
-                    goalEditorRequest = true
-                    progressSection = .goals
-                    navigation.section = .progress
-                }, showProgress: {
-                    progressSection = .badges
-                    navigation.section = .progress
-                })
-            case .history:
-                HistoryView()
-            case .progress:
-                ProgressHubView(section: $progressSection, openGoalEditor: $goalEditorRequest)
-            case .settings:
-                SettingsView()
+            detail
+        }
+        .allowsHitTesting(!showsCelebration && !celebrationFading)
+        .accessibilityHidden(showsCelebration || celebrationFading)
+        .task(id: showsCelebration) {
+            if showsCelebration {
+                celebrationFading = true
+            } else {
+                // Cikis solarken alttaki kontroller kapali kalir.
+                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+                celebrationFading = false
             }
+        }
+        .overlay(alignment: .top) {
+            CelebrationOverlay(center: celebrations, share: {
+                celebrations.dismiss()
+                celebrations.setBlocked(shareBlocker, true)
+                celebrationShare = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
+            }, openBadges: {
+                progressSection = .badges
+                navigation.section = .progress
+            }, openCompanion: {
+                showCompanion = true
+            })
+        }
+        .sheet(isPresented: $showCompanion) { CompanionView().macSheetFrame() }
+        .celebrationBlocked(by: showCompanion)
+        .sheet(item: $celebrationShare, onDismiss: {
+            celebrations.setBlocked(shareBlocker, false, waitForDismissal: false)
+        }) { snapshot in
+            ShareStatsView(snapshot: snapshot)
+                .preferredColorScheme(palette.colorScheme)
+                .macSheetFrame()
         }
         .sheet(item: $navigation.sheet) { destination in
             Group {
@@ -53,10 +81,14 @@ struct MacRootView: View {
                 case .newEntry: ManualEntryView()
                 }
             }
-            .frame(minWidth: 440, minHeight: 420)
             .environment(\.palette, palette)
             .preferredColorScheme(palette.colorScheme)
+            .macSheetFrame()
         }
+        .celebrationBlocked(by: navigation.sheet != nil)
+        .background(CelebrationWindowProbe())
+        // Barindirilan gorunum bir sahnede degil; evre pencereden gelir.
+        .environment(\.scenePhase, services.scenePhase)
         .environment(\.palette, palette)
         // iPhone formlari gruplu yazildi; Mac'in varsayilan sutun duzeni
         // etiketleri sola tasiyip kesiyordu.
@@ -64,5 +96,40 @@ struct MacRootView: View {
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
+        .onChange(of: nudges.openToday, initial: true) { _, requested in
+            guard requested else { return }
+            navigation.open(.today)
+            nudges.openToday = false
+        }
+        .onChange(of: reminder.pendingEndTime, initial: true) { _, start in
+            if start != nil { navigation.open(.today) }
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        let contentActive = !celebrations.hasBlockingPresentation && !showsCelebration
+        switch navigation.section ?? .today {
+        case .today:
+            DashboardView(isSelected: navigation.section == .today && contentActive,
+                          showHistory: { navigation.section = .history }, showInsights: {
+                progressSection = .goals
+                navigation.section = .progress
+            }, setGoals: {
+                goalEditorRequest = true
+                progressSection = .goals
+                navigation.section = .progress
+            }, showProgress: {
+                progressSection = .badges
+                navigation.section = .progress
+            })
+        case .history:
+            HistoryView()
+        case .progress:
+            ProgressHubView(section: $progressSection, openGoalEditor: $goalEditorRequest)
+                .environment(\.clockinContentActive, contentActive)
+        case .settings:
+            SettingsView()
+        }
     }
 }

@@ -56,6 +56,15 @@ extension View {
         #endif
     }
 
+    /// Genis Mac penceresinde kartlar satir boyu okunur kalsin diye ortalanir.
+    func macReadableWidth(_ width: CGFloat = 720) -> some View {
+        #if os(macOS)
+        frame(maxWidth: width).frame(maxWidth: .infinity)
+        #else
+        self
+        #endif
+    }
+
     /// iPhone'da tam ekran kapak, Mac'te sheet.
     func fullScreenSheet<Item: Identifiable, Content: View>(
         item: Binding<Item?>, @ViewBuilder content: @escaping (Item) -> Content

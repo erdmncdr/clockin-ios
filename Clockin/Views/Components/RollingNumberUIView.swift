@@ -336,9 +336,9 @@ private final class RollingDigitNSView: NSView {
         for label in [current, spare] {
             if label.font != font { label.font = font }
             if label.textColor != color { label.textColor = color }
+            // AppKit katmaninin tutma noktasi sol ust; konum cerceveden gelir.
+            // UIKit'teki gibi merkeze konum vermek glifi yarim hucre kaydiriyordu.
             if label.frame != bounds { label.frame = bounds }
-            let center = CGPoint(x: bounds.midX, y: bounds.midY)
-            if label.layer!.position != center { label.layer!.position = center }
         }
         if !snap, !changed { return }
         stopAnimations()

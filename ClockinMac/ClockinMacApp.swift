@@ -22,6 +22,11 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         MenuBarController.shared.start(.clockin())
         PinnedWindowController.shared.start(store: store)
         KeyboardShortcutController.shared.start(store: store)
+        MacAppServices.shared.start(store: store)
+        #if DEBUG
+        // Review fixture: `--clock-in` starts the timer on the debug data copy.
+        if ProcessInfo.processInfo.arguments.contains("--clock-in"), store.running == nil { store.clockIn() }
+        #endif
         refreshSubscription = store.objectWillChange.sink { [weak self] _ in
             Task { @MainActor in self?.refreshRates() }
         }
@@ -77,6 +82,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         KeyboardShortcutController.shared.stop()
+        MacAppServices.shared.stop()
         refreshTask?.cancel()
         refreshSubscription = nil
     }

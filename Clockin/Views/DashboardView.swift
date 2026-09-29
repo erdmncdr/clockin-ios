@@ -86,6 +86,7 @@ struct DashboardView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
                 .padding(.top, 6)
+                .macReadableWidth()
             }
             .scrollBounceBehavior(.basedOnSize)
             .pinnedHeader { header }
@@ -191,7 +192,14 @@ struct DashboardView: View {
             .foregroundStyle(palette.accent)
             .accessibilityLabel("Customize Today")
             .accessibilityIdentifier("dashboard.customize")
-            Button { sheet = .settings } label: {
+            Button {
+                #if os(macOS)
+                // Mac'te ayarlar kenar cubugunda; ayni ekrani sheet olarak acma.
+                MacNavigation.shared.open(.settings)
+                #else
+                sheet = .settings
+                #endif
+            } label: {
                 Image(systemName: "gearshape")
                     .font(.headline)
                     .frame(width: 36, height: 36)
@@ -213,6 +221,7 @@ struct DashboardView: View {
             .accessibilityLabel("Add past entry")
         }
         .padding(.horizontal, 16)
+        .macReadableWidth()
         .padding(.top, 4)
         .padding(.bottom, 8)
         // The soft scroll edge alone left card text legible right under the
