@@ -155,11 +155,13 @@ da sabit pencere olur.
   derlemesi `Clockin Debug` klasörünü ve `com.ismailakdag.clockin.debug`
   alanını kullanıyor. iOS derlemesi değişmeden geçiyor.
 - [ ] 2. Ekran eşitliği (2a–2e): sheet boyutları, grouped formlar,
-  segmented etiketleri yapıldı. Kalan: Today'in geniş pencerede yayılması,
-  kutlama katmanı ve oturum özeti (iPhone `RootView`'un üstlendikleri),
-  Today başlığındaki ayar düğmesinin kenar çubuğuna gitmesi, Companion ve
-  oda düzenleyicinin Mac'te gözden geçirilmesi, geçmişin katlanan/düz
-  listesi, rehberin Mac anlatımı, masa modunun Mac karşılığı.
+  segmented etiketleri, Today'in okunur genişliği, ayar düğmesinin kenar
+  çubuğuna gitmesi, kutlama katmanı ve paylaşım/companion sheet'leri,
+  uygulama genelinde chime/nudge/hatırlatıcı/kutlama tazelemesi
+  (`MacAppServices`), geçmişin güne göre/oturumlar listesi (brief 04), Mac
+  rehberi, masa modu penceresi (⌃⌘F) yapıldı. Kalan: masa modunda oda geniş
+  ekranda alttan taşıyor, oda düzenleyicinin Mac'te gözden geçirilmesi,
+  menü çubuğu panelinin elle denenmesi, arayüz boyutu (UIScale) kararı.
 - [x] 3. Mac'e özgü özellikler (brief 02): menü çubuğu ve paneli, minimal
   mod, sabit pencere ve beş düzeni, global kısayollar (Carbon; erişilebilirlik
   izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
