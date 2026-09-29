@@ -127,7 +127,8 @@ struct SyncSidecar: Codable, Sendable {
     }
 
     mutating func addRecoveries(_ entries: [SyncRecovery]) {
-        for entry in entries where !recoveryInbox.contains(where: { $0.id == entry.id }) {
+        for var entry in entries where !recoveryInbox.contains(where: { $0.id == entry.id }) {
+            if entry.recoveredAt == nil { entry.recoveredAt = .now }
             recoveryInbox.append(entry)
             while recoveryInbox.count > SyncBounds.recoveryCount || SyncBounds.size(recoveryInbox) > SyncBounds.recoveryBytes {
                 recoveryInbox.removeFirst(); recoveryOverflow = true

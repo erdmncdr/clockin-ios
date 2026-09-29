@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/ClockStore.swift
+ Shared/Core/WardrobeBackup.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift
+ Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift
+ Shared/Mascot/Wardrobe.swift Shared/Mascot/WardrobeCatalog.swift Shared/Mascot/MascotMotion.swift
+ Shared/Mascot/RoomArrangement.swift Shared/Mascot/RoomPlacement.swift Shared/Mascot/HomeSceneLayout.swift
+ Shared/Mascot/CompanionAccessory.swift Clockin/Celebrations/CelebrationRules.swift
+ Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift
+ Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Companion/WardrobeEarnings.swift
+ Clockin/Views/Companion/WardrobeStore.swift Shared/Sync/Cloud/*.swift
+ Shared/Sync/SyncAppState.swift Shared/Sync/SyncCoordinator.swift Tests/manual/syncapp/Support.swift Tests/manual/syncsend/TestClock.swift)
+flags=(-swift-version 6 -strict-concurrency=complete -warnings-as-errors -module-cache-path /tmp/clockin-syncapp-cache)
+if [[ "${1:-}" == "typecheck" ]]; then
+ for target in 'macosx arm64-apple-macosx14.0' 'iphonesimulator arm64-apple-ios17.0-simulator'; do
+  read -r sdk triple <<< "$target"
+  xcrun --sdk "$sdk" swiftc "${flags[@]}" -sdk "$(xcrun --sdk "$sdk" --show-sdk-path)" \
+   -target "$triple" -typecheck "${sources[@]}"
+  echo "PASS sync app: $sdk ($triple)"
+ done
+else
+ swiftc "${flags[@]}" -parse-as-library "${sources[@]}" Tests/manual/syncapp/main.swift -o /tmp/clockin-syncapp-tests
+ /tmp/clockin-syncapp-tests
+fi

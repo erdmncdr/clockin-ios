@@ -40,4 +40,18 @@ largeSession.note = String(repeating: "a", count: ClockinCloudRecord.maximumPayl
 oversized.versions[0].payload = try SyncCoding.encode(largeSession)
 do { _ = try ClockinCloudRecord.encode(oversized, systemFields: nil); fatalError("oversized record accepted") }
 catch { check(true, "over-limit input is invalid and never silently truncated") }
+check(ClockinCloudAdapter.accountState(.noAccount) == .absent
+      && ClockinCloudAdapter.accountState(.restricted) == .absent, "no account/restricted launch stays off")
+check(ClockinCloudAdapter.accountState(.couldNotDetermine) == .temporary
+      && ClockinCloudAdapter.accountState(.temporarilyUnavailable) == .temporary, "temporary account lookup schedules retry")
+check(ClockinCloudAdapter.accountState(.available) == .available, "available account permits identity lookup")
+for (code, expected) in [(CKError.Code.serverRecordChanged, SyncSendFailure.serverRecordChanged),
+                         (.unknownItem, .unknownItem), (.zoneNotFound, .zoneNotFound),
+                         (.networkFailure, .networkFailure), (.networkUnavailable, .networkUnavailable),
+                         (.zoneBusy, .zoneBusy), (.serviceUnavailable, .serviceUnavailable),
+                         (.requestRateLimited, .requestRateLimited), (.notAuthenticated, .notAuthenticated),
+                         (.operationCancelled, .operationCancelled), (.quotaExceeded, .other),
+                         (.permissionFailure, .other), (.invalidArguments, .other)] {
+    check(ClockinCloudAdapter.failure(code) == expected, "CKError maps to offline send policy: \(code.rawValue)")
+}
 print("All \(checks) CloudKit codec checks passed without network or entitlements.")

@@ -230,6 +230,8 @@ struct SyncNotice: Codable, Equatable, Sendable {
 }
 
 struct SyncRecovery: Codable, Equatable, Sendable {
+    // Device-local capture time. Nil for sidecars written before app wiring.
+    var recoveredAt: Date? = nil
     var recordKey: String
     var version: SyncVersion
     var reason: String

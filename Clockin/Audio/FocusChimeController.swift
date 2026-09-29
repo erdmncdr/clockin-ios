@@ -299,7 +299,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         // Uygulama ondeyken cani kendimiz caliyoruz, banner ayni olayi ikinci
         // kez duyurmak olurdu. Bes dakikalik aralikta saatte on iki banner
         // birikiyordu. Ses kalir, bildirim gorunmez ve listede iz birakmaz.
-        play(FocusChimeSound.migrate())
+        play(FocusChimeSound.selected(UserDefaults.standard.string(forKey: FocusChimeSound.preferenceKey)))
         clearDelivered()
         return []
     }
