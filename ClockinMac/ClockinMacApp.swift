@@ -26,6 +26,10 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         #if DEBUG
         // Review fixture: `--clock-in` starts the timer on the debug data copy.
         if ProcessInfo.processInfo.arguments.contains("--clock-in"), store.running == nil { store.clockIn() }
+        // Review fixture: `--desk-mode` opens the full-screen desk window.
+        if ProcessInfo.processInfo.arguments.contains("--desk-mode") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DeskModeWindowController.shared.show() }
+        }
         #endif
         refreshSubscription = store.objectWillChange.sink { [weak self] _ in
             Task { @MainActor in self?.refreshRates() }

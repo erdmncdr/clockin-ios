@@ -50,7 +50,6 @@
 				Privacy/LiveActivityPrivacySection.swift,
 				Privacy/LiveActivitySetupView.swift,
 				Views/DeskMode/DeskModeOrientation.swift,
-				Views/DeskMode/DeskModeView.swift,
 				Views/RootView.swift,
 			);
 			target = 0C1A00000000000000000030 /* ClockinMac */;
