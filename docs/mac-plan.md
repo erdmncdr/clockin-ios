@@ -154,7 +154,17 @@ da sabit pencere olur.
 - [x] 1. macOS hedefi iskeleti: `ClockinMac` derleniyor ve açılıyor; Debug
   derlemesi `Clockin Debug` klasörünü ve `com.ismailakdag.clockin.debug`
   alanını kullanıyor. iOS derlemesi değişmeden geçiyor.
-- [ ] 2. Ekran eşitliği (2a–2e): sheet boyutları yapıldı.
-- [ ] 3. Mac'e özgü özellikler (brief 02 sürüyor)
-- [ ] 4. Geçiş ve yayın (ilk açılış: brief 03 sürüyor)
+- [ ] 2. Ekran eşitliği (2a–2e): sheet boyutları, grouped formlar,
+  segmented etiketleri yapıldı. Kalan: Today'in geniş pencerede yayılması,
+  kutlama katmanı ve oturum özeti (iPhone `RootView`'un üstlendikleri),
+  Today başlığındaki ayar düğmesinin kenar çubuğuna gitmesi, Companion ve
+  oda düzenleyicinin Mac'te gözden geçirilmesi, geçmişin katlanan/düz
+  listesi, rehberin Mac anlatımı, masa modunun Mac karşılığı.
+- [x] 3. Mac'e özgü özellikler (brief 02): menü çubuğu ve paneli, minimal
+  mod, sabit pencere ve beş düzeni, global kısayollar (Carbon; erişilebilirlik
+  izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
+  Kalan: arayüz boyutu (UIScale) kararı; gerçek güncelleme provası aşama 4'te.
+- [ ] 4. Geçiş ve yayın: ilk açılış hazır (brief 03: karantina, tercih
+  çevirisi, kutlama tekrarı yok). Kalan: 1.1.6'dan yerinde güncelleme provası,
+  imzalı arşiv, notarize, appcast.
 - [ ] 5. Senkron
