@@ -31,9 +31,14 @@ for relative in Versions/B/Autoupdate Versions/B/Updater.app \
 done
 EXECUTABLE="$(plist_value "$PLIST" CFBundleExecutable)"
 [[ "$EXECUTABLE" == Clockin ]] || fail 'Expected Clockin executable.'
-run lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/$EXECUTABLE"
+# This lipo accepts one architecture per -verify_arch; check each slice.
+verify_universal() {
+    local arch
+    for arch in arm64 x86_64; do run lipo "$1" -verify_arch "$arch"; done
+}
+verify_universal "$APP/Contents/MacOS/$EXECUTABLE"
 while IFS= read -r component; do
-    if [[ -f "$component" ]]; then run lipo -verify_arch arm64 x86_64 "$component"; fi
+    if [[ -f "$component" ]]; then verify_universal "$component"; fi
 done < <(sparkle_components "$FRAMEWORK")
 verify_all_signatures "$APP" || fail 'App or Sparkle signature requirements failed.'
 ENTITLEMENTS="$(codesign -d --entitlements :- "$APP" 2>/dev/null)"
