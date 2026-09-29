@@ -55,7 +55,11 @@ struct ShareStatsView: View {
     @State private var page: StatsSharePage = .overview
     @State private var mode: StatsShareMode = .all
     @State private var png: StatsPNG?
+    #if canImport(UIKit)
     @State private var preview: UIImage?
+    #else
+    @State private var preview: NSImage?
+    #endif
     @State private var status: String?
 
     @State private var selectionFeedback = HapticSignal()
@@ -78,17 +82,25 @@ struct ShareStatsView: View {
                         }.pickerStyle(.segmented).accessibilityLabel("Image pages")
                     }.padding(16).card(palette)
                     if let preview {
-                        Image(uiImage: preview).resizable().scaledToFit()
+                        previewImage(preview).resizable().scaledToFit()
                             .accessibilityLabel(String(localized: "\(privacy.title) stats preview, \(mode == .all ? String(localized: "all three pages") : page.title)", bundle: .app))
                             .accessibilityValue(previewDescription)
                     }
                     if let png, let preview {
-                        ShareLink(item: png, preview: SharePreview("Clockin stats", image: Image(uiImage: preview))) {
+                        ShareLink(item: png, preview: SharePreview("Clockin stats", image: previewImage(preview))) {
                             Label("Share PNG", systemImage: "square.and.arrow.up")
                         }.buttonStyle(PrimaryActionButtonStyle(palette: palette))
                             .accessibilityLabel("Share stats as PNG")
                         Button {
+                            #if canImport(UIKit)
                             UIPasteboard.general.setData(png.data, forPasteboardType: UTType.png.identifier)
+                            #else
+                            NSPasteboard.general.clearContents()
+                            guard NSPasteboard.general.setData(png.data, forType: .png) else {
+                                status = String(localized: "Could not copy image. Please try again.", bundle: .app)
+                                return
+                            }
+                            #endif
                             status = String(localized: "PNG copied to clipboard.", bundle: .app)
                         } label: { Label("Copy image", systemImage: "doc.on.doc") }
                         .buttonStyle(.bordered).accessibilityLabel("Copy stats PNG to clipboard")
@@ -121,6 +133,12 @@ struct ShareStatsView: View {
         .transaction { if reduceMotion { $0.animation = nil } }
     }
 
+    #if canImport(UIKit)
+    private func previewImage(_ image: UIImage) -> Image { Image(uiImage: image) }
+    #else
+    private func previewImage(_ image: NSImage) -> Image { Image(nsImage: image) }
+    #endif
+
     private var previewDescription: String {
         mode.pages(current: page).map { page in
             page.title + ": " + StatsShareFields.rows(page: page, privacy: privacy, values: snapshot.values)
@@ -146,10 +164,20 @@ struct ShareStatsView: View {
         let renderer = ImageRenderer(content: content)
         renderer.scale = displayScale
         renderer.isOpaque = true
+        #if canImport(UIKit)
         guard let image = renderer.uiImage, let data = image.pngData() else {
             status = String(localized: "Could not create image. Please try again.", bundle: .app)
             return
         }
+        #else
+        guard let cgImage = renderer.cgImage,
+              let data = NSBitmapImageRep(cgImage: cgImage).representation(using: .png, properties: [:]) else {
+            status = String(localized: "Could not create image. Please try again.", bundle: .app)
+            return
+        }
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: CGFloat(cgImage.width) / displayScale,
+                                                        height: CGFloat(cgImage.height) / displayScale))
+        #endif
         preview = image
         png = StatsPNG(data: data)
     }

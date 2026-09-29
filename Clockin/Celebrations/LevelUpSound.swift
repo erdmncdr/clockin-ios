@@ -23,17 +23,19 @@ enum LevelUpSound {
     /// `still` is a card that opens on its final frame; it hears only the
     /// strike and the chord.
     static func play(milestone: Bool, still: Bool) {
-        guard enabled, UIApplication.shared.applicationState == .active else { return }
+        guard enabled, Platform.isAppActive else { return }
         halt()
         let name = still ? "clockin-levelup-still" : milestone ? "clockin-levelup-rank" : "clockin-levelup"
         guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else { return }
         do {
+            #if os(iOS)
             // Focus radio owns the shared session while it plays; leave its category alone.
             if !FocusRadioController.shared.ownsAudioSession {
                 let session = AVAudioSession.sharedInstance()
                 try session.setCategory(.ambient, mode: .default)
                 try session.setActive(true)
             }
+            #endif
             let player = try AVAudioPlayer(contentsOf: url)
             player.volume = 0.8
             guard player.prepareToPlay(), player.play() else { return }

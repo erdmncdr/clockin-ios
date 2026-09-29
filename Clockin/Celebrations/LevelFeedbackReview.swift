@@ -75,6 +75,7 @@ struct LevelFeedbackReview: View {
         .preferredColorScheme(.dark)
     }
 }
+#if canImport(UIKit)
 private struct ReviewWindowProbe: UIViewRepresentable {
     let center: CelebrationCenter
     func makeUIView(context: Context) -> ReviewWindowView { ReviewWindowView(center: center) }
@@ -88,4 +89,19 @@ private final class ReviewWindowView: UIView {
         super.didMoveToWindow(); celebrationCenter.window = window; celebrationCenter.screenAttached()
     }
 }
+#else
+private struct ReviewWindowProbe: NSViewRepresentable {
+    let center: CelebrationCenter
+    func makeNSView(context: Context) -> ReviewWindowView { ReviewWindowView(center: center) }
+    func updateNSView(_ view: ReviewWindowView, context: Context) {}
+}
+private final class ReviewWindowView: NSView {
+    let celebrationCenter: CelebrationCenter
+    init(center: CelebrationCenter) { self.celebrationCenter = center; super.init(frame: .zero) }
+    required init?(coder: NSCoder) { fatalError() }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow(); celebrationCenter.window = window; celebrationCenter.screenAttached()
+    }
+}
+#endif
 #endif

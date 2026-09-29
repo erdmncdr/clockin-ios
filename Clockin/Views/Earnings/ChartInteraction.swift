@@ -5,6 +5,7 @@ import UIKit
 import AppKit
 #endif
 
+#if canImport(UIKit)
 struct ChartInteraction: UIViewRepresentable {
     let pageable: Bool
     let onTap: (CGPoint) -> Void
@@ -57,3 +58,25 @@ struct ChartInteraction: UIViewRepresentable {
         }
     }
 }
+#else
+struct ChartInteraction: View {
+    let pageable: Bool
+    let onTap: (CGPoint) -> Void
+    let onPage: (Int) -> Void
+
+    var body: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { onTap($0.location) }
+                .onEnded { value in
+                    if pageable, let direction = EarningsSwipe.page(x: value.translation.width, y: value.translation.height) {
+                        onPage(direction)
+                    } else { onTap(value.location) }
+                })
+            .onContinuousHover { phase in
+                if case .active(let location) = phase { onTap(location) }
+            }
+    }
+}
+#endif

@@ -31,6 +31,7 @@ extension View {
     }
 }
 
+#if canImport(UIKit)
 struct CelebrationVisibilityProbe: UIViewRepresentable {
     let id: UUID
     let enabled: Bool
@@ -74,3 +75,67 @@ final class CelebrationWindowView: UIView {
         CelebrationCenter.shared.screenAttached()
     }
 }
+#else
+import AppKit
+import Combine
+
+struct CelebrationVisibilityProbe: NSViewRepresentable {
+    let id: UUID
+    let enabled: Bool
+
+    func makeNSView(context: Context) -> CelebrationVisibilityView {
+        let view = CelebrationVisibilityView()
+        CelebrationCenter.shared.setCompanion(id, view: view)
+        return view
+    }
+    func updateNSView(_ view: CelebrationVisibilityView, context: Context) { view.enabled = enabled }
+    func makeCoordinator() -> UUID { id }
+    static func dismantleNSView(_ view: CelebrationVisibilityView, coordinator: UUID) {
+        CelebrationCenter.shared.setCompanion(coordinator, view: nil)
+    }
+}
+
+final class CelebrationVisibilityView: NSView {
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    var enabled = false
+    var isCompanionVisible: Bool {
+        guard enabled, let window, window.isVisible, window.occlusionState.contains(.visible),
+              !isHiddenOrHasHiddenAncestor, alphaValue > 0, !visibleRect.isEmpty else { return false }
+        var ancestor = superview
+        while let view = ancestor {
+            if view.alphaValue == 0 { return false }
+            ancestor = view.superview
+        }
+        guard let content = window.contentView else { return false }
+        return !convert(visibleRect, to: content).intersection(content.bounds).isEmpty
+    }
+}
+
+struct CelebrationWindowProbe: NSViewRepresentable {
+    func makeNSView(context: Context) -> CelebrationWindowView { CelebrationWindowView() }
+    func updateNSView(_ view: CelebrationWindowView, context: Context) {}
+}
+
+final class CelebrationWindowView: NSView {
+    private var observations: [AnyCancellable] = []
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        observations.removeAll()
+        CelebrationCenter.shared.window = window
+        CelebrationCenter.shared.screenAttached()
+        guard let window else { return }
+        for name in [NSWindow.didChangeOcclusionStateNotification, NSWindow.didBecomeKeyNotification,
+                     NSWindow.didEndSheetNotification] {
+            observations.append(NotificationCenter.default.publisher(for: name, object: window).sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard self?.window != nil else { return }
+                    CelebrationCenter.shared.screenAttached()
+                }
+            })
+        }
+    }
+}
+#endif

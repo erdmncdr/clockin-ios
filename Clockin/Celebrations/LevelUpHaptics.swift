@@ -10,6 +10,7 @@ import AppKit
 /// Falls back to the plain success tap wherever the pattern cannot play.
 @MainActor
 enum LevelUpHaptics {
+    #if os(iOS)
     private static var engine: CHHapticEngine?
     private static var started = false
     private static var players: [any CHHapticPatternPlayer] = []
@@ -99,4 +100,8 @@ enum LevelUpHaptics {
         }
         return current
     }
+    #else
+    static func play(milestone: Bool) {}
+    static func stop() {}
+    #endif
 }

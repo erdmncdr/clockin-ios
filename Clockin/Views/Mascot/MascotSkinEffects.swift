@@ -201,7 +201,7 @@ final class MascotSkinEffects {
         let cell = 2, width = rows[0].count * cell, height = rows.count * cell
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        context.setFillColor(UIColor.white.cgColor)
+        context.setFillColor(PlatformColor.white.cgColor)
         for (y, row) in rows.enumerated() {
             for (x, mark) in row.enumerated() where mark == "#" {
                 context.fill(CGRect(x: x * cell, y: height - (y + 1) * cell, width: cell, height: cell))
@@ -210,9 +210,9 @@ final class MascotSkinEffects {
         return context.makeImage()
     }
 
-    private static func color(_ hex: String) -> UIColor {
+    private static func color(_ hex: String) -> PlatformColor {
         guard let value = WardrobePalette.rgb(hex) else { return .white }
-        return UIColor(red: CGFloat((value >> 16) & 255) / 255, green: CGFloat((value >> 8) & 255) / 255,
+        return PlatformColor(red: CGFloat((value >> 16) & 255) / 255, green: CGFloat((value >> 8) & 255) / 255,
                        blue: CGFloat(value & 255) / 255, alpha: 1)
     }
 }

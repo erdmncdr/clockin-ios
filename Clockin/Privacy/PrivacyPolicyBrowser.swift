@@ -1,3 +1,4 @@
+#if os(iOS)
 #if canImport(SafariServices)
 import SafariServices
 #endif
@@ -26,3 +27,33 @@ struct PrivacyPolicyBrowser: UIViewControllerRepresentable {
         func safariViewControllerDidFinish(_ controller: SFSafariViewController) { onClose() }
     }
 }
+#else
+import AppKit
+import SwiftUI
+
+struct PrivacyPolicyBrowser: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var attempted = false
+    @State private var failed = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Privacy policy").font(.headline)
+            if failed { Text("Could not open the browser. Please try again.") }
+            Button("Open in browser", action: openPolicy)
+            Button("Done") { dismiss() }
+        }
+        .padding(24)
+        .task {
+            guard !attempted else { return }
+            attempted = true
+            openPolicy()
+        }
+    }
+
+    private func openPolicy() {
+        if NSWorkspace.shared.open(LiveActivityPrivacy.policyURL) { dismiss() }
+        else { failed = true }
+    }
+}
+#endif

@@ -39,6 +39,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         super.init()
         center.delegate = self
         LongSessionReminderNotification.register(on: center)
+        #if os(iOS)
         let notifications = NotificationCenter.default
         for name in [AVAudioSession.interruptionNotification, AVAudioSession.mediaServicesWereResetNotification,
                      UIApplication.didEnterBackgroundNotification] {
@@ -53,6 +54,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 Task { @MainActor in self?.stopPlayback() }
             }
         })
+        #endif
     }
 
     // Izin isteme yalnizca kullanicinin acma hareketinden cagrilir.
@@ -67,14 +69,23 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
 
     func refreshPermission() async {
         let settings = await center.notificationSettings()
+        #if os(iOS)
         canNotify = [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus)
+        #else
+        canNotify = [.authorized, .provisional].contains(settings.authorizationStatus)
+        #endif
         needsSystemSettings = settings.authorizationStatus == .denied || settings.authorizationStatus == .provisional || (canNotify && settings.soundSetting != .enabled)
         switch settings.authorizationStatus {
         case .notDetermined: permissionText = String(localized: "Not requested. Turn on Focus chime to allow notifications.", bundle: .app)
         case .denied: permissionText = String(localized: "Notifications denied", bundle: .app)
         case .provisional: permissionText = String(localized: "Quiet delivery only. Enable sounds in system Settings.", bundle: .app)
+        #if os(iOS)
         case .authorized, .ephemeral:
             permissionText = settings.soundSetting == .enabled ? String(localized: "Notifications and sounds allowed", bundle: .app) : String(localized: "Notifications allowed, sounds disabled", bundle: .app)
+        #else
+        case .authorized:
+            permissionText = settings.soundSetting == .enabled ? String(localized: "Notifications and sounds allowed", bundle: .app) : String(localized: "Notifications allowed, sounds disabled", bundle: .app)
+        #endif
         @unknown default: permissionText = String(localized: "Notification permission unknown", bundle: .app)
         }
     }
@@ -193,6 +204,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             return
         }
         do {
+            #if os(iOS)
             let session = AVAudioSession.sharedInstance()
             // Radyo ortak oturumu kullaniyor; kategorisini degistirme.
             if !FocusRadioController.shared.ownsAudioSession {
@@ -200,6 +212,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 ownsAudioSession = true
                 try session.setActive(true)
             }
+            #endif
             let player = try AVAudioPlayer(contentsOf: url)
             self.player = player
             player.delegate = self
@@ -219,14 +232,17 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     func stopPlayback() {
         player?.stop()
         player = nil
+        #if os(iOS)
         // Can bittiginde radyo veya baska uygulamalarin sesi kesilmesin.
         if ownsAudioSession && !FocusRadioController.shared.ownsAudioSession {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
+        #endif
         ownsAudioSession = false
     }
 
     func retainSessionForChime() -> Bool {
+        #if os(iOS)
         guard player != nil else { return false }
         do {
             // Radyo biterken can tamamlanir; oturum yeniden etkinlestirilmez.
@@ -237,6 +253,9 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             stopPlayback()
             return false
         }
+        #else
+        return false
+        #endif
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
