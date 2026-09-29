@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C1A0000000000000000003D /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 0C1A0000000000000000003C /* Sparkle */; };
 		0C1A00000000000000000020 /* ClockinWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C1A00000000000000000012 /* ClockinWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -99,6 +100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C1A0000000000000000003D /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,6 +164,7 @@
 			);
 			name = ClockinMac;
 			packageProductDependencies = (
+				0C1A0000000000000000003C /* Sparkle */,
 			);
 			productName = ClockinMac;
 			productReference = 0C1A00000000000000000034 /* Clockin.app */;
@@ -246,6 +249,9 @@
 			);
 			mainGroup = 0C1A00000000000000000004;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0C1A0000000000000000003B /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0C1A00000000000000000005 /* Products */;
 			projectDirPath = "";
@@ -563,6 +569,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C1A0000000000000000003B /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0C1A0000000000000000003C /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C1A0000000000000000003B /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0C1A00000000000000000009 /* Project object */;
 }
