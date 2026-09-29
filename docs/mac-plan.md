@@ -147,9 +147,14 @@ da sabit pencere olur.
 
 ## Durum
 
-- [ ] 0. Envanter ve uyumluluk
-- [ ] 1. macOS hedefi iskeleti
-- [ ] 2. Ekran eşitliği (2a–2e)
-- [ ] 3. Mac'e özgü özellikler
-- [ ] 4. Geçiş ve yayın
+- [x] 0. Envanter ve uyumluluk: `docs/mac-port-inventory.md`,
+  `Tests/manual/maccompat`. Gerçek Mac verisi (salt okunur deneme) iPhone
+  çözücüsüyle açılıyor; yine de eski Mac'in yazabildiği 20 bozuk şekil tüm
+  arşivi reddettiriyor → kayıt bazında karantina (brief 03).
+- [x] 1. macOS hedefi iskeleti: `ClockinMac` derleniyor ve açılıyor; Debug
+  derlemesi `Clockin Debug` klasörünü ve `com.ismailakdag.clockin.debug`
+  alanını kullanıyor. iOS derlemesi değişmeden geçiyor.
+- [ ] 2. Ekran eşitliği (2a–2e): sheet boyutları yapıldı.
+- [ ] 3. Mac'e özgü özellikler (brief 02 sürüyor)
+- [ ] 4. Geçiş ve yayın (ilk açılış: brief 03 sürüyor)
 - [ ] 5. Senkron
