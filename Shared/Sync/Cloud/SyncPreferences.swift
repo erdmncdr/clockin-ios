@@ -54,6 +54,7 @@ enum SyncPreferences {
         "SUEnableAutomaticChecks": "bool",
     ]
     static let deviceKeys: [String] = [
+        "Clockin.CloudSyncEnabled",
         "AppleLanguages",
         "Clockin.GoalPromptDismissedAt",
         "Clockin.HasConfiguredGoal",

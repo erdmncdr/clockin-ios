@@ -4,7 +4,11 @@ import Foundation
 @MainActor
 final class SyncBridge {
     typealias Apply = @MainActor @Sendable (SyncSnapshot) throws -> Void
-    private(set) var state: SyncSidecar
+    var willReceive: (@MainActor @Sendable () -> Void)?
+    var didChange: (@MainActor @Sendable () -> Void)?
+    /// Diagnostic count of accepted full local captures (not a persisted revision counter).
+    private(set) var localSaveCount = 0
+    private(set) var state: SyncSidecar { didSet { didChange?() } }
     private(set) var snapshot: SyncSnapshot
     private var transportError: String?
     private var persistenceError: String?
@@ -24,6 +28,7 @@ final class SyncBridge {
         guard !applyingRemote else { return }
         try state.capture(previous: snapshot, current: current, at: date)
         snapshot = current
+        localSaveCount += 1
     }
 
     func seedIfNeeded(at date: Date = .now) throws {
@@ -40,6 +45,7 @@ final class SyncBridge {
 
     @discardableResult
     func receive(_ records: [SyncRecord]) throws -> [String] {
+        willReceive?()
         var candidate = state
         var rejected: [String] = []
         let merge = try candidate.receive(records, snapshot: snapshot, onReject: { rejected = $0 })
@@ -56,7 +62,7 @@ final class SyncBridge {
         return result
     }
 
-    func markFetchComplete(_ complete: Bool) { fetchComplete = complete }
+    func markFetchComplete(_ complete: Bool) { fetchComplete = complete; didChange?() }
 
     func allowInitialUploadIfSafe() {
         guard fetchComplete, !state.firstMergeCompleted, !state.needsFirstMergeReview else { return }
@@ -93,7 +99,7 @@ final class SyncBridge {
     func persist() async -> Bool {
         let captured = state
         do { try await disk.save(captured); persistenceError = nil; return captured.revision == state.revision }
-        catch { persistenceError = "Sync sidecar could not be saved: \(error)"; return false }
+        catch { persistenceError = String(localized: "Sync sidecar could not be saved: \(error.localizedDescription)", bundle: .app); return false }
     }
 
     func updateEngineState(_ data: Data) {

@@ -7,6 +7,7 @@ final class WardrobeStore: ObservableObject {
     @Published private(set) var state: WardrobeState
     @Published private(set) var earned = 0
     private(set) var ledger: [WardrobePurchase]
+    let didPersist = PassthroughSubject<Void, Never>()
     private let defaults: UserDefaults
     private var archive: [WorkSession]?
     private var lastGoal: Double?
@@ -26,8 +27,9 @@ final class WardrobeStore: ObservableObject {
 
     func refresh(sessions: [WorkSession], now: Date, dailyGoal: Double) -> (first: Bool, items: [String]) {
         let saved = WardrobeState.decode(defaults.string(forKey: WardrobeState.stateKey))
-        if saved != state { state = saved; archive = nil }
         let savedLedger = Self.readLedger(defaults)
+        let reloaded = saved != state || savedLedger != ledger
+        if saved != state { state = saved; archive = nil }
         if savedLedger != ledger { ledger = savedLedger; archive = nil }
         let day = Calendar.current.startOfDay(for: now)
         guard archive != sessions || lastGoal != dailyGoal || lastDay != day else { return (false, []) }
@@ -41,7 +43,8 @@ final class WardrobeStore: ObservableObject {
                                  legacyOwned: Set(defaults.stringArray(forKey: CompanionAccessory.seenKey) ?? []))
         // Satin alma kaydi sahipligin ikinci kanitidir.
         state.owned.formUnion(ledger.filter { $0.cost > 0 }.map(\.itemID))
-        persist()
+        // Backup restore writes defaults outside this store; adoption is a persisted change too.
+        persist(includingReload: reloaded)
         return (first, items)
     }
 
@@ -70,12 +73,43 @@ final class WardrobeStore: ObservableObject {
         if item.slot == .room { return state.room == item.id }
         return state.equipped[item.slot.rawValue] == item.id || state.furniture[item.slot.rawValue] == item.id
     }
-    private func persist() {
+    struct SyncedState {
+        fileprivate var state: WardrobeState
+        fileprivate var ledger: [WardrobePurchase]
+        fileprivate var stateJSON: String
+        fileprivate var ledgerJSON: String
+    }
+
+    // Encode both values before the primary archive is changed. Seed bookkeeping stays local.
+    func prepareSynced(_ incoming: WardrobeState, ledger: [WardrobePurchase]) throws -> SyncedState {
+        var state = incoming
+        state.seeded = self.state.seeded
+        let stateJSON = String(decoding: try JSONEncoder().encode(state), as: UTF8.self)
+        let ledgerJSON = String(decoding: try JSONEncoder().encode(ledger), as: UTF8.self)
+        return SyncedState(state: state, ledger: ledger, stateJSON: stateJSON, ledgerJSON: ledgerJSON)
+    }
+
+    func applySynced(_ prepared: SyncedState) {
+        defaults.set(prepared.ledgerJSON, forKey: WardrobeState.ledgerKey)
+        defaults.set(prepared.stateJSON, forKey: WardrobeState.stateKey)
+        ledger = prepared.ledger; state = prepared.state; archive = nil
+        // No didPersist: the coordinator refreshes derived services after the whole apply.
+    }
+
+    private func persist(includingReload: Bool = false) {
         // Once harcama yazilir; yarim kalan kayit ledger'dan sahipligi onarabilir.
-        if let data = try? JSONEncoder().encode(ledger), let json = String(data: data, encoding: .utf8),
-           defaults.string(forKey: WardrobeState.ledgerKey) != json { defaults.set(json, forKey: WardrobeState.ledgerKey) }
-        if let json = state.json, defaults.string(forKey: WardrobeState.stateKey) != json {
-            defaults.set(json, forKey: WardrobeState.stateKey)
+        guard let data = try? JSONEncoder().encode(ledger),
+              let ledgerJSON = String(data: data, encoding: .utf8), let stateJSON = state.json else { return }
+        // JSON dictionary key order can change between encodes. Diff values, not text.
+        let changed = Self.readLedger(defaults) != ledger
+            || WardrobeState.decode(defaults.string(forKey: WardrobeState.stateKey)) != state
+        if defaults.string(forKey: WardrobeState.ledgerKey) != ledgerJSON {
+            defaults.set(ledgerJSON, forKey: WardrobeState.ledgerKey)
         }
+        if defaults.string(forKey: WardrobeState.stateKey) != stateJSON {
+            defaults.set(stateJSON, forKey: WardrobeState.stateKey)
+        }
+        // Refresh often computes the same value. Only actual persistence emits a local change.
+        if changed || includingReload { didPersist.send() }
     }
 }

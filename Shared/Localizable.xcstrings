@@ -1607,6 +1607,16 @@
         }
       }
     },
+    "A replaced value is available in recovery.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değiştirilen önceki değer kurtarma kutusunda."
+          }
+        }
+      }
+    },
     "A session is already running.": {
       "localizations": {
         "tr": {
@@ -1965,6 +1975,16 @@
         }
       }
     },
+    "An iCloud value was set aside for review. Your local data is retained.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir iCloud değeri incelenmek üzere ayrıldı. Yerel verileriniz korundu."
+          }
+        }
+      }
+    },
     "Another %@ would reach today's goal.": {
       "localizations": {
         "tr": {
@@ -1991,6 +2011,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bir odak aralığı daha tamamlandı."
+          }
+        }
+      }
+    },
+    "Another timer state won. The previous timer is in recovery.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer sayaç durumu kullanıldı. Önceki sayaç kurtarma kutusunda."
           }
         }
       }
@@ -3569,6 +3599,16 @@
         }
       }
     },
+    "Concurrent changes were resolved. Your previous value is in recovery.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlı değişiklikler birleştirildi. Önceki değeriniz kurtarma kutusunda."
+          }
+        }
+      }
+    },
     "Connected to live updates": {
       "localizations": {
         "tr": {
@@ -4469,6 +4509,16 @@
         }
       }
     },
+    "Duplicate entries were collapsed. Your previous entry is in recovery.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yinelenen kayıtlar birleştirildi. Önceki kaydınız kurtarma kutusunda."
+          }
+        }
+      }
+    },
     "Duplicate • skipped": {
       "localizations": {
         "tr": {
@@ -5277,6 +5327,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlk mobilya"
+          }
+        }
+      }
+    },
+    "First merge postponed. Your data stays on this device.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk birleştirme ertelendi. Verileriniz bu cihazda kalacak."
           }
         }
       }
@@ -9127,6 +9187,16 @@
         }
       }
     },
+    "Pay settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücret ayarları"
+          }
+        }
+      }
+    },
     "Per active day": {
       "localizations": {
         "tr": {
@@ -9407,6 +9477,16 @@
         }
       }
     },
+    "Preference": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tercih"
+          }
+        }
+      }
+    },
     "Press Command-comma (⌘,) or open Settings in the sidebar, then choose Data > Import timecards. Choose a CSV file or paste a task block or timecards page and select Review. CSV needs Start Time and End Time columns with ISO 8601 dates. Pasted text needs English dates, a status, source, and 24-hour times; include the date range and years when available. Check dates, duration and any Approved total warning. Review New, Matched corrections and Duplicate skipped entries. Deselect any rows you want to leave out. Only selected rows are imported; matched entries are corrected and duplicates are skipped.": {
       "localizations": {
         "tr": {
@@ -9637,6 +9717,16 @@
         }
       }
     },
+    "Quarantine full. Oldest entries were removed.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karantina alanı dolu. En eski kayıtlar kaldırıldı."
+          }
+        }
+      }
+    },
     "Quarter XP": {
       "localizations": {
         "tr": {
@@ -9837,6 +9927,16 @@
         }
       }
     },
+    "Rate rule": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücret kuralı"
+          }
+        }
+      }
+    },
     "Rate schedule": {
       "localizations": {
         "tr": {
@@ -10013,6 +10113,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pikap konsolu"
+          }
+        }
+      }
+    },
+    "Recovery inbox full. Oldest entries were removed.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurtarma kutusu dolu. En eski kayıtlar kaldırıldı."
           }
         }
       }
@@ -10297,6 +10407,16 @@
         }
       }
     },
+    "Review the first merge to continue syncing.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlamaya devam etmek için ilk birleştirmeyi inceleyin."
+          }
+        }
+      }
+    },
     "Review your own entries": {
       "localizations": {
         "tr": {
@@ -10433,6 +10553,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yuvarlak halı"
+          }
+        }
+      }
+    },
+    "Running timer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışan sayaç"
           }
         }
       }
@@ -11027,6 +11157,16 @@
         }
       }
     },
+    "Sign in to the original iCloud account to sync this archive.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu arşivi eşzamanlamak için ilk kullanılan iCloud hesabına giriş yapın."
+          }
+        }
+      }
+    },
     "Silver and a nebula stone": {
       "localizations": {
         "tr": {
@@ -11135,6 +11275,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düz: gerçek toplam · kesikli: son tempo · noktalı: aylık hedef"
+          }
+        }
+      }
+    },
+    "Some changes could not be sent. They remain on this device for the next sync.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı değişiklikler gönderilemedi. Sonraki eşzamanlama için bu cihazda saklanıyor."
           }
         }
       }
@@ -11373,6 +11523,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başlangıç: %@"
+          }
+        }
+      }
+    },
+    "Starting sync": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama başlatılıyor"
           }
         }
       }
@@ -11653,6 +11813,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gün batımı"
+          }
+        }
+      }
+    },
+    "Sync checkpoint exceeded its limit. Changes will be fetched again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama ilerleme kaydı sınırı aştı. Değişiklikler yeniden alınacak."
+          }
+        }
+      }
+    },
+    "Sync could not save its data. Check available storage and try again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama verileri kaydedilemedi. Boş alanı kontrol edip tekrar deneyin."
+          }
+        }
+      }
+    },
+    "Sync is off": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama kapalı"
+          }
+        }
+      }
+    },
+    "Sync paused because data could not be applied. Your archive is retained.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veriler uygulanamadığı için eşzamanlama duraklatıldı. Arşiviniz korundu."
+          }
+        }
+      }
+    },
+    "Sync reached its retry limit. Pending changes will wait for the next sync.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama yeniden deneme sınırına ulaştı. Bekleyen değişiklikler sonraki eşzamanlamada denenecek."
+          }
+        }
+      }
+    },
+    "Sync sidecar could not be saved: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama yan dosyası kaydedilemedi: %@"
+          }
+        }
+      }
+    },
+    "Syncing": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlanıyor"
           }
         }
       }
@@ -12139,6 +12369,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu oturum artık çalışmıyor."
+          }
+        }
+      }
+    },
+    "This value exceeds sync limits or is unsupported. It is saved only on this device. Edit it to resume syncing.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu değer eşzamanlama sınırlarını aşıyor veya desteklenmiyor. Yalnızca bu cihazda kayıtlı. Eşzamanlamak için değeri düzenleyin."
           }
         }
       }
@@ -12663,6 +12903,16 @@
         }
       }
     },
+    "Up to date": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncel"
+          }
+        }
+      }
+    },
     "Updated": {
       "localizations": {
         "tr": {
@@ -12873,6 +13123,16 @@
         }
       }
     },
+    "Waiting for network": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağ bağlantısı bekleniyor"
+          }
+        }
+      }
+    },
     "Wall clock": {
       "localizations": {
         "tr": {
@@ -12893,12 +13153,32 @@
         }
       }
     },
+    "Wardrobe": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardırop"
+          }
+        }
+      }
+    },
     "Wardrobe curator": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Gardırop küratörü"
+          }
+        }
+      }
+    },
+    "Wardrobe purchase": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardırop satın alımı"
           }
         }
       }
@@ -14206,6 +14486,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başa"
+          }
+        }
+      }
+    },
+    "iCloud storage is full. Pending changes remain on this device.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud saklama alanı dolu. Bekleyen değişiklikler bu cihazda saklanıyor."
           }
         }
       }

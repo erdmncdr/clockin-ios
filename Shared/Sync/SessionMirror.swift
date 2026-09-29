@@ -140,7 +140,8 @@ final class SessionMirror {
             running: running,
             enabled: defaults.bool(forKey: "Clockin.ChimeEnabled"),
             interval: defaults.integer(forKey: "Clockin.ChimeIntervalMinutes"),
-            sound: FocusChimeSound.migrate(in: defaults).rawValue,
+            // Salt okuma: tazeleme tercihi geri yazarsa senkronla gelen secimi ezip yankilar.
+            sound: FocusChimeSound.selected(defaults.string(forKey: FocusChimeSound.preferenceKey)).rawValue,
             force: force
         )
     }

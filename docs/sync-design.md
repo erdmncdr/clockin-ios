@@ -1,6 +1,6 @@
 # Clockin sync core, schema 2
 
-This is an inert implementation for review. Nothing creates it from either app. `ClockStore`, `SessionMirror`, `WardrobeStore`, app entry points, project settings and entitlements are unchanged. Only the adapter imports CloudKit; the model, diff, merge, bridge and disk actor import Foundation. Shared data and wire types are `Sendable` values, built in Swift 6 language mode with complete concurrency checking.
+The app coordinator is implemented but **off by default and not called by either app entry point**. A Boolean `ClockinCloudSyncEnabled` Info.plist key must assert build capability, and the device-local `Clockin.CloudSyncEnabled` preference must not be false. Stores expose passive persistence hooks; `SessionMirror`, entry points, project settings and entitlements remain unchanged. Only the adapter imports CloudKit; the model, diff, merge, bridge and disk actor import Foundation. Shared data and wire types are `Sendable` values, built in Swift 6 language mode with complete concurrency checking.
 
 ## Schema and identity
 
@@ -142,36 +142,46 @@ For the complete serialized sidecar, with `R` the multiset of local and staged r
 
 That is **fixed bookkeeping/checkpoint + per-identity registers/transport/issues + capped local recovery/quarantine**. The 256-byte allowance covers JSON dictionary keys; the per-identity 2-KiB allowance covers pending keys, issue keys, system-field keys and syntax. Account and backup-path strings are each limited to 1,024 UTF-8 bytes and included in fixed bookkeeping. Save/load validates these local budgets as well as the total formula. Staged and local copies are counted separately; system fields count once per identity. For tombstoned records the optional tighter 2,048-byte register bound may replace E. Session/rule creation increases |I| permanently; mere edits do not. Whole-primary-archive backups are separate user data, not sidecar history.
 
-## Inert integration surface
+## App coordinator, disabled by default
 
-All bridge calls and app state mutation belong on the main actor. No changes to the stores are necessary until the later wiring task.
+`SyncCoordinator.shared` is the sole app-process owner. It is `@MainActor`, compiled behind `!WIDGET_EXTENSION`, and defaults to off when `ClockinCloudSyncEnabled` is absent or false. Its checked `isEnabled` also reads device-local `Clockin.CloudSyncEnabled` (absent = true in a supported build). Creating it and invoking any trigger while disabled does not create/access the clock, wardrobe, App Group language suite, sidecar or CloudKit transport. Turning it off detaches observers, cancels debounce/retry/work and drains old transport work before a later enable opens another sidecar writer.
 
-| Application event | Future call |
+| Application event | Coordinator call |
 |---|---|
-| Launch | Capture current `SyncSnapshot`; `await disk.load()` or create `SyncSidecar`; construct `SyncBridge(..., apply:)` and `ClockinCloudAdapter`; `try await adapter.launch()` |
-| Successful primary archive save | `try bridge.localDidSave(fullCurrentSnapshot)`; then asynchronously `await bridge.persist()` and `await adapter.synchronize()` |
-| Successful preference write/reset | Same `localDidSave`, with the full allowed preference map; preserve unsupported remote choices in that map |
-| Wardrobe/equipment/room/ledger persistence | Same `localDidSave`, with state **and ledger captured together** |
-| Foreground / retry / remote notification | `await adapter.synchronize()`; honor the platform background completion deadline |
-| First fetch complete with `state.needsFirstMergeReview` | Present `try bridge.firstPreview()` counts; on approval call `try await bridge.approveFirstMerge(preview, archiveURL:)`, then `await adapter.synchronize()` |
-| Displayed conflict notice | `bridge.acknowledgeNotices(ids)`, then persist |
+| Process launch, including headless intent launch | `SyncCoordinator.shared.start()` |
+| Foreground | `sceneDidBecomeActive()` |
+| Matching private-database CloudKit push | `await handleRemoteNotification()` |
+| `Notification.Name.CKAccountChanged` | `accountMayHaveChanged()` |
+| User toggles sync | `setSyncEnabled(_:)` |
+| User approves the displayed first preview | `await approveFirstMerge()` |
+| User dismisses first preview | `postponeFirstMerge()` |
+| User acknowledges a recovery/overflow notice | `acknowledge(_:)` with its ID |
 
-The `apply: @MainActor @Sendable (SyncSnapshot) throws -> Void` callback is the only path back to app storage. Later wiring must validate/stage the full update, save `ClockStore` using its normal failure handling, apply only allowlisted preferences (removing keys absent after a reset), persist ledger then wardrobe, refresh derived earnings/coins, and call `SessionMirror.shared.refresh()` plus `refreshChimes(force: true)` when settings require it. Keep device state from the receiving snapshot. The callback must be synchronous, must not start asynchronous app mutations, and must report primary-save failure before publishing partial state. The bridge suppresses reentrant `localDidSave` calls during this callback and updates its baseline only after success.
+`start()` returns an optional task handle for callers that need to await the work; normal process/scene hooks can ignore it. The coordinator serializes its worker and coalesces triggers. Dependency factories accept a fake transport and isolated defaults/stores for offline checks, without replacing production store code.
 
-Create the initial archive before enabling first merge. Serialize local storage writes and snapshot capture on the main actor; capture **all** stores in a single snapshot so missing preferences are not interpreted as resets. Use the same persistence path for Shortcuts/widget actions in the later wiring; observing only views misses those actions. Extension/app coordination for multiple processes sharing the archive is a separate integration responsibility: one process must own this sidecar writer.
+Every successful local `ClockStore` save emits `didPersist` synchronously, except load/migration and remote apply. `WardrobeStore.didPersist` emits after state and ledger writes when their values changed (JSON dictionary ordering is not a change). The coordinator captures clock data, the entire typed preference allowlist and wardrobe **plus ledger** in one main-actor turn, calls `bridge.localDidSave` synchronously, then persists and synchronizes asynchronously. Preferences use standard defaults except `Clockin.Language`, which uses `AppLanguage.shared`: iOS App Group, macOS standard. `UserDefaults.didChangeNotification` only diffs allowlisted values; a cancellable 0.5-second debounce coalesces bursts. A store save includes an outstanding preference burst. `bridge.willReceive` flushes an outstanding burst before copying the merge candidate, so an in-flight fetch cannot silently discard an uncaptured preference edit. Approval similarly flushes pending edits and rejects the now-stale preview.
 
-The bridge does not roll back unrelated app work if sidecar persistence fails. If primary storage and several UserDefaults writes can fail independently, the later app wiring needs its own recoverable apply transaction. This brief has no device effects and makes no claim that a widget or Live Activity actually updated.
+The synchronous remote callback validates all snapshot domains and pre-encodes wardrobe/ledger before writing. Unchanged local-only invalid values can survive, but remote replacements cannot borrow their exemption. `ClockStore.applySynced(_:)` uses its atomic write/backup path and publishes new data only after success; failure leaves the previous in-memory data intact and throws before any preference/wardrobe mutation. `pinVisible` remains local. Allowlisted preferences are then set or removed (reset), followed by ledger and wardrobe via `applySynced`; wardrobe `seeded` remains local. Finally `SessionMirror.refresh()` refreshes celebrations/wardrobe earnings as well as widgets/activities, and `refreshChimes(force: true)` rereads sound settings. No store hook fires for remote applies; the coordinator also suppresses synchronous derived-service hooks and updates the preference baseline to absorb delayed defaults notifications. **Before enabling**, resolve the existing `SessionMirror.syncChimes` preference-writing migrator described in the Brief 08 result: its pure-read replacement is outside this brief's allowed files and awaits a scope exception. The fake-refresh no-echo checks do not cover that production side effect.
+
+Published UI state comprises `status`, `lastSuccessfulSync` (this process lifetime), `pendingFirstMerge` (local/remote/duplicate/result counts and exact revision), `recoveryInbox` (typed replaced payload, kind, author installation ID, authored time and optional local capture time), and `issues` (local limits, quarantine bytes and overflow notices). `SyncRecovery.recoveredAt` is optional for older sidecars; it is device-local metadata, not part of register equality. Installation IDs are not device display names. User-facing status, reason, issue and recovery copy uses `Bundle.app` with Turkish catalog translations.
+
+Intents in `Shared/Intents/ClockIntents.swift` use `LiveActivityIntent` on iOS and `AppIntent` on macOS, and every app-side action uses `SharedStore.clock`; the iOS control intent delegates to those same actions. The widget compilation branch performs no store writes. Start the coordinator from the application delegate, not only from a SwiftUI view task, so cold/headless intent launches are included. No extension should create a coordinator or write the sidecar.
+
+`UserDefaults.set` offers no synchronous durable-write result, and these multiple stores are not a crash-atomic disk transaction. All fallible validation/encoding precedes the primary write, and primary failure is covered offline. A process kill between independent archive/defaults writes and signed-device defaults durability still require integration testing. No cross-process sidecar writer or automatic account migration is provided.
+
+Exact entry-point snippets, per-platform registration/capabilities and checks are in [Brief 08 result](codex/08-sync-wiring-result.md).
 
 ## Transport behavior and failures
 
-The adapter restores `CKSyncEngine.State.Serialization`, stores state-update events, supplies save-only batches of up to 100 records / 1.5 MB payload, retains system fields, and acknowledges only the exact sent version. An acknowledgment for an older in-flight save cannot clear a newer edit. `CKSyncEngine` owns CloudKit change fetching and conditional save conflict delivery; the delegate supplies the current record batches. See [Apple's CKSyncEngine sample](https://github.com/apple/sample-cloudkit-sync-engine) and [CKSyncEngineDelegate](https://developer.apple.com/documentation/cloudkit/cksyncenginedelegate-1q7g8).
+The adapter restores `CKSyncEngine.State.Serialization`, stores state-update events, and builds save-only batches from **the engine pending list filtered by send scope**, with bridge record bodies and limits of 100 records / 1.5 MB payload. A missing/unavailable body is removed from engine pending state. It retains system fields and acknowledges only the exact sent version. An acknowledgment for an older in-flight save cannot clear a newer edit. `CKSyncEngine` owns CloudKit change fetching and conditional save conflict delivery; the delegate supplies the current record batches. See [Apple's CKSyncEngine sample](https://github.com/apple/sample-cloudkit-sync-engine) and [CKSyncEngineDelegate](https://developer.apple.com/documentation/cloudkit/cksyncenginedelegate-1q7g8).
 
 | Failure | Response |
 |---|---|
 | `serverRecordChanged` | Validate and join the returned server record, retain its system fields, requeue joined local winners/history |
 | `unknownItem` while saving | Discard stale system fields and retry the retained record as a create |
 | `zoneNotFound` / fetched zone deletion | Keep history/tombstones, reset transport fields, queue zone creation and all retained records; foreign-data review still gates merging and further record upload |
-| Network, service, rate limit or zone busy | Retain pending work; respect `retryAfterSeconds` with a minimum delay; next foreground/push/save/retry trigger attempts again |
+| Network, unavailable network, service, rate limit, zone busy, unauthenticated send or cancelled operation | Leave record retries to CKSyncEngine; do not re-add. Network/service errors schedule a coalesced cancellable wakeup respecting `retryAfterSeconds`; authentication send errors do not by themselves prove an account change |
+| Other save errors | Report and retain bridge pending state; remove from engine pending for this pass, eligible only on a later `synchronize()` pass |
 | Quota full | Keep pending records, report storage error, delay retries; no deletion of work/tombstones |
 | Sign-out / account switch | Halt and cancel engine operations; keep the original account's archive/sidecar; never automatically send it to another account |
 | Invalid record / reused revision identity | Preserve quarantine and block that record from overwriting the offending server record |
@@ -179,7 +189,7 @@ The adapter restores `CKSyncEngine.State.Serialization`, stores state-update eve
 | Sidecar write failure | Keep memory/pending work, expose error and gate upload; primary save remains successful |
 | Unsupported schema / corrupt sidecar | Stop for explicit recovery/migration; do not reset silently |
 
-Scheduling is explicit (`automaticallySync = false`) to make approval/account/durability gates reviewable. The later app supplies foreground, push and post-save triggers and a retry scheduler if desired. A trigger arriving during an active synchronization may wait until the next trigger; pending data remains durable. Push is an optimization, not a correctness assumption.
+Scheduling is explicit (`automaticallySync = false`) to make approval/account/durability gates reviewable. Every pass enqueues bridge-pending records once. Send events re-add only joined conflicts, unknown-item creates, or zone-recovery records, with a three-re-add budget per record and a zone-rebuild budget per pass. No unconditional post-send requeue exists. A trigger arriving during synchronization is recorded and produces one coalesced follow-up pass; callers can await that shared work. A cancellable `Task.sleep` schedules `retryAfter` without requiring another app event. Launch first checks account status: no account/restriction reports an account problem without opening an engine, while temporary status/identity failures retry at 5, 10, 20, 40, 80, 160, then 300 seconds (or the larger server delay). Repeated launch calls share work; account rechecks drain the old work and preserve the original sidecar account binding. Push remains an optimization, not a correctness assumption.
 
 History is pruned on every local revision and join; the byte bounds above replace the former reachable 750,000-byte history refusal. Tombstones and Session origin facts have no time-based garbage collection.
 

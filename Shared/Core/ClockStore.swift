@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 @MainActor
@@ -16,6 +17,10 @@ final class ClockStore: ObservableObject {
     }
     @Published var statusMessage: String?
     @Published var timerPersistenceError: String?
+
+    /// Emitted synchronously on the main actor, only after a successful local write.
+    let didPersist = PassthroughSubject<Void, Never>()
+    var archiveURL: URL { fileURL }
 
     private let fileURL: URL
     private let calendar: Calendar
@@ -110,7 +115,7 @@ final class ClockStore: ObservableObject {
         }
         // Kopya alinamadiysa okunamayan dosyanin uzerine hic yazilmaz.
         if !mustNotOverwrite {
-            if needsRateMigration || recoveredEntries { save() }
+            if needsRateMigration || recoveredEntries { save(notify: false) }
             else { createAutomaticBackupIfNeeded() }
         }
         if let loadFailureMessage { statusMessage = loadFailureMessage }
@@ -1036,14 +1041,27 @@ final class ClockStore: ObservableObject {
         return true
     }
 
+    /// Remote applies use the same atomic write/backup path. Publish only after it succeeds;
+    /// on failure the previous data (including its timer) remains visible. No local-save echo.
     @discardableResult
-    private func save() -> Bool {
+    func applySynced(_ incoming: ClockinData) -> Bool {
+        var candidate = incoming
+        candidate.pinVisible = data.pinVisible
+        guard save(candidate, notify: false) else { return false }
+        timerPersistenceError = nil
+        return true
+    }
+
+    @discardableResult
+    private func save(_ replacement: ClockinData? = nil, notify: Bool = true) -> Bool {
         guard !mustNotOverwrite else { return false }
         do {
             try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             createAutomaticBackupIfNeeded()
-            let encoded = try JSONEncoder().encode(data)
+            let encoded = try JSONEncoder().encode(replacement ?? data)
             try encoded.write(to: fileURL, options: .atomic)
+            if let replacement { data = replacement }
+            if notify { didPersist.send() }
             return true
         } catch {
             statusMessage = String(localized: "Could not save: \(error.localizedDescription)", bundle: .app)
