@@ -63,6 +63,18 @@
 			);
 			target = 0C1A00000000000000000030 /* ClockinMac */;
 		};
+		0C1A0000000000000000003E /* Exceptions for "Shared" folder in "ClockinWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sync/Cloud/CloudKitAdapter.swift,
+				Sync/Cloud/SyncBridge.swift,
+				Sync/Cloud/SyncMerge.swift,
+				Sync/Cloud/SyncModel.swift,
+				Sync/Cloud/SyncPreferences.swift,
+				Sync/Cloud/SyncSidecar.swift,
+			);
+			target = 0C1A00000000000000000013 /* ClockinWidgets */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +95,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				0C1A0000000000000000003A /* Exceptions for "Shared" folder in "ClockinMac" target */,
+				0C1A0000000000000000003E /* Exceptions for "Shared" folder in "ClockinWidgets" target */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
