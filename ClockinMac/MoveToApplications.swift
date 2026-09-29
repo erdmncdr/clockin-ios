@@ -14,6 +14,11 @@ enum MoveToApplications {
     /// Clockin Applications'taki kopyadan yeniden acilmak uzere kapanacaksa
     /// `true` doner; cagiran baska bir sey baslatmamali.
     static func offerIfNeeded() -> Bool {
+        #if DEBUG
+        // Debug derlemesi hic tasima onermez: gelistirme kopyasi yayindaki
+        // uygulamanin yerine gecip onu Cop Kutusu'na atmisti.
+        return false
+        #else
         let location = ApplicationMover.locate(Bundle.main.bundleURL)
         guard location.shouldOfferMove else { return false }
         // DMG'den calisan kopya icin "bir daha sorma" sunulmaz: orada kalmak
@@ -55,6 +60,7 @@ enum MoveToApplications {
             showFailure(error)
             return false
         }
+        #endif
     }
 
     static func explanation(for location: ApplicationLocation, destination: URL) -> String {
@@ -73,6 +79,10 @@ enum MoveToApplications {
     static func move(_ location: ApplicationLocation, into destination: URL,
                      fileManager: FileManager = .default) throws -> URL {
         let existing = destination.appendingPathComponent(location.originalURL.lastPathComponent)
+        if FileManager.default.fileExists(atPath: existing.path),
+           ApplicationMover.bundleIdentifier(of: existing) != ApplicationMover.bundleIdentifier(of: location.originalURL) {
+            throw ApplicationMoverError.differentApplication(existing)
+        }
         let installed: URL
         if let existingBuild = buildNumber(of: existing), let ownBuild = buildNumber(of: location.originalURL),
            existingBuild >= ownBuild {

@@ -30,6 +30,7 @@ enum ApplicationMoverError: LocalizedError {
     case sameLocation
     case operation(URL, String)
     case recovery(URL, String)
+    case differentApplication(URL)
 
     var errorDescription: String? {
         switch self {
@@ -38,6 +39,8 @@ enum ApplicationMoverError: LocalizedError {
         case let .operation(url, reason): String(localized: "Clockin can't be copied to \(url.path): \(reason)", bundle: .app)
         case let .recovery(url, reason):
             String(localized: "Clockin couldn't restore the previous app. A backup remains at \(url.path): \(reason)", bundle: .app)
+        case let .differentApplication(url):
+            String(localized: "\(url.path) is a different app. Clockin did not replace it.", bundle: .app)
         }
     }
 }
@@ -82,6 +85,10 @@ enum ApplicationMover {
         url.standardizedFileURL.pathComponents.dropFirst().reduce(URL(fileURLWithPath: "/")) {
             $0.appendingPathComponent($1).resolvingSymlinksInPath().standardizedFileURL
         }
+    }
+
+    static func bundleIdentifier(of app: URL) -> String? {
+        Bundle(url: app)?.bundleIdentifier
     }
 
     private static func isDevelopmentPath(_ url: URL) -> Bool {
@@ -141,6 +148,12 @@ enum ApplicationMover {
                         fileManager: FileManager = .default) throws -> URL {
         let final = directory.appendingPathComponent(source.lastPathComponent)
         guard resolved(source) != resolved(final) else { throw ApplicationMoverError.sameLocation }
+        // Ayni adli ama baska kimlikli bir uygulamanin (ornegin Debug ile
+        // yayindaki surum) yerine asla gecilmez.
+        if (try? fileManager.attributesOfItem(atPath: final.path)) != nil,
+           bundleIdentifier(of: final) != bundleIdentifier(of: source) {
+            throw ApplicationMoverError.differentApplication(final)
+        }
         let temporary = directory.appendingPathComponent(".clockin-install-\(UUID().uuidString).app")
         let backup = directory.appendingPathComponent(".clockin-backup-\(UUID().uuidString).app")
         var hasBackup = false

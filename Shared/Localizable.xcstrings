@@ -111,6 +111,16 @@
         }
       }
     },
+    "%@ is a different app. Clockin did not replace it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ başka bir uygulama. Clockin onun yerine geçmedi."
+          }
+        }
+      }
+    },
     "%@ is unreachable. Check your connection and try again.": {
       "localizations": {
         "tr": {

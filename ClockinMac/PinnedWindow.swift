@@ -286,7 +286,7 @@ struct PinnedTimerView: View {
                 Spacer()
                 Button { if radio.isPlaying { radio.stop() } else { radio.play() } } label: { Image(systemName: radio.isPlaying ? "stop.fill" : "play.fill") }.buttonStyle(.hitTarget)
                     .accessibilityLabel(radio.isPlaying ? String(localized: "Stop focus radio", bundle: .app) : String(localized: "Play focus radio", bundle: .app))
-                Slider(value: $radio.volume, in: 0...1) { Text("Volume") }.frame(width: 65).tint(theme.accent)
+                Slider(value: $radio.volume, in: 0...1) { Text("Volume") }.labelsHidden().frame(width: 65).tint(theme.accent)
             }
         }
         .padding(12)

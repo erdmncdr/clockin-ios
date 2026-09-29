@@ -54,4 +54,19 @@ if [[ -n "$ENTITLEMENTS" ]]; then
         [[ "$value" != true ]] || fail "Distribution app has forbidden entitlement: $key"
     done
 fi
+# The desktop widget runs sandboxed and reads the snapshot from the team group.
+WIDGET="$APP/Contents/PlugIns/ClockinMacWidgets.appex"
+[[ -d "$WIDGET" ]] || fail 'Missing ClockinMacWidgets.appex.'
+[[ "$(plist_value "$WIDGET/Contents/Info.plist" CFBundleIdentifier)" == com.ismailakdag.clockin.widgets ]] \
+    || fail 'Unexpected widget bundle identifier.'
+verify_universal "$WIDGET/Contents/MacOS/ClockinMacWidgets"
+verify_signature "$WIDGET" || fail 'Widget signature requirements failed.'
+WIDGET_ENTITLEMENTS="$(mktemp "$OUTPUT_ROOT/checks/widget-entitlements.XXXXXX")"
+codesign -d --entitlements :- "$WIDGET" 2>/dev/null > "$WIDGET_ENTITLEMENTS"
+[[ "$(plist_value "$WIDGET_ENTITLEMENTS" com.apple.security.app-sandbox)" == true ]] || fail 'Widget must be sandboxed.'
+[[ "$(plist_value "$WIDGET_ENTITLEMENTS" com.apple.security.get-task-allow 2>/dev/null || true)" != true ]] \
+    || fail 'Widget has get-task-allow.'
+/usr/libexec/PlistBuddy -c 'Print :com.apple.security.application-groups' "$WIDGET_ENTITLEMENTS" \
+    | grep -q 'LU36PKDPT3.com.ismailakdag.clockin' || fail 'Widget is missing the Clockin app group.'
+rm -f "$WIDGET_ENTITLEMENTS"
 step 'App metadata, architectures and distribution signatures verified.'
