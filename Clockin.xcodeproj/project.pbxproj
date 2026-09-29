@@ -73,6 +73,9 @@
 				Sync/Cloud/SyncModel.swift,
 				Sync/Cloud/SyncPreferences.swift,
 				Sync/Cloud/SyncSidecar.swift,
+				Sync/Cloud/SyncTransport.swift,
+				Sync/SyncAppState.swift,
+				Sync/SyncCoordinator.swift,
 			);
 			target = 0C1A00000000000000000013 /* ClockinWidgets */;
 		};
