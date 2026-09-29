@@ -86,6 +86,7 @@ struct RateScheduleView: View {
                 RatePeriodEditor(editing: destination.rule)
                     // Ic ice sheet ayri bir sunum; renk semasi kendiliginden gecmiyor.
                     .preferredColorScheme(palette.colorScheme)
+                    .macSheetFrame(width: 480, height: 460)
             }
             .alert("Delete rate period?", isPresented: Binding(
                 get: { pendingDelete != nil },

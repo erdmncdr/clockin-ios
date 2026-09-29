@@ -140,6 +140,7 @@ struct DashboardView: View {
                 }
             }
             .preferredColorScheme(palette.colorScheme)
+            .macSheetFrame()
         }
         .deleteSessionAlert($pendingDelete)
         .onChange(of: reminder.pendingEndTime, initial: true) { _, _ in routeReminderEnd() }

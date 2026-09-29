@@ -32,9 +32,10 @@ struct BadgesView: View {
             }
             .background(palette.background)
         }
-        .sheet(isPresented: $showCompanion) { CompanionView() }
+        .sheet(isPresented: $showCompanion) { CompanionView().macSheetFrame() }
         .sheet(isPresented: $showRanks) {
             LevelBadgeGallery(currentLevel: celebrations.snapshot?.level ?? 1, xp: celebrations.snapshot?.xp ?? 0)
+                .macSheetFrame()
         }
         .celebrationBlocked(by: showCompanion || showRanks)
         .tint(palette.accent)

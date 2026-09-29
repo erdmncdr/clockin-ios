@@ -28,6 +28,7 @@ struct InsightsView: View {
         .celebrationBlocked(by: shareSnapshot != nil)
         .sheet(item: $shareSnapshot) { snapshot in
             ShareStatsView(snapshot: snapshot)
+                .macSheetFrame()
         }
     }
 

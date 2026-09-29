@@ -44,6 +44,17 @@ extension View {
         #endif
     }
 
+    /// Mac'te sheet icerigi kadar acilir; iPhone icin yazilmis liste ve
+    /// formlar daracik kalirdi. iPhone'da degisiklik yok.
+    func macSheetFrame(width: CGFloat = 560, height: CGFloat = 680) -> some View {
+        #if os(macOS)
+        frame(minWidth: min(width, 460), idealWidth: width, maxWidth: .infinity,
+              minHeight: min(height, 420), idealHeight: height, maxHeight: .infinity)
+        #else
+        self
+        #endif
+    }
+
     /// iPhone'da tam ekran kapak, Mac'te sheet.
     func fullScreenSheet<Item: Identifiable, Content: View>(
         item: Binding<Item?>, @ViewBuilder content: @escaping (Item) -> Content
@@ -51,7 +62,7 @@ extension View {
         #if os(iOS)
         fullScreenCover(item: item, content: content)
         #else
-        sheet(item: item, content: content)
+        sheet(item: item) { content($0).macSheetFrame(width: 820, height: 720) }
         #endif
     }
 

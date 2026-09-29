@@ -70,6 +70,7 @@ struct InsightsBadgesView: View {
         .celebrationBlocked(by: selectedBadge != nil)
         .sheet(item:$selectedBadge) { selected in
             InsightsBadgeDetail(badge:badges.first { $0.id == selected.id } ?? selected)
+                .macSheetFrame(width: 480, height: 560)
         }
         .task(id:tier) {
             var reset = Transaction()

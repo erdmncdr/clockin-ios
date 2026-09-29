@@ -46,6 +46,7 @@ private struct SessionSheetsModifier: ViewModifier {
             // Renk semasi tercihi en yakin sunuma uygulanir; sheet kendi
             // sunumu oldugu icin tekrar verilmesi gerekiyor.
             .preferredColorScheme(palette.colorScheme)
+            .macSheetFrame()
         }
     }
 }

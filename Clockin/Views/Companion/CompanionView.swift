@@ -80,7 +80,7 @@ struct CompanionView: View {
             .navigationTitle("Companion")
             .inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .sheet(item: $preview) { item in CompanionHomePreview(item: item) }
+            .sheet(item: $preview) { item in CompanionHomePreview(item: item).macSheetFrame(width: 480, height: 600) }
             .fullScreenSheet(item: $roomEditor) { session in RoomEditorView(state:session.state) }
 
         }
