@@ -159,8 +159,11 @@ da sabit pencere olur.
   çubuğuna gitmesi, kutlama katmanı ve paylaşım/companion sheet'leri,
   uygulama genelinde chime/nudge/hatırlatıcı/kutlama tazelemesi
   (`MacAppServices`), geçmişin güne göre/oturumlar listesi (brief 04), Mac
-  rehberi, masa modu penceresi (⌃⌘F) yapıldı. Kalan: oda düzenleyicinin
-  Mac'te gözden geçirilmesi, menü çubuğu panelinin elle denenmesi.
+  rehberi, masa modu penceresi (⌃⌘F) yapıldı. Menü çubuğu paneli ve sabit
+  sayaç (Kazanç, Tümü) açılıp doğrulandı; ikisindeki çökmeler düzeltildi
+  (serbest boyutlu rolling yazı tipi, ortam nesnesi sırası). Kalan: oda
+  düzenleyicinin elle denenmesi, sabit sayacın "Tümü" düzeninde ses
+  etiketinin kesilmesi.
   Arayüz boyutu (UIScale, 2026-09-29): kaldırıldı. Pencere serbestçe
   boyutlanıyor; `Clockin.UIScalePercent` ve `Clockin.UIScale` silinmeden
   kalır. 2.0 sürüm notunda söylenecek.
@@ -182,7 +185,10 @@ da sabit pencere olur.
   değişmez `clockinStart`, cihaza özel kurtarma kutusu (50 kayıt / 256 KB),
   girdi sınırları. 5 yıllık 3 cihazlı simülasyonda en büyük kayıt 13,6 KB,
   yan dosya ~1,1 MB. `Tests/manual/sync`: 262 + 17 kontrol. Widget
-  uzantısına derlenmiyor. Sürüyor: gönderme yolunun sağlamlaştırılması ve
-  uygulama tarafı koordinatörü (brief 08, kapalı bayrak arkasında). Kalan:
-  developer portal kurulumu (senin), yetkiler ve giriş noktaları, ilk
-  birleştirme önizlemesi / kurtarma / durum arayüzü, iki gerçek cihazla deneme.
+  uzantısına derlenmiyor. Gönderme yolu sağlamlaştırıldı ve uygulama tarafı
+  koordinatörü yazıldı (brief 08: 50 + 37 + 33 kontrol). Ayarlar'da iCloud
+  bölümü, ilk birleştirme önizlemesi ve eşzamanlama değişiklikleri ekranı
+  var; iki uygulamanın giriş noktaları bağlı. Hepsi `ClockinCloudSyncEnabled`
+  Info.plist anahtarı olmadan kapalı. Kalan: developer portal kurulumu
+  (senin), yetkiler + Info.plist anahtarı, arayüzün görsel kontrolü, iki
+  gerçek cihazla deneme, CloudKit şemasının production'a alınması.
