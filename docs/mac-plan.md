@@ -159,13 +159,15 @@ da sabit pencere olur.
   çubuğuna gitmesi, kutlama katmanı ve paylaşım/companion sheet'leri,
   uygulama genelinde chime/nudge/hatırlatıcı/kutlama tazelemesi
   (`MacAppServices`), geçmişin güne göre/oturumlar listesi (brief 04), Mac
-  rehberi, masa modu penceresi (⌃⌘F) yapıldı. Kalan: masa modunda oda geniş
-  ekranda alttan taşıyor, oda düzenleyicinin Mac'te gözden geçirilmesi,
-  menü çubuğu panelinin elle denenmesi, arayüz boyutu (UIScale) kararı.
+  rehberi, masa modu penceresi (⌃⌘F) yapıldı. Kalan: oda düzenleyicinin
+  Mac'te gözden geçirilmesi, menü çubuğu panelinin elle denenmesi.
+  Arayüz boyutu (UIScale, 2026-09-29): kaldırıldı. Pencere serbestçe
+  boyutlanıyor; `Clockin.UIScalePercent` ve `Clockin.UIScale` silinmeden
+  kalır. 2.0 sürüm notunda söylenecek.
 - [x] 3. Mac'e özgü özellikler (brief 02): menü çubuğu ve paneli, minimal
   mod, sabit pencere ve beş düzeni, global kısayollar (Carbon; erişilebilirlik
   izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
-  Kalan: arayüz boyutu (UIScale) kararı; gerçek güncelleme provası aşama 4'te.
+  Gerçek güncelleme provası aşama 4'te.
 - [ ] 4. Geçiş ve yayın: ilk açılış hazır (brief 03: karantina, tercih
   çevirisi, kutlama tekrarı yok). Kalan: 1.1.6'dan yerinde güncelleme provası,
   imzalı arşiv, notarize, appcast.
