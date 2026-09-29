@@ -176,7 +176,7 @@ struct TimecardImportView: View {
                 .scrollContentBackground(.hidden)
                 .focused($isEditingText)
                 .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .noAutocapitalization()
                 .accessibilityLabel("Pasted timecards")
                 .onChange(of: text) { _, _ in errorMessage = nil }
         } header: {

@@ -19,6 +19,14 @@ extension View {
         #endif
     }
 
+    func noAutocapitalization() -> some View {
+        #if os(iOS)
+        textInputAutocapitalization(.never)
+        #else
+        self
+        #endif
+    }
+
     func hiddenNavigationBar() -> some View {
         #if os(iOS)
         toolbar(.hidden, for: .navigationBar)
