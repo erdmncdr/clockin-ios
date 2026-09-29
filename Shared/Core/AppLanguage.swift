@@ -1,8 +1,8 @@
 import Foundation
 
 /// Clockin's own language, chosen in Settings. The app and the widget
-/// extension both read it from the App Group, so the widgets, the Live
-/// Activity and the controls follow the same choice as the app.
+/// extension share it through the iOS App Group. Mac keeps it in the
+/// existing standard domain without opening an App Group suite.
 ///
 /// Self-contained so the standalone checks can compile it on its own.
 enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
@@ -13,8 +13,11 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
     static let key = "Clockin.Language"
-    /// The same suite as `AppGroup.identifier`.
+    #if os(macOS)
+    nonisolated(unsafe) static let shared: UserDefaults? = .standard
+    #else
     nonisolated(unsafe) static let shared = UserDefaults(suiteName: "group.com.erdmncdr.clockin")
+    #endif
 
     static var stored: AppLanguage {
         shared?.string(forKey: key).flatMap(AppLanguage.init(rawValue:)) ?? .automatic

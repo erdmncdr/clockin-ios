@@ -123,6 +123,10 @@ struct ClockinData: Codable, Sendable {
 
 extension ClockinData {
     init(from decoder: any Decoder) throws {
+        try self.init(from: decoder, validatingDurations: true)
+    }
+
+    fileprivate init(from decoder: any Decoder, validatingDurations: Bool) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         hourlyRate = try container.decode(Double.self, forKey: .hourlyRate)
         currencyCode = try container.decode(String.self, forKey: .currencyCode)
@@ -130,13 +134,123 @@ extension ClockinData {
         sessions = try container.decode([WorkSession].self, forKey: .sessions)
         pinVisible = try container.decode(Bool.self, forKey: .pinVisible)
         rateRules = try container.decodeIfPresent([RateRule].self, forKey: .rateRules)
-        // Disk ve yedek ayni kurali kullanmali; bozuk sureler yayimlanan
-        // store verisine girdikten sonra duzeltilirse aynalar da etkilenir.
-        guard sessions.allSatisfy(\.hasValidDuration), running?.hasValidDuration() ?? true else {
+        // Kati okuyucular yedegi butun olarak dogrular.
+        guard !validatingDurations || (sessions.allSatisfy(\.hasValidDuration)
+                                      && (running?.hasValidDuration() ?? true)) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath, debugDescription: "Invalid session duration or dates."
             ))
         }
+    }
+}
+
+/// Sure hatalarini ayirir; sema hatalari yine tum okumayi durdurur.
+struct ClockinArchive {
+    let data: ClockinData
+    let quarantine: Data?
+    let rejectedCount: Int
+
+    static func read(_ bytes: Data, at date: Date = .now) throws -> Self {
+        struct Unchecked: Decodable {
+            let data: ClockinData
+            init(from decoder: any Decoder) throws {
+                data = try ClockinData(from: decoder, validatingDurations: false)
+            }
+        }
+        var data = try JSONDecoder().decode(Unchecked.self, from: bytes).data
+        let rejected = data.sessions.indices.filter { !data.sessions[$0].hasValidDuration }
+        let rejectRunning = data.running.map { !$0.hasValidDuration(at: date) } ?? false
+        let count = rejected.count + (rejectRunning ? 1 : 0)
+        guard count > 0 else { return Self(data: data, quarantine: nil, rejectedCount: 0) }
+        // Bilinmeyen alanlar, sayi yazimi ve bosluklar da aynen korunur.
+        var scanner = ArchiveJSONSlices(bytes)
+        let fields = try scanner.object()
+        guard let sessions = fields["sessions"] else { throw CocoaError(.fileReadCorruptFile) }
+        var rows = ArchiveJSONSlices(sessions)
+        let entries = try rows.array()
+        guard entries.count == data.sessions.count else { throw CocoaError(.fileReadCorruptFile) }
+        var quarantine = Data("{\"sessions\":[".utf8)
+        for (offset, index) in rejected.enumerated() {
+            if offset > 0 { quarantine.append(contentsOf: ",".utf8) }
+            quarantine.append(entries[index])
+        }
+        quarantine.append(contentsOf: "],\"running\":".utf8)
+        if rejectRunning, let running = fields["running"] { quarantine.append(running) }
+        else { quarantine.append(contentsOf: "null".utf8) }
+        quarantine.append(contentsOf: "}".utf8)
+        data.sessions.removeAll { !$0.hasValidDuration }
+        if rejectRunning { data.running = nil }
+        return Self(data: data, quarantine: quarantine, rejectedCount: count)
+    }
+}
+
+// Yalnizca decoder'in dogruladigi JSON'dan ham deger dilimleri alir.
+private struct ArchiveJSONSlices {
+    let bytes: [UInt8]
+    var index = 0
+    init(_ data: Data) { bytes = Array(data) }
+
+    mutating func whitespace() {
+        while index < bytes.count, [9, 10, 13, 32].contains(bytes[index]) { index += 1 }
+    }
+    mutating func consume(_ byte: UInt8) throws {
+        whitespace()
+        guard index < bytes.count, bytes[index] == byte else { throw CocoaError(.fileReadCorruptFile) }
+        index += 1
+    }
+    mutating func value() throws -> Data {
+        whitespace()
+        let start = index
+        var depth = 0
+        var quoted = false
+        var escaped = false
+        while index < bytes.count {
+            let byte = bytes[index]
+            if quoted {
+                if escaped { escaped = false }
+                else if byte == 92 { escaped = true }
+                else if byte == 34 { quoted = false }
+            } else {
+                if depth == 0, [44, 58, 93, 125, 9, 10, 13, 32].contains(byte) { break }
+                if byte == 34 { quoted = true }
+                else if byte == 91 || byte == 123 { depth += 1 }
+                else if byte == 93 || byte == 125 { depth -= 1 }
+            }
+            index += 1
+        }
+        guard index > start, depth == 0, !quoted else { throw CocoaError(.fileReadCorruptFile) }
+        return Data(bytes[start..<index])
+    }
+    mutating func object() throws -> [String: Data] {
+        try consume(123)
+        var fields: [String: Data] = [:]
+        whitespace()
+        while index < bytes.count, bytes[index] != 125 {
+            let key = try JSONDecoder().decode(String.self, from: value())
+            try consume(58)
+            let raw = try value()
+            // Decoder ile belirsiz bir esleme yapmamak icin yinelenen anahtari reddet.
+            guard fields[key] == nil else { throw CocoaError(.fileReadCorruptFile) }
+            fields[key] = raw
+            whitespace()
+            if index < bytes.count, bytes[index] == 125 { break }
+            try consume(44)
+        }
+        try consume(125)
+        return fields
+    }
+    mutating func array() throws -> [Data] {
+        try consume(91)
+        var entries: [Data] = []
+        whitespace()
+        while index < bytes.count, bytes[index] != 93 {
+            entries.append(try value())
+            whitespace()
+            if index < bytes.count, bytes[index] == 93 { break }
+            try consume(44)
+        }
+        try consume(93)
+        return entries
     }
 }
 

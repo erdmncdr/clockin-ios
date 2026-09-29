@@ -34,7 +34,8 @@ final class WardrobeStore: ObservableObject {
         archive = sessions; lastGoal = dailyGoal; lastDay = day
         let calculation = WardrobeEarnings(sessions: sessions, dailyGoal: dailyGoal, now: now, calendar: .current)
         earned = calculation.coins
-        let first = !state.seeded
+        // Mevcut arsiv ilk kez yuklenince tanitim bildirimi oynatilmaz.
+        let first = !state.seeded && sessions.isEmpty
         let items = state.unlock(calculation.progress,
                                  legacy: defaults.string(forKey: CompanionAccessory.storageKey) ?? "Auto",
                                  legacyOwned: Set(defaults.stringArray(forKey: CompanionAccessory.seenKey) ?? []))

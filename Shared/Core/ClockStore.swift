@@ -21,6 +21,7 @@ final class ClockStore: ObservableObject {
     private let calendar: Calendar
     private let now: () -> Date
     private let backupDirectory: URL
+    private var mustNotOverwrite = false
 
     /// Siralanmis kopyalar. `data` her degistiginde bosaltilir; boylece
     /// her okumada yeniden siralama yapilmaz.
@@ -59,23 +60,40 @@ final class ClockStore: ObservableObject {
     private static let automaticBackupInterval: TimeInterval = 86_400
 
     init(fileURL: URL? = nil, calendar: Calendar = .autoupdatingCurrent,
-         now: @escaping () -> Date = { .now }) {
+         now: @escaping () -> Date = { .now },
+         writeQuarantine: (Data, URL) throws -> Void = { try $0.write(to: $1, options: .withoutOverwriting) }) {
         self.calendar = calendar
         self.now = now
         self.fileURL = fileURL ?? Self.defaultFileURL
         self.backupDirectory = self.fileURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
         var loadFailureMessage: String?
-        var mustNotOverwrite = false
+        var recoveredEntries = false
+        data = ClockinData()
         if let content = try? Data(contentsOf: self.fileURL),
-           let decoded = try? JSONDecoder().decode(ClockinData.self, from: content) {
-            data = decoded
+           let archive = try? ClockinArchive.read(content, at: now()) {
+            if let quarantine = archive.quarantine {
+                let directory = self.fileURL.deletingLastPathComponent()
+                let stamp = Self.recoveryStamp(in: directory)
+                let original = directory.appending(path: "clockin-unreadable-\(stamp).json")
+                let copy = directory.appending(path: "clockin-quarantine-\(stamp).json")
+                do {
+                    try content.write(to: original, options: .withoutOverwriting)
+                    try writeQuarantine(quarantine, copy)
+                    data = archive.data
+                    recoveredEntries = true
+                    loadFailureMessage = String(localized: "\(archive.rejectedCount) invalid entries were set aside in \(copy.lastPathComponent). The original file was also kept.", bundle: .app)
+                } catch {
+                    mustNotOverwrite = true
+                    loadFailureMessage = String(localized: "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin.", bundle: .app)
+                }
+            } else { data = archive.data }
         } else {
             data = ClockinData()
             // Dosya hic yoksa ilk kurulumdur. Varsa ama okunamiyorsa, bos veriyle
             // devam etmeden once kopyasi kenara alinir: asagidaki ucret gecisi
             // hemen `save()` cagirip kullanicinin dosyasinin uzerine yaziyordu.
             if FileManager.default.fileExists(atPath: self.fileURL.path) {
-                let stamp = Int(Date().timeIntervalSince1970 * 1000)
+                let stamp = Self.recoveryStamp(in: self.fileURL.deletingLastPathComponent())
                 let copy = self.fileURL.deletingLastPathComponent().appending(path: "clockin-unreadable-\(stamp).json")
                 if (try? FileManager.default.copyItem(at: self.fileURL, to: copy)) != nil {
                     loadFailureMessage = String(localized: "Your data could not be read. The original file was kept as \(copy.lastPathComponent). You can restore a backup from Settings.", bundle: .app)
@@ -91,9 +109,19 @@ final class ClockStore: ObservableObject {
             data.rateRules = [RateRule(effectiveFrom: july2026, hourlyRate: data.hourlyRate)]
         }
         // Kopya alinamadiysa okunamayan dosyanin uzerine hic yazilmaz.
-        if needsRateMigration, !mustNotOverwrite { save() }
-        else { createAutomaticBackupIfNeeded() }
+        if !mustNotOverwrite {
+            if needsRateMigration || recoveredEntries { save() }
+            else { createAutomaticBackupIfNeeded() }
+        }
         if let loadFailureMessage { statusMessage = loadFailureMessage }
+    }
+
+    private static func recoveryStamp(in directory: URL) -> Int {
+        var stamp = Int(Date().timeIntervalSince1970 * 1000)
+        while ["unreadable", "quarantine"].contains(where: {
+            FileManager.default.fileExists(atPath: directory.appending(path: "clockin-\($0)-\(stamp).json").path)
+        }) { stamp += 1 }
+        return stamp
     }
 
     static var defaultFileURL: URL {
@@ -568,6 +596,11 @@ final class ClockStore: ObservableObject {
         let wardrobe: WardrobeBackupSection?
         do {
             let bytes = try Data(contentsOf: url)
+            // Geri yukleme tum arsivi degistirir; eksik bir yedek uygulanmaz.
+            if let archive = try? ClockinArchive.read(bytes), archive.rejectedCount > 0 {
+                statusMessage = String(localized: "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive.", bundle: .app)
+                return false
+            }
             decoded = try JSONDecoder().decode(ClockinData.self, from: bytes)
             wardrobe = try WardrobeBackupSection.read(from: bytes)
         } catch {
@@ -1005,6 +1038,7 @@ final class ClockStore: ObservableObject {
 
     @discardableResult
     private func save() -> Bool {
+        guard !mustNotOverwrite else { return false }
         do {
             try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             createAutomaticBackupIfNeeded()
