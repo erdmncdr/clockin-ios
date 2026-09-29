@@ -28,7 +28,7 @@ do { _ = try ClockinCloudRecord.decode(bad); fatalError("invalid stamp accepted"
 catch { check(true, "mismatched CloudKit metadata rejected") }
 let wrongID = CKRecord(recordType: value.kind.rawValue,
                        recordID: .init(recordName: "wrong", zoneID: ClockinCloudRecord.zoneID))
-wrongID["schema"] = Int64(1) as CKRecordValue
+wrongID["schema"] = Int64(2) as CKRecordValue
 wrongID["payload"] = try SyncCoding.encode(value) as CKRecordValue
 wrongID["modifiedAt"] = now as CKRecordValue
 wrongID["modifiedBy"] = "codec" as CKRecordValue
@@ -39,5 +39,5 @@ var largeSession = try SyncCoding.decode(WorkSession.self, oversized.versions[0]
 largeSession.note = String(repeating: "a", count: ClockinCloudRecord.maximumPayloadBytes + 1)
 oversized.versions[0].payload = try SyncCoding.encode(largeSession)
 do { _ = try ClockinCloudRecord.encode(oversized, systemFields: nil); fatalError("oversized record accepted") }
-catch { check(true, "valid oversized payload is never silently truncated") }
+catch { check(true, "over-limit input is invalid and never silently truncated") }
 print("All \(checks) CloudKit codec checks passed without network or entitlements.")

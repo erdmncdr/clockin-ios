@@ -4,7 +4,11 @@ var checks = 0
 @MainActor func check(_ value: @autoclosure () throws -> Bool, _ message: String) rethrows {
     guard try value() else { fatalError("FAIL: \(message)") }
     checks += 1
-    print("ok \(message)")
+    emit("ok \(message)")
+}
+func emit(_ text: String) {
+    // Keep progress visible when the long-run command is redirected to a log.
+    try? FileHandle.standardOutput.write(contentsOf: Data((text + "\n").utf8))
 }
 func date(_ value: Double) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + value) }
 func uuid(_ value: Int) -> UUID { UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", value))! }
@@ -57,7 +61,7 @@ try check(merge([a, b]).snapshot.data.sessions.first?.note == "b", "LWW ties bre
 try check(bytes(merge([a, b]).snapshot) == bytes(merge([b, a]).snapshot), "LWW order is commutative")
 let tombstone = try record(.session, uuid(1).uuidString, session(1), time: 99, deleted: true)
 let lateEdit = try record(.session, uuid(1).uuidString, session(1, note: "newer edit"), device: "b", time: 999)
-let removed = try merge([lateEdit, tombstone])
+let removed = try SyncCore.merge(local: [lateEdit.key: lateEdit], incoming: [tombstone], onto: merge([lateEdit]).snapshot)
 check(removed.snapshot.data.sessions.isEmpty && !removed.recoveries.isEmpty, "deletion wins even against later offline edit and preserves it")
 try check(SyncCoding.encode(removed.records) == SyncCoding.encode(merge([tombstone, lateEdit]).records), "delete conflict converges")
 let rule = RateRule(id: uuid(9), effectiveFrom: date(0), hourlyRate: 10)
@@ -77,7 +81,7 @@ let deleteCompleted = try record(.session, uuid(10).uuidString, session(10), dev
 try check(merge([completed, deleteCompleted, start]).snapshot.data.running == nil,
           "deleting completed session does not erase resurrection guard")
 let laterStart = try record(.running, "Running", SyncRunning(session: run(10)), device: "b", time: 111)
-let competing = try merge([start, laterStart])
+let competing = try SyncCore.merge(local: [start.key: start], incoming: [laterStart], onto: merge([start]).snapshot)
 check(competing.snapshot.data.running?.start == date(10), "later of two starts wins")
 check(competing.recoveries.contains { $0.reason == "Displaced timer" } && competing.notices.count == 1,
       "losing run remains recoverable with stable notice")
@@ -93,12 +97,12 @@ try check(merge([try record(.session, uuid(10).uuidString, session(10, source: "
           "external-source history never closes a Clockin run")
 
 var wardrobeA = WardrobeState(); wardrobeA.owned = ["cape"]; wardrobeA.colorway = "mint"
-var wardrobeB = WardrobeState(); wardrobeB.owned = ["hat"]; wardrobeB.colorway = "gold"; wardrobeB.homeLampOn = false
+var wardrobeB = WardrobeState(); wardrobeB.owned = ["cap"]; wardrobeB.colorway = "gold"; wardrobeB.homeLampOn = false
 wardrobeB.homeArrangement.set(.init(10, 20), for: "desk", room: "cozy")
 let wa = try record(.wardrobe, "WardrobeState", SyncWardrobe(wardrobeA))
 let wb = try record(.wardrobe, "WardrobeState", SyncWardrobe(wardrobeB), device: "b")
 let wardrobe = try merge([wb, wa]).snapshot.wardrobe
-check(wardrobe.owned == ["cape", "hat"] && wardrobe.colorway == "gold" && !wardrobe.homeLampOn,
+check(wardrobe.owned == ["cape", "cap"] && wardrobe.colorway == "gold" && !wardrobe.homeLampOn,
       "wardrobe owned unions while selection and lamp use LWW")
 check(wardrobe.homeArrangement.offset(for: "desk", room: "cozy") == .init(10, 20), "room arrangement follows selected state")
 let purchase1 = WardrobePurchase(itemID: "mint", cost: 100, date: date(1))
@@ -135,8 +139,8 @@ let unique = try record(.session, uuid(4).uuidString, session(4, start: 400), de
 let preview = try SyncCore.firstPreview(local: firstKnown, incoming: [sharedID, alias, unique], snapshot: localFirst, revision: 1)
 check(preview.localCount == 2 && preview.remoteCount == 3 && preview.duplicates == 2 && preview.mergedCount == 3,
       "first sync reports local 2 + remote 3 - duplicates 2 = merged 3")
-check(preview.merge.recoveries.contains { $0.reason == "Import-key duplicate" }, "duplicate with different notes is retained for recovery")
-check(preview.merge.notices.contains { $0.id.hasPrefix("duplicate:") }, "duplicate collapse provides a stable recoverability notice")
+check(preview.merge.records[alias.key] != nil, "unapplied remote duplicate remains its own retained identity")
+check(preview.merge.recoveries.isEmpty, "unapplied remote duplicate creates no local recovery notice")
 check(SyncCore.importKey(session(1)) == "1800000000|1800000060|60", "duplicate key matches ClockStore integer-second import key")
 var deletedAlias = preview.merge.snapshot; deletedAlias.data.sessions.removeAll { $0.start == date(200) }
 let aliasDeletes = try SyncCore.diff(previous: preview.merge.snapshot, current: deletedAlias, known: preview.merge.records, stamp: stamp("local", 1001))
@@ -166,7 +170,7 @@ try echo.capture(previous: received.snapshot, current: received.snapshot, at: da
 check(beforeEcho.isEmpty && echo.pending.isEmpty, "applying remote state creates no echo upload")
 let localWins = try SyncCore.merge(local: [b.key: b], incoming: [a], onto: blank())
 check(localWins.resend.count == 1 && localWins.snapshot.data.sessions.first?.note == "b", "local-winning conflict resends joined history")
-var notices = SyncSidecar(); notices.acknowledgeNotices(competing.notices.map(\.id))
+var notices = SyncSidecar(); notices.addRecoveries(competing.recoveries); notices.acknowledgeNotices(competing.notices.map(\.id))
 check(notices.notices(competing).isEmpty, "notice acknowledgment prevents repeat presentation")
 
 struct RNG {
@@ -214,10 +218,10 @@ for seed in 1...30 {
         case 3: next.preferences["Clockin.Theme"] = .string("theme-\(rng.next(8))")
         case 4: next.data.hourlyRate = Double(rng.next(100)); next.data.currencyCode = rng.next(2) == 0 ? "USD" : "EUR"
         case 5:
-            next.wardrobe.owned.insert("item-\(rng.next(8))"); next.wardrobe.colorway = "color-\(rng.next(5))"
+            next.wardrobe.owned.insert(WardrobeCatalog.items[rng.next(8)].id); next.wardrobe.colorway = ["classic", "mint", "sunset", "gold", "stealth"][rng.next(5)]
             next.wardrobe.homeLampOn = rng.next(2) == 0
         case 6:
-            let item = "buy-\(rng.next(5))"
+            let item = ["scarf", "sunglasses", "balloon", "backpack", "wings"][rng.next(5)]
             next.ledger.append(.init(itemID: item, cost: 50 + rng.next(20), date: date(Double(step))))
         case 7: next.data.running = run(Double(step), paused: rng.next(2) == 0)
         case 8:
@@ -354,4 +358,5 @@ try await approvalBridge!.approveFirstMerge(approvalBridge!.firstPreview(), arch
 try await queuedSave?.value
 check(approvalBridge!.state.pending.contains("Session:" + uuid(700).uuidString),
       "local save during first-merge sidecar write is tracked")
-print("All \(checks) sync checks passed.")
+try await boundedChecks()
+emit("All \(checks) sync checks passed.")

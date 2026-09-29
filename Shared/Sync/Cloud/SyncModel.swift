@@ -12,7 +12,7 @@ enum SyncCoding {
 }
 
 enum SyncFailure: Error, Equatable {
-    case invalid(String), unsupportedVersion, stalePreview, backupRequired, accountChanged
+    case invalid(String), unknownCatalog, unsupportedVersion, stalePreview, backupRequired, accountChanged
 }
 
 struct SyncSnapshot: Sendable {
@@ -114,6 +114,15 @@ struct SyncVersion: Codable, Equatable, Sendable {
     var payload: Data
     // Causal parents distinguish a conflict from an ordinary sequential edit.
     var parents: [String] = []
+    // Immutable causal floor: maximum stamp observed for this identity when authored.
+    // Unlike parent edges, this witness survives pruning.
+    var observed: SyncStamp? = nil
+
+    func concurrent(with other: Self) -> Bool {
+        (observed.map { $0 < other.stamp } ?? true)
+            && (other.observed.map { $0 < stamp } ?? true)
+            && stamp.modifiedBy != other.stamp.modifiedBy
+    }
 
     var id: String { "\(stamp.modifiedBy):\(stamp.sequence)" }
     static func less(_ lhs: Self, _ rhs: Self) -> Bool {
@@ -123,33 +132,88 @@ struct SyncVersion: Codable, Equatable, Sendable {
     }
 }
 
+// The wrapper distinguishes a known non-Clockin origin (nil) from a missing fact.
+struct SyncSessionFact: Codable, Equatable, Sendable {
+    var clockinStart: Date?
+}
+
 struct SyncRecord: Codable, Equatable, Sendable {
-    var schema = 1
+    var schema = 2
     var kind: SyncKind
     var name: String
     var versions: [SyncVersion]
+    var maximumStamp: SyncStamp
+    var sessionFact: SyncSessionFact?
+    var ownership: [String] = []
+
+    init(kind: SyncKind, name: String, versions: [SyncVersion]) {
+        self.kind = kind; self.name = name; self.versions = versions
+        maximumStamp = versions.map(\.stamp).max() ?? .init(modifiedAt: .distantPast, modifiedBy: "empty", sequence: 0)
+        if kind == .session, let payload = versions.first?.payload,
+           let value = try? SyncCoding.decode(WorkSession.self, payload) {
+            sessionFact = .init(clockinStart: value.source == "Clockin" ? value.start : nil)
+        }
+        // These facts are extracted once at creation, then joined independently of history.
+        if kind == .wardrobe {
+            ownership = Set(versions.flatMap { (try? SyncCoding.decode(SyncWardrobe.self, $0.payload).owned) ?? [] }).sorted()
+        } else if kind == .preference && name == "Clockin.SeenAccessoryIDs" {
+            ownership = Set(versions.flatMap { version -> [String] in
+                if case .strings(let ids) = try? SyncCoding.decode(SyncPreference.self, version.payload) { return ids }
+                return []
+            }).sorted()
+        }
+        if kind.removeWins {
+            for i in self.versions.indices where self.versions[i].deleted { self.versions[i].payload = Data() }
+        }
+    }
 
     var key: String { kind.rawValue + ":" + name }
-    var winner: SyncVersion? {
-        let eligible = kind.removeWins && versions.contains(where: \.deleted)
-            ? versions.filter(\.deleted) : versions
-        return eligible.max(by: SyncVersion.less)
+    func less(_ lhs: SyncVersion, _ rhs: SyncVersion) -> Bool {
+        if kind.removeWins && lhs.deleted != rhs.deleted { return !lhs.deleted }
+        if kind == .purchase,
+           let a = try? SyncCoding.decode(WardrobePurchase.self, lhs.payload),
+           let b = try? SyncCoding.decode(WardrobePurchase.self, rhs.payload) {
+            if a.date != b.date { return a.date > b.date }
+            if a.cost != b.cost { return a.cost > b.cost }
+        }
+        return SyncVersion.less(lhs, rhs)
+    }
+    var winner: SyncVersion? { versions.max(by: less) }
+
+    func pruned() -> Self {
+        var result = self
+        result.maximumStamp = max(maximumStamp, versions.map(\.stamp).max() ?? maximumStamp)
+        result.versions = Array(versions.sorted(by: less).suffix(kind.capacity))
+        let retained = Set(result.versions.map(\.id))
+        for i in result.versions.indices {
+            result.versions[i].parents = Set(result.versions[i].parents).intersection(retained)
+                .subtracting([result.versions[i].id]).sorted()
+        }
+        result.ownership = Set(ownership).sorted()
+        return result
     }
 
     func joined(with other: Self) throws -> Self {
-        guard kind == other.kind, name == other.name, schema == other.schema else {
-            throw SyncFailure.invalid("Record identity changed")
+        guard kind == other.kind, name == other.name, schema == other.schema,
+              sessionFact == other.sessionFact else {
+            throw SyncFailure.invalid("Record identity or immutable clockinStart changed")
         }
         var byID: [String: SyncVersion] = [:]
-        for version in versions + other.versions {
-            if let old = byID[version.id], old != version {
-                throw SyncFailure.invalid("Revision identity reused")
+        for var version in versions + other.versions {
+            if let old = byID[version.id] {
+                // Parent edges are a projected relation, not part of immutable revision identity.
+                var left = old; var right = version
+                left.parents = []; right.parents = []
+                guard left == right else { throw SyncFailure.invalid("Revision identity reused") }
+                version.parents = Set(old.parents + version.parents).sorted()
             }
             byID[version.id] = version
         }
         var result = self
-        result.versions = byID.values.sorted(by: SyncVersion.less)
-        return result
+        result.versions = Array(byID.values)
+        result.maximumStamp = max(maximumStamp, other.maximumStamp)
+        result.ownership = Set(ownership + other.ownership).sorted()
+        return result.pruned()
     }
 }
 
@@ -157,6 +221,7 @@ struct SyncQuarantine: Codable, Equatable, Sendable {
     var recordKey: String
     var bytes: Data
     var reason: String
+    var futureCatalog: Bool = false
 }
 
 struct SyncNotice: Codable, Equatable, Sendable {
@@ -164,10 +229,21 @@ struct SyncNotice: Codable, Equatable, Sendable {
     var message: String
 }
 
-struct SyncRecovery: Sendable {
+struct SyncRecovery: Codable, Equatable, Sendable {
     var recordKey: String
     var version: SyncVersion
     var reason: String
+    var id: String { "recovery:" + recordKey + ":" + version.id }
+    var notice: SyncNotice {
+        let message: String
+        switch reason {
+        case "Displaced timer": message = String(localized: "Another timer state won. The previous timer is in recovery.", bundle: .app)
+        case "Replaced value": message = String(localized: "A replaced value is available in recovery.", bundle: .app)
+        case "Import-key duplicate": message = String(localized: "Duplicate entries were collapsed. Your previous entry is in recovery.", bundle: .app)
+        default: message = String(localized: "Concurrent changes were resolved. Your previous value is in recovery.", bundle: .app)
+        }
+        return .init(id: id, message: message)
+    }
 }
 
 struct SyncMerge: Sendable {
