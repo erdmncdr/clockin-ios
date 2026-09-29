@@ -1805,6 +1805,16 @@
         }
       }
     },
+    "After merging": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirince"
+          }
+        }
+      }
+    },
     "Aim for %@ per workday.": {
       "localizations": {
         "tr": {
@@ -1980,7 +1990,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir iCloud değeri incelenmek üzere ayrıldı. Yerel verileriniz korundu."
+            "value": "Bir iCloud değeri incelenmek üzere ayrıldı. Bu cihazdaki verin korundu."
           }
         }
       }
@@ -3604,7 +3614,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşzamanlı değişiklikler birleştirildi. Önceki değeriniz kurtarma kutusunda."
+            "value": "Aynı anda yapılan değişiklikler birleştirildi. Önceki değerin kurtarma kutusunda."
           }
         }
       }
@@ -4514,7 +4524,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yinelenen kayıtlar birleştirildi. Önceki kaydınız kurtarma kutusunda."
+            "value": "Yinelenen kayıtlar tek kayda indirildi. Önceki kaydın kurtarma kutusunda."
           }
         }
       }
@@ -4979,6 +4989,26 @@
         }
       }
     },
+    "Entries": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıtlar"
+          }
+        }
+      }
+    },
+    "Entries recorded on both devices are kept once. A copy of this device's data is saved before anything changes, and nothing is merged until you choose Merge.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İki cihazda da olan kayıtlar bir kez tutulur. Bir şey değişmeden önce bu cihazdaki verinin bir kopyası alınır; Birleştir'i seçene kadar hiçbir şey birleşmez."
+          }
+        }
+      }
+    },
     "Entries the file already covers are not listed here.": {
       "localizations": {
         "tr": {
@@ -5336,7 +5366,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "İlk birleştirme ertelendi. Verileriniz bu cihazda kalacak."
+            "value": "İlk birleştirme ertelendi. Verin bu cihazda kalıyor."
           }
         }
       }
@@ -5497,6 +5527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ itibarıyla · Bitiş tarihi yok"
+          }
+        }
+      }
+    },
+    "From your other devices": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer cihazlarından"
           }
         }
       }
@@ -6839,6 +6879,16 @@
         }
       }
     },
+    "Last synced": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eşzamanlama"
+          }
+        }
+      }
+    },
     "Latest available USD to TRY rate": {
       "localizations": {
         "tr": {
@@ -7455,6 +7505,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Menü çubuğu ve panel"
+          }
+        }
+      }
+    },
+    "Merge": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştir"
+          }
+        }
+      }
+    },
+    "Merge with iCloud": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud ile birleştir"
           }
         }
       }
@@ -8375,6 +8445,16 @@
         }
       }
     },
+    "Not synced": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlanmadı"
+          }
+        }
+      }
+    },
     "Not working anymore?": {
       "localizations": {
         "tr": {
@@ -8401,6 +8481,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not (isteğe bağlı)"
+          }
+        }
+      }
+    },
+    "Nothing needs your attention.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlgilenmen gereken bir şey yok."
           }
         }
       }
@@ -8583,12 +8673,32 @@
         }
       }
     },
+    "On": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
     "On a roll": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Seri başladı"
+          }
+        }
+      }
+    },
+    "On this device": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazda"
           }
         }
       }
@@ -8869,6 +8979,16 @@
         }
       }
     },
+    "Outfit and room": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kıyafet ve oda"
+          }
+        }
+      }
+    },
     "Outfits, coins and home": {
       "localizations": {
         "tr": {
@@ -9143,6 +9263,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duraklatılmış oturum"
+          }
+        }
+      }
+    },
+    "Paused timer started %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tarihinde başlayan duraklatılmış sayaç"
           }
         }
       }
@@ -10107,6 +10237,16 @@
         }
       }
     },
+    "Record": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıt"
+          }
+        }
+      }
+    },
     "Record player console": {
       "localizations": {
         "tr": {
@@ -10203,6 +10343,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tüm veriler değiştirilsin mi?"
+          }
+        }
+      }
+    },
+    "Replaced by another device": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir cihaz değiştirdi"
           }
         }
       }
@@ -10407,12 +10557,22 @@
         }
       }
     },
+    "Review the first merge": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk birleştirmeyi gözden geçir"
+          }
+        }
+      }
+    },
     "Review the first merge to continue syncing.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşzamanlamaya devam etmek için ilk birleştirmeyi inceleyin."
+            "value": "Eşzamanlamaya devam etmek için ilk birleştirmeye bak."
           }
         }
       }
@@ -10613,6 +10773,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İSTATİSTİK ÖZETİ"
+          }
+        }
+      }
+    },
+    "Same entry on both": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İkisinde de aynı kayıt"
           }
         }
       }
@@ -11162,7 +11332,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu arşivi eşzamanlamak için ilk kullanılan iCloud hesabına giriş yapın."
+            "value": "Bu arşivi eşzamanlamak için ilk kullandığın iCloud hesabıyla giriş yap."
           }
         }
       }
@@ -11577,6 +11747,16 @@
         }
       }
     },
+    "Status": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum"
+          }
+        }
+      }
+    },
     "Stealth": {
       "localizations": {
         "tr": {
@@ -11817,6 +11997,16 @@
         }
       }
     },
+    "Sync changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşzamanlama değişiklikleri"
+          }
+        }
+      }
+    },
     "Sync checkpoint exceeded its limit. Changes will be fetched again.": {
       "localizations": {
         "tr": {
@@ -11832,7 +12022,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşzamanlama verileri kaydedilemedi. Boş alanı kontrol edip tekrar deneyin."
+            "value": "Eşzamanlama verileri kaydedilemedi. Boş alanı kontrol edip tekrar dene."
           }
         }
       }
@@ -11852,7 +12042,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veriler uygulanamadığı için eşzamanlama duraklatıldı. Arşiviniz korundu."
+            "value": "Veriler uygulanamadığı için eşzamanlama duraklatıldı. Arşivin korundu."
           }
         }
       }
@@ -11873,6 +12063,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşzamanlama yan dosyası kaydedilemedi: %@"
+          }
+        }
+      }
+    },
+    "Sync with iCloud": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud ile eşzamanla"
           }
         }
       }
@@ -12247,6 +12447,16 @@
         }
       }
     },
+    "There is nothing to merge.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirilecek bir şey yok."
+          }
+        }
+      }
+    },
     "There's %@ left today. Choose a next step that works for you.": {
       "localizations": {
         "tr": {
@@ -12283,6 +12493,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başka bir uygulama açıkken de bu kısayollar çalışır: ⌥⌘I giriş yapar veya duraklatılmış oturumu sürdürür, ⌥⌘P duraklatır veya sürdürür, ⌥⌘O çıkış yapar, ⌥⌘E Clockin’i açar. Bir kısayol kaydedilemezse Ayarlar > Genel kısayollar bölümünde belirtilir; diğer uygulamalarda aynı kısayolun kullanılıp kullanılmadığını kontrol et."
+          }
+        }
+      }
+    },
+    "These values were replaced while syncing. They are kept here so you can check them; choose OK once you have.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu değerler eşzamanlanırken değişti. Kontrol edebilmen için burada duruyor; baktıktan sonra Tamam'ı seç."
           }
         }
       }
@@ -12373,12 +12593,22 @@
         }
       }
     },
+    "This value cannot be shown by this version of Clockin.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin'in bu sürümü bu değeri gösteremiyor."
+          }
+        }
+      }
+    },
     "This value exceeds sync limits or is unsupported. It is saved only on this device. Edit it to resume syncing.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu değer eşzamanlama sınırlarını aşıyor veya desteklenmiyor. Yalnızca bu cihazda kayıtlı. Eşzamanlamak için değeri düzenleyin."
+            "value": "Bu değer eşzamanlama sınırlarını aşıyor veya desteklenmiyor. Yalnızca bu cihazda kayıtlı. Eşzamanlamak için değeri düzenle."
           }
         }
       }
@@ -12449,6 +12679,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Puantaj kaydı"
+          }
+        }
+      }
+    },
+    "Timer started %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tarihinde başlayan sayaç"
+          }
+        }
+      }
+    },
+    "Timer stopped": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayaç durdu"
           }
         }
       }
@@ -14303,6 +14553,16 @@
         }
       }
     },
+    "Your work, goals, companion and choices move between your iPhone and Mac through your private iCloud. Clockin has no server and no account.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışmaların, hedeflerin, arkadaşın ve seçimlerin özel iCloud'un üzerinden iPhone ile Mac arasında taşınır. Clockin'in sunucusu da hesabı da yok."
+          }
+        }
+      }
+    },
     "a calendar month": {
       "localizations": {
         "tr": {
@@ -14486,6 +14746,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başa"
+          }
+        }
+      }
+    },
+    "iCloud": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud"
           }
         }
       }

@@ -131,6 +131,7 @@ struct RootView: View {
             })
         }
         .sheet(isPresented: $showCompanion) { CompanionView() }
+        .syncFirstMergePrompt()
         .celebrationBlocked(by: showCompanion)
         .background(CelebrationWindowProbe())
         .onChange(of: verticalSizeClass) { _, _ in deskSuppressed = false }

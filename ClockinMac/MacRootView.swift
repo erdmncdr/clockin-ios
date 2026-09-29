@@ -86,6 +86,7 @@ struct MacRootView: View {
             .macSheetFrame()
         }
         .celebrationBlocked(by: navigation.sheet != nil)
+        .syncFirstMergePrompt()
         .background(CelebrationWindowProbe())
         // Barindirilan gorunum bir sahnede degil; evre pencereden gelir.
         .environment(\.scenePhase, services.scenePhase)

@@ -125,6 +125,7 @@ struct SettingsView: View {
                     openPolicy: { openPrivacySheet(.privacyPolicy) }
                 )
                 #endif
+                SyncSettingsSection()
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)

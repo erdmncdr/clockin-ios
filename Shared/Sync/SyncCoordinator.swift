@@ -10,6 +10,8 @@ final class SyncCoordinator: ObservableObject {
     static let preferenceKey = "Clockin.CloudSyncEnabled" // Device-local; absent = on in a capable build.
     static let shared = SyncCoordinator()
 
+    /// The build carries the iCloud entitlement; the Settings section only shows then.
+    var isSupported: Bool { supportsSync() }
     var isEnabled: Bool {
         supportsSync() && (defaults.object(forKey: Self.preferenceKey) as? Bool ?? true)
     }
