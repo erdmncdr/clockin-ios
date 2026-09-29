@@ -27,13 +27,31 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         }
         refreshRates()
         if !minimal {
-            MacNavigation.shared.open()
+            MacNavigation.shared.open(Self.launchSection)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 if !UserDefaults.standard.bool(forKey: "Clockin.MinimalMode") {
                     MacNavigation.shared.open()
                 }
             }
         }
+    }
+
+    /// Review fixture: `--open-section history|progress|settings` opens a
+    /// section without clicks. Release builds always open where they left off.
+    private static var launchSection: MacSection? {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: "--open-section"), args.indices.contains(index + 1) else { return nil }
+        switch args[index + 1] {
+        case "today": return .today
+        case "history": return .history
+        case "progress": return .progress
+        case "settings": return .settings
+        default: return nil
+        }
+        #else
+        nil
+        #endif
     }
 
     // Refresh even on a minimal launch, before any main-window view exists.

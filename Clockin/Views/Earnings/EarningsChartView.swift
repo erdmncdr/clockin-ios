@@ -63,7 +63,7 @@ struct EarningsChartView: View {
                         Text("USD").tag(false)
                         Text("TRY").tag(true)
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.segmented).labelsHidden()
                     .frame(width: 130)
                 } else {
                     Text(currencyCode).font(.caption.bold())

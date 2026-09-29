@@ -50,6 +50,7 @@ extension View {
         #if os(macOS)
         frame(minWidth: min(width, 460), idealWidth: width, maxWidth: .infinity,
               minHeight: min(height, 420), idealHeight: height, maxHeight: .infinity)
+            .formStyle(.grouped)
         #else
         self
         #endif

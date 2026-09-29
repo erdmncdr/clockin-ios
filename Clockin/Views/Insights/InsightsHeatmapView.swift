@@ -27,7 +27,7 @@ struct InsightsHeatmapView: View {
             Picker("Heatmap grouping", selection: $grouping.hapticSelection($selectionFeedback)) {
                 ForEach(InsightsGrouping.allCases, id: \.self) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.segmented).labelsHidden()
             Group {
                 if grouping == .day {
                     dayContent
@@ -58,7 +58,7 @@ struct InsightsHeatmapView: View {
                 Text("12 weeks").tag(12)
                 Text("All").tag(0)
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.segmented).labelsHidden()
             Text("Each square is a day. Swipe across and tap a day for details.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollViewReader { proxy in

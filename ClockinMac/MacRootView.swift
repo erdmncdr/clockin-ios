@@ -58,6 +58,9 @@ struct MacRootView: View {
             .preferredColorScheme(palette.colorScheme)
         }
         .environment(\.palette, palette)
+        // iPhone formlari gruplu yazildi; Mac'in varsayilan sutun duzeni
+        // etiketleri sola tasiyip kesiyordu.
+        .formStyle(.grouped)
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)

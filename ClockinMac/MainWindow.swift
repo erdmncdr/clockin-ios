@@ -29,11 +29,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             window.contentMinSize = minimum
             window.setFrameAutosaveName("ClockinMainWindow")
             window.delegate = self
-            window.contentView = NSHostingView(rootView:
+            let host = NSHostingView(rootView:
                 MacMainContent()
                     .environmentObject(store)
                     .environmentObject(exchangeRates)
             )
+            // Pencereyi kullanici boyutlar; uzun bir ayar listesi onu ekran
+            // boyunca buyutmesin.
+            host.sizingOptions = [.minSize]
+            window.contentView = host
             // Kaydedilen boyutu geri getir; en kucuk boyutu koru.
             window.setFrameUsingName("ClockinMainWindow")
             let restored = window.contentRect(forFrameRect: window.frame).size

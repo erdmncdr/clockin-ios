@@ -71,15 +71,15 @@ struct ShareStatsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Picker("Privacy", selection: $privacy.hapticSelection($selectionFeedback)) {
                             ForEach(StatsSharePrivacy.allCases) { Text($0.title).tag($0) }
-                        }.pickerStyle(.segmented).accessibilityLabel("Stats privacy")
+                        }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Stats privacy")
                         Text("Private hides headline time, earnings and best-day duration. XP, level, streaks and rhythm remain visible. It is not anonymization.")
                             .font(.caption).foregroundStyle(.secondary)
                         Picker("Page", selection: $page.hapticSelection($selectionFeedback)) {
                             ForEach(StatsSharePage.allCases) { Text($0.title).tag($0) }
-                        }.pickerStyle(.segmented).accessibilityLabel("Preview page")
+                        }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Preview page")
                         Picker("Export", selection: $mode.hapticSelection($selectionFeedback)) {
                             ForEach(StatsShareMode.allCases) { Text($0.title).tag($0) }
-                        }.pickerStyle(.segmented).accessibilityLabel("Image pages")
+                        }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Image pages")
                     }.padding(16).card(palette)
                     if let preview {
                         previewImage(preview).resizable().scaledToFit()

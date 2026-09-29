@@ -123,10 +123,10 @@ struct CompanionHomePreview: View {
         VStack(spacing: 16) {
             Picker("Room layout", selection: $layout) {
                 ForEach(CompanionHomeLayout.allCases, id: \.self) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented)
+            }.pickerStyle(.segmented).labelsHidden()
             Picker("Window light", selection: $time) {
                 ForEach(["Now", "Day", "Evening", "Night"], id: \.self) { Text(LocalizedStringKey($0)) }
-            }.pickerStyle(.segmented)
+            }.pickerStyle(.segmented).labelsHidden()
             Toggle("Room lamp", isOn: $lamp)
             Picker("Companion activity", selection: $activity) {
                 Text("Automatic").tag(Optional<CompanionHomeActivity>.none)

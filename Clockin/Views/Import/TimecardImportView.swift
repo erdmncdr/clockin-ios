@@ -264,7 +264,7 @@ struct TimecardImportView: View {
             Picker("Period", selection: $scope.hapticSelection($selectionFeedback)) {
                 ForEach(ImportScope.allCases) { Text($0.title).tag($0) }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.segmented).labelsHidden()
             if review.leftovers.isEmpty {
                 Text("No Clockin entries of your own are left over in this period.")
                     .font(.subheadline)
@@ -273,7 +273,7 @@ struct TimecardImportView: View {
                 Picker("These entries", selection: $leftoverAction.hapticSelection($selectionFeedback)) {
                     ForEach(LeftoverAction.allCases) { Text($0.title).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.segmented).labelsHidden()
                 if leftoverAction == .deleteAll {
                     Label("\(review.leftovers.count) entries will be deleted. This cannot be undone.",
                           systemImage: "exclamationmark.triangle.fill")

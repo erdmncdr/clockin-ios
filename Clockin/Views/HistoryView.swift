@@ -32,7 +32,7 @@ struct HistoryView: View {
                     Picker("Period", selection: $range) {
                         ForEach(EarningsRange.allCases) { Text($0.title).tag($0) }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.segmented).labelsHidden()
                     .hapticFeedback(.selection, trigger: range)
                     periodHeader(period)
                         // Sayfa degisimi elle yapilir; kaydirma ya da ok ayni tiki verir.

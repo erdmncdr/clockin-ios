@@ -22,7 +22,7 @@ struct ProgressHubView: View {
                         Text(LocalizedStringKey(section.rawValue)).tag(section)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.segmented).labelsHidden()
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .accessibilityIdentifier("progress.sections")

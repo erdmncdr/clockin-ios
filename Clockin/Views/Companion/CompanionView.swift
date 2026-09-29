@@ -46,7 +46,7 @@ struct CompanionView: View {
                             VStack(spacing: 12) {
                                 Picker("Room layout", selection: Binding(get: { wardrobe.state.homeLayout }, set: { wardrobe.setHomeLayout($0) })) {
                                     ForEach(CompanionHomeLayout.allCases, id: \.self) { Text($0.title).tag($0) }
-                                }.pickerStyle(.segmented)
+                                }.pickerStyle(.segmented).labelsHidden()
                                 Toggle("Room lamp", isOn: Binding(get: { wardrobe.state.homeLampOn }, set: { wardrobe.setHomeLamp($0) }))
                             }.padding(.top, 8)
                         }
