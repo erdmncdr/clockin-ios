@@ -24,6 +24,9 @@ struct MenuBarPanelView: View {
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.MinimalMode") private var minimalMode = false
+    @AppStorage(NudgePlanner.toneKey) private var tone = NudgeTone.grumpy.rawValue
+    @ObservedObject private var celebrations = CelebrationCenter.shared
+    @ObservedObject private var nudges = NudgeController.shared
     @State private var now = Date()
     @State private var confirmingDiscard = false
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -99,7 +102,9 @@ struct MenuBarPanelView: View {
     private var header: some View {
         HStack(spacing: 12) {
             if mascotEnabled {
-                ClockinMascotStage()
+                ClockinMascotStage(state: celebrations.companionState(
+                    running: store.running, angry: nudges.mood?.isAngry == true,
+                    friendly: tone == NudgeTone.friendly.rawValue))
                     .frame(width: 44, height: 44)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)

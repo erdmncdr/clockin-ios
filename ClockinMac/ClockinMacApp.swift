@@ -69,7 +69,11 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
 struct ClockinMacApp: App {
     @NSApplicationDelegateAdaptor(ClockinMacAppDelegate.self) private var appDelegate
 
-    init() { AppLanguage.applyToSystem() }
+    init() {
+        // 1.1.6'dan gelen tercihler, onlari okuyan her seyden once cevrilir.
+        MacLegacyMigration.migrate(in: .standard)
+        AppLanguage.applyToSystem()
+    }
 
     var body: some Scene {
         Settings { SettingsSceneRedirect() }
