@@ -7,11 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C1A0000000000000000004A /* ClockinMacWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C1A00000000000000000044 /* ClockinMacWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0C1A0000000000000000003D /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 0C1A0000000000000000003C /* Sparkle */; };
 		0C1A00000000000000000020 /* ClockinWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C1A00000000000000000012 /* ClockinWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0C1A0000000000000000004C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0C1A00000000000000000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0C1A00000000000000000040;
+			remoteInfo = ClockinMacWidgets;
+		};
 		0C1A00000000000000000023 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0C1A00000000000000000009 /* Project object */;
@@ -22,6 +30,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		0C1A0000000000000000004B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0C1A0000000000000000004A /* ClockinMacWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0C1A00000000000000000021 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -36,12 +55,38 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0C1A00000000000000000044 /* ClockinMacWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClockinMacWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C1A00000000000000000034 /* Clockin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clockin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C1A00000000000000000002 /* Clockin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clockin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C1A00000000000000000012 /* ClockinWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClockinWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0C1A00000000000000000048 /* Exceptions for "ClockinWidgets" folder in "ClockinMacWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ClockinLiveActivity.swift,
+			);
+			target = 0C1A00000000000000000040 /* ClockinMacWidgets */;
+		};
+		0C1A00000000000000000049 /* Exceptions for "Shared" folder in "ClockinMacWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sync/ClockinActivityAttributes.swift,
+				Sync/Cloud/CloudKitAdapter.swift,
+				Sync/Cloud/SyncBounds.swift,
+				Sync/Cloud/SyncBridge.swift,
+				Sync/Cloud/SyncMerge.swift,
+				Sync/Cloud/SyncModel.swift,
+				Sync/Cloud/SyncPreferences.swift,
+				Sync/Cloud/SyncSidecar.swift,
+				Sync/Cloud/SyncTransport.swift,
+				Sync/LiveActivityPush.swift,
+				Sync/SyncAppState.swift,
+				Sync/SyncCoordinator.swift,
+			);
+			target = 0C1A00000000000000000040 /* ClockinMacWidgets */;
+		};
 		0C1A00000000000000000039 /* Exceptions for "Clockin" folder in "ClockinMac" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -57,7 +102,6 @@
 		0C1A0000000000000000003A /* Exceptions for "Shared" folder in "ClockinMac" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Intents/SetClockedInIntent.swift,
 				Sync/ClockinActivityAttributes.swift,
 				Sync/LiveActivityPush.swift,
 			);
@@ -100,18 +144,29 @@
 			exceptions = (
 				0C1A0000000000000000003A /* Exceptions for "Shared" folder in "ClockinMac" target */,
 				0C1A0000000000000000003E /* Exceptions for "Shared" folder in "ClockinWidgets" target */,
+				0C1A00000000000000000049 /* Exceptions for "Shared" folder in "ClockinMacWidgets" target */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
 		0C1A00000000000000000011 /* ClockinWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0C1A00000000000000000048 /* Exceptions for "ClockinWidgets" folder in "ClockinMacWidgets" target */,
+			);
 			path = ClockinWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0C1A00000000000000000042 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0C1A00000000000000000032 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -154,6 +209,7 @@
 				0C1A00000000000000000002 /* Clockin.app */,
 				0C1A00000000000000000012 /* ClockinWidgets.appex */,
 				0C1A00000000000000000034 /* Clockin.app */,
+				0C1A00000000000000000044 /* ClockinMacWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -161,6 +217,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0C1A00000000000000000040 /* ClockinMacWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C1A00000000000000000045 /* Build configuration list for PBXNativeTarget "ClockinMacWidgets" */;
+			buildPhases = (
+				0C1A00000000000000000041 /* Sources */,
+				0C1A00000000000000000042 /* Frameworks */,
+				0C1A00000000000000000043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0C1A00000000000000000011 /* ClockinWidgets */,
+				0C1A00000000000000000010 /* Shared */,
+			);
+			name = ClockinMacWidgets;
+			packageProductDependencies = (
+			);
+			productName = ClockinMacWidgets;
+			productReference = 0C1A00000000000000000044 /* ClockinMacWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		0C1A00000000000000000030 /* ClockinMac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0C1A00000000000000000035 /* Build configuration list for PBXNativeTarget "ClockinMac" */;
@@ -168,10 +247,12 @@
 				0C1A00000000000000000031 /* Sources */,
 				0C1A00000000000000000032 /* Frameworks */,
 				0C1A00000000000000000033 /* Resources */,
+				0C1A0000000000000000004B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0C1A0000000000000000004D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				0C1A00000000000000000038 /* ClockinMac */,
@@ -253,6 +334,9 @@
 					0C1A00000000000000000030 = {
 						CreatedOnToolsVersion = 27.0;
 					};
+					0C1A00000000000000000040 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 				};
 			};
 			buildConfigurationList = 0C1A0000000000000000000A /* Build configuration list for PBXProject "Clockin" */;
@@ -276,11 +360,19 @@
 				0C1A00000000000000000006 /* Clockin */,
 				0C1A00000000000000000013 /* ClockinWidgets */,
 				0C1A00000000000000000030 /* ClockinMac */,
+				0C1A00000000000000000040 /* ClockinMacWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0C1A00000000000000000043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0C1A00000000000000000033 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -305,6 +397,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0C1A00000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0C1A00000000000000000031 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -329,6 +428,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0C1A0000000000000000004D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0C1A00000000000000000040 /* ClockinMacWidgets */;
+			targetProxy = 0C1A0000000000000000004C /* PBXContainerItemProxy */;
+		};
 		0C1A00000000000000000022 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 0C1A00000000000000000013 /* ClockinWidgets */;
@@ -492,8 +596,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = MacAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Config/ClockinMac.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = LU36PKDPT3;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 11;
 				ENABLE_APP_SANDBOX = NO;
@@ -522,8 +628,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = MacAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Config/ClockinMac.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = LU36PKDPT3;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 11;
 				ENABLE_APP_SANDBOX = NO;
@@ -543,6 +651,66 @@
 				PRODUCT_NAME = Clockin;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		0C1A00000000000000000046 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/ClockinMacWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = LU36PKDPT3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/ClockinWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Clockin;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ismailakdag.clockin.debug.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		0C1A00000000000000000047 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/ClockinMacWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = LU36PKDPT3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/ClockinWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Clockin;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ismailakdag.clockin.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Release;
@@ -582,6 +750,15 @@
 			buildConfigurations = (
 				0C1A00000000000000000036 /* Debug */,
 				0C1A00000000000000000037 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0C1A00000000000000000045 /* Build configuration list for PBXNativeTarget "ClockinMacWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C1A00000000000000000046 /* Debug */,
+				0C1A00000000000000000047 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

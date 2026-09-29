@@ -5,8 +5,10 @@ import WidgetKit
 struct ClockinWidgetsBundle: WidgetBundle {
     var body: some Widget {
         TodayWidget()
+        #if os(iOS)
         ClockinLiveActivity()
-        if #available(iOS 18.0, *) {
+        #endif
+        if #available(iOS 18.0, macOS 26.0, *) {
             ClockinTimerControl()
             ClockinPauseControl()
         }

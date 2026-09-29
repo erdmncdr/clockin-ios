@@ -14,7 +14,8 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
     static let key = "Clockin.Language"
     #if os(macOS)
-    nonisolated(unsafe) static let shared: UserDefaults? = .standard
+    // Mac widget'i sandbox icinde; dil secimi takim onekli grupta paylasilir.
+    nonisolated(unsafe) static let shared = UserDefaults(suiteName: "LU36PKDPT3.com.ismailakdag.clockin")
     #else
     nonisolated(unsafe) static let shared = UserDefaults(suiteName: "group.com.erdmncdr.clockin")
     #endif

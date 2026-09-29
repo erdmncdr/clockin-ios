@@ -32,7 +32,25 @@ enum AppGroup {
     }
 
     static var dataFileURL: URL { directory.appending(path: "clockin.json") }
+    #if os(macOS)
+    /// Mac widget'i sandbox icinde calisir ve uygulamanin klasorunu okuyamaz;
+    /// ozet takim onekli grup kapsayicisinda durur. Veri eski klasorde kalir.
+    static let macIdentifier = "LU36PKDPT3.com.ismailakdag.clockin"
+
+    static var snapshotURL: URL {
+        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: macIdentifier) else {
+            return directory.appending(path: "widget-snapshot.json")
+        }
+        #if DEBUG
+        let folder = "Clockin Debug"
+        #else
+        let folder = "Clockin"
+        #endif
+        return container.appending(path: folder, directoryHint: .isDirectory).appending(path: "widget-snapshot.json")
+    }
+    #else
     static var snapshotURL: URL { directory.appending(path: "widget-snapshot.json") }
+    #endif
 
     /// Veri grup kapsayicisina bir kez kopyalanir. Eski dosya silinmez; bir
     /// sorun olursa elle geri alinabilsin.

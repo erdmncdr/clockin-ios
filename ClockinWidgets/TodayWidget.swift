@@ -59,6 +59,14 @@ struct TodayProvider: TimelineProvider {
 }
 
 struct TodayWidget: Widget {
+    // Kilit ekrani ailesi iPhone'a ozgu; Mac masaustu ve bildirim merkezi
+    // kucuk ve orta boyutu kullanir.
+    #if os(iOS)
+    static let families: [WidgetFamily] = [.systemSmall, .systemMedium, .accessoryRectangular]
+    #else
+    static let families: [WidgetFamily] = [.systemSmall, .systemMedium]
+    #endif
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TodayWidget", provider: TodayProvider()) { entry in
             TodayWidgetView(entry: entry)
@@ -70,7 +78,7 @@ struct TodayWidget: Widget {
         }
         .configurationDisplayName("Today")
         .description("The current session and today's time and earnings.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
+        .supportedFamilies(Self.families)
     }
 }
 
@@ -91,17 +99,27 @@ private struct TodayWidgetView: View {
     var body: some View {
         Group {
             switch family {
+            #if os(iOS)
             case .accessoryRectangular: lockScreen
+            #endif
             case .systemMedium: mediumLayout
             default: smallLayout
             }
         }
         // Kilit ekrani ve zemini kaldirilmis widget sistemin renklerini kullanir.
-        .environment(\.colorScheme, family == .accessoryRectangular || !showsBackground
+        .environment(\.colorScheme, isLockScreen || !showsBackground
                      ? systemColorScheme : palette.colorScheme)
         .containerBackground(for: .widget) {
-            if family != .accessoryRectangular { palette.background }
+            if !isLockScreen { palette.background }
         }
+    }
+
+    private var isLockScreen: Bool {
+        #if os(iOS)
+        family == .accessoryRectangular
+        #else
+        false
+        #endif
     }
 
     private var mediumLayout: some View {

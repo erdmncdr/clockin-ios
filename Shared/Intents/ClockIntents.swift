@@ -13,6 +13,11 @@ typealias ClockinActionIntent = AppIntent
 #endif
 
 struct ClockInIntent: ClockinActionIntent {
+    #if os(macOS)
+    // Mac'te Live Activity niyeti yok; widget dugmesi magazayi degistirebilsin
+    // diye uygulamanin surecinde calisir, gerekirse uygulama baslatilir.
+    static let openAppWhenRun = true
+    #endif
     static let title: LocalizedStringResource = "Clock In"
     static let description = IntentDescription("Starts the Clockin timer, or resumes it if it is paused.")
 
@@ -47,6 +52,11 @@ struct ClockInIntent: ClockinActionIntent {
 }
 
 struct ClockOutIntent: ClockinActionIntent {
+    #if os(macOS)
+    // Mac'te Live Activity niyeti yok; widget dugmesi magazayi degistirebilsin
+    // diye uygulamanin surecinde calisir, gerekirse uygulama baslatilir.
+    static let openAppWhenRun = true
+    #endif
     static let title: LocalizedStringResource = "Clock Out"
     static let description = IntentDescription("Stops the running session and saves it to history.")
 
@@ -70,6 +80,11 @@ struct ClockOutIntent: ClockinActionIntent {
 }
 
 struct TogglePauseIntent: ClockinActionIntent {
+    #if os(macOS)
+    // Mac'te Live Activity niyeti yok; widget dugmesi magazayi degistirebilsin
+    // diye uygulamanin surecinde calisir, gerekirse uygulama baslatilir.
+    static let openAppWhenRun = true
+    #endif
     static let title: LocalizedStringResource = "Pause or Resume"
     static let description = IntentDescription("Pauses the running session, or resumes it if it is paused.")
 

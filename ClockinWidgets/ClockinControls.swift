@@ -2,7 +2,7 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 26.0, *)
 struct ClockinControlProvider: ControlValueProvider {
     var previewValue: ClockinControlState { .off }
 
@@ -11,7 +11,7 @@ struct ClockinControlProvider: ControlValueProvider {
     }
 }
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 26.0, *)
 struct ClockinTimerControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(
@@ -27,7 +27,7 @@ struct ClockinTimerControl: ControlWidget {
     }
 }
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 26.0, *)
 struct ClockinPauseControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(
