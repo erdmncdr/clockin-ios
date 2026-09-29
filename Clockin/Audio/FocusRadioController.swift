@@ -25,6 +25,7 @@ final class FocusRadioController: ObservableObject {
 
     private init() {
         station = RadioStation.selected(UserDefaults.standard.string(forKey: RadioStation.storageKey))
+        #if os(iOS)
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification,
             object: nil, queue: nil) { [weak self] notification in
@@ -58,6 +59,7 @@ final class FocusRadioController: ObservableObject {
                 self?.isInterrupted = false
             }
         })
+        #endif
     }
 
     func selectStation(id: String) {
@@ -91,6 +93,7 @@ final class FocusRadioController: ObservableObject {
         errorMessage = nil
         if player == nil {
             FocusChimeController.shared.stopPlayback()
+            #if os(iOS)
             do {
                 let session = AVAudioSession.sharedInstance()
                 try session.setCategory(.playback, mode: .default)
@@ -101,6 +104,7 @@ final class FocusRadioController: ObservableObject {
                 fail(String(localized: "Could not start audio: \(error.localizedDescription)", bundle: .app))
                 return
             }
+            #endif
             let item = AVPlayerItem(url: station.url)
             player = AVPlayer(playerItem: item)
             observeFailure(of: item)
@@ -197,9 +201,11 @@ final class FocusRadioController: ObservableObject {
         } else {
             updateNowPlaying()
         }
+        #if os(iOS)
         if cleanup.deactivateAudioSession {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
+        #endif
     }
 
     private func fail(_ message: String) {

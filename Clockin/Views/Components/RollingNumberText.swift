@@ -38,7 +38,7 @@ struct RollingNumberText: View {
         let uiFont = RollingNumberFont.resolve(font, design: design ?? palette.fontDesign,
                                                sizeCategory: environment.sizeCategory)
         let color = foregroundColor.resolve(in: environment)
-        let uiColor = UIColor(red: CGFloat(color.red), green: CGFloat(color.green),
+        let uiColor = PlatformColor(red: CGFloat(color.red), green: CGFloat(color.green),
                               blue: CGFloat(color.blue), alpha: CGFloat(color.opacity))
         let layout = RollingNumberFont.layout(text, font: uiFont)
         let minimumScaleFactor = environment.minimumScaleFactor
@@ -68,10 +68,11 @@ struct RollingNumberText: View {
     }
 }
 
+#if canImport(UIKit)
 private struct RollingNumberRepresentable: UIViewRepresentable {
     let sample: RollingNumberSample
     let font: UIFont
-    let color: UIColor
+    let color: PlatformColor
     let layout: RollingNumberLayout
     let canAnimate: Bool
     let minimumScaleFactor: CGFloat
@@ -94,3 +95,31 @@ private struct RollingNumberRepresentable: UIViewRepresentable {
         uiView.stopAnimations()
     }
 }
+#else
+private struct RollingNumberRepresentable: NSViewRepresentable {
+    let sample: RollingNumberSample
+    let font: NSFont
+    let color: PlatformColor
+    let layout: RollingNumberLayout
+    let canAnimate: Bool
+    let minimumScaleFactor: CGFloat
+
+    func makeNSView(context: Context) -> RollingNumberUIView {
+        RollingNumberUIView()
+    }
+
+    func updateNSView(_ nsView: RollingNumberUIView, context: Context) {
+        nsView.update(sample: sample, font: font, color: color, layout: layout,
+                      canAnimate: canAnimate, minimumScaleFactor: minimumScaleFactor)
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: RollingNumberUIView,
+                     context: Context) -> CGSize? {
+        nsView.fittingSize(width: proposal.width)
+    }
+
+    static func dismantleNSView(_ nsView: RollingNumberUIView, coordinator: ()) {
+        nsView.stopAnimations()
+    }
+}
+#endif

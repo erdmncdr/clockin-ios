@@ -7,8 +7,10 @@ import AppKit
 
 extension MascotAnimationRate {
     func apply(to animation: CAAnimation) {
+        #if canImport(UIKit)
         animation.preferredFrameRateRange = CAFrameRateRange(
             minimum: minimum, maximum: maximum, preferred: preferred)
+        #endif
         // Grup ve alt animasyonlar ayni siniri kullanir.
         if let group = animation as? CAAnimationGroup {
             group.animations?.forEach { apply(to: $0) }
@@ -284,6 +286,7 @@ struct ClockinMotionMascot: View {
     }
 }
 
+#if canImport(UIKit)
 private struct MascotLayerRepresentable: UIViewRepresentable {
     let image: CGImage?
     let frameID: String?
@@ -315,7 +318,59 @@ private struct MascotLayerRepresentable: UIViewRepresentable {
     }
 }
 
-final class MascotLayerView: UIView {
+#else
+private struct MascotLayerRepresentable: NSViewRepresentable {
+    let image: CGImage?
+    let frameID: String?
+    let outfit: WardrobeState
+    let feet: Double
+    let moving: Bool
+    let swaying: Bool
+    let angry: Bool
+    let tired: Bool
+    let hop: MascotLayerView.HopRequest
+    let pop: Int
+    let wiggle: Int
+    let squash: Int
+    let dark: Bool
+
+    func makeNSView(context: Context) -> MascotLayerView {
+        let view = MascotLayerView(frame: .zero)
+        updateNSView(view, context: context)
+        return view
+    }
+
+    func updateNSView(_ view: MascotLayerView, context: Context) {
+        view.update(image: image, frameID: frameID, outfit: outfit, feet: feet, moving: moving, swaying: swaying, angry: angry, tired: tired,
+                    hop: hop, pop: pop, wiggle: wiggle, squash: squash, dark: dark)
+    }
+
+    static func dismantleNSView(_ view: MascotLayerView, coordinator: ()) {
+        view.stopMotion()
+    }
+}
+
+#endif
+
+#if canImport(UIKit)
+typealias MascotLayerViewBase = UIView
+#else
+typealias MascotLayerViewBase = NSView
+#endif
+
+final class MascotLayerView: MascotLayerViewBase {
+    #if os(macOS)
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    #endif
+
+    private var renderingLayer: CALayer {
+        #if canImport(UIKit)
+        layer
+        #else
+        layer!
+        #endif
+    }
     struct HopRequest: Equatable {
         let id: Int
         let height: Double
@@ -351,10 +406,15 @@ final class MascotLayerView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        #if canImport(UIKit)
         isUserInteractionEnabled = false
         backgroundColor = .clear
         clipsToBounds = false
-        layer.masksToBounds = false
+        #else
+        wantsLayer = true
+        setAccessibilityElement(false)
+        #endif
+        renderingLayer.masksToBounds = false
         robot.contentsGravity = .resizeAspect
         robot.minificationFilter = .nearest
         robot.magnificationFilter = .nearest
@@ -370,7 +430,7 @@ final class MascotLayerView: UIView {
         sway.addSublayer(popLayer)
         rig.addSublayer(shadowLayer)
         rig.addSublayer(sway)
-        layer.addSublayer(rig)
+        renderingLayer.addSublayer(rig)
     }
 
     @available(*, unavailable)
@@ -412,11 +472,15 @@ final class MascotLayerView: UIView {
         }
         if self.feet != feet {
             self.feet = feet
+            #if canImport(UIKit)
             setNeedsLayout()
+            #else
+            needsLayout = true
+            #endif
         }
         if self.dark != dark {
             self.dark = dark
-            let tint = dark ? UIColor.black.withAlphaComponent(0.55) : UIColor(red: 23 / 255, green: 34 / 255, blue: 55 / 255, alpha: 0.24)
+            let tint = dark ? PlatformColor.black.withAlphaComponent(0.55) : PlatformColor(red: 23 / 255, green: 34 / 255, blue: 55 / 255, alpha: 0.24)
             shadowLayer.colors = [tint.cgColor, tint.withAlphaComponent(0).cgColor]
         }
         CATransaction.commit()
@@ -532,8 +596,19 @@ final class MascotLayerView: UIView {
         [rig, shadowLayer, sway, popLayer, reactLayer, body].forEach { $0.removeAllAnimations() }
     }
 
+    #if canImport(UIKit)
     override func layoutSubviews() {
         super.layoutSubviews()
+        layoutLayers()
+    }
+    #else
+    override func layout() {
+        super.layout()
+        layoutLayers()
+    }
+    #endif
+
+    private func layoutLayers() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         let side = min(bounds.width, bounds.height)
@@ -559,9 +634,24 @@ final class MascotLayerView: UIView {
         if swaying, side != swaySide { restartSwayBursts() }
     }
 
+    #if canImport(UIKit)
     override func didMoveToWindow() {
         super.didMoveToWindow()
+        updateWindow()
+    }
+    #else
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateWindow()
+    }
+    #endif
+
+    private func updateWindow() {
+        #if canImport(UIKit)
         let scale = traitCollection.displayScale
+        #else
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        #endif
         [rig, shadowLayer, sway, popLayer, reactLayer, body].forEach { $0.contentsScale = scale }
         if window == nil { stopMotion() }
         else { updateWingMotion(); skinEffects.update(skinLight, moving: motionEnabled) }

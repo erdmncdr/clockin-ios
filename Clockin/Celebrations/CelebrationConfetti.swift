@@ -5,21 +5,54 @@ import UIKit
 import AppKit
 #endif
 
+#if canImport(UIKit)
 struct CelebrationConfetti: UIViewRepresentable {
     func makeUIView(context: Context) -> CelebrationConfettiView { CelebrationConfettiView() }
     func updateUIView(_ view: CelebrationConfettiView, context: Context) {}
     static func dismantleUIView(_ view: CelebrationConfettiView, coordinator: ()) { view.stop() }
 }
 
-final class CelebrationConfettiView: UIView {
+#else
+struct CelebrationConfetti: NSViewRepresentable {
+    func makeNSView(context: Context) -> CelebrationConfettiView { CelebrationConfettiView() }
+    func updateNSView(_ view: CelebrationConfettiView, context: Context) {}
+    static func dismantleNSView(_ view: CelebrationConfettiView, coordinator: ()) { view.stop() }
+}
+
+#endif
+
+#if canImport(UIKit)
+typealias CelebrationConfettiViewBase = UIView
+#else
+typealias CelebrationConfettiViewBase = NSView
+#endif
+
+final class CelebrationConfettiView: CelebrationConfettiViewBase {
+    #if os(macOS)
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    #endif
+
+    private var renderingLayer: CALayer {
+        #if canImport(UIKit)
+        layer
+        #else
+        layer!
+        #endif
+    }
     private var emitter: CAEmitterLayer?
     private var cleanup: Task<Void, Never>?
     private var started = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        #if canImport(UIKit)
         isUserInteractionEnabled = false
         isAccessibilityElement = false
+        #else
+        wantsLayer = true
+        setAccessibilityElement(false)
+        #endif
     }
 
     @available(*, unavailable)
@@ -27,8 +60,19 @@ final class CelebrationConfettiView: UIView {
 
     deinit { cleanup?.cancel() }
 
+    #if canImport(UIKit)
     override func layoutSubviews() {
         super.layoutSubviews()
+        startIfNeeded()
+    }
+    #else
+    override func layout() {
+        super.layout()
+        startIfNeeded()
+    }
+    #endif
+
+    private func startIfNeeded() {
         guard window != nil, bounds.width > 0, !started else { return }
         started = true
         let emitter = CAEmitterLayer()
@@ -36,11 +80,21 @@ final class CelebrationConfettiView: UIView {
         emitter.emitterPosition = CGPoint(x: bounds.midX, y: bounds.height * 0.15)
         emitter.emitterSize = CGSize(width: bounds.width * 0.7, height: 1)
         emitter.birthRate = 0
+        #if canImport(UIKit)
         let chip = UIGraphicsImageRenderer(size: CGSize(width: 6, height: 9)).image { context in
             UIColor.white.setFill()
             context.fill(CGRect(x: 0, y: 0, width: 6, height: 9))
         }.cgImage
-        emitter.emitterCells = [UIColor.systemMint, .systemYellow, .systemPink, .systemBlue].map { color in
+        let colors = [UIColor.systemMint, .systemYellow, .systemPink, .systemBlue]
+        #else
+        let context = CGContext(data: nil, width: 6, height: 9, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        context?.setFillColor(NSColor.white.cgColor)
+        context?.fill(CGRect(x: 0, y: 0, width: 6, height: 9))
+        let chip = context?.makeImage()
+        let colors = [NSColor.systemMint, .systemYellow, .systemPink, .systemBlue]
+        #endif
+        emitter.emitterCells = colors.map { color in
             let cell = CAEmitterCell()
             cell.contents = chip
             cell.color = color.cgColor
@@ -57,7 +111,7 @@ final class CelebrationConfettiView: UIView {
             cell.alphaSpeed = -0.65
             return cell
         }
-        layer.addSublayer(emitter)
+        renderingLayer.addSublayer(emitter)
         self.emitter = emitter
         // Model sifirda kalir; CA yalnizca 0.8 saniye parcacik uretir.
         let burst = CABasicAnimation(keyPath: "birthRate")
@@ -71,9 +125,26 @@ final class CelebrationConfettiView: UIView {
         }
     }
 
+    #if canImport(UIKit)
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        if window == nil { stop() } else { setNeedsLayout() }
+        updateWindow()
+    }
+    #else
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateWindow()
+    }
+    #endif
+
+    private func updateWindow() {
+        if window == nil { stop() } else {
+            #if canImport(UIKit)
+            setNeedsLayout()
+            #else
+            needsLayout = true
+            #endif
+        }
     }
 
     func stop() {

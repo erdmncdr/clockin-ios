@@ -4,6 +4,7 @@ import UIKit
 import AppKit
 #endif
 
+#if canImport(UIKit)
 final class RollingNumberUIView: UIView {
     private let content = UIView()
     private var cells: [Int: RollingDigitUIView] = [:]
@@ -196,3 +197,212 @@ private final class RollingDigitUIView: UIView {
         layer.add(group, forKey: "rolling")
     }
 }
+#else
+final class RollingNumberUIView: NSView {
+    private let content = RollingContainerView()
+    private var cells: [Int: RollingDigitNSView] = [:]
+    private var state = RollingNumberRenderState()
+    private var font = NSFont.systemFont(ofSize: 17)
+    private var color = NSColor.labelColor
+    private var textLayout = RollingNumberLayout(widths: [], lineHeight: 0, ascender: 0)
+    private var naturalSize: CGSize { textLayout.naturalSize }
+    private var minimumScaleFactor: CGFloat = 1
+
+    init() {
+        super.init(frame: .zero)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        wantsLayer = true
+        setAccessibilityElement(true)
+        setAccessibilityRole(.staticText)
+        layer?.masksToBounds = true
+        content.wantsLayer = true
+        content.setAccessibilityElement(false)
+        content.layer!.anchorPoint = .zero
+        addSubview(content)
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentHuggingPriority(.required, for: .vertical)
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override var intrinsicContentSize: CGSize { naturalSize }
+
+    func fittingSize(width: CGFloat?) -> CGSize {
+        guard let width, width.isFinite else { return naturalSize }
+        return CGSize(width: min(naturalSize.width, max(0, width)), height: naturalSize.height)
+    }
+
+    func update(sample: RollingNumberSample, font: NSFont, color: NSColor, layout: RollingNumberLayout,
+                canAnimate: Bool, minimumScaleFactor: CGFloat) {
+        let fontChanged = self.font != font
+        let styleChanged = fontChanged || self.color != color
+        if self.minimumScaleFactor != minimumScaleFactor {
+            self.minimumScaleFactor = minimumScaleFactor
+            needsLayout = true
+        }
+        guard let update = state.update(to: sample, allowsAnimation: canAnimate, reset: styleChanged) else {
+            return
+        }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        self.font = font
+        self.color = color
+        setAccessibilityLabel(sample.text)
+
+        let ids = Set(update.cells.map(\.id))
+        for id in Array(cells.keys) where !ids.contains(id) {
+            cells.removeValue(forKey: id)?.removeFromSuperview()
+        }
+        var x: CGFloat = 0
+        let height = ceil(font.ascender - font.descender + font.leading)
+        for (cell, width) in zip(update.cells, layout.widths) {
+            let view: RollingDigitNSView
+            if let existing = cells[cell.id] {
+                view = existing
+            } else {
+                view = RollingDigitNSView()
+                cells[cell.id] = view
+                content.addSubview(view)
+            }
+            let frame = CGRect(x: x, y: 0, width: width, height: height)
+            if view.frame != frame { view.frame = frame }
+            view.update(cell: cell, direction: update.direction, font: font, color: color,
+                        snap: !state.allowsAnimation || update.lengthChanged || styleChanged)
+            x += width
+        }
+        let oldSize = naturalSize
+        textLayout = layout
+        if oldSize != naturalSize { invalidateIntrinsicContentSize() }
+        needsLayout = true
+    }
+
+    override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        let scale = textLayout.scale(width: bounds.width, minimum: minimumScaleFactor)
+        content.frame = CGRect(x: 0, y: (bounds.height - naturalSize.height * scale) / 2,
+                               width: naturalSize.width, height: naturalSize.height)
+        content.layer!.setAffineTransform(CGAffineTransform(scaleX: scale, y: scale))
+        CATransaction.commit()
+    }
+
+    func stopAnimations() {
+        state = RollingNumberRenderState()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for cell in cells.values { cell.stopAnimations() }
+        CATransaction.commit()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil { stopAnimations() }
+    }
+}
+
+private final class RollingDigitNSView: NSView {
+    override var isFlipped: Bool { true }
+    private var current = RollingGlyphView()
+    private var spare = RollingGlyphView()
+    private var character: Character?
+
+    init() {
+        super.init(frame: .zero)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        wantsLayer = true
+        setAccessibilityElement(false)
+        for label in [current, spare] {
+            label.wantsLayer = true
+            label.setAccessibilityElement(false)
+            addSubview(label)
+        }
+        spare.layer!.opacity = 0
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    func update(cell: RollingNumberCell, direction: RollDirection, font: NSFont, color: NSColor, snap: Bool) {
+        layer!.masksToBounds = cell.character.isNumber
+        let changed = character != cell.character
+        for label in [current, spare] {
+            if label.font != font { label.font = font }
+            if label.textColor != color { label.textColor = color }
+            if label.frame != bounds { label.frame = bounds }
+            let center = CGPoint(x: bounds.midX, y: bounds.midY)
+            if label.layer!.position != center { label.layer!.position = center }
+        }
+        if !snap, !changed { return }
+        stopAnimations()
+        character = cell.character
+        guard !snap, let previous = cell.previous else {
+            current.text = String(cell.character)
+            return
+        }
+        // Iki glif yeniden kullanilir; bitiste eski glif modelde saydam kalir.
+        swap(&current, &spare)
+        spare.text = String(previous)
+        current.text = String(cell.character)
+        let travel = direction == .up ? -bounds.height : bounds.height
+        spare.layer!.transform = CATransform3DMakeTranslation(0, travel, 0)
+        spare.layer!.opacity = 0
+        current.layer!.transform = CATransform3DIdentity
+        current.layer!.opacity = 1
+        animate(spare.layer!, fromY: 0, toY: travel, fromOpacity: 1, toOpacity: 0)
+        animate(current.layer!, fromY: -travel, toY: 0, fromOpacity: 0, toOpacity: 1)
+    }
+
+    func stopAnimations() {
+        current.layer!.removeAllAnimations()
+        spare.layer!.removeAllAnimations()
+        current.layer!.transform = CATransform3DIdentity
+        current.layer!.opacity = 1
+        spare.layer!.transform = CATransform3DIdentity
+        spare.layer!.opacity = 0
+    }
+
+    private func animate(_ layer: CALayer, fromY: CGFloat, toY: CGFloat,
+                         fromOpacity: Float, toOpacity: Float) {
+        let move = CABasicAnimation(keyPath: "transform.translation.y")
+        move.fromValue = fromY
+        move.toValue = toY
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = fromOpacity
+        fade.toValue = toOpacity
+        for animation in [move, fade] {
+            animation.duration = 0.25
+        }
+        let group = CAAnimationGroup()
+        group.animations = [move, fade]
+        group.duration = 0.25
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        // Model son degerdedir; CA animasyonu bitiste kendiliginden siler.
+        layer.add(group, forKey: "rolling")
+    }
+}
+
+private final class RollingContainerView: NSView {
+    override var isFlipped: Bool { true }
+}
+
+private final class RollingGlyphView: NSView {
+    var text = "" { didSet { needsDisplay = true } }
+    var font = NSFont.systemFont(ofSize: 17) { didSet { needsDisplay = true } }
+    var textColor = NSColor.labelColor { didSet { needsDisplay = true } }
+    override var isFlipped: Bool { true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        let width = (text as NSString).size(withAttributes: attributes).width
+        (text as NSString).draw(at: NSPoint(x: (bounds.width - width) / 2, y: 0), withAttributes: attributes)
+    }
+}
+#endif

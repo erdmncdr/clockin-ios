@@ -249,8 +249,13 @@ enum CrestNumerals {
 
     static func outline(_ text: String) -> NumeralOutline {
         if let hit = cache[text] { return hit }
+        #if canImport(UIKit)
         let base = UIFont.systemFont(ofSize: unit, weight: .bold)
         let font = base.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: unit) } ?? base
+        #else
+        let base = NSFont.systemFont(ofSize: unit, weight: .bold)
+        let font = base.fontDescriptor.withDesign(.serif).flatMap { NSFont(descriptor: $0, size: unit) } ?? base
+        #endif
         let attributed = NSAttributedString(string: text, attributes: [.font: font, .kern: -unit * 0.03])
         let line = CTLineCreateWithAttributedString(attributed)
         let glyphs = CGMutablePath()

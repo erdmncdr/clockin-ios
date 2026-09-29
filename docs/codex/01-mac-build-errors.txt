@@ -1,0 +1,278 @@
+Clockin/Audio/FocusChimeController.swift:196:27: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:196:42: error: 'sharedInstance()' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:199:29: error: 'setCategory(_:mode:options:)' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:199:42: error: 'ambient' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:199:58: error: 'default' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:201:29: error: 'setActive' is unavailable in Swift
+Clockin/Audio/FocusChimeController.swift:224:18: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:224:33: error: 'sharedInstance()' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:224:50: error: 'setActive(_:options:)' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:233:17: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:233:32: error: 'sharedInstance()' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:233:49: error: 'setCategory(_:mode:options:)' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:233:62: error: 'ambient' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:233:78: error: 'default' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:44:22: error: cannot find 'UIApplication' in scope
+Clockin/Audio/FocusChimeController.swift:49:69: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:49:84: error: 'routeChangeNotification' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:51:49: error: 'AVAudioSessionRouteChangeReasonKey' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:52:26: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusChimeController.swift:70:50: error: 'ephemeral' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:201:18: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:201:33: error: 'sharedInstance()' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:201:50: error: 'setActive(_:options:)' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:29:54: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:29:69: error: 'interruptionNotification' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:31:47: error: 'AVAudioSessionInterruptionTypeKey' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:34:28: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:40:35: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:46:54: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:46:69: error: 'routeChangeNotification' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:48:49: error: 'AVAudioSessionRouteChangeReasonKey' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:51:30: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:54:54: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:54:69: error: 'mediaServicesWereResetNotification' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:95:31: error: 'AVAudioSession' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:95:46: error: 'sharedInstance()' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:96:29: error: 'setCategory(_:mode:options:)' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:96:42: error: 'playback' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:96:59: error: 'default' is unavailable in macOS
+Clockin/Audio/FocusRadioController.swift:99:29: error: 'setActive' is unavailable in Swift
+Clockin/Audio/FocusSettingsSection.swift:55:54: error: cannot find 'UIApplication' in scope
+Clockin/Audio/LongSessionReminderController.swift:87:48: error: 'ephemeral' is unavailable in macOS
+Clockin/Audio/LongSessionReminderSettingsSection.swift:31:50: error: cannot find 'UIApplication' in scope
+Clockin/Celebrations/CelebrationCenter.swift:112:42: error: cannot find 'UIApplication' in scope
+Clockin/Celebrations/CelebrationCenter.swift:112:84: error: cannot infer contextual base in reference to member 'active'
+Clockin/Celebrations/CelebrationCenter.swift:211:103: error: cannot infer contextual base in reference to member 'active'
+Clockin/Celebrations/CelebrationCenter.swift:211:61: error: cannot find 'UIApplication' in scope
+Clockin/Celebrations/CelebrationCenter.swift:226:35: error: cannot find 'UIAccessibility' in scope
+Clockin/Celebrations/CelebrationCenter.swift:242:39: error: cannot find type 'UIViewController' in scope
+Clockin/Celebrations/CelebrationCenter.swift:242:60: error: cannot find type 'UIViewController' in scope
+Clockin/Celebrations/CelebrationCenter.swift:248:72: error: cannot infer type of closure parameter '_' without a type annotation
+Clockin/Celebrations/CelebrationCenter.swift:24:22: error: cannot find type 'UIWindow' in scope
+Clockin/Celebrations/CelebrationCenter.swift:31:16: error: cannot find 'UIAccessibility' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:10:65: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:14:38: error: cannot find type 'UIView' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:19:14: error: initializer does not override a designated initializer from its superclass
+Clockin/Celebrations/CelebrationConfetti.swift:20:9: error: 'super' cannot be used in class 'CelebrationConfettiView' because it has no superclass
+Clockin/Celebrations/CelebrationConfetti.swift:21:9: error: cannot find 'isUserInteractionEnabled' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:22:9: error: cannot find 'isAccessibilityElement' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:30:19: error: method does not override any method from its superclass
+Clockin/Celebrations/CelebrationConfetti.swift:31:9: error: 'super' cannot be used in class 'CelebrationConfettiView' because it has no superclass
+Clockin/Celebrations/CelebrationConfetti.swift:32:15: error: cannot find 'window' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:32:30: error: cannot find 'bounds' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:36:46: error: cannot find 'bounds' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:36:62: error: cannot find 'bounds' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:37:45: error: cannot find 'bounds' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:39:20: error: cannot find 'UIGraphicsImageRenderer' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:40:13: error: cannot find 'UIColor' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:43:33: error: cannot find 'UIColor' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:43:54: error: reference to member 'systemYellow' cannot be resolved without a contextual type
+Clockin/Celebrations/CelebrationConfetti.swift:43:69: error: reference to member 'systemPink' cannot be resolved without a contextual type
+Clockin/Celebrations/CelebrationConfetti.swift:43:82: error: reference to member 'systemBlue' cannot be resolved without a contextual type
+Clockin/Celebrations/CelebrationConfetti.swift:60:9: error: cannot find 'layer' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:74:19: error: method does not override any method from its superclass
+Clockin/Celebrations/CelebrationConfetti.swift:75:9: error: 'super' cannot be used in class 'CelebrationConfettiView' because it has no superclass
+Clockin/Celebrations/CelebrationConfetti.swift:76:12: error: cannot find 'window' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:76:44: error: cannot find 'setNeedsLayout' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:8:29: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:9:30: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationConfetti.swift:9:92: error: missing argument for parameter 'frame' in call
+Clockin/Celebrations/CelebrationPresentation.swift:34:36: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:38:30: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:40:27: error: main actor-isolated static property 'shared' can not be referenced from a nonisolated context
+Clockin/Celebrations/CelebrationPresentation.swift:40:34: error: call to main actor-isolated instance method 'setCompanion(_:view:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+Clockin/Celebrations/CelebrationPresentation.swift:43:67: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:46:27: error: main actor-isolated static property 'shared' can not be referenced from a nonisolated context
+Clockin/Celebrations/CelebrationPresentation.swift:46:34: error: call to main actor-isolated instance method 'setCompanion(_:view:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+Clockin/Celebrations/CelebrationPresentation.swift:50:40: error: cannot find type 'UIView' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:53:28: error: cannot find 'window' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:53:37: error: cannot find 'isHidden' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:53:47: error: cannot find 'alpha' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:54:23: error: cannot find 'convert' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:54:31: error: cannot find 'bounds' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:55:24: error: cannot find 'superview' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:65:32: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:66:30: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:67:63: error: cannot find type 'Context' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:70:36: error: cannot find type 'UIView' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:71:19: error: method does not override any method from its superclass
+Clockin/Celebrations/CelebrationPresentation.swift:72:9: error: 'super' cannot be used in class 'CelebrationWindowView' because it has no superclass
+Clockin/Celebrations/CelebrationPresentation.swift:73:43: error: cannot find 'window' in scope
+Clockin/Celebrations/CelebrationPresentation.swift:74:34: error: call to main actor-isolated instance method 'screenAttached()' in a synchronous nonisolated context [#ActorIsolatedCall]
+Clockin/Celebrations/LevelFeedbackReview.swift:78:35: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Celebrations/LevelFeedbackReview.swift:80:30: error: cannot find type 'Context' in scope
+Clockin/Celebrations/LevelFeedbackReview.swift:81:58: error: cannot find type 'Context' in scope
+Clockin/Celebrations/LevelFeedbackReview.swift:83:39: error: cannot find type 'UIView' in scope
+Clockin/Celebrations/LevelFeedbackReview.swift:87:19: error: method does not override any method from its superclass
+Clockin/Companion/NudgeController.swift:61:75: error: 'ephemeral' is unavailable in macOS
+Clockin/Companion/NudgeSettingsSection.swift:30:50: error: cannot find 'UIApplication' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:10:40: error: cannot find type 'Context' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:10:52: error: cannot find type 'SFSafariViewController' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:11:26: error: cannot find 'SFSafariViewController' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:12:42: error: cannot infer contextual base in reference to member 'close'
+Clockin/Privacy/PrivacyPolicyBrowser.swift:17:47: error: cannot find type 'SFSafariViewController' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:17:80: error: cannot find type 'Context' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:23:40: error: cannot find type 'SFSafariViewControllerDelegate' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:26:58: error: cannot find type 'SFSafariViewController' in scope
+Clockin/Privacy/PrivacyPolicyBrowser.swift:7:30: error: cannot find type 'UIViewControllerRepresentable' in scope
+Clockin/Views/Badges/LevelBadgeGallery.swift:42:46: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:110:28: error: cannot find 'UIBezierPath' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:113:63: error: cannot find 'UIColor' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:117:17: error: cannot find 'layer' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:12:30: error: cannot find type 'Context' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:12:82: error: missing argument for parameter 'frame' in call
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:13:60: error: cannot find type 'Context' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:17:33: error: cannot find type 'UIView' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:19:14: error: initializer does not override a designated initializer from its superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:20:9: error: 'super' cannot be used in class 'FurnitureLayerView' because it has no superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:21:9: error: cannot find 'isUserInteractionEnabled' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:24:9: error: cannot find 'layer' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:27:19: error: method does not override any method from its superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:28:9: error: 'super' cannot be used in class 'FurnitureLayerView' because it has no superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:30:22: error: cannot find 'bounds' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:30:56: error: cannot find 'bounds' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:30:71: error: cannot find 'bounds' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:49:33: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:54:30: error: cannot find type 'Context' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:54:92: error: missing argument for parameter 'frame' in call
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:55:65: error: cannot find type 'Context' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:59:38: error: cannot find type 'UIView' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:62:14: error: initializer does not override a designated initializer from its superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:62:36: error: 'super' cannot be used in class 'HomeAtmosphereLayerView' because it has no superclass
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:62:62: error: cannot find 'isUserInteractionEnabled' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:64:19: error: cannot find 'layer' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:69:29: error: cannot find 'layer' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:79:28: error: cannot find 'UIColor' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:79:83: error: cannot find 'UIColor' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:83:13: error: cannot find 'layer' in scope
+Clockin/Views/Companion/CompanionHomeAtmosphere.swift:8:33: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Views/Companion/CompanionHomePreview.swift:113:41: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Companion/CompanionHomePreview.swift:150:13: error: cannot find 'UIAccessibility' in scope
+Clockin/Views/Companion/CompanionHomeView.swift:113:18: error: value of type 'CompanionHomeAtmosphere' has no member 'frame'
+Clockin/Views/Companion/CompanionView.swift:81:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Companion/CompanionView.swift:84:14: error: 'fullScreenCover(item:onDismiss:content:)' is unavailable in macOS
+Clockin/Views/Companion/RoomEditorView.swift:67:43: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Components/RollingNumberFont.swift:12:20: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:14:21: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:30:98: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:34:23: error: cannot find type 'UIFontDescriptor' in scope
+Clockin/Views/Components/RollingNumberFont.swift:41:20: error: cannot find 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:43:33: error: reference to member 'featureSettings' cannot be resolved without a contextual type
+Clockin/Views/Components/RollingNumberFont.swift:44:18: error: cannot find 'UIFontDescriptor' in scope
+Clockin/Views/Components/RollingNumberFont.swift:45:18: error: cannot find 'UIFontDescriptor' in scope
+Clockin/Views/Components/RollingNumberFont.swift:47:24: error: cannot find 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:50:16: error: cannot find 'UIFontMetrics' in scope
+Clockin/Views/Components/RollingNumberFont.swift:51:44: error: cannot find 'UITraitCollection' in scope
+Clockin/Views/Components/RollingNumberFont.swift:54:46: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberFont.swift:68:16: error: cannot find type 'UIContentSizeCategory' in scope
+Clockin/Views/Components/RollingNumberText.swift:39:62: error: generic parameter 'T' could not be inferred
+Clockin/Views/Components/RollingNumberText.swift:39:74: error: value of type '@Sendable (T?) -> some View' has no member 'sizeCategory'
+Clockin/Views/Components/RollingNumberText.swift:41:23: error: cannot find 'UIColor' in scope
+Clockin/Views/Components/RollingNumberText.swift:71:44: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Views/Components/RollingNumberText.swift:73:15: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberText.swift:74:16: error: cannot find type 'UIColor' in scope
+Clockin/Views/Components/RollingNumberText.swift:79:30: error: cannot find type 'Context' in scope
+Clockin/Views/Components/RollingNumberText.swift:83:63: error: cannot find type 'Context' in scope
+Clockin/Views/Components/RollingNumberText.swift:89:31: error: cannot find type 'Context' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:106:19: error: method does not override any method from its superclass
+Clockin/Views/Components/RollingNumberUIView.swift:107:9: error: 'super' cannot be used in class 'RollingNumberUIView' because it has no superclass
+Clockin/Views/Components/RollingNumberUIView.swift:108:12: error: cannot find 'window' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:112:41: error: cannot find type 'UIView' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:113:27: error: cannot find 'UILabel' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:114:25: error: cannot find 'UILabel' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:118:9: error: 'super' cannot be used in class 'RollingDigitUIView' because it has no superclass
+Clockin/Views/Components/RollingNumberUIView.swift:11:24: error: cannot find 'UIFont' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:122:9: error: cannot find 'isAccessibilityElement' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:125:36: error: cannot infer contextual base in reference to member 'center'
+Clockin/Views/Components/RollingNumberUIView.swift:126:38: error: cannot infer contextual base in reference to member 'clear'
+Clockin/Views/Components/RollingNumberUIView.swift:127:13: error: cannot find 'addSubview' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:12:25: error: cannot find 'UIColor' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:134:74: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:134:89: error: cannot find type 'UIColor' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:135:9: error: cannot find 'layer' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:140:43: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:141:66: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:143:37: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:143:53: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:157:42: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:157:58: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:18:9: error: 'super' cannot be used in class 'RollingNumberUIView' because it has no superclass
+Clockin/Views/Components/RollingNumberUIView.swift:22:9: error: cannot find 'isAccessibilityElement' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:23:32: error: cannot infer contextual base in reference to member 'staticText'
+Clockin/Views/Components/RollingNumberUIView.swift:23:9: error: cannot find 'accessibilityTraits' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:24:9: error: cannot find 'isUserInteractionEnabled' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:25:9: error: cannot find 'clipsToBounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:27:38: error: cannot infer contextual base in reference to member 'zero'
+Clockin/Views/Components/RollingNumberUIView.swift:28:9: error: cannot find 'addSubview' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:29:9: error: cannot find 'setContentHuggingPriority' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:30:9: error: cannot find 'setContentHuggingPriority' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:35:18: error: property does not override any property from its superclass
+Clockin/Views/Components/RollingNumberUIView.swift:42:52: error: cannot find type 'UIFont' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:42:67: error: cannot find type 'UIColor' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:48:13: error: cannot find 'setNeedsLayout' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:58:9: error: cannot find 'accessibilityLabel' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:60:40: error: cannot infer key path type from context; consider explicitly specifying a root type
+Clockin/Views/Components/RollingNumberUIView.swift:62:44: error: value of type 'RollingDigitUIView' has no member 'removeFromSuperview'
+Clockin/Views/Components/RollingNumberUIView.swift:76:21: error: value of type 'RollingDigitUIView' has no member 'frame'
+Clockin/Views/Components/RollingNumberUIView.swift:76:43: error: value of type 'RollingDigitUIView' has no member 'frame'
+Clockin/Views/Components/RollingNumberUIView.swift:7:34: error: cannot find type 'UIView' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:83:37: error: cannot find 'invalidateIntrinsicContentSize' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:84:9: error: cannot find 'setNeedsLayout' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:87:19: error: method does not override any method from its superclass
+Clockin/Views/Components/RollingNumberUIView.swift:88:9: error: 'super' cannot be used in class 'RollingNumberUIView' because it has no superclass
+Clockin/Views/Components/RollingNumberUIView.swift:8:27: error: cannot find 'UIView' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:91:45: error: cannot find 'bounds' in scope
+Clockin/Views/Components/RollingNumberUIView.swift:93:52: error: cannot find 'bounds' in scope
+Clockin/Views/DashboardShortcuts.swift:48:46: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/DashboardShortcuts.swift:89:45: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/DashboardView.swift:282:13: error: 'safeAreaBar(edge:alignment:spacing:content:)' is only available in macOS 26.0 or newer
+Clockin/Views/DashboardView.swift:93:37: error: 'navigationBar' is unavailable in macOS
+Clockin/Views/Earnings/ChartInteraction.swift:13:45: error: call to main actor-isolated initializer 'init(_:)' in a synchronous nonisolated context [#ActorIsolatedCall]
+Clockin/Views/Earnings/ChartInteraction.swift:15:30: error: cannot find type 'Context' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:15:42: error: cannot find type 'UIView' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:16:20: error: cannot find 'UIView' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:17:19: error: cannot find 'UITapGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:18:19: error: cannot find 'UIPanGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:27:31: error: cannot find type 'UIView' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:27:48: error: cannot find type 'Context' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:30:40: error: cannot find type 'UIGestureRecognizerDelegate' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:34:64: error: cannot find type 'UIGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:35:51: error: cannot find type 'UIPanGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:40:53: error: cannot find type 'UIGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:41:90: error: cannot find type 'UIGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:43:34: error: cannot find type 'UIPanGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:46:38: error: cannot find type 'UITapGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:51:38: error: cannot find type 'UIPanGestureRecognizer' in scope
+Clockin/Views/Earnings/ChartInteraction.swift:8:26: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Views/Goals/GoalHoursField.swift:27:22: error: value of type 'TextField<Text>' has no member 'keyboardType'
+Clockin/Views/Goals/GoalsPaceView.swift:45:70: error: cannot find 'UIResponder' in scope
+Clockin/Views/Goals/ProgressHubView.swift:42:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Guide/UsageGuideView.swift:85:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/HistoryView.swift:89:25: error: 'insetGrouped' is unavailable in macOS
+Clockin/Views/HistoryView.swift:94:41: error: 'topBarTrailing' is unavailable in macOS
+Clockin/Views/Import/TimecardImportView.swift:72:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/ManualEntryView.swift:126:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/ManualStartView.swift:74:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Mascot/MascotAsset.swift:287:42: error: cannot find type 'UIViewRepresentable' in scope
+Clockin/Views/Mascot/MascotAsset.swift:302:30: error: cannot find type 'Context' in scope
+Clockin/Views/Mascot/MascotAsset.swift:308:57: error: cannot find type 'Context' in scope
+Clockin/Views/Mascot/MascotAsset.swift:318:30: error: cannot find type 'UIView' in scope
+Clockin/Views/Mascot/MascotAsset.swift:334:17: error: main actor-isolated default value in a nonisolated context
+Clockin/Views/Mascot/MascotAsset.swift:352:14: error: initializer does not override a designated initializer from its superclass
+Clockin/Views/Mascot/MascotAsset.swift:535:19: error: method does not override any method from its superclass
+Clockin/Views/Mascot/MascotAsset.swift:562:19: error: method does not override any method from its superclass
+Clockin/Views/Mascot/MascotSkinEffects.swift:213:49: error: cannot find type 'UIColor' in scope
+Clockin/Views/RateScheduleView.swift:175:26: error: value of type 'TextField<Text>' has no member 'keyboardType'
+Clockin/Views/RateScheduleView.swift:74:25: error: 'insetGrouped' is unavailable in macOS
+Clockin/Views/RateScheduleView.swift:78:14: error: 'navigationBarTitleDisplayMode' is unavailable in macOS
+Clockin/Views/Share/ShareStatsView.swift:58:33: error: cannot find type 'UIImage' in scope
+ClockinMac/MacRootView.swift:13:13: error: generic parameter 'SelectionValue' could not be inferred
+ClockinMac/MacRootView.swift:14:58: error: cannot find 'AppTab' in scope
+ClockinMac/MacRootView.swift:15:70: error: cannot find 'AppTab' in scope
+ClockinMac/MacRootView.swift:16:81: error: cannot find 'AppTab' in scope
+ClockinMac/MacRootView.swift:5:29: error: cannot find type 'AppTab' in scope
+Shared/Intents/ClockIntents.swift:43:24: error: 'LiveActivityIntent' is unavailable in macOS
+Shared/Intents/ClockIntents.swift:66:27: error: 'LiveActivityIntent' is unavailable in macOS
+Shared/Intents/ClockIntents.swift:9:23: error: 'LiveActivityIntent' is unavailable in macOS
+Shared/Intents/SetClockedInIntent.swift:5:44: error: 'LiveActivityIntent' is unavailable in macOS

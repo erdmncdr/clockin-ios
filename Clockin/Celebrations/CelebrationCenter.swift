@@ -21,14 +21,18 @@ final class CelebrationCenter: ObservableObject {
 
     private let defaults: UserDefaults
     private var queue: CelebrationQueue
+    #if canImport(UIKit)
     weak var window: UIWindow?
+    #else
+    weak var window: NSWindow?
+    #endif
     private var active = false
     private var blockers: Set<UUID> = []
     private var companions: [UUID: CelebrationVisibilityView] = [:]
     private var reactionOwner: UUID?
     private var visibleCompanions: [UUID] {
         guard defaults.object(forKey: "Clockin.MascotEnabled") as? Bool != false,
-              !UIAccessibility.isReduceMotionEnabled else { return [] }
+              !Platform.reduceMotion else { return [] }
         return companions.filter { $0.value.isCompanionVisible }.map(\.key)
     }
     private var dismissal: Task<Void, Never>?
@@ -109,7 +113,7 @@ final class CelebrationCenter: ObservableObject {
         let earnedPride = CelebrationRules.earnsPride(from: queue.previous, to: state)
         let oldPending = queue.pending
         queue.ingest(state, now: ProcessInfo.processInfo.systemUptime,
-                     canReact: active && UIApplication.shared.applicationState == .active && blockers.isEmpty && !visibleCompanions.isEmpty, includeAccessories: false)
+                     canReact: active && Platform.isAppActive && blockers.isEmpty && !visibleCompanions.isEmpty, includeAccessories: false)
         if earnedPride || queue.pending.contains(where: { $0.startsPride && !oldPending.contains($0) }) {
             // Widget olayi hemen alir; kapali kart sheet sonrasi kendi penceresini acar.
             showPride()
@@ -208,7 +212,7 @@ final class CelebrationCenter: ObservableObject {
         // SwiftUI sunum baglantilari ayni olay turunda once yerlessin.
         dismissal = Task { [weak self] in
             await Task.yield()
-            guard !Task.isCancelled, let self, self.active, UIApplication.shared.applicationState == .active, self.blockers.isEmpty else { return }
+            guard !Task.isCancelled, let self, self.active, Platform.isAppActive, self.blockers.isEmpty else { return }
             guard self.screenIsFree() else { self.queue.suspend(); return }
             self.queue.presentNext(active: true, blocked: false, companionVisible: !self.visibleCompanions.isEmpty,
                                    now: ProcessInfo.processInfo.systemUptime)
@@ -223,7 +227,7 @@ final class CelebrationCenter: ObservableObject {
                 LevelUpHaptics.play(milestone: milestone)
                 // The same test the card uses to open on its still frame.
                 let still = !RollingAnimationPolicy.shared.allowsAnimation(
-                    reduceMotion: UIAccessibility.isReduceMotionEnabled, contentActive: true, sceneActive: true, visible: true)
+                    reduceMotion: Platform.reduceMotion, contentActive: true, sceneActive: true, visible: true)
                 LevelUpSound.play(milestone: milestone, still: still)
             }
             self.persist()
@@ -238,6 +242,7 @@ final class CelebrationCenter: ObservableObject {
     }
 
     private func screenIsFree() -> Bool {
+        #if canImport(UIKit)
         guard let root = window?.rootViewController else { return false }
         func presented(in controller: UIViewController) -> UIViewController? {
             if let modal = controller.presentedViewController { return modal }
@@ -250,6 +255,10 @@ final class CelebrationCenter: ObservableObject {
             }
         }
         return false
+        #else
+        guard let window, window.isVisible, window.occlusionState.contains(.visible) else { return false }
+        return window.attachedSheet == nil && NSApplication.shared.modalWindow == nil
+        #endif
     }
 
     func screenAttached() { requestPresentation() }

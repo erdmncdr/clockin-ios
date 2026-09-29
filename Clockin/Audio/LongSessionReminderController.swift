@@ -84,7 +84,11 @@ final class LongSessionReminderController: ObservableObject {
             guard let input, let running = input.running, !running.isPaused, input.hours > 0 else { continue }
             let permission = await center.notificationSettings()
             guard processed == revision else { continue }
+            #if os(iOS)
             guard [.authorized, .provisional, .ephemeral].contains(permission.authorizationStatus) else { continue }
+            #else
+            guard [.authorized, .provisional].contains(permission.authorizationStatus) else { continue }
+            #endif
             let now = Date.now
             var next = state ?? LongSessionReminderState(start: running.start)
             guard let date = next.reconcile(running: running, hours: input.hours, now: now) else {

@@ -58,7 +58,11 @@ final class NudgeController: ObservableObject {
             let pending = await center.pendingNotificationRequests()
             guard processed == revision, var input else { continue }
             input.now = .now
+            #if os(iOS)
             input.enabled = input.enabled && [.authorized, .provisional, .ephemeral].contains(permission.authorizationStatus)
+            #else
+            input.enabled = input.enabled && [.authorized, .provisional].contains(permission.authorizationStatus)
+            #endif
             input.consumed = state.scheduled.filter { $0.fireDate <= input.now }
             let nextMood = NudgePlanner.currentMood(input)
             if mood != nextMood { mood = nextMood }

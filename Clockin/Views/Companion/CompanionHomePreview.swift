@@ -147,7 +147,16 @@ struct CompanionHomePreview: View {
         Haptics.play(.companionReaction)
         if wasOwned { dismiss() } else {
             purchased = true
+            #if canImport(UIKit)
             UIAccessibility.post(notification: .announcement, argument: String(localized: "Purchased. \(item.name) is yours and equipped.", bundle: .app))
+            #else
+            if let window = NSApplication.shared.keyWindow {
+                NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
+                    .announcement: String(localized: "Purchased. \(item.name) is yours and equipped.", bundle: .app),
+                    .priority: NSAccessibilityPriorityLevel.high.rawValue
+                ])
+            }
+            #endif
         }
     }
 }
