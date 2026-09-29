@@ -1,0 +1,52 @@
+#!/bin/bash
+set -euo pipefail
+source "$(dirname "$0")/common.sh"
+parse_args "$@"
+[[ "${#ARGS[@]}" == 3 ]] || fail 'Usage: verify-app.sh APP VERSION BUILD [--dry-run]'
+version_paths "${ARGS[1]}" "${ARGS[2]}"
+APP="${ARGS[0]}"
+if [[ "$DRY_RUN" == 1 ]]; then
+    step "Verify $APP: production bundle ID, $VERSION ($BUILD), macOS 14.0, universal app and Sparkle binaries."
+    step 'Check pinned Sparkle feed/public key, required signed feed, pre-extraction verification, zero signature expiry.'
+    step 'Verify deep/strict signatures; require Developer ID, LU36PKDPT3, timestamps and hardened runtime for app and every Sparkle component.'
+    step 'Reject app sandbox or get-task-allow entitlements; require Sparkle 2.10.0 and its XPC services, Updater and Autoupdate.'
+    exit 0
+fi
+PLIST="$APP/Contents/Info.plist"
+require_plist "$PLIST" CFBundleIdentifier "$BUNDLE_ID"
+require_plist "$PLIST" CFBundleShortVersionString "$VERSION"
+require_plist "$PLIST" CFBundleVersion "$BUILD"
+require_plist "$PLIST" LSMinimumSystemVersion 14.0
+require_plist "$PLIST" SUFeedURL "$FEED_URL"
+require_plist "$PLIST" SUPublicEDKey "$PUBLIC_KEY"
+require_plist "$ROOT/Config/ClockinMac-Info.plist" SUPublicEDKey "$PUBLIC_KEY"
+require_plist "$PLIST" SURequireSignedFeed true
+require_plist "$PLIST" SUVerifyUpdateBeforeExtraction true
+require_plist "$PLIST" SUSignedFeedFailureExpirationInterval 0
+FRAMEWORK="$APP/Contents/Frameworks/Sparkle.framework"
+require_plist "$FRAMEWORK/Resources/Info.plist" CFBundleShortVersionString 2.10.0
+for relative in Versions/B/Autoupdate Versions/B/Updater.app \
+    Versions/B/XPCServices/Downloader.xpc Versions/B/XPCServices/Installer.xpc; do
+    [[ -e "$FRAMEWORK/$relative" ]] || fail "Missing Sparkle component: $relative"
+done
+EXECUTABLE="$(plist_value "$PLIST" CFBundleExecutable)"
+[[ "$EXECUTABLE" == Clockin ]] || fail 'Expected Clockin executable.'
+run lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/$EXECUTABLE"
+while IFS= read -r component; do
+    if [[ -f "$component" ]]; then run lipo -verify_arch arm64 x86_64 "$component"; fi
+done < <(sparkle_components "$FRAMEWORK")
+verify_all_signatures "$APP" || fail 'App or Sparkle signature requirements failed.'
+ENTITLEMENTS="$(codesign -d --entitlements :- "$APP" 2>/dev/null)"
+if [[ -n "$ENTITLEMENTS" ]]; then
+    mkdir -p "$OUTPUT_ROOT/checks"
+    ENTITLEMENTS_FILE="$(mktemp "$OUTPUT_ROOT/checks/entitlements.XXXXXX")"
+    trap 'rm -f "$ENTITLEMENTS_FILE"' EXIT
+    printf '%s' "$ENTITLEMENTS" > "$ENTITLEMENTS_FILE"
+    plutil -lint "$ENTITLEMENTS_FILE"
+    for key in com.apple.security.app-sandbox com.apple.security.get-task-allow; do
+        # PlistBuddy treats dots literally; plutil -extract treats them as paths.
+        value="$(plist_value "$ENTITLEMENTS_FILE" "$key" 2>/dev/null || true)"
+        [[ "$value" != true ]] || fail "Distribution app has forbidden entitlement: $key"
+    done
+fi
+step 'App metadata, architectures and distribution signatures verified.'
