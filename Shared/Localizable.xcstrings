@@ -1,50 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive.": {
+    "%@\n\nYou can drag Clockin into the Applications folder in Finder instead.": {
       "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive."
-          }
-        },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu yedekte geçersiz oturum süreleri veya tarihleri var. Hiçbir veri geri yüklenmedi; geri yükleme için tüm arşiv geçerli olmalı."
-          }
-        }
-      }
-    },
-    "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bazı kayıtlar okunamadı ve güvenlik kopyaları kaydedilemedi. Veri dosyanızın üzerine yazılmayacak. Depolama alanı açıp Clockin’i yeniden başlatın."
-          }
-        }
-      }
-    },
-    "%lld invalid entries were set aside in %@. The original file was also kept.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld invalid entries were set aside in %@. The original file was also kept."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld geçersiz kayıt %2$@ dosyasına ayrıldı. Özgün dosya da korundu."
+            "value": "%@\n\nBunun yerine Finder’da Clockin’i Uygulamalar klasörüne sürükleyebilirsiniz."
           }
         }
       }
@@ -169,6 +131,16 @@
         }
       }
     },
+    "%@ left": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kaldı"
+          }
+        }
+      }
+    },
     "%@ left on today's goal. The chair is still warm. Get back here.": {
       "localizations": {
         "tr": {
@@ -195,6 +167,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bugün %@ kaldı."
+          }
+        }
+      }
+    },
+    "%@ of %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ hedefinin %1$@ kadarı"
           }
         }
       }
@@ -245,6 +227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "%@ to daily goal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük hedefe %@ kaldı"
           }
         }
       }
@@ -365,6 +357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@. İnternetten yayın yapar ve ekran kilitliyken çalmaya devam eder. İstasyon, oynatma ve ses denetimleri için Bugün'e sabitle."
+          }
+        }
+      }
+    },
+    "%@/h": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/sa"
           }
         }
       }
@@ -657,6 +659,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld saat çalışma"
+          }
+        }
+      }
+    },
+    "%lld invalid entries were set aside in %@. The original file was also kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld invalid entries were set aside in %@. The original file was also kept."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld geçersiz kayıt %2$@ dosyasına ayrıldı. Özgün dosya da korundu."
           }
         }
       }
@@ -1499,6 +1517,16 @@
         }
       }
     },
+    "A global shortcut could not be registered. Check for conflicts with other apps.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir genel kısayol kaydedilemedi. Diğer uygulamaların kısayollarıyla çakışıp çakışmadığını kontrol edin."
+          }
+        }
+      }
+    },
     "A lifetime-class achievement": {
       "localizations": {
         "tr": {
@@ -2149,12 +2177,32 @@
         }
       }
     },
+    "Automatic follows your Mac's language.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik, Mac’inizin dilini kullanır."
+          }
+        }
+      }
+    },
     "Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Otomatik, iPhone'unun dilini izler. Araç takımları ve Canlı Etkinlik de uygulamayla birlikte değişir."
+          }
+        }
+      }
+    },
+    "Automatically check for updates": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellemeleri otomatik kontrol et"
           }
         }
       }
@@ -2175,6 +2223,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ortalama kazanç / saat"
+          }
+        }
+      }
+    },
+    "Avg day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük ort."
+          }
+        }
+      }
+    },
+    "Avg month": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aylık ort."
+          }
+        }
+      }
+    },
+    "Avg week": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftalık ort."
           }
         }
       }
@@ -2599,6 +2677,16 @@
         }
       }
     },
+    "Cancel session, asks for confirmation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu iptal et, onay istenir"
+          }
+        }
+      }
+    },
     "Cap": {
       "localizations": {
         "tr": {
@@ -2767,6 +2855,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bağlantıyı yeniden denetle"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellemeleri Kontrol Et…"
           }
         }
       }
@@ -2951,6 +3049,16 @@
         }
       }
     },
+    "Clock": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesai"
+          }
+        }
+      }
+    },
     "Clock In": {
       "localizations": {
         "tr": {
@@ -3011,6 +3119,16 @@
         }
       }
     },
+    "Clock in or resume": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaiye başla veya devam et"
+          }
+        }
+      }
+    },
     "Clock in, pause, and clock out": {
       "localizations": {
         "tr": {
@@ -3027,6 +3145,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mesaiyi bitir"
+          }
+        }
+      }
+    },
+    "Clock out and save session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaiyi bitir ve oturumu kaydet"
           }
         }
       }
@@ -3071,6 +3199,26 @@
         }
       }
     },
+    "Clockin %@ is available": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin %@ hazır"
+          }
+        }
+      }
+    },
+    "Clockin can't be copied to %@: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin, %1$@ konumuna kopyalanamıyor: %2$@"
+          }
+        }
+      }
+    },
     "Clockin checks the server connection when your timer is running. No test session is needed.": {
       "localizations": {
         "tr": {
@@ -3081,12 +3229,62 @@
         }
       }
     },
+    "Clockin couldn't move itself to Applications": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin kendini Uygulamalar klasörüne taşıyamadı"
+          }
+        }
+      }
+    },
+    "Clockin couldn't restore the previous app. A backup remains at %@: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin önceki uygulamayı geri yükleyemedi. %1$@ konumunda bir yedek var: %2$@"
+          }
+        }
+      }
+    },
     "Clockin has been running for %@.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Clockin %@ süredir çalışıyor."
+          }
+        }
+      }
+    },
+    "Clockin is already at the destination.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin zaten hedef konumda."
+          }
+        }
+      }
+    },
+    "Clockin is running from %@. In %@ it can install updates and there is only one copy on this Mac. Clockin will move itself there and reopen.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin, %1$@ konumundan çalışıyor. %2$@ konumunda güncellemeleri yükleyebilir ve bu Mac’te tek kopyası kalır. Clockin kendini oraya taşıyıp yeniden açılacak."
+          }
+        }
+      }
+    },
+    "Clockin is running from the disk image, where updates can't be installed and the app disappears once the disk image is ejected. Clockin will copy itself to %@, reopen from there and eject the disk image.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin disk görüntüsünden çalışıyor. Burada güncellemeler yüklenemez ve disk görüntüsü çıkarıldığında uygulama kaybolur. Clockin kendini %@ konumuna kopyalayıp oradan yeniden açılacak ve disk görüntüsünü çıkaracak."
           }
         }
       }
@@ -3167,6 +3365,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarları değiştirdikten sonra Clockin'e dön. Onları otomatik olarak yeniden denetleriz. Eski iOS sürümlerinde Clockin doğrudan Ayarlar'da listelenir."
+          }
+        }
+      }
+    },
+    "Compact": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kompakt"
           }
         }
       }
@@ -3751,6 +3959,16 @@
         }
       }
     },
+    "D %lld%%": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G %lld%%"
+          }
+        }
+      }
+    },
     "DAILY EARNINGS": {
       "localizations": {
         "tr": {
@@ -3821,6 +4039,16 @@
         }
       }
     },
+    "Daily goal reached": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük hedefe ulaşıldı"
+          }
+        }
+      }
+    },
     "Daily work: %@": {
       "localizations": {
         "tr": {
@@ -3867,6 +4095,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yoğun Veri"
+          }
+        }
+      }
+    },
+    "Data is stored only on this Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veriler yalnızca bu Mac’te saklanır."
           }
         }
       }
@@ -4091,6 +4329,46 @@
         }
       }
     },
+    "Discard": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
+    "Discard current session without saving": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli oturumu kaydetmeden sil"
+          }
+        }
+      }
+    },
+    "Discard this session?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturum silinsin mi?"
+          }
+        }
+      }
+    },
+    "Don't ask again": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir daha sorma"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "tr": {
@@ -4287,6 +4565,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kazanılan"
+          }
+        }
+      }
+    },
+    "Earned today, %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugünkü kazanç, %@"
+          }
+        }
+      }
+    },
+    "Earning": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kazanılıyor"
           }
         }
       }
@@ -5113,6 +5411,16 @@
         }
       }
     },
+    "Gentle feedback for completed actions. The level-up sound plays while Clockin is open.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlanan işlemler için hafif geri bildirim. Seviye atlama sesi Clockin açıkken çalar."
+          }
+        }
+      }
+    },
     "Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.": {
       "localizations": {
         "tr": {
@@ -5153,12 +5461,32 @@
         }
       }
     },
+    "Global shortcuts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel kısayollar"
+          }
+        }
+      }
+    },
     "Go beyond the familiar": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Alışılmışın ötesine geç"
+          }
+        }
+      }
+    },
+    "Goal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef"
           }
         }
       }
@@ -5911,6 +6239,36 @@
         }
       }
     },
+    "Install": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükle"
+          }
+        }
+      }
+    },
+    "Install Clockin %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin %@ sürümünü yükle"
+          }
+        }
+      }
+    },
+    "Install Clockin %@…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin %@ Sürümünü Yükle…"
+          }
+        }
+      }
+    },
     "Invalid elapsed time or date.": {
       "localizations": {
         "tr": {
@@ -6041,6 +6399,16 @@
         }
       }
     },
+    "Keep Running from Disk Image": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk Görüntüsünden Çalışmaya Devam Et"
+          }
+        }
+      }
+    },
     "Keep a 3-day streak": {
       "localizations": {
         "tr": {
@@ -6077,6 +6445,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tümünü sakla"
+          }
+        }
+      }
+    },
+    "Keep current session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli oturumu koru"
           }
         }
       }
@@ -6261,12 +6639,32 @@
         }
       }
     },
+    "Last checked": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son kontrol"
+          }
+        }
+      }
+    },
     "Last seen days ago. Come back and clock in.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Son görülme günler önce. Dön ve mesaiye başla."
+          }
+        }
+      }
+    },
+    "Last session %@ · %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son oturum %1$@ · %2$@"
           }
         }
       }
@@ -6297,6 +6695,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fırlatma"
+          }
+        }
+      }
+    },
+    "Layout": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzen"
           }
         }
       }
@@ -6731,6 +7139,16 @@
         }
       }
     },
+    "M %lld%%": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A %lld%%"
+          }
+        }
+      }
+    },
     "MILESTONES\n& MOMENTUM": {
       "localizations": {
         "tr": {
@@ -6851,6 +7269,16 @@
         }
       }
     },
+    "Menu bar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu"
+          }
+        }
+      }
+    },
     "Midnight": {
       "localizations": {
         "tr": {
@@ -6877,6 +7305,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başarılar"
+          }
+        }
+      }
+    },
+    "Minimal menu bar mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimal menü çubuğu modu"
           }
         }
       }
@@ -6957,6 +7395,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İvme"
+          }
+        }
+      }
+    },
+    "Money": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kazanç"
           }
         }
       }
@@ -7081,6 +7529,16 @@
         }
       }
     },
+    "More Clockin options": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Clockin seçenekleri"
+          }
+        }
+      }
+    },
     "More Frequent Updates": {
       "localizations": {
         "tr": {
@@ -7111,6 +7569,16 @@
         }
       }
     },
+    "Move Clockin to your Applications folder?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin Uygulamalar klasörüne taşınsın mı?"
+          }
+        }
+      }
+    },
     "Move down": {
       "localizations": {
         "tr": {
@@ -7137,6 +7605,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sağa taşı"
+          }
+        }
+      }
+    },
+    "Move to Applications": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamalar’a Taşı"
           }
         }
       }
@@ -7283,6 +7761,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni"
+          }
+        }
+      }
+    },
+    "New Entry…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Kayıt…"
           }
         }
       }
@@ -7487,6 +7975,16 @@
         }
       }
     },
+    "No sessions yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz oturum yok"
+          }
+        }
+      }
+    },
     "No sessions yet. Clock in or add a past entry.": {
       "localizations": {
         "tr": {
@@ -7587,6 +8085,16 @@
         }
       }
     },
+    "No writable Applications directory is available.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazılabilir bir Uygulamalar klasörü bulunamadı."
+          }
+        }
+      }
+    },
     "Nobody told me. The timer is still waiting.": {
       "localizations": {
         "tr": {
@@ -7603,6 +8111,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hiçbiri"
+          }
+        }
+      }
+    },
+    "Not Now": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Değil"
+          }
+        }
+      }
+    },
+    "Not clocked in": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaide değil"
           }
         }
       }
@@ -7931,6 +8459,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yalnızca dosyada geçen günler incelenir."
+          }
+        }
+      }
+    },
+    "Open Clockin": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin’i Aç"
+          }
+        }
+      }
+    },
+    "Open Clockin main window": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin ana penceresini aç"
           }
         }
       }
@@ -8339,6 +8887,16 @@
         }
       }
     },
+    "Pause or resume": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklat veya devam et"
+          }
+        }
+      }
+    },
     "Pause or resume your Clockin session. Does nothing when no session is running.": {
       "localizations": {
         "tr": {
@@ -8355,6 +8913,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Radyoyu duraklat"
+          }
+        }
+      }
+    },
+    "Pause session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu duraklat"
           }
         }
       }
@@ -8519,6 +9087,16 @@
         }
       }
     },
+    "Pin timer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayacı sabitle"
+          }
+        }
+      }
+    },
     "Pin to Today": {
       "localizations": {
         "tr": {
@@ -8549,6 +9127,16 @@
         }
       }
     },
+    "Pinned timer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit sayaç"
+          }
+        }
+      }
+    },
     "Pixel shades": {
       "localizations": {
         "tr": {
@@ -8575,6 +9163,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Platin ve nova yıldızı"
+          }
+        }
+      }
+    },
+    "Play focus radio": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak radyosunu çal"
           }
         }
       }
@@ -8919,6 +9517,16 @@
         }
       }
     },
+    "Quit Clockin": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin’den Çık"
+          }
+        }
+      }
+    },
     "READY": {
       "localizations": {
         "tr": {
@@ -8965,6 +9573,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Radio Paradise • Odak radyosu"
+          }
+        }
+      }
+    },
+    "Radio off": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radyo kapalı"
+          }
+        }
+      }
+    },
+    "Radio on": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radyo açık"
           }
         }
       }
@@ -9135,6 +9763,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizlilik politikasını oku"
+          }
+        }
+      }
+    },
+    "Ready": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır"
           }
         }
       }
@@ -9415,6 +10053,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Devam et"
+          }
+        }
+      }
+    },
+    "Resume session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturuma devam et"
           }
         }
       }
@@ -9879,6 +10527,16 @@
         }
       }
     },
+    "Session earnings, %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum kazancı, %@"
+          }
+        }
+      }
+    },
     "Session institution": {
       "localizations": {
         "tr": {
@@ -9905,6 +10563,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Oturum hatırlatıcısı"
+          }
+        }
+      }
+    },
+    "Session time, %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum süresi, %@"
           }
         }
       }
@@ -9979,6 +10647,16 @@
         }
       }
     },
+    "Set in Settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlardan belirle"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "tr": {
@@ -9995,6 +10673,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar > Görünüm > Titreşim, dokunmalar, seçimler ve tamamlanan işlemler için hafif titreşimi denetler. Clockin'in titreşimlerini susturmak için kapat. Kaydırma ve çalışan sayaç sessiz kalır."
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar…"
           }
         }
       }
@@ -10049,12 +10737,62 @@
         }
       }
     },
+    "Show TRY equivalent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TL karşılığını göster"
+          }
+        }
+      }
+    },
+    "Show earnings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kazancı göster"
+          }
+        }
+      }
+    },
+    "Show goal progress": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef ilerlemesini göster"
+          }
+        }
+      }
+    },
     "Show home in desk mode": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Masa modunda odayı göster"
+          }
+        }
+      }
+    },
+    "Show hours": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süreyi göster"
+          }
+        }
+      }
+    },
+    "Show seconds": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saniyeleri göster"
           }
         }
       }
@@ -10197,6 +10935,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düz: gerçek toplam · kesikli: son tempo · noktalı: aylık hedef"
+          }
+        }
+      }
+    },
+    "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı kayıtlar okunamadı ve güvenlik kopyaları kaydedilemedi. Veri dosyanızın üzerine yazılmayacak. Depolama alanı açıp Clockin’i yeniden başlatın."
           }
         }
       }
@@ -10403,6 +11157,16 @@
         }
       }
     },
+    "Start with elapsed time…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçen Süreyle Başlat…"
+          }
+        }
+      }
+    },
     "Start: %@": {
       "localizations": {
         "tr": {
@@ -10509,6 +11273,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hâlâ çalışıyor musun?"
+          }
+        }
+      }
+    },
+    "Stop focus radio": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak radyosunu durdur"
           }
         }
       }
@@ -11073,6 +11847,22 @@
         }
       }
     },
+    "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yedekte geçersiz oturum süreleri veya tarihleri var. Hiçbir veri geri yüklenmedi; geri yükleme için tüm arşiv geçerli olmalı."
+          }
+        }
+      }
+    },
     "This file cannot be read": {
       "localizations": {
         "tr": {
@@ -11109,6 +11899,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu ayın performansı"
+          }
+        }
+      }
+    },
+    "This replaces every session and the running timer on this Mac with the selected file. Your current data is kept as a backup first, so it can be restored from Automatic backups.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac’teki tüm oturumlar ve çalışan sayaç, seçilen dosyayla değiştirilir. Mevcut verileriniz önce yedeklenir; Otomatik yedekler bölümünden geri yüklenebilir."
           }
         }
       }
@@ -11233,6 +12033,16 @@
         }
       }
     },
+    "Today %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün %@"
+          }
+        }
+      }
+    },
     "Today %@, %@": {
       "localizations": {
         "tr": {
@@ -11333,12 +12143,32 @@
         }
       }
     },
+    "Total": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplam"
+          }
+        }
+      }
+    },
     "Total XP": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Toplam XP"
+          }
+        }
+      }
+    },
+    "Total earned": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplam kazanç"
           }
         }
       }
@@ -11593,6 +12423,16 @@
         }
       }
     },
+    "Unpin timer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayacı sabitlemeyi kaldır"
+          }
+        }
+      }
+    },
     "Unstoppable": {
       "localizations": {
         "tr": {
@@ -11609,6 +12449,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güncellendi"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellemeler"
           }
         }
       }
@@ -12313,6 +13163,16 @@
         }
       }
     },
+    "Worked today, %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün çalışılan süre, %@"
+          }
+        }
+      }
+    },
     "Working": {
       "localizations": {
         "tr": {
@@ -12933,6 +13793,16 @@
         }
       }
     },
+    "an hour": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "saatlik"
+          }
+        }
+      }
+    },
     "and %lld more": {
       "localizations": {
         "tr": {
@@ -13197,6 +14067,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Süreyle başlat"
+          }
+        }
+      }
+    },
+    "today": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bugün"
           }
         }
       }
