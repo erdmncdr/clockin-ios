@@ -176,4 +176,10 @@ da sabit pencere olur.
   imzalı appcast, 1.1.6 → 2.0 yerinde Sparkle provası, ortakla kaynak ve
   lisans konuşması, yayın (`publish.sh --yes`). Sürüm notu taslağı:
   `docs/release-notes-mac-2.0.0.md`.
-- [ ] 5. Senkron
+- [ ] 5. Senkron: çekirdek ve CloudKit adaptörü hazır ama uygulamalara
+  bağlı değil (brief 05, `docs/sync-design.md`, `Tests/manual/sync`: 196 +
+  17 kontrol, 2–3 cihazlı yakınsama testi). Widget uzantısına derlenmiyor.
+  Kalan: geçmişin sınırlanması (brief 07, sürüyor; budamasız `Running`
+  kaydı 1,5–2 yılda 750 KB sınırına dayanırdı), developer portal kurulumu
+  (senin), uygulamalara bağlama, ilk birleştirme önizlemesi ve kurtarma
+  arayüzü, iki gerçek cihazla deneme.
