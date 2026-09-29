@@ -1,0 +1,100 @@
+import Foundation
+
+// Inert until explicitly created. The application owns primary saves and UI.
+@MainActor
+final class SyncBridge {
+    typealias Apply = @MainActor @Sendable (SyncSnapshot) throws -> Void
+    private(set) var state: SyncSidecar
+    private(set) var snapshot: SyncSnapshot
+    private var transportError: String?
+    private var persistenceError: String?
+    var lastError: String? { persistenceError ?? transportError }
+    private(set) var fetchComplete = false
+    private let disk: SyncSidecarStore
+    private let apply: Apply
+    private var applyingRemote = false
+
+    init(state: SyncSidecar, snapshot: SyncSnapshot, disk: SyncSidecarStore, apply: @escaping Apply) {
+        self.state = state; self.snapshot = snapshot; self.disk = disk; self.apply = apply
+    }
+
+    // Call after the primary save succeeds, for all three stores, on the main actor.
+    func localDidSave(_ current: SyncSnapshot, at date: Date = .now) throws {
+        guard !applyingRemote else { return }
+        try state.capture(previous: snapshot, current: current, at: date)
+        snapshot = current
+    }
+
+    func seedIfNeeded(at date: Date = .now) throws {
+        guard state.records.isEmpty else { return }
+        try state.capture(previous: nil, current: snapshot, at: date)
+    }
+
+    // Launch reconciliation uses the previous projected snapshot to find offline/disk-only edits.
+    func reconcileLocalArchive(at date: Date = .now) throws {
+        if state.records.isEmpty { try seedIfNeeded(at: date); return }
+        let projected = try SyncCore.materialize(state.records, onto: SyncSnapshot(data: ClockinData())).snapshot
+        try state.capture(previous: projected, current: snapshot, at: date)
+    }
+
+    func receive(_ records: [SyncRecord]) throws {
+        var candidate = state
+        let merge = try candidate.receive(records, snapshot: snapshot)
+        if let merge { try applyMerged(merge.snapshot) }
+        state = candidate
+    }
+
+    func review() throws -> SyncMerge {
+        try SyncCore.merge(local: state.records, incoming: [], onto: snapshot)
+    }
+
+    func markFetchComplete(_ complete: Bool) { fetchComplete = complete }
+
+    func allowInitialUploadIfSafe() {
+        guard fetchComplete, !state.firstMergeCompleted, !state.needsFirstMergeReview else { return }
+        state.initialUploadAllowed = true
+        state.touch()
+    }
+
+    func firstPreview() throws -> SyncFirstPreview {
+        guard fetchComplete && state.needsFirstMergeReview else {
+            throw SyncFailure.invalid("No completed foreign-data fetch to review")
+        }
+        return try state.preview(snapshot: snapshot)
+    }
+
+    // Call only after the user approves this exact preview. Edits during backup invalidate it.
+    func approveFirstMerge(_ preview: SyncFirstPreview, archiveURL: URL) async throws {
+        guard preview.revision == state.revision else { throw SyncFailure.stalePreview }
+        let backup = try await disk.backup(archiveURL: archiveURL, revision: preview.revision)
+        var candidate = state
+        try candidate.commit(preview, backup: backup)
+        try applyMerged(preview.merge.snapshot)
+        state = candidate
+        _ = await persist()
+    }
+
+    private func applyMerged(_ merged: SyncSnapshot) throws {
+        applyingRemote = true
+        defer { applyingRemote = false }
+        try apply(merged)
+        snapshot = merged
+    }
+
+    @discardableResult
+    func persist() async -> Bool {
+        let captured = state
+        do { try await disk.save(captured); persistenceError = nil; return captured.revision == state.revision }
+        catch { persistenceError = "Sync sidecar could not be saved: \(error)"; return false }
+    }
+
+    func updateEngineState(_ data: Data) { state.engineState = data; state.touch() }
+    func setAccount(_ id: String) { state.accountID = id; state.touch() }
+    func resetTransport() { state.resetTransport() }
+    func rememberSystemFields(_ fields: Data, for key: String) { state.systemFields[key] = fields; state.touch() }
+    func clearSystemFields(for key: String) { state.systemFields[key] = nil; state.touch() }
+    func acknowledge(_ record: SyncRecord, fields: Data) { state.acknowledge(record, systemFields: fields) }
+    func quarantine(_ entry: SyncQuarantine) { state.addQuarantine([entry]); state.touch() }
+    func acknowledgeNotices(_ ids: [String]) { state.acknowledgeNotices(ids) }
+    func report(_ message: String) { transportError = message }
+}
