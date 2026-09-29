@@ -17,7 +17,7 @@ struct InsightsView: View {
         }
         .background(palette.background)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .trailingBar) {
                 Button {
                     shareSnapshot = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours,
                                                        monthlyGoal: monthlyGoalHours)

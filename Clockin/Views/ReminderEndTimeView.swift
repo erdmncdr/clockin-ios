@@ -32,7 +32,7 @@ struct ReminderEndTimeView: View {
                     .scrollContentBackground(.hidden)
                     .background(palette.background)
                     .navigationTitle(String(localized: "title.setEnd", defaultValue: "Set end time", bundle: .app))
-                    .navigationBarTitleDisplayMode(.inline)
+                    .inlineNavigationTitle()
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Cancel") { dismiss() }

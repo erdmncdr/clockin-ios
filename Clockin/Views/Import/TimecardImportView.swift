@@ -69,7 +69,7 @@ struct TimecardImportView: View {
             .scrollDismissesKeyboard(.interactively)
             .background(palette.background)
             .navigationTitle(String(localized: "title.import", defaultValue: "Import timecards", bundle: .app))
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     switch phase {

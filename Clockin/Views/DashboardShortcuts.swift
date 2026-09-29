@@ -45,7 +45,7 @@ struct DashboardPinOptions: View {
             } footer: {
                 Text("Keep your everyday controls on Today. Pinning does not turn a feature on or start playback.")
             }
-        }.navigationTitle("Customize Today").navigationBarTitleDisplayMode(.inline)
+        }.navigationTitle("Customize Today").inlineNavigationTitle()
     }
 }
 
@@ -86,7 +86,7 @@ struct DashboardShortcutSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(palette.background)
-            .navigationTitle(feature.title).navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(feature.title).inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }

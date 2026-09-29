@@ -90,7 +90,7 @@ struct DashboardView: View {
             .scrollBounceBehavior(.basedOnSize)
             .pinnedHeader { header }
             .background(palette.background)
-            .toolbar(.hidden, for: .navigationBar)
+            .hiddenNavigationBar()
         }
         .environment(\.clockinContentActive, appeared && isSelected && sheet == nil && pendingDelete == nil && scenePhase == .active)
         .onAppear {
@@ -278,7 +278,7 @@ private extension View {
     /// cubugunun yumusak kenar efektini alir; oncesinde cubuk malzemesi.
     @ViewBuilder
     func pinnedHeader<Header: View>(@ViewBuilder _ header: () -> Header) -> some View {
-        if #available(iOS 26, *) {
+        if #available(iOS 26, macOS 26, *) {
             safeAreaBar(edge: .top, spacing: 0, content: header)
         } else {
             safeAreaInset(edge: .top, spacing: 0) {

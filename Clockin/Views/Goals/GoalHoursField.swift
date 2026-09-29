@@ -24,7 +24,7 @@ struct GoalHoursField: View {
                 Text(title)
                 Spacer(minLength: 8)
                 TextField("0", text: $text)
-                    .keyboardType(.decimalPad)
+                    .decimalPadKeyboard()
                     .multilineTextAlignment(.trailing)
                     .monospacedDigit()
                     .frame(width: 64)

@@ -64,7 +64,7 @@ struct RoomEditorView: View {
                 }.padding(16)
             }
             .background(palette.background)
-            .navigationTitle("Edit room").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Edit room").inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement:.cancellationAction) {
                     Button("Cancel") { dismiss() }.accessibilityIdentifier("room.editor.cancel")

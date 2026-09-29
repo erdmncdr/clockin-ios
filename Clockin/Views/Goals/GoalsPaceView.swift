@@ -42,7 +42,7 @@ struct GoalsPaceView: View {
                 .onChange(of: focusedGoal) { _, field in
                     if let field { scroll.scrollTo(field, anchor: .center) }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                .onKeyboardShow {
                     if let field = focusedGoal { scroll.scrollTo(field, anchor: .center) }
                 }
                 .task(id: openGoalEditor) {

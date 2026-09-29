@@ -78,10 +78,10 @@ struct CompanionView: View {
             }
             .background(palette.background)
             .navigationTitle("Companion")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .sheet(item: $preview) { item in CompanionHomePreview(item: item) }
-            .fullScreenCover(item:$roomEditor) { session in RoomEditorView(state:session.state) }
+            .fullScreenSheet(item: $roomEditor) { session in RoomEditorView(state:session.state) }
 
         }
         .tint(palette.accent).fontDesign(palette.fontDesign).preferredColorScheme(palette.colorScheme)

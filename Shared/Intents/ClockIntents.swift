@@ -4,9 +4,15 @@ import Foundation
 // `LiveActivityIntent`: widget ya da Live Activity dugmesinden cagrilsa bile
 // uygulamanin surecinde calisir, boylece ekrandaki magazayla ayni ornegi
 // degistirir. Tipler widget uzantisinda da derlenmeli ki dugmeler onlara
-// basvurabilsin; uzantidaki dal hic calismaz.
+// basvurabilsin; uzantidaki dal hic calismaz. Mac'te Live Activity yok;
+// ayni niyetler Kisayollar icin duz `AppIntent` olur.
+#if os(iOS)
+typealias ClockinActionIntent = LiveActivityIntent
+#else
+typealias ClockinActionIntent = AppIntent
+#endif
 
-struct ClockInIntent: LiveActivityIntent {
+struct ClockInIntent: ClockinActionIntent {
     static let title: LocalizedStringResource = "Clock In"
     static let description = IntentDescription("Starts the Clockin timer, or resumes it if it is paused.")
 
@@ -40,7 +46,7 @@ struct ClockInIntent: LiveActivityIntent {
     }
 }
 
-struct ClockOutIntent: LiveActivityIntent {
+struct ClockOutIntent: ClockinActionIntent {
     static let title: LocalizedStringResource = "Clock Out"
     static let description = IntentDescription("Stops the running session and saves it to history.")
 
@@ -63,7 +69,7 @@ struct ClockOutIntent: LiveActivityIntent {
     }
 }
 
-struct TogglePauseIntent: LiveActivityIntent {
+struct TogglePauseIntent: ClockinActionIntent {
     static let title: LocalizedStringResource = "Pause or Resume"
     static let description = IntentDescription("Pauses the running session, or resumes it if it is paused.")
 

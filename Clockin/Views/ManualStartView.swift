@@ -71,7 +71,7 @@ struct ManualStartView: View {
             .background(palette.background)
             // Short title of its own: the long label only fits as a button.
             .navigationTitle(String(localized: "title.startEarlier", defaultValue: "Start earlier", bundle: .app))
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

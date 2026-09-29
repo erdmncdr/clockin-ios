@@ -71,11 +71,11 @@ struct RateScheduleView: View {
                     .listRowBackground(palette.surface)
                 }
             }
-            .listStyle(.insetGrouped)
+            .insetGroupedList()
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("Rate schedule")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -172,7 +172,7 @@ private struct RatePeriodEditor: View {
 
                 Section {
                     TextField("Hourly rate (\(store.currencyCode))", text: $rateText)
-                        .keyboardType(.decimalPad)
+                        .decimalPadKeyboard()
                         .focused($rateIsFocused)
                         .decimalInputRegion(active: rateIsFocused)
                         .onSubmit { rateIsFocused = false }
@@ -196,7 +196,7 @@ private struct RatePeriodEditor: View {
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle(editing == nil ? "Add rate period" : "Edit rate period")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

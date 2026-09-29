@@ -184,7 +184,7 @@ private struct InsightsBadgeDetail: View {
                 }
                 .coordinateSpace(name: "medalDetailViewport")
             }
-            .background(palette.background).navigationTitle("Mission").navigationBarTitleDisplayMode(.inline)
+            .background(palette.background).navigationTitle("Mission").inlineNavigationTitle()
             .toolbar { ToolbarItem(placement:.confirmationAction) { Button("Done") { dismiss() } } }
         }
         .tint(badge.tier.tint).fontDesign(palette.fontDesign).presentationDetents([.large])

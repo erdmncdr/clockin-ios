@@ -82,7 +82,7 @@ struct UsageGuideView: View {
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("How to use Clockin")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

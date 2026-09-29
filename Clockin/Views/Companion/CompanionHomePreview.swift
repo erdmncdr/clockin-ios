@@ -110,7 +110,7 @@ struct CompanionHomePreview: View {
                 }.padding(16).background(palette.background)
             }
             .background(palette.background)
-            .navigationTitle(item.name).navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(item.name).inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(purchased ? "Close" : "Cancel") { dismiss() } } }
             .alert("Not enough coins", isPresented: $purchaseError) { Button("OK", role: .cancel) {} }
         }

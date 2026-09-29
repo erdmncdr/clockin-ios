@@ -39,7 +39,7 @@ struct LevelBadgeGallery: View {
             .coordinateSpace(name: "rankGallery")
             }
             .background(palette.background)
-            .navigationTitle("Level badges").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Level badges").inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .environment(\.clockinContentActive, true)

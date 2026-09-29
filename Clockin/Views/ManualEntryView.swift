@@ -123,7 +123,7 @@ struct ManualEntryView: View {
             }
             .hapticFeedback(.destructiveConfirmation, trigger: confirmingDelete) { _, new in new }
             .navigationTitle(editing == nil ? "Add past entry" : "Edit entry")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

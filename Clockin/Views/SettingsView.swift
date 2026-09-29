@@ -126,7 +126,7 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 // Artik Bugun ekranindan sayfa olarak aciliyor.
                 ToolbarItem(placement: .confirmationAction) {
@@ -237,7 +237,7 @@ struct SettingsView: View {
             HStack {
                 Text("Hourly rate")
                 TextField("Hourly rate", text: $rateText)
-                    .keyboardType(.decimalPad)
+                    .decimalPadKeyboard()
                     .multilineTextAlignment(.trailing)
                     .focused($rateIsFocused)
                     .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)
@@ -252,7 +252,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Earlier rate")
                         TextField("Earlier rate", text: $earlierRateText)
-                            .keyboardType(.decimalPad)
+                            .decimalPadKeyboard()
                             .multilineTextAlignment(.trailing)
                             .focused($earlierRateIsFocused)
                             .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)

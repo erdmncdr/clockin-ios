@@ -1,8 +1,14 @@
 import SwiftUI
 
+enum MacSection: Hashable {
+    case today
+    case history
+    case progress
+}
+
 struct MacRootView: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
-    @State private var tab: AppTab? = .today
+    @State private var section: MacSection? = .today
     @State private var progressSection: ProgressSection = .goals
     @State private var goalEditorRequest = false
 
@@ -10,25 +16,25 @@ struct MacRootView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $tab) {
-                Label("Today", systemImage: "timer").tag(AppTab.today)
-                Label("History", systemImage: "chart.bar.xaxis").tag(AppTab.history)
-                Label("Progress", systemImage: "chart.line.uptrend.xyaxis").tag(AppTab.progress)
+            List(selection: $section) {
+                Label("Today", systemImage: "timer").tag(MacSection.today)
+                Label("History", systemImage: "chart.bar.xaxis").tag(MacSection.history)
+                Label("Progress", systemImage: "chart.line.uptrend.xyaxis").tag(MacSection.progress)
             }
             .navigationSplitViewColumnWidth(min: 160, ideal: 180)
         } detail: {
-            switch tab ?? .today {
+            switch section ?? .today {
             case .today:
-                DashboardView(isSelected: tab == .today, showHistory: { tab = .history }, showInsights: {
+                DashboardView(isSelected: section == .today, showHistory: { section = .history }, showInsights: {
                     progressSection = .goals
-                    tab = .progress
+                    section = .progress
                 }, setGoals: {
                     goalEditorRequest = true
                     progressSection = .goals
-                    tab = .progress
+                    section = .progress
                 }, showProgress: {
                     progressSection = .badges
-                    tab = .progress
+                    section = .progress
                 })
             case .history:
                 HistoryView()

@@ -103,7 +103,7 @@ struct ShareStatsView: View {
             }
             .background(palette.background)
             .navigationTitle("Share stats")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .hapticFeedback(selectionFeedback)

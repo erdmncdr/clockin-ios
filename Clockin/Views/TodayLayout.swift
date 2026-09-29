@@ -91,7 +91,7 @@ struct TodayCustomizationView: View {
                 TodayCustomizationSections()
             }
             .navigationTitle("Customize Today")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .tint(palette.accent)

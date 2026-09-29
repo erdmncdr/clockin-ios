@@ -86,12 +86,12 @@ struct HistoryView: View {
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
-            .listStyle(.insetGrouped)
+            .insetGroupedList()
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("History")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .trailingBar) {
                     Button { sheet = .newEntry } label: {
                         Image(systemName: "plus")
                     }

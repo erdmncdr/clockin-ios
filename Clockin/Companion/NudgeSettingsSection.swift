@@ -27,7 +27,7 @@ struct NudgeSettingsSection: View {
                 }
                 if chime.needsSystemSettings {
                     Button("Open notification settings", systemImage: "gear") {
-                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+                        if let url = SystemSettings.notifications { openURL(url) }
                     }
                 }
             }

@@ -39,7 +39,7 @@ struct ProgressHubView: View {
             }
             .background(palette.background)
             .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
         }
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
