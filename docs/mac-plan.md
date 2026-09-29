@@ -168,7 +168,12 @@ da sabit pencere olur.
   mod, sabit pencere ve beş düzeni, global kısayollar (Carbon; erişilebilirlik
   izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
   Gerçek güncelleme provası aşama 4'te.
-- [ ] 4. Geçiş ve yayın: ilk açılış hazır (brief 03: karantina, tercih
-  çevirisi, kutlama tekrarı yok). Kalan: 1.1.6'dan yerinde güncelleme provası,
-  imzalı arşiv, notarize, appcast.
+- [ ] 4. Geçiş ve yayın: ilk açılış hazır (brief 03) ve gerçek 1.1.6
+  tercihlerinin kopyasıyla Debug'da prova edildi (ses, geçmiş, ısı haritası,
+  hedef işareti, kutlama tabanı doğru). Yayın hattı `Tools/mac-release/`
+  (brief 06, `docs/mac-releases.md`); 2.0.0 (11) Developer ID arşivi ve
+  doğrulaması yerelde geçti. Kalan: notarize (Apple'a gönderim), DMG ve
+  imzalı appcast, 1.1.6 → 2.0 yerinde Sparkle provası, ortakla kaynak ve
+  lisans konuşması, yayın (`publish.sh --yes`). Sürüm notu taslağı:
+  `docs/release-notes-mac-2.0.0.md`.
 - [ ] 5. Senkron
