@@ -25,7 +25,11 @@ struct SessionRow: View {
         // One time style for every row, so Today and History write a time alike.
         let time = Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.formatLocale)
         if showsDay {
+            #if os(macOS)
+            let day = session.start.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated).year())
+            #else
             let day = session.start.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month(.abbreviated))
+            #endif
             return "\(day) \(session.start.formatted(time))"
         }
         return "\(session.start.formatted(time)) – \(session.end.formatted(time))"

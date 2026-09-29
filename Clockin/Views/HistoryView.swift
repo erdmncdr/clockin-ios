@@ -16,6 +16,11 @@ struct HistoryView: View {
 
     @State private var sheet: SessionSheet?
     @State private var pendingDelete: WorkSession?
+    #if os(macOS)
+    @AppStorage("Clockin.HistoryGroupByDay") private var groupByDay = true
+    @State private var expandedDays: Set<Date> = []
+    @State private var selectedSessionID: UUID?
+    #endif
 
     var body: some View {
         let period = EarningsPeriod(range: range, anchor: pageAnchor, now: now)
@@ -27,7 +32,7 @@ struct HistoryView: View {
         let conflicts = store.conflictingSessionIDs
 
         NavigationStack {
-            List {
+            sessionList {
                 Section {
                     Picker("Period", selection: $range) {
                         ForEach(EarningsRange.allCases) { Text($0.title).tag($0) }
@@ -50,6 +55,41 @@ struct HistoryView: View {
                     }
                 }
                 .listRowBackground(palette.surface)
+                #if os(macOS)
+                Group {
+                    if groupByDay {
+                        ForEach(days, id: \.day) { group in
+                            Section {
+                                if expandedDays.contains(group.day) {
+                                    ForEach(group.sessions) { session in
+                                        macSessionRow(session, snapshot: snapshot, converting: converting, conflicts: conflicts)
+                                    }
+                                }
+                            } header: {
+                                Button {
+                                    selectedSessionID = nil
+                                    if !expandedDays.insert(group.day).inserted { expandedDays.remove(group.day) }
+                                } label: {
+                                    HStack {
+                                        Image(systemName: expandedDays.contains(group.day) ? "chevron.down" : "chevron.right")
+                                        dayHeader(group, conflicts: conflicts, showTRY: converting)
+                                    }
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityValue(expandedDays.contains(group.day) ? "Expanded" : "Collapsed")
+                            }
+                        }
+                    } else {
+                        Section {
+                            ForEach(snapshot.sessions.sorted { $0.start > $1.start }) { session in
+                                macSessionRow(session, snapshot: snapshot, converting: converting, conflicts: conflicts)
+                            }
+                        }
+                    }
+                }
+                .animation(nil, value: period.pageID)
+                #else
                 ForEach(days, id: \.day) { group in
                     Section {
                         ForEach(group.sessions) { session in
@@ -83,6 +123,7 @@ struct HistoryView: View {
                 }
                 // Sayfa degisince kayitlar yer degistirme animasyonu yapmasin.
                 .animation(nil, value: period.pageID)
+                #endif
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
@@ -91,6 +132,15 @@ struct HistoryView: View {
             .background(palette.background)
             .navigationTitle("History")
             .toolbar {
+                #if os(macOS)
+                ToolbarItem {
+                    Picker("Session list", selection: $groupByDay) {
+                        Text("By day").tag(true)
+                        Text("Sessions").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                #endif
                 ToolbarItem(placement: .trailingBar) {
                     Button { sheet = .newEntry } label: {
                         Image(systemName: "plus")
@@ -99,12 +149,50 @@ struct HistoryView: View {
                 }
             }
         }
+        #if os(macOS)
+        .onChange(of: period.pageID) { _, _ in selectedSessionID = nil }
+        .onChange(of: groupByDay) { _, _ in selectedSessionID = nil }
+        .onChange(of: store.sessions) { _, sessions in
+            if let selectedSessionID, !sessions.contains(where: { $0.id == selectedSessionID }) {
+                self.selectedSessionID = nil
+            }
+        }
+        #endif
         .onAppear { now = .now }
         .onReceive(refresh) { now = $0 }
         .onReceive(store.objectWillChange) { now = .now }
         .sessionSheets($sheet)
         .deleteSessionAlert($pendingDelete)
     }
+
+    @ViewBuilder
+    private func sessionList<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        #if os(macOS)
+        List(selection: $selectedSessionID, content: content)
+            .onDeleteCommand {
+                guard let selectedSessionID else { return }
+                pendingDelete = store.sessions.first { $0.id == selectedSessionID }
+            }
+        #else
+        List(content: content)
+        #endif
+    }
+
+    #if os(macOS)
+    private func macSessionRow(_ session: WorkSession, snapshot: EarningsSnapshot,
+                               converting: Bool, conflicts: Set<UUID>) -> some View {
+        SessionRow(session: session, showsDay: !groupByDay,
+                   conflicts: conflicts.contains(session.id),
+                   historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
+            .tag(session.id)
+            .listRowBackground(palette.surface)
+            .onTapGesture(count: 2) { sheet = .edit(session) }
+            .contextMenu {
+                Button("Edit", systemImage: "pencil") { sheet = .edit(session) }
+                Button("Delete", systemImage: "trash", role: .destructive) { pendingDelete = session }
+            }
+    }
+    #endif
 
     private func periodHeader(_ period: EarningsPeriod) -> some View {
         HStack(spacing: 8) {

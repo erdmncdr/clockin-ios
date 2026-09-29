@@ -10,6 +10,7 @@ struct MacSettingsSection: View {
     @AppStorage("Clockin.MinimalShowEarnings") private var showEarnings = true
     @AppStorage("Clockin.MinimalShowTRY") private var showTRY = true
     @AppStorage("Clockin.MinimalShowGoal") private var showGoal = false
+    @AppStorage(WardrobeState.deskKey) private var showHome = true
     @AppStorage("Clockin.PinnedMode") private var pinnedMode = "Money"
 
     var body: some View {
@@ -34,6 +35,10 @@ struct MacSettingsSection: View {
                 Text("All").tag("All")
                 Text("Total").tag("Total")
             }
+        }
+        Section("Desk Mode") {
+            Button("Open Desk Mode") { DeskModeWindowController.shared.show() }
+            Toggle("Show home in desk mode", isOn: $showHome)
         }
         Section("Global shortcuts") {
             LabeledContent("Clock in or resume", value: "⌥⌘I")

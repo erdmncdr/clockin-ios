@@ -61,6 +61,9 @@ struct MacCommands: Commands {
                 .disabled(navigation.sheet != nil)
         }
         CommandGroup(after: .sidebar) {
+            Button(String(localized: "Desk Mode", bundle: .app)) { DeskModeWindowController.shared.show() }
+                .keyboardShortcut("f", modifiers: [.control, .command])
+            Divider()
             Button(String(localized: "Today", bundle: .app)) { MacNavigation.shared.open(.today) }.keyboardShortcut("1")
             Button(String(localized: "History", bundle: .app)) { MacNavigation.shared.open(.history) }.keyboardShortcut("2")
             Button(String(localized: "Progress", bundle: .app)) { MacNavigation.shared.open(.progress) }.keyboardShortcut("3")
