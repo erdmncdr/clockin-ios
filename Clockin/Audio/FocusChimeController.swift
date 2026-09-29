@@ -1,5 +1,9 @@
 import AVFoundation
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 import Combine
 import Foundation
 import UserNotifications

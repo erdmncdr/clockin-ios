@@ -1,4 +1,6 @@
+#if canImport(SafariServices)
 import SafariServices
+#endif
 import SwiftUI
 
 /// Presented as its own sheet, including when opened over the setup guide.

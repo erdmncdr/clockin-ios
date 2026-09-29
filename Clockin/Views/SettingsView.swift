@@ -23,7 +23,9 @@ struct SettingsView: View {
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
     @AppStorage(WardrobeState.deskKey) private var showHome = true
+    #if os(iOS)
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
+    #endif
     @AppStorage(HapticPolicy.enabledKey) private var hapticsEnabled = true
     @AppStorage(LevelUpSound.enabledKey) private var levelUpSoundEnabled = true
     @FocusState private var rateIsFocused: Bool
@@ -93,6 +95,7 @@ struct SettingsView: View {
                 } footer: {
                     Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
                 }
+                #if os(iOS)
                 Section {
                     Toggle("Show home in desk mode", isOn: $showHome.hapticSelection($selectionFeedback))
                     Toggle("Desk mode in landscape", isOn: $deskModeEnabled.hapticSelection($selectionFeedback))
@@ -100,12 +103,15 @@ struct SettingsView: View {
                 } footer: {
                     Text("Turn sideways for a large, always-on work timer.")
                 }
+                #endif
                 FocusSettingsSection()
                 LongSessionReminderSettingsSection()
+                #if os(iOS)
                 LiveActivityPrivacySection(
                     openSetup: { openPrivacySheet(.liveActivitySetup) },
                     openPolicy: { openPrivacySheet(.privacyPolicy) }
                 )
+                #endif
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)
@@ -183,7 +189,12 @@ struct SettingsView: View {
                     case .companion: CompanionView()
                     case .backups: BackupsView()
                     case .guide: UsageGuideView()
-                    case .liveActivitySetup: LiveActivitySetupView()
+                    case .liveActivitySetup:
+                        #if os(iOS)
+                        LiveActivitySetupView()
+                        #else
+                        EmptyView()
+                        #endif
                     case .privacyPolicy: PrivacyPolicyBrowser()
                     }
                 }

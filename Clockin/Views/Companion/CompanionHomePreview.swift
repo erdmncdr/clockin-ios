@@ -1,5 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The same try-first flow is used for clothing, colors, rooms and furniture.
 struct CompanionHomePreview: View {

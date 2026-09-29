@@ -1,4 +1,8 @@
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 final class RollingNumberUIView: UIView {
     private let content = UIView()

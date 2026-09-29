@@ -1,5 +1,7 @@
 #if !WIDGET_EXTENSION
+#if os(iOS)
 import ActivityKit
+#endif
 import Combine
 import Foundation
 import WidgetKit
@@ -18,12 +20,16 @@ final class SessionMirror {
     private var companionSubscriptions: Set<AnyCancellable> = []
     private var moodSubscription: AnyCancellable?
     private var lastSnapshot: ClockinSnapshot?
+    #if os(iOS)
     private var lastState: ClockinActivityAttributes.ContentState?
     private var activityTask: Task<Void, Never>?
+    #endif
 
     func start(observing store: ClockStore) {
         self.store = store
+        #if os(iOS)
         LiveActivityPush.shared.retryPendingDeletions()
+        #endif
         // `objectWillChange` deger yazilmadan once gelir; yeni degeri okumak
         // icin bir sonraki turda senkronlanir.
         subscription = store.objectWillChange.sink { [weak self] _ in
@@ -51,7 +57,9 @@ final class SessionMirror {
     }
 
     func refresh() {
+        #if os(iOS)
         LiveActivityPush.shared.retryPendingDeletions()
+        #endif
         sync()
     }
 
@@ -67,8 +75,10 @@ final class SessionMirror {
         await LongSessionReminderController.shared.finishPendingUpdates()
         await FocusChimeController.shared.finishPendingUpdates()
         await NudgeController.shared.finishPendingUpdates()
+        #if os(iOS)
         await activityTask?.value
         await LiveActivityPush.shared.finishPendingUploads()
+        #endif
     }
 
     private func sync() {
@@ -82,8 +92,10 @@ final class SessionMirror {
         LongSessionReminderController.shared.update(running: store.running)
         syncChimes(running: store.running)
         NudgeController.shared.update(store: store)
+        #if os(iOS)
         syncActivity(running: store.running, hourlyRate: snapshot?.hourlyRate ?? 0,
                      earned: store.currentEarnings(at: .now), currencyCode: store.currencyCode, theme: theme)
+        #endif
     }
 
     @discardableResult
@@ -104,9 +116,11 @@ final class SessionMirror {
                 try snapshot.write()
                 lastSnapshot = snapshot
                 WidgetCenter.shared.reloadAllTimelines()
+                #if os(iOS)
                 if #available(iOS 18.0, *) {
                     ControlCenter.shared.reloadAllControls()
                 }
+                #endif
             } catch {
                 // Basarisiz yazim sonraki yenilemede tekrar denenir.
             }
@@ -131,6 +145,7 @@ final class SessionMirror {
         )
     }
 
+    #if os(iOS)
     private func syncActivity(running: RunningSession?, hourlyRate: Double, earned: Double, currencyCode: String, theme: ClockinThemeChoice) {
         guard let running else {
             lastState = nil
@@ -212,5 +227,6 @@ final class SessionMirror {
             await activity.update(content)
         }
     }
+    #endif
 }
 #endif

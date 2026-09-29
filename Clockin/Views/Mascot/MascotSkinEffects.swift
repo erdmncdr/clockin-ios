@@ -1,4 +1,8 @@
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The light a skin adds round the companion: a soft glow behind it, a sheen
 /// that sweeps across its armour every few seconds and a few particles of its

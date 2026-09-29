@@ -1,5 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 // Font kapali bir tip; kullanim yerlerinin eslemeleri burada acik tutulur.
 enum RollingNumberFont {

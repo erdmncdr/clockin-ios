@@ -1,5 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 struct CompanionFurnitureImage: UIViewRepresentable {
     let image: CGImage

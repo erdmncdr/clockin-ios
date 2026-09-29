@@ -1,5 +1,9 @@
 import AVFoundation
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The level-up heard: the charge building in the dark, the strike and a
 /// chord that fades with the light, on the same clock as the card and the

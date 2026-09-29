@@ -1,6 +1,10 @@
 import CoreText
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The new level struck into a forged ring of the rank's metal. During the
 /// charge it is dark steel holding the old level, swelling on each pulse and

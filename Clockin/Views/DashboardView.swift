@@ -125,7 +125,12 @@ struct DashboardView: View {
                 case .companion: CompanionView()
                 case .settings: SettingsView()
                 case .customize: DashboardCustomizationView()
-                case .liveActivitySetup: LiveActivitySetupView()
+                case .liveActivitySetup:
+                    #if os(iOS)
+                    LiveActivitySetupView()
+                    #else
+                    EmptyView()
+                    #endif
                 case .shortcut(let feature): DashboardShortcutSheet(feature: feature)
                 case .newEntry: ManualEntryView()
                 case .edit(let session): ManualEntryView(editing: session)

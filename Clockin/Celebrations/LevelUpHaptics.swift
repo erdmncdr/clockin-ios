@@ -1,5 +1,9 @@
 import CoreHaptics
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The level-up felt in the hand: a hum that builds during the charge, a heavy
 /// double thump on the impact and, on a new rank, a second beat with sparkles.

@@ -1,7 +1,9 @@
 import SwiftUI
 
 #if !WIDGET_EXTENSION
+#if os(iOS)
 import UIKit
+#endif
 
 @MainActor
 enum Haptics {
@@ -9,6 +11,10 @@ enum Haptics {
         HapticPolicy.isEnabled(storedValue: UserDefaults.standard.object(forKey: HapticPolicy.enabledKey) as? Bool)
     }
 
+    #if os(macOS)
+    // Mac'te dokunsal geri bildirim yok; olaylar sessizce yutulur.
+    static func play(_ event: HapticEvent) {}
+    #else
     private static var light: UIImpactFeedbackGenerator?
     private static var soft: UIImpactFeedbackGenerator?
     private static var selection: UISelectionFeedbackGenerator?
@@ -43,6 +49,7 @@ enum Haptics {
             break
         }
     }
+    #endif
 
     static func sensory(_ event: HapticEvent, enabled: Bool) -> SensoryFeedback? {
         guard let feedback = HapticPolicy.feedback(for: event, enabled: enabled) else { return nil }
