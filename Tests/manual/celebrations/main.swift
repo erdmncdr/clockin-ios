@@ -231,4 +231,86 @@ check(CelebrationRules.badgesKey == "Clockin.SeenBadgeIDs", "badge persistence k
 check(CelebrationEvent.levelUp(level: 75, hours: 370).autoDismissDelay == nil, "level card waits for explicit dismissal")
 check(CelebrationEvent.reaction(.clockIn).autoDismissDelay == 1.6, "brief companion reaction still expires")
 check(CelebrationEvent.badge(badge("test")).autoDismissDelay == 4, "badge banner allows reading time")
+// Rendering/widget publication is outside this Foundation check.
+@MainActor final class SessionMirror {
+    static let shared = SessionMirror()
+    func refreshCompanion() {}
+    func refresh() {}
+}
+
+let defaultsName = "Clockin.celebrations.firstLaunch.\(UUID().uuidString)"
+let defaults = UserDefaults(suiteName: defaultsName)!
+defer { defaults.removePersistentDomain(forName: defaultsName) }
+var calendar = Calendar(identifier: .gregorian)
+calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+let firstLaunch = calendar.date(from: DateComponents(year: 2026, month: 9, day: 29, hour: 15))!
+let oldSessions: [WorkSession] = (1...120).map { offset in
+    let start = calendar.date(byAdding: .day, value: -offset, to: firstLaunch)!
+    return WorkSession(id: UUID(), start: start, end: start.addingTimeInterval(8 * 3600),
+                       duration: 8 * 3600, note: "archive", hourlyRate: 25, source: "Clockin")
+}
+let statistics = InsightsSnapshot(sessions: oldSessions, sessionEarnings: Dictionary(uniqueKeysWithValues: oldSessions.map { ($0.id, 200.0) }),
+                                  now: firstLaunch, calendar: calendar)
+var large = CelebrationState()
+large.level = statistics.level
+large.totalHours = statistics.totalDuration / 3600
+large.focusHours = Int(large.totalHours)
+large.badges = statistics.badges.filter(\.unlocked).map { CelebrationBadge(id: $0.id, title: $0.title, icon: $0.icon) }
+large.day = calendar.startOfDay(for: firstLaunch)
+large.streak = statistics.currentStreak
+check(large.level > 100 && large.badges.count > 3, "large archive actually crosses many level and badge thresholds")
+var upgrade = CelebrationQueue()
+let wardrobe = WardrobeStore(defaults: defaults)
+let unlocks = wardrobe.refresh(sessions: oldSessions, now: firstLaunch, dailyGoal: 8)
+upgrade.wardrobeUnlocked(first: unlocks.first, names: unlocks.items)
+upgrade.ingest(large, now: 0, canReact: true, includeAccessories: false)
+show(&upgrade)
+check(upgrade.current == nil && upgrade.pending.isEmpty, "real wardrobe refresh plus celebration ingest is silent for old archive")
+check(upgrade.lastLevel == large.level && upgrade.seenBadgeIDs == Set(large.badges.map(\.id)), "large first refresh seeds exact level and all badges")
+check(wardrobe.state.seeded && wardrobe.state.owned.isSuperset(of: ["crown", "wizard-hat", "antenna", "bow-tie"]), "silent baseline still grants earned wardrobe ownership")
+check(wardrobe.earned > 0 && wardrobe.ledger.isEmpty && wardrobe.balance == wardrobe.earned, "archive earns coins without inventing purchases")
+let secondUnlocks = WardrobeStore(defaults: defaults).refresh(sessions: oldSessions, now: firstLaunch, dailyGoal: 8)
+check(!secondUnlocks.first && secondUnlocks.items.isEmpty, "wardrobe baseline persists across launch")
+var afterUpgrade = CelebrationQueue(lastLevel: upgrade.lastLevel, seenBadgeIDs: upgrade.seenBadgeIDs, seenAccessoryIDs: upgrade.seenAccessoryIDs)
+afterUpgrade.ingest(large, now: 1, canReact: true, includeAccessories: false)
+check(afterUpgrade.pending.isEmpty, "persisted archive baseline does not replay on second launch")
+var earnedLater = large; earnedLater.level += 1
+afterUpgrade.ingest(earnedLater, now: 2, canReact: true, includeAccessories: false)
+check(afterUpgrade.pending == [.levelUp(level: earnedLater.level, hours: earnedLater.focusHours)], "new work after baseline still celebrates")
+
+let freshName = "Clockin.celebrations.fresh.\(UUID().uuidString)"
+let freshDefaults = UserDefaults(suiteName: freshName)!
+defer { freshDefaults.removePersistentDomain(forName: freshName) }
+let freshWardrobe = WardrobeStore(defaults: freshDefaults)
+let freshUnlocks = freshWardrobe.refresh(sessions: [], now: firstLaunch, dailyGoal: 0)
+check(freshUnlocks.first && freshUnlocks.items.isEmpty, "fresh install keeps the single wardrobe introduction")
+var freshQueue = CelebrationQueue()
+freshQueue.wardrobeUnlocked(first: freshUnlocks.first, names: freshUnlocks.items)
+check(freshQueue.pending.count == 1, "fresh wardrobe introduction is only one banner")
+
+// Goals already in the old Mac domain must not restart onboarding when cleared.
+defaults.set(8, forKey: "Clockin.GoalDailyHours")
+MacLegacyMigration.migrate(in: defaults)
+check(!GoalPrompt.isVisible(daily: 0, monthly: 0, everConfigured: defaults.bool(forKey: GoalPrompt.configuredKey),
+                           completedSessions: oldSessions.count, dismissedAt: nil, now: firstLaunch),
+      "migrated goal stays configured even after user clears it")
+check(GoalPrompt.isVisible(daily: 0, monthly: 0, everConfigured: false, completedSessions: oldSessions.count,
+                          dismissedAt: nil, now: firstLaunch), "archive without any configured goal still gets one useful goal prompt")
+var nudgeInput = NudgeInput(now: firstLaunch, calendar: calendar, dailyDurations: statistics.daily, sessions: oldSessions)
+let nudgePlan = NudgePlanner.plan(nudgeInput)
+check(!nudgePlan.isEmpty && nudgePlan.allSatisfy { $0.fireDate > firstLaunch }, "first refresh only schedules future nudges, no historical backlog")
+check(nudgePlan.count <= 12, "large archive respects pending nudge limit")
+let olderSessions = oldSessions.map { session -> WorkSession in
+    var result = session
+    result.start = calendar.date(byAdding: .day, value: -30, to: session.start)!
+    result.end = result.start.addingTimeInterval(session.duration)
+    return result
+}
+nudgeInput.sessions = olderSessions
+nudgeInput.dailyDurations = Dictionary(uniqueKeysWithValues: olderSessions.map { (calendar.startOfDay(for: $0.start), $0.duration) })
+check(!NudgePlanner.plan(nudgeInput).contains { $0.kind == .goneQuiet }, "past 3-day and 7-day nudges are never replayed")
+check(NudgePlanner.currentMood(nudgeInput)?.kind == .goneQuiet, "quiet archive may show a current mood, not a notification backlog")
+let pausedArchive = RunningSession(start: firstLaunch.addingTimeInterval(-30 * 86400), accumulated: 3600, resumedAt: nil, note: "old pause")
+let observation = NudgePauseObservation.reconcile(nil, running: pausedArchive, now: firstLaunch)
+check(observation?.date == firstLaunch, "old paused timer starts its nudge observation at first launch")
 print("\(checks) celebration checks passed")

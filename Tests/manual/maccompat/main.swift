@@ -462,14 +462,17 @@ var checks = 0
         check(try sameJSON(reopened.data, store.data), "\(name): second launch does not repeat rate migration")
         check(try unreadable(in: dir).isEmpty, "\(name): save and reopen leave no unreadable copy")
     }
-    func rejected(_ name: String, _ fixture: MacClockinData, path: String) throws {
+    func rejected(_ name: String, _ input: MacClockinData, path: String) throws {
+        var fixture = input
+        var valid = baseline.sessions[0]; valid.id = UUID()
+        fixture.sessions.append(valid)
         let bytes = try encoder.encode(fixture)
         _ = try decoder.decode(MacClockinData.self, from: bytes)
         do {
             _ = try decoder.decode(ClockinData.self, from: bytes)
             check(false, "\(name): expected current decoder rejection")
         } catch DecodingError.dataCorrupted(_) {
-            check(true, "KNOWN INCOMPATIBILITY \(name): old Mac encodes/decodes; current decoder rejects [\(path)]")
+            check(true, "STRICT DECODER \(name): old Mac encodes/decodes; current decoder rejects [\(path)]")
         }
         let dir = try directory(name), url = dir.appendingPathComponent("clockin.json")
         try bytes.write(to: url)
@@ -477,8 +480,43 @@ var checks = 0
         let copies = try unreadable(in: dir)
         check(copies.count == 1, "\(name): store creates exactly one unreadable copy")
         check(try Data(contentsOf: copies[0]) == bytes, "\(name): unreadable copy preserves original bytes")
-        check(store.sessions.isEmpty && store.running == nil && store.statusMessage != nil,
-              "\(name): store reports failure and starts empty (not compatible)")
+        let raw = try JSONSerialization.jsonObject(with: bytes) as! [String: Any]
+        let sessions = try decoder.decode([WorkSession].self, from: encoder.encode(fixture.sessions))
+        let rejectedIndices = sessions.indices.filter { !sessions[$0].hasValidDuration }
+        let running = try fixture.running.map { try decoder.decode(RunningSession.self, from: encoder.encode($0)) }
+        let rejectsRunning = running.map { !$0.hasValidDuration() } ?? false
+        let count = rejectedIndices.count + (rejectsRunning ? 1 : 0)
+        check(store.data.sessions == sessions.filter(\.hasValidDuration)
+              && store.running == (rejectsRunning ? nil : running),
+              "\(name): valid sessions and running timer survive")
+        let quarantines = try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasPrefix("clockin-quarantine-") }
+        check(quarantines.count == 1, "\(name): exactly one quarantine file")
+        let quarantined = try JSONSerialization.jsonObject(with: Data(contentsOf: quarantines[0])) as! [String: Any]
+        let rawSessions = raw["sessions"] as! [Any]
+        let expected: [String: Any] = ["sessions": rejectedIndices.map { rawSessions[$0] },
+                                       "running": rejectsRunning ? raw["running"]! : NSNull()]
+        check(NSDictionary(dictionary: quarantined).isEqual(to: expected), "\(name): only rejected entries are preserved untouched")
+        check(store.statusMessage?.hasPrefix("\(count) invalid entries") == true
+              && store.statusMessage?.contains(quarantines[0].lastPathComponent) == true,
+              "\(name): status reports rejected count and quarantine name")
+        check(store.hourlyRate == fixture.hourlyRate && store.currencyCode == fixture.currencyCode
+              && store.pinVisible == fixture.pinVisible, "\(name): profile and pin preference survive recovery")
+        if fixture.rateRules != nil {
+            check(try sameJSON(store.data, {
+                var expected = fixture
+                expected.sessions = fixture.sessions.enumerated().filter { !rejectedIndices.contains($0.offset) }.map(\.element)
+                if rejectsRunning { expected.running = nil }
+                return expected
+            }()), "\(name): all remaining archive fields survive recovery")
+        }
+        let reopened = ClockStore(fileURL: url)
+        check(reopened.data.sessions == store.data.sessions && reopened.running == store.running
+              && reopened.statusMessage == nil, "\(name): repaired archive opens without another warning")
+        check(try unreadable(in: dir).count == 1, "\(name): original safety copy remains after save and reopen")
+        check(try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasPrefix("clockin-quarantine-") }.count == 1,
+              "\(name): second launch creates no extra quarantine")
     }
 
     try accepted("scheduled-nonUSD-pinned", baseline)
@@ -594,7 +632,88 @@ var checks = 0
     var oddRates = baseline
     oddRates.rateRules = [MacRateRule(effectiveFrom: Date.distantPast.addingTimeInterval(-86400), hourlyRate: -1)]
     try accepted("unvalidated-rate-fields", oddRates)
-    print("\(checks) maccompat checks passed; known decoder incompatibilities reproduced, not fixed")
+    var mixed = baseline
+    var bad = baseline.sessions[0]; bad.id = UUID(); bad.duration = -1
+    mixed.sessions.append(bad)
+    bad.id = UUID(); bad.duration = SessionDuration.maximum + 1
+    mixed.sessions.append(bad)
+    mixed.running = MacRunningSession(start: start, accumulated: -1, resumedAt: nil, note: "invalid timer")
+    try rejected("mixed-valid-and-invalid", mixed, path: "mixed archive with two invalid sessions and invalid timer")
+    mixed.rateRules = nil
+    try rejected("mixed-before-rate-migration", mixed, path: "quarantine before the missing-rate save")
+
+    let mixedBytes = try encoder.encode(mixed)
+    let blockedDir = try directory("quarantine-write-failure")
+    let blockedURL = blockedDir.appendingPathComponent("clockin.json")
+    try mixedBytes.write(to: blockedURL)
+    var writes = 0
+    let blocked = ClockStore(fileURL: blockedURL, writeQuarantine: { _, _ in
+        writes += 1
+        throw CocoaError(.fileWriteOutOfSpace)
+    })
+    check(writes == 1 && blocked.sessions.isEmpty && blocked.running == nil,
+          "quarantine write failure publishes no archive entries")
+    check(blocked.statusMessage?.contains("will not be overwritten") == true,
+          "quarantine failure explains the protected original")
+    check(try Data(contentsOf: blockedURL) == mixedBytes, "quarantine failure never saves rate migration over original")
+    let blockedCopies = try unreadable(in: blockedDir)
+    check(try blockedCopies.count == 1 && Data(contentsOf: blockedCopies[0]) == mixedBytes,
+          "quarantine failure still retains byte-identical original safety copy")
+    blocked.updateCurrency("EUR")
+    blocked.clockIn()
+    check(try Data(contentsOf: blockedURL) == mixedBytes, "later save paths cannot overwrite protected original")
+    check(blocked.running == nil && blocked.timerPersistenceError != nil, "blocked timer start rolls back")
+    let retried = ClockStore(fileURL: blockedURL)
+    check(retried.sessions.count == 1 && retried.running == nil, "reopen retries recovery once storage works")
+
+    // Include unknown fields, escaped delimiters and exact numeric spelling.
+    let rawDir = try directory("raw-entry-preservation")
+    let rawURL = rawDir.appendingPathComponent("clockin.json")
+    let rawEntry = #"{ "id":"11111111-1111-1111-1111-111111111111", "start":800000000, "end":800000001, "duration":-1.000e0, "note":"braces } ], comma, quote \"", "hourlyRate":25, "source":"Mac", "unknown":{"integer":1234567890123456789,"nested":[true,null,{"x":"}"}]}}"#
+    let rawRunning = #"{ "start":800000000, "accumulated":-1.00e0, "note":"old timer", "resumedAt":null, "unknown":[{"x":1234567890123456789}] }"#
+    let rawBytes = Data((#"{"hourlyRate":25,"currencyCode":"USD","pinVisible":false,"sessions":["# + rawEntry + #"],"rateRules":[],"running":"# + rawRunning + "}").utf8)
+    try rawBytes.write(to: rawURL)
+    let rawStore = ClockStore(fileURL: rawURL)
+    let rawCopies = try fm.contentsOfDirectory(at: rawDir, includingPropertiesForKeys: nil)
+        .filter { $0.lastPathComponent.hasPrefix("clockin-quarantine-") }
+    check(rawStore.statusMessage != nil && rawCopies.count == 1, "raw entry fixture quarantines successfully")
+    let rawQuarantine = try Data(contentsOf: rawCopies[0])
+    check(String(decoding: rawQuarantine, as: UTF8.self).contains(rawEntry), "quarantine keeps rejected entry byte-for-byte including unknown fields")
+    check(String(decoding: rawQuarantine, as: UTF8.self).contains(rawRunning), "quarantine keeps rejected timer byte-for-byte including unknown fields")
+    _ = try JSONSerialization.jsonObject(with: rawQuarantine)
+
+    for (name, bytes) in [("not-json", Data("not json".utf8)),
+                           ("missing-top-level-key", Data(#"{"hourlyRate":25,"currencyCode":"USD","sessions":[]}"#.utf8))] {
+        let dir = try directory(name), url = dir.appendingPathComponent("clockin.json")
+        try bytes.write(to: url)
+        let store = ClockStore(fileURL: url)
+        check(store.sessions.isEmpty && store.running == nil && store.statusMessage != nil,
+              "\(name): malformed archive retains whole-file failure")
+        let copies = try unreadable(in: dir)
+        check(try copies.count == 1 && Data(contentsOf: copies[0]) == bytes,
+              "\(name): byte-identical unreadable copy retained")
+        check(try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .allSatisfy { !$0.lastPathComponent.hasPrefix("clockin-quarantine-") },
+              "\(name): malformed archive is not treated as entry quarantine")
+    }
+
+    let restoreDir = try directory("strict-restore")
+    let restoreURL = restoreDir.appendingPathComponent("clockin.json")
+    try encoder.encode(baseline).write(to: restoreURL)
+    let restoreStore = ClockStore(fileURL: restoreURL)
+    let beforeRestore = try Data(contentsOf: restoreURL)
+    let backup = restoreDir.appendingPathComponent("mixed-backup.json")
+    try mixedBytes.write(to: backup)
+    check(!restoreStore.restoreBackup(from: backup), "restore rejects partial invalid backup as a whole")
+    check(restoreStore.statusMessage?.contains("requires a complete valid archive") == true,
+          "restore explains its all-or-nothing contract")
+    restoreStore.importBackup(from: backup)
+    check(try Data(contentsOf: restoreURL) == beforeRestore, "importBackup also leaves existing archive untouched")
+    check(try Data(contentsOf: backup) == mixedBytes, "strict restore and import never modify supplied backup")
+    check(ClockStore.readBackups(in: restoreDir).first(where: { $0.url.lastPathComponent == backup.lastPathComponent })?.isReadable == false,
+          "backup listing stays strict, matching restore")
+
+    print("\(checks) maccompat checks passed; legacy invalid entries quarantined without losing valid work")
 }
 
 do {

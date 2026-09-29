@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This backup contains invalid session durations or dates. Nothing was restored; restore requires a complete valid archive."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yedekte geçersiz oturum süreleri veya tarihleri var. Hiçbir veri geri yüklenmedi; geri yükleme için tüm arşiv geçerli olmalı."
+          }
+        }
+      }
+    },
+    "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some entries could not be read and their safety copies could not be saved. Your data file will not be overwritten. Free up storage and reopen Clockin."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı kayıtlar okunamadı ve güvenlik kopyaları kaydedilemedi. Veri dosyanızın üzerine yazılmayacak. Depolama alanı açıp Clockin’i yeniden başlatın."
+          }
+        }
+      }
+    },
+    "%lld invalid entries were set aside in %@. The original file was also kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld invalid entries were set aside in %@. The original file was also kept."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld geçersiz kayıt %2$@ dosyasına ayrıldı. Özgün dosya da korundu."
+          }
+        }
+      }
+    },
     "%@ / %@": {
       "localizations": {
         "tr": {
