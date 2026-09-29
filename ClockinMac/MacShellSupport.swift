@@ -20,8 +20,10 @@ struct MacRollingText: View {
     }
 
     var body: some View {
-        RollingNumberText(text, value: value, font: .system(size: size, weight: weight, design: design),
-                          design: design, foregroundColor: color)
+        var rolling = RollingNumberText(text, value: value, font: .system(size: size, weight: weight, design: design),
+                                        design: design, foregroundColor: color)
+        rolling.explicit = (size, weight)
+        return rolling
     }
 }
 

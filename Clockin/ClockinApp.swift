@@ -64,6 +64,7 @@ struct ClockinApp: App {
                     if phase == .active || phase == .background {
                         SessionMirror.shared.refresh()
                     }
+                    if phase == .active { SyncCoordinator.shared.sceneDidBecomeActive() }
                 }
         }
     }

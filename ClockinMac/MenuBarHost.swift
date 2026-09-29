@@ -56,11 +56,12 @@ extension MenuBarController.Host {
                         },
                         quit: { NSApp.terminate(nil) }
                     ))
+                    // Uyari store'u ortamdan okur; ortam nesnelerinin icinde kalmali.
+                    .timerPersistenceAlert()
                     .environmentObject(store)
                     .environmentObject(exchangeRates)
                     .environmentObject(FocusRadioController.shared)
                     .environmentObject(UpdateChecker.shared)
-                    .timerPersistenceAlert()
                     }
                 )
             },

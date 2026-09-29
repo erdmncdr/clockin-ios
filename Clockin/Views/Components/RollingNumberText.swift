@@ -11,6 +11,11 @@ struct RollingNumberText: View {
     let font: Font
     let design: Font.Design?
     let foregroundColor: Color
+    #if os(macOS)
+    /// Menu cubugu ve sabit sayac serbest boyut kullanir; tarif tablosu
+    /// yalnizca paylasilan ekranlarin yazi tiplerini bilir.
+    var explicit: (size: CGFloat, weight: Font.Weight)? = nil
+    #endif
 
     @Environment(\.self) private var environment
     @Environment(\.palette) private var palette
@@ -35,8 +40,13 @@ struct RollingNumberText: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        let uiFont = explicit.map { RollingNumberFont.resolve(size: $0.size, weight: $0.weight, design: design ?? palette.fontDesign) }
+            ?? RollingNumberFont.resolve(font, design: design ?? palette.fontDesign, sizeCategory: environment.sizeCategory)
+        #else
         let uiFont = RollingNumberFont.resolve(font, design: design ?? palette.fontDesign,
                                                sizeCategory: environment.sizeCategory)
+        #endif
         let color = foregroundColor.resolve(in: environment)
         let uiColor = PlatformColor(red: CGFloat(color.red), green: CGFloat(color.green),
                               blue: CGFloat(color.blue), alpha: CGFloat(color.opacity))

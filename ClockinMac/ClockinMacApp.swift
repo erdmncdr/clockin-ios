@@ -1,4 +1,5 @@
 import AppKit
+import CloudKit
 import Combine
 import SwiftUI
 
@@ -7,6 +8,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
     private var refreshSubscription: AnyCancellable?
     private var refreshTask: Task<Void, Never>?
     private var lastRateDates: [Date]?
+    private var cloudAccountObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -23,9 +25,23 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         PinnedWindowController.shared.start(store: store)
         KeyboardShortcutController.shared.start(store: store)
         MacAppServices.shared.start(store: store)
+        // iCloud yetkisi olmayan derlemede hicbir sey yapmaz.
+        let sync = SyncCoordinator.shared
+        sync.start()
+        if sync.isEnabled { NSApplication.shared.registerForRemoteNotifications() }
+        cloudAccountObserver = NotificationCenter.default.addObserver(
+            forName: .CKAccountChanged, object: nil, queue: nil
+        ) { _ in
+            Task { @MainActor in SyncCoordinator.shared.accountMayHaveChanged() }
+        }
         #if DEBUG
         // Review fixture: `--clock-in` starts the timer on the debug data copy.
         if ProcessInfo.processInfo.arguments.contains("--clock-in"), store.running == nil { store.clockIn() }
+        // Review fixtures: `--pin` shows the pinned timer, `--menu-panel` opens the menu bar panel.
+        if ProcessInfo.processInfo.arguments.contains("--pin") { store.setPinned(true) }
+        if ProcessInfo.processInfo.arguments.contains("--menu-panel") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { MenuBarController.shared.open() }
+        }
         // Review fixture: `--desk-mode` opens the full-screen desk window.
         if ProcessInfo.processInfo.arguments.contains("--desk-mode") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { DeskModeWindowController.shared.show() }
@@ -89,6 +105,22 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         MacAppServices.shared.stop()
         refreshTask?.cancel()
         refreshSubscription = nil
+        if let cloudAccountObserver { NotificationCenter.default.removeObserver(cloudAccountObserver) }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        SyncCoordinator.shared.sceneDidBecomeActive()
+    }
+
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        guard SyncCoordinator.shared.isEnabled,
+              let notice = CKNotification(fromRemoteNotificationDictionary: userInfo) as? CKDatabaseNotification,
+              notice.containerIdentifier == ClockinCloudRecord.containerID,
+              notice.databaseScope == .private else { return }
+        Task { @MainActor in
+            await SyncCoordinator.shared.handleRemoteNotification()
+            await SessionMirror.shared.finishPendingUpdates()
+        }
     }
 }
 

@@ -110,6 +110,28 @@ enum RollingNumberFont {
         guard let recipe = recipes.first(where: { $0.font == font }) else {
             preconditionFailure("Add an explicit RollingNumberFont recipe for this font")
         }
+        return resolve(size: recipe.size, weight: recipe.weight, design: design)
+    }
+
+    static func resolve(size: CGFloat, weight: Font.Weight, design: Font.Design) -> NSFont {
+        resolve(size: size, weight: nsWeight(weight), design: design)
+    }
+
+    private static func nsWeight(_ weight: Font.Weight) -> NSFont.Weight {
+        switch weight {
+        case .ultraLight: .ultraLight
+        case .thin: .thin
+        case .light: .light
+        case .medium: .medium
+        case .semibold: .semibold
+        case .bold: .bold
+        case .heavy: .heavy
+        case .black: .black
+        default: .regular
+        }
+    }
+
+    private static func resolve(size: CGFloat, weight: NSFont.Weight, design: Font.Design) -> NSFont {
         let uiDesign: NSFontDescriptor.SystemDesign
         switch design {
         case .rounded: uiDesign = .rounded
@@ -117,13 +139,13 @@ enum RollingNumberFont {
         case .monospaced: uiDesign = .monospaced
         default: uiDesign = .default
         }
-        let base = NSFont.monospacedDigitSystemFont(ofSize: recipe.size, weight: recipe.weight)
+        let base = NSFont.monospacedDigitSystemFont(ofSize: size, weight: weight)
         let descriptor = (base.fontDescriptor.withDesign(uiDesign) ?? base.fontDescriptor)
             .addingAttributes([.featureSettings: [
                 [NSFontDescriptor.FeatureKey.typeIdentifier: kNumberSpacingType,
                  NSFontDescriptor.FeatureKey.selectorIdentifier: kMonospacedNumbersSelector]
             ]])
-        let designed = NSFont(descriptor: descriptor, size: recipe.size) ?? base
+        let designed = NSFont(descriptor: descriptor, size: size) ?? base
         return designed
     }
 
