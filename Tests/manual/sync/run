@@ -22,6 +22,6 @@ elif [[ "${1:-}" == "codec" ]]; then
   /tmp/clockin-sync-codec-tests
 else
   swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
-    -module-cache-path /tmp/clockin-sync-module-cache "${sources[@]}" Tests/manual/sync/main.swift -o /tmp/clockin-sync-tests
-  /tmp/clockin-sync-tests
+    -module-cache-path /tmp/clockin-sync-module-cache "${sources[@]}" Tests/manual/sync/BoundedChecks.swift Tests/manual/sync/main.swift -o /tmp/clockin-sync-tests
+  /tmp/clockin-sync-tests "${@:1}"
 fi

@@ -5,7 +5,7 @@ import Foundation
 enum ClockinCloudRecord {
     static let containerID = "iCloud.com.erdmncdr.clockin"
     static let zoneID = CKRecordZone.ID(zoneName: "Clockin", ownerName: CKCurrentUserDefaultName)
-    static let maximumPayloadBytes = 750_000
+    static let maximumPayloadBytes = SyncBounds.envelopeBytes
 
     static func id(_ record: SyncRecord) -> CKRecord.ID {
         // UUID session names remain compatible with the proposed schema; all others are namespaced.
@@ -15,7 +15,7 @@ enum ClockinCloudRecord {
     static func decode(_ record: CKRecord) throws -> SyncRecord {
         guard record.recordID.zoneID == zoneID,
               let bytes = record["payload"] as? Data, bytes.count <= maximumPayloadBytes,
-              let schema = record["schema"] as? Int64, schema == 1 else {
+              let schema = record["schema"] as? Int64, schema == 2 else {
             throw SyncFailure.invalid("Invalid CloudKit envelope")
         }
         let value = try SyncCoding.decode(SyncRecord.self, bytes)
@@ -33,7 +33,7 @@ enum ClockinCloudRecord {
         try SyncCore.validate(value)
         let bytes = try SyncCoding.encode(value)
         guard bytes.count <= maximumPayloadBytes else {
-            throw SyncFailure.invalid("Record history exceeds the upload limit; export and migrate history before syncing this record")
+            throw SyncFailure.invalid("Invalid schema-2 envelope exceeds defensive byte limit")
         }
         let record: CKRecord
         if let systemFields {
@@ -44,7 +44,7 @@ enum ClockinCloudRecord {
                   restored.recordType == value.kind.rawValue else { throw SyncFailure.invalid("Invalid system fields") }
             record = restored
         } else { record = CKRecord(recordType: value.kind.rawValue, recordID: id(value)) }
-        record["schema"] = Int64(1) as CKRecordValue
+        record["schema"] = Int64(2) as CKRecordValue
         record["payload"] = bytes as CKRecordValue
         record["modifiedAt"] = value.winner?.stamp.modifiedAt as CKRecordValue?
         record["modifiedBy"] = value.winner?.stamp.modifiedBy as CKRecordValue?
@@ -85,7 +85,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate {
             bridge.report("iCloud account changed. Keep this archive and sidecar for the original account; choose an account migration explicitly.")
             throw SyncFailure.accountChanged
         }
-        bridge.setAccount(account)
+        try bridge.setAccount(account)
         try bridge.reconcileLocalArchive()
         let serialized = try bridge.state.engineState.map { try SyncCoding.decode(CKSyncEngine.State.Serialization.self, $0) }
         guard await bridge.persist() else { return }
@@ -163,11 +163,15 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate {
                 for change in changes.modifications {
                     if let value = decodeOrQuarantine(change.record) {
                         valid.append(value)
+                    }
+                }
+                let rejected = try bridge.receive(valid)
+                for change in changes.modifications {
+                    if let value = try? ClockinCloudRecord.decode(change.record) {
                         bridge.rememberSystemFields(ClockinCloudRecord.systemFields(change.record), for: value.key)
                     }
                 }
-                try bridge.receive(valid)
-                blockRejected(valid)
+                blockRejected(rejected)
                 for deletion in changes.deletions {
                     // Supported deletions are saved tombstones, never hard deletes.
                     bridge.quarantine(.init(recordKey: deletion.recordID.recordName, bytes: Data(),
@@ -187,8 +191,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate {
                     if failure.error.code == .serverRecordChanged,
                        let server = failure.error.serverRecord, let remote = decodeOrQuarantine(server) {
                         bridge.rememberSystemFields(ClockinCloudRecord.systemFields(server), for: remote.key)
-                        try bridge.receive([remote])
-                        blockRejected([remote])
+                        blockRejected(try bridge.receive([remote]))
                     } else if failure.error.code == .unknownItem, let value {
                         bridge.clearSystemFields(for: value.key)
                     } else { handle(failure.error) }
@@ -220,7 +223,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate {
         do { return try ClockinCloudRecord.decode(record) }
         catch {
             let bytes = (record["payload"] as? Data) ?? ClockinCloudRecord.systemFields(record)
-            bridge.quarantine(.init(recordKey: record.recordID.recordName, bytes: bytes, reason: String(describing: error)))
+            bridge.quarantine(.init(recordKey: record.recordID.recordName, bytes: bytes, reason: String(describing: error), futureCatalog: error as? SyncFailure == .unknownCatalog))
             if let local = bridge.state.records.values.first(where: { ClockinCloudRecord.id($0) == record.recordID }) {
                 blockedKeys.insert(local.key)
             }
@@ -229,14 +232,10 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate {
         }
     }
 
-    private func blockRejected(_ records: [SyncRecord]) {
-        for record in records {
-            let bytes = try? SyncCoding.encode(record)
-            if bridge.state.quarantine.contains(where: { $0.recordKey == record.key && $0.bytes == bytes }) {
-                blockedKeys.insert(record.key)
-                bridge.report("A conflicting revision identity was quarantined. The server record is retained for review.")
-            }
-        }
+    private func blockRejected(_ keys: [String]) {
+        guard !keys.isEmpty else { return }
+        blockedKeys.formUnion(keys)
+        bridge.report("Conflicting revision identities or immutable facts were quarantined. Server records are retained for review.")
     }
 
     private func recoverZone(_ engine: CKSyncEngine) {

@@ -1,4 +1,4 @@
-# Clockin sync core, schema 1
+# Clockin sync core, schema 2
 
 This is an inert implementation for review. Nothing creates it from either app. `ClockStore`, `SessionMirror`, `WardrobeStore`, app entry points, project settings and entitlements are unchanged. Only the adapter imports CloudKit; the model, diff, merge, bridge and disk actor import Foundation. Shared data and wire types are `Sendable` values, built in Swift 6 language mode with complete concurrency checking.
 
@@ -8,7 +8,7 @@ Use `iCloud.com.erdmncdr.clockin`, the current user's **private** database and c
 
 | Field | CloudKit type | Meaning |
 |---|---|---|
-| `schema` | Int64 | Currently 1; unknown schemas are quarantined |
+| `schema` | Int64 | Currently 2; unknown schemas are quarantined |
 | `payload` | Bytes | Canonical JSON `SyncRecord`, including retained revisions |
 | `modifiedAt` | Date/Time | Winning revision's timestamp, checked against payload |
 | `modifiedBy` | String | Winning revision's installation ID, checked against payload |
@@ -27,22 +27,44 @@ JSON dates use Foundation's default seconds since 2001. Binary fields use Codabl
 
 Namespacing everything except sessions avoids collisions between independent UUID domains. Record types and names are schema contracts; change them only through a migration.
 
-A revision has `stamp { modifiedAt, modifiedBy, sequence }`, `deleted`, `payload` and `parents`. `modifiedBy` is a UUID generated once in the local sidecar. Revision identity is `<modifiedBy>:<sequence>` **within a record**. One local snapshot edit can update several records with the same sequence. Causal parents identify superseded revisions. An installation must never reuse a sequence or copy its sidecar identity to another installation.
+A revision has `stamp { modifiedAt, modifiedBy, sequence }`, `deleted`, `payload`, retained `parents`, and an immutable optional `observed` causal floor. Installation IDs are 1–128 ASCII letters, digits, hyphens or underscores (production uses UUIDs). Revision identity is `<modifiedBy>:<sequence>` **within a record**; one snapshot save can update several records with the same sequence. Never reuse a sequence or copy an installation's sidecar to another installation.
 
-## Merge rules and departures from the brief
+A schema-2 register also carries `maximumStamp`, optional `sessionFact { clockinStart? }`, and sorted `ownership` set facts. There is no production schema-1 data; schema 1 is rejected, not migrated. Record types, zone and names are unchanged.
 
-The register stores a **union of immutable revisions**, then projects the winning value. This additional history is necessary: a plain LWW register loses a displaced running timer before another device can recover it, and a deleted or edited completed session can otherwise erase the evidence that a timer ended. Retaining the versions in both the sidecar and CloudKit envelope makes those facts survive arrival order, restarts and a third replica. Join is associative, commutative and idempotent for valid revisions. Reusing an existing revision identity with different contents is quarantined.
+## Bounded join, order and proof
 
-- Sessions, rules, profile, preferences and wardrobe selections use `(modifiedAt, modifiedBy, sequence)` order. Exact timestamp ties use lexical installation ID, then the local counter. No timestamp is manufactured on receive.
-- Local edit timestamps start with the supplied device time and advance to the next representable instant beyond observed history if necessary. This small logical floor handles clock rollback and lets a deliberate resume supersede an observed remote pause. Offline clock skew still affects the winner; this is not server-time ordering.
-- Session/rule deletion is a saved tombstone. **It wins permanently for that UUID**, including against a later stale offline edit. This deliberately strengthens concurrent delete-wins without requiring a per-device vector clock or guessing concurrency from wall time. Restore a deleted entry under a fresh UUID. Tombstones and prior values are never garbage-collected.
-- Preferences may be reset through an LWW tombstone and subsequently set again. `Clockin.SeenAccessoryIDs` additionally unions IDs because it represents earned ownership. Unsupported platform-specific choice strings are retained verbatim; applying them is the future platform adapter's responsibility.
-- Wardrobe selection/layout is one LWW register; ownership unions every revision and the purchase ledger. The `seeded` migration flag stays on the device. The forgiving app decoder is not used for remote wardrobe validation: a strict DTO prevents malformed layouts from silently resetting a room.
-- Purchases identify **permanent, non-consumable item ownership**, using unpadded base64url of UTF-8 `itemID`. Two devices buying the same item are one charge, even with different purchase dates. The earliest purchase date wins, then the lower cost for an exact date tie. Both versions remain recoverable. Different items union. Ledger removal does not upload a deletion. Coins never appear in a record; continue deriving them from work/goals and the merged ledger. Offline purchases of different items can overspend the eventual balance; the current balance clamps at zero, and no item is confiscated.
-- Running is LWW including explicit idle. Every retained completed `Clockin`-source session permanently closes its `start`, even after deletion or correction. A selected running value with that start projects as idle. Imported-source sessions do not close runs. Distinct losing unfinished starts are returned as recoverable revisions with stable notice IDs. Pausing/resuming the same start does not create a second timer. Restoring a displaced timer is a future explicit UI operation; use a fresh start identity if the old start has completed.
-- Every losing/previous revision is returned through `recoveries`. Concurrent non-running edits produce one notice per record; displaced timers produce one per start, and duplicate collapses produce one per import key. Notice IDs are acknowledged locally **after presentation**, not at receipt, so failed presentation can retry and relaunch does not repeat an acknowledged notice.
+Each register keeps the greatest K revisions under a fixed total order. Ordinary revisions order by `(modifiedAt, modifiedBy, sequence)`, then deletion bit and payload bytes as deterministic tie breakers. Reusing a **retained** revision identity with different immutable content is quarantined. A pruned identity is not an unlimited revision-integrity archive.
 
-There is no timestamp bump for a conflict re-send. The re-send contains the joined history with original stamps. Pure diff compares the previous/current app snapshots, so applying a remote snapshot then saving that same snapshot emits nothing.
+| Kind | K | Order and rationale |
+|---|---:|---|
+| Running | 8 | LWW, including explicit idle; frequent operations and a small recent causal context |
+| Preference | 8 | LWW including reset tombstones; accommodates bursts of setting changes |
+| WardrobeState | 8 | LWW selections/layout; ownership is a separate fact |
+| Profile | 4 | LWW; relatively infrequent changes |
+| Session | 1 | Every deletion outranks every live revision, then LWW; recovery is captured locally before pruning, and one revision keeps deleted identities small |
+| RateRule | 1 | Same permanent deletion order and rationale as Session |
+| WardrobePurchase | 3 | Earlier purchase date ranks higher, then lower cost, then greater stamp; winner plus two alternatives |
+
+Session/rule tombstones have **empty payloads**, retain the identity, stamp/causal floor and Session origin fact, and are never removed. An old replica's arbitrarily newer live edit still loses. Restore using a new UUID. The sidecar is proportional to retained identities, including one small register per deleted identity; it is not constant in the number of sessions or rules.
+
+`maximumStamp` joins by maximum and survives pruning even when the payload order prefers an older purchase or a deletion. Local edit stamps advance beyond the maximum observed stamp (across local records) if the clock has rolled back. Receive and re-send never manufacture stamps. Clock skew still influences concurrent LWW choices.
+
+**Proof sketch.** Write T_K(S) for the greatest K elements of S. If x is discarded from A, A already contains K strictly greater elements, which are also present in any union with B. Thus `T_K(A ∪ B) = T_K(T_K(A) ∪ T_K(B))`. This applies unchanged to the fixed deletion-first and reverse-purchase-date orders. Maximum stamps join by max, immutable Session facts must agree, and ownership joins by union independently of the selected revisions. None depend on arrival time, wall-clock expiry, or local acknowledgments.
+
+Parent edges are a projected relation: an edit references all retained revisions it observed, at most K. After pruning, remove references to discarded revisions; parents reference only retained versions. Joining copies of a revision unions their parent edges before projecting them; differing projected edges are not identity reuse. A removed target had K greater revisions, so it can never re-enter the retained union. Hence edge projection also commutes with pruning and join **for input registers with no dangling parents**. The complete register projection P therefore satisfies `P(A ⊔ B) = P(P(A) ⊔ P(B))`. Registers and all their metadata are associative, commutative and idempotent on the valid, immutable-fact-compatible domain. Invalid or disagreeing facts are quarantined outside this algebra.
+
+`observed` is the greatest stamp for this identity known when the revision was authored; it must precede the new stamp. Two distinct-device revisions are *certifiably concurrent* only when each one's causal floor is strictly below the other's stamp. Seeing a revision (including through later sequential edits) raises the floor past its stamp forever. This is a conservative positive concurrency test: an unrelated high floor may suppress a concurrent label, but the replaced payload is still recovered with neutral wording. Pruning a parent cannot invent a conflict. Same-device sequential changes never conflict. Parent absence alone is never conflict evidence.
+
+Convergence means canonical byte-identical retained `SyncRecord` dictionaries (including maximum stamps, projected parents and durable facts) and synchronized snapshots after every valid update has propagated. It excludes only device-local sidecar state, `pinVisible`, and wardrobe seeding. There is no time retention window and no replica-age cutoff.
+
+## Durable domain facts
+
+- Every Session has a required `sessionFact` wrapper. `clockinStart` is the start at creation for a `Clockin`-source session, otherwise nil. Edits to start, note or source **never change it**. The tombstone keeps it. All revisions of an identity must agree on the fact, including nil versus a date; disagreement on join is quarantined. A selected run whose start equals **any known fact** projects as idle, including after the live Session payload has been edited and deleted. Imported sessions do not close runs. This is not inferred from revision history.
+- `WardrobeState.ownership` and `Preference:Clockin.SeenAccessoryIDs.ownership` are grow-only sets joined by exact union. Creating a local revision adds its owned/seen IDs to the existing fact. Removing an ID or resetting the preference does not revoke it. Projection additionally unions known purchases into ownership. The `seeded` flag stays local.
+- Ownership and purchase IDs must exist in `WardrobeCatalog.items` (67 IDs in this checkout). Arbitrary unknown IDs cannot enter an exact, indefinitely bounded grow-only set. For forward compatibility, unknown-catalog envelopes are retained **whole and unapplied in local quarantine**, with a dedicated allowance of 16 such entries inside the 100-entry/1-MB overall quarantine. An upgrade can decode/re-submit these bytes after catalog support is installed. Entries beyond that allowance evict the oldest unknown envelope with the quarantine overflow notice. This allowance preserves future data for review; it is not permission to project an unrecognized purchase or invent ownership. The server envelope is not overwritten. The bridge reports every rejected key directly to the transport before quarantine eviction, so overflowing quarantine cannot unblock a rejected server record. Quarantine is capped, so preservation is subject to its explicit overflow policy.
+- A purchase identity is unpadded base64url of UTF-8 `itemID`. Earliest date wins, then lower cost, then greatest stamp. Later purchase revisions cannot change the first charge. Purchases are permanent non-consumable unlocks and ledger removal never uploads deletion. Coins remain derived; offline buying of different items can overspend the eventual balance, which continues clamping at zero.
+
+Pure diff compares previous/current application values, so saving an applied remote snapshot emits no echo upload.
 
 ## Preference policy
 
@@ -52,36 +74,73 @@ The brief overrides two older inventory classifications: `Clockin.RemoteActivity
 
 ## First synchronization
 
-The adapter fetches before sending, with automatic engine scheduling disabled. Until first merge is approved, remote records accumulate in durable `staged` state and do not invoke the application's apply callback. An empty cloud (or only this installation's previously uploaded records) permits initial publication without marking a future merge as approved. When the first foreign revision arrives, uploads pause and `needsFirstMergeReview` becomes true. This gives the first device a preview and fresh backup too, even if the other device connects much later. A completed fetch is required to request `firstPreview()`; a network failure does not count as an empty server.
+The adapter fetches before sending, with automatic engine scheduling disabled. Until first merge is approved, remote records accumulate in durable `staged` state and do not invoke the application's apply callback. An empty cloud (or only this installation's previously uploaded records) permits initial publication without marking a future merge as approved. A durable device-local flag remembers that foreign staged data was seen, even after all its revisions are pruned. When the first foreign revision arrives, uploads pause and `needsFirstMergeReview` becomes true. This gives the first device a preview and fresh backup too, even if the other device connects much later. A completed fetch is required to request `firstPreview()`; a network failure does not count as an empty server.
 
 The preview reports raw local and valid foreign remote session counts (excluding unchanged echoes authored solely by this installation), duplicate count and final visible count:
 
 `localCount + remoteCount - duplicates = mergedCount`
 
-Shared UUIDs count once. Different UUIDs with the exact **ClockStore import key** also collapse: `Int(start epoch seconds)|Int(end epoch seconds)|Int(duration)`. This deliberately includes the importer's integer truncation and ignores note/rate/source. The lowest UUID is the deterministic visible representative. Every other version, including different notes, stays recoverable. Projection continues this collapse after first sync so later deliveries of existing duplicates cannot inflate totals. Deleting a visible duplicate tombstones all aliases currently known to that device; a previously unseen alias may still require another explicit deletion after arrival.
+Shared UUIDs count once. Different UUIDs with the exact **ClockStore import key** also collapse: `Int(start epoch seconds)|Int(end epoch seconds)|Int(duration)`. This deliberately includes the importer's integer truncation and ignores note/rate/source. The lowest UUID is the deterministic visible representative. Every alias remains its own bounded Session register. If collapsing duplicates removes a value this device had applied, that value enters its local recovery inbox; an unseen remote alias does not generate a local recovery notice. Projection continues this collapse after first sync so later deliveries of existing duplicates cannot inflate totals. Deleting a visible duplicate tombstones all aliases currently known to that device; a previously unseen alias may still require another explicit deletion after arrival.
 
 After the user approves a particular preview, `approveFirstMerge` copies the **exact existing archive bytes** to a uniquely named `clockin-before-sync-<UUID>.json` beside it, reads the copy back, and rechecks the preview revision. Missing/unreadable archives or failed backups abort the merge. Changes during the backup invalidate approval and require a refreshed preview. Each installation follows this gate before applying foreign data. A new installation needs its normal initial archive save before approval. Merely uploading to an empty cloud does not change the local archive and does not consume this gate.
 
 Only then does the synchronous main-actor callback apply the projected data. The bridge records first-merge completion, retains the backup path and schedules uploads that the fetched server lacks. Canceling/dismissing the preview leaves local state intact and keeps staged data for later review.
 
-## Sidecar and recovery
+## Input validation and local-only errors
 
-`sync-state.json` lives beside `clockin.json`. It contains:
+The same `SyncCore.validate` rules apply on local save and remote input. No payload is silently truncated:
 
-- Schema, installation ID, edit sequence and persistence revision.
-- Full per-record revision registers, including permanent tombstones and completed-run evidence.
-- Pending record keys; the current record body is resolved at send time.
-- CloudKit secure-archived system fields per record and JSON-encoded engine state serialization as `Data`.
-- Bound iCloud user record ID, initial-publication permission, first-merge status, staged records and first-backup path.
-- Quarantined envelopes/reasons and acknowledged notice IDs.
+- Session and Running notes: at most 2,000 Swift characters **and 8,000 UTF-8 bytes**. The byte check matters because one grapheme can contain arbitrarily many combining scalars.
+- Preference strings: at most 256 characters and 1,024 UTF-8 bytes. Arrays: at most 256 entries, each under the same string limit; the only array preference currently carries catalog IDs.
+- Session source/matched-source strings: at most 256 characters / 1,024 UTF-8 bytes. Profiles use a finite nonnegative rate and exactly three uppercase ASCII currency letters. Rules and sessions use existing valid-date/duration/rate checks; Running uses `hasValidDuration(at: revisionStamp)`.
+- Wardrobe selections and ownership validate catalog IDs. Equipment/furniture use known slots and at most 16 entries each. Arrangement has at most 16 rooms, 64 items per room, ASCII room/item identifiers at most 64/80 bytes, finite coordinates within ±360/±240. Home-layout decoding remains strict. Each payload additionally has the byte ceiling below, including any unknown JSON fields; malformed JSON is rejected.
+- Revision stamps/causal floors, name/type/ID, required Session fact, parent membership/count, unique revision IDs and payload size are checked. Oversized remote revision lists are rejected, not accepted and silently pruned. Join itself handles bounded inputs by deterministic pruning.
 
-The sidecar's installation ID, queues, account binding, engine cursors, system fields and notice acknowledgments are never sent as user data. Only the record envelopes are sent. Byte-identical convergence refers to the canonical synchronized projection **and record registers**, excluding those installation-specific fields, `pinVisible`, and the wardrobe seeding flag.
+An invalid local record stays in the primary local snapshot, is excluded from pending uploads, and receives a durable `SyncLocalIssue` exposed through `bridge.localErrors` and `lastError`, with stable localization key `sync.localValueInvalid` and a localized fallback. Valid records in the same save continue syncing. Subsequent merges/first previews preserve the local-only value over the synchronized projection, and preview counts include that preserved value. Errors survive unrelated saves and relaunch; correcting the value clears its error and authors a fresh revision. The sidecar stores the issue/identity, not another copy of the over-limit payload. Unknown preference keys remain device-local by policy. Invalid remote records go to quarantine without erasing local work.
 
-`SyncSidecarStore` is a separate actor and uses atomic replacement. It never writes the primary archive. Older asynchronous saves cannot replace a newer persisted revision. Sidecar failure retains memory state and reports an error; it does not undo or prevent a primary archive save. The adapter will not build an upload batch until the current sidecar revision is durable. On launch, compare the archive against the known record projection to recover primary saves that preceded a sidecar failure. A missing sidecar creates a new identity and first-merge flow; a corrupt/unknown-version sidecar throws and must be retained for explicit recovery rather than replaced with an empty sidecar.
+## Sidecar, recovery and ancillary bounds
 
-Quarantine is per record. Work sessions reuse `hasValidDuration`, and running values reuse `hasValidDuration(at:)` at the revision timestamp for deterministic validation. Rules/profiles additionally require finite nonnegative rates, valid dates/intervals and a three-letter uppercase currency. Preference keys/types and CloudKit envelope ID/type/stamp are checked. Malformed `Running` payloads cannot masquerade as idle. Invalid records do not clear unrelated local values, even before seeding. Raw CloudKit payload bytes are retained and the server record is not deleted or overwritten. Ordinary physical CloudKit deletions are treated as unexpected and retained for review, not converted into unversioned local deletions.
+`sync-state.json` lives beside `clockin.json`. It contains schema/device/counters, bounded registers, pending keys, bounded system fields and engine checkpoint, account/review/backup state, staged registers, recovery inbox, quarantine and local issues. None of the recovery/acknowledgment/transport state participates in synchronized-register equality.
 
-Recovery is an API and durable data in this brief, not a UI. Use `bridge.review().recoveries` and `bridge.state.notices(review)` to build the recovery/notice surfaces. A valid losing payload can be decoded by its record kind. The old archive and old Mac reader require no changes.
+Recovery is **device-local**. Before a remote update replaces an applied value (or this device's authored winner), the device captures the displaced revision. Recovery is independent of conflict classification: certified concurrency gets a conflict notice; sequential or uncertain replacements get neutral recovery wording. A high unrelated causal floor cannot cause a genuine losing edit to be discarded without recovery. A local edit that immediately loses to a known permanent tombstone or earlier purchase is captured before pruning too; ordinary deliberate local replacements do not populate edit recovery. Distinct unfinished timers are captured when the projection leaves their start; pause/resume of the same start and runs closed by a durable Session fact do not create timer recoveries. Duplicate collapse captures an applied alias that becomes hidden. Ordinary sequential edits do not produce conflicts. Replaying remote losers never populates the inbox merely because they occurred in a received register.
+
+The inbox has at most **50 entries and 256 KB (256,000 bytes) of canonical encoded JSON**, including payload base64 and metadata. Entries are ordered by local insertion, with deterministic record-key ordering for a single merge. When either bound is exceeded, evict oldest unacknowledged entries until both hold. Raise one `recovery-overflow` notice per overflow episode; further evictions do not repeat an acknowledged notice. Acknowledging a recovery removes its payload immediately. An episode ends after its overflow notice is acknowledged and the inbox is drained; then its acknowledgment ID is removed. A later overflow starts a new episode. There is no time expiry and no promise of indefinite preservation when capacity is exhausted. Replaying the same remote register after acknowledgment cannot recapture an unchanged local projection.
+
+Quarantine has at most **100 entries and 1 MB (1,000,000 bytes) encoded JSON**, including its 16-entry future-catalog allowance. It evicts oldest entries, raises one `quarantine-overflow` notice per episode, and uses the same acknowledge-and-drain reset rule. Payloads are kept whole or evicted whole (a single over-budget envelope is evicted with notice). Diagnostic keys/reasons are byte-limited. `removeQuarantine(at:)` is an explicit review/removal API; no app UI is added. Acknowledged entry IDs are not retained; at most the two active overflow acknowledgments exist.
+
+Staged first-merge registers use exactly the same per-record bounds. Pending keys are a unique subset of known uploadable records. System-field archives are at most 16 KiB per known identity; oversized ones are discarded for a conditional-create/refetch fallback. Engine serialization is at most 256 KiB; an oversized checkpoint is omitted with a localized notice so restart performs a fresh fetch. Register data, pending work and recovery survive that fallback.
+
+`SyncSidecarStore` remains a separate actor with atomic replacement, no primary archive writes and a revision guard against stale asynchronous saves. Corrupt/unknown-version sidecars stop for recovery. Failed primary apply does not advance sidecar metadata. Disk failure keeps memory/pending state and gates uploads until a current sidecar revision is durable. On launch the archive is reconciled against retained register projection, including any local-only invalid values.
+
+Use `bridge.review().recoveries`, `bridge.review().notices`, `bridge.localErrors`, `bridge.acknowledgeNotices(ids)` and `bridge.removeQuarantine(at:)` for future UI wiring. Recovery is an inert API and durable data in this change, not a wired user interface.
+
+## Byte bounds
+
+All sizes below are bytes of **canonical JSON**, not raw payload bytes and not CloudKit's total storage accounting. Let `C = WardrobeCatalog.items.count` (67), `B64(n) = 4 × ceil(n/3)`, and
+
+`E(kind) = 2048 + 84C + K × (B64(payloadCap) + 1024 + 152K)`.
+
+The header allowance covers record identity, maximum stamp, fact wrapper and JSON syntax; 84 bytes per catalog ID is conservative (ASCII IDs ≤80 bytes). Each revision reserves 1 KiB for its scalar metadata, including its 128-byte author and optional causal floor; each parent ID needs at most 152 bytes including JSON syntax (128 + colon + 20-digit UInt64 + quotes/comma). Payload Data is base64. Validation makes these finite independently of edit count. The current catalog IDs and defensive bound are exercised by worst-payload tests.
+
+| Kind | K | Raw payload cap | Envelope upper bound |
+|---|---:|---:|---:|
+| Session | 1 | 16,384 | 30,700 |
+| RateRule | 1 | 1,024 | 10,220 |
+| Profile | 4 | 1,024 | 19,676 |
+| Running | 8 | 16,384 | 200,380 |
+| Preference | 8 | 32,768 | 375,132 |
+| WardrobeState | 8 | 32,768 | 375,132 |
+| WardrobePurchase | 3 | 1,024 | 16,220 |
+
+A deleted Session/RateRule retains a single empty-payload revision, maximum stamp and optional Session fact; a conservative **2,048 bytes** suffices for that tombstoned register (the table remains a valid general bound).
+
+The adapter's defensive refusal is now **524,288 bytes**, strictly above the largest valid register bound, so a valid register cannot reach it regardless of years of use. Oversized invalid wire data is still rejected. Any future catalog/schema extension must keep the tested inequality or revise schema/limits deliberately.
+
+For the complete serialized sidecar, with `R` the multiset of local and staged register copies and `I` the union of their identities plus local-only issue identities, the conservative implemented formula is:
+
+`16,384 + B64(262,144) + Σ[r ∈ R](E(r.kind) + 256) + |I| × (B64(16,384) + 2,048) + 256,000 + 1,000,000`.
+
+That is **fixed bookkeeping/checkpoint + per-identity registers/transport/issues + capped local recovery/quarantine**. The 256-byte allowance covers JSON dictionary keys; the per-identity 2-KiB allowance covers pending keys, issue keys, system-field keys and syntax. Account and backup-path strings are each limited to 1,024 UTF-8 bytes and included in fixed bookkeeping. Save/load validates these local budgets as well as the total formula. Staged and local copies are counted separately; system fields count once per identity. For tombstoned records the optional tighter 2,048-byte register bound may replace E. Session/rule creation increases |I| permanently; mere edits do not. Whole-primary-archive backups are separate user data, not sidecar history.
 
 ## Inert integration surface
 
@@ -113,7 +172,7 @@ The adapter restores `CKSyncEngine.State.Serialization`, stores state-update eve
 | `unknownItem` while saving | Discard stale system fields and retry the retained record as a create |
 | `zoneNotFound` / fetched zone deletion | Keep history/tombstones, reset transport fields, queue zone creation and all retained records; foreign-data review still gates merging and further record upload |
 | Network, service, rate limit or zone busy | Retain pending work; respect `retryAfterSeconds` with a minimum delay; next foreground/push/save/retry trigger attempts again |
-| Quota full | Keep pending records, report storage error, delay retries; no pruning of work/history |
+| Quota full | Keep pending records, report storage error, delay retries; no deletion of work/tombstones |
 | Sign-out / account switch | Halt and cancel engine operations; keep the original account's archive/sidecar; never automatically send it to another account |
 | Invalid record / reused revision identity | Preserve quarantine and block that record from overwriting the offending server record |
 | Primary apply failure | Halt sync without advancing persisted state through that failed event; preserve archive and allow refetch after recovery |
@@ -122,7 +181,7 @@ The adapter restores `CKSyncEngine.State.Serialization`, stores state-update eve
 
 Scheduling is explicit (`automaticallySync = false`) to make approval/account/durability gates reviewable. The later app supplies foreground, push and post-save triggers and a retry scheduler if desired. A trigger arriving during an active synchronization may wait until the next trigger; pending data remains durable. Push is an optimization, not a correctness assumption.
 
-History is intentionally not compacted in v1. The adapter refuses envelopes over **750,000 bytes**, retaining local data and an actionable error rather than truncating history. This is a known pre-release capacity limit, particularly for long-lived Running/Preference/Wardrobe registers. A future schema should move immutable revision archives into separate records or assets before this threshold becomes reachable in production. Do not delete tombstones or completed-run evidence on a time-based retention policy without an explicit replica retirement protocol.
+History is pruned on every local revision and join; the byte bounds above replace the former reachable 750,000-byte history refusal. Tombstones and Session origin facts have no time-based garbage collection.
 
 ## Developer setup, deferred
 
