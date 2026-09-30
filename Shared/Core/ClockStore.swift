@@ -669,8 +669,11 @@ final class ClockStore: ObservableObject {
         (try? PastedTextImporter.parse(text, hourlyRate: hourlyRate)) ?? []
     }
 
+    /// - Parameter fileIsReference: dosya donemin tek dogruluk kaynagi. Artik
+    ///   adaylari yalnizca sayac kayitlari degil, donemdeki her kayit olur.
     func compareImportedSessions(_ imported: [WorkSession],
-                                 scope: ImportScope = .daysInFile) -> ImportComparisonSummary {
+                                 scope: ImportScope = .daysInFile,
+                                 fileIsReference: Bool = false) -> ImportComparisonSummary {
         var seenKeys = Set<String>()
         // Onizleme ile asil aktarma ayni sonucu vermeli: ikisi de dosya icindeki
         // ayni isin ikinci yazimini atlar.
@@ -703,7 +706,8 @@ final class ClockStore: ObservableObject {
             return ImportComparisonItem(session: session, kind: .new)
         }
         return ImportComparisonSummary(items: items,
-                                       leftovers: leftoverSessions(imported, scope: scope, touched: touched))
+                                       leftovers: leftoverSessions(imported, scope: scope, touched: touched,
+                                                                   anySource: fileIsReference))
     }
 
     /// Kapsama giren, dosyanin dokunmadigi kendi sayac kayitlarin.
@@ -711,15 +715,19 @@ final class ClockStore: ObservableObject {
     /// Yalnizca `source == "Clockin"` olanlar: daha once baska bir dosyadan
     /// gelmis kayitlar kullanicinin elle tuttugu kayit degil, onlari bir dokum
     /// eksik diye silmek veri kaybi olur.
-    private func leftoverSessions(_ imported: [WorkSession],
-                                  scope: ImportScope, touched: Set<Int>) -> [WorkSession] {
+    ///
+    /// `anySource`: kullanici dosyayi esas aldiginda bu koruma kalkar. Iki
+    /// cihazda ayri ayri ice aktarilan dokumler eslesmeyince ayni is iki kez
+    /// kaliyordu; dosyada karsiligi olmayan ikinci yazim da artik adaydir.
+    private func leftoverSessions(_ imported: [WorkSession], scope: ImportScope,
+                                  touched: Set<Int>, anySource: Bool = false) -> [WorkSession] {
         let days = Set(imported.map { calendar.startOfDay(for: $0.start) })
         guard let first = days.min(), let last = days.max() else { return [] }
         // `data.sessions` yazilma sirasinda duruyor; liste gun gun okunacagi
         // icin tarihe gore siralanir.
         return data.sessions.enumerated().compactMap { index, session -> WorkSession? in
             guard !touched.contains(index),
-                  session.source == "Clockin", session.matchedExternalSource == nil else { return nil }
+                  anySource || (session.source == "Clockin" && session.matchedExternalSource == nil) else { return nil }
             let day = calendar.startOfDay(for: session.start)
             switch scope {
             case .daysInFile: return days.contains(day) ? session : nil
@@ -858,7 +866,7 @@ final class ClockStore: ObservableObject {
             var parts = [String(localized: "Imported \(fresh.count)", bundle: .app)]
             if corrected > 0 { parts.append(String(localized: "corrected \(corrected) Clockin entries", bundle: .app)) }
             if matched > 0 { parts.append(String(localized: "matched \(matched)", bundle: .app)) }
-            if removed > 0 { parts.append(String(localized: "deleted \(removed) Clockin entries", bundle: .app)) }
+            if removed > 0 { parts.append(String(localized: "deleted \(removed) entries", bundle: .app)) }
             statusMessage = parts.joined(separator: ", ") + "."
         }
         return true

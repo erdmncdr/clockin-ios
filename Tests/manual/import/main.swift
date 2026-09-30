@@ -175,4 +175,26 @@ do {
     check(s.sessions.isEmpty, "nothing is imported when the only real row was left out")
 }
 
+// 13. Dosya esas alininca: iki cihazda ayri ayri ice aktarilan dokumler
+//     birlesince ayni is iki kez kalmisti. Dosyada karsiligi olmayan her
+//     kayit, kaynagi ne olursa olsun, silinmek uzere listelenir.
+do {
+    let kept = session(10, 0, 18, 00, source: "timeportal", linked: "timeportal")
+    let copy = session(10, 0, 17, 58, source: "timeportal")             // ayni isin ikinci yazimi
+    let stale = session(day: 5, 9, 0, 12, 0, source: "timeportal")      // dosyada artik yok
+    let timer = session(day: 6, 13, 0, 14, 0, source: "Clockin")        // donem icinde, dosyada yok
+    let later = session(day: 20, 9, 0, 10, 0, source: "Clockin")        // donemin disinda
+    let (s, dir) = store([kept, copy, stale, timer, later]); defer { try? FileManager.default.removeItem(at: dir) }
+    let rows = [session(10, 0, 18, 00, source: "timeportal"), session(day: 7, 9, 0, 17, 0, source: "timeportal")]
+    let plain = s.compareImportedSessions(rows, scope: .wholeRange)
+    check(Set(plain.leftovers.map(\.id)) == [timer.id], "without the reference only timer entries are offered")
+    let reference = s.compareImportedSessions(rows, scope: .wholeRange, fileIsReference: true)
+    check(Set(reference.leftovers.map(\.id)) == [copy.id, stale.id, timer.id],
+          "with the file as reference every entry in the period that the file lacks is offered")
+    s.importSessions(reference.sessionsToImport(excluding: []), removing: Set(reference.leftovers.map(\.id)))
+    check(Set(s.sessions.map(\.id)).isSuperset(of: [kept.id, later.id]) && s.sessions.count == 3,
+          "the period matches the file, entries outside it stay")
+    check(abs(hours(s) - 17) < 0.01, "no doubled hours remain")
+}
+
 print("\(checks) import checks passed")

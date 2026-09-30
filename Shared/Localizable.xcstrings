@@ -625,6 +625,34 @@
         }
       }
     },
+    "%lld entries that are not in the file will be removed from this period. This cannot be undone.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entry that is not in the file will be removed from this period. This cannot be undone."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entries that are not in the file will be removed from this period. This cannot be undone."
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dönemden dosyada olmayan %lld kayıt silinecek. Bu geri alınamaz."
+          }
+        }
+      }
+    },
     "%lld entries will be deleted. This cannot be undone.": {
       "localizations": {
         "en": {
@@ -5019,6 +5047,16 @@
         }
       }
     },
+    "Entries in this period": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dönemdeki kayıtlar"
+          }
+        }
+      }
+    },
     "Entries recorded on both devices are kept once. A copy of this device's data is saved before anything changes, and nothing is merged until you choose Merge.": {
       "localizations": {
         "tr": {
@@ -5201,12 +5239,32 @@
         }
       }
     },
+    "Every entry in this period is in the file.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dönemdeki her kayıt dosyada var."
+          }
+        }
+      }
+    },
     "Every focused hour makes your companion stronger.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Odaklandığın her saat arkadaşını güçlendirir."
+          }
+        }
+      }
+    },
+    "Everything in the period below that the file does not contain is marked for deletion, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki dönemde dosyada olmayan her kayıt silinmek üzere işaretlenir; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Eşleşen kayıtlar dosyadaki saatleri alır."
           }
         }
       }
@@ -13283,6 +13341,16 @@
         }
       }
     },
+    "Use this file as the reference": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosyayı esas al"
+          }
+        }
+      }
+    },
     "Uses %lld completed calendar days before today, including days without work, adjusted to your %lld-day week. %@The forecast is an estimate, not a guarantee.": {
       "localizations": {
         "tr": {
@@ -14712,6 +14780,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Clockin kaydı silindi"
+          }
+        }
+      }
+    },
+    "deleted %lld entries": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "deleted %lld entry"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "deleted %lld entries"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kayıt silindi"
           }
         }
       }
