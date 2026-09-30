@@ -139,7 +139,7 @@ import Foundation
         check(f.coordinator.lastSuccessfulSync != nil && f.coordinator.status == .upToDate,
               "transport publishes successful sync date and status")
         check(fake.bridge.localSaveCount == 0, "load and initial reconciliation are not local save hooks")
-        check(fake.bridge.snapshot.preferences[AppLanguage.key] == .string("tr"), "language snapshot uses its assigned suite")
+        check(fake.bridge.snapshot.preferences[AppLanguage.key] == nil, "app language stays on this device")
         check(SyncPreferenceStore(standard: f.defaults, language: f.defaults).suite(for: AppLanguage.key) === f.defaults,
               "macOS language mapping supports standard defaults")
 
@@ -168,8 +168,8 @@ import Foundation
         f.defaults.set(25, forKey: "Clockin.ChimeIntervalMinutes"); f.notify()
         await f.clock.registered(registrations + 2)
         f.clock.advance(0.1)
+        // The language is device-local: it changes locally without scheduling a sync.
         f.language.set("en", forKey: AppLanguage.key); f.notify()
-        await f.clock.registered(registrations + 3)
         check(fake.bridge.localSaveCount == beforePreferences, "preference bursts wait for debounce")
         let delivered = TestSignal(); fake.afterSend = delivered
         f.clock.advance(0.5)
@@ -177,7 +177,7 @@ import Foundation
         fake.afterSend = nil
         check(fake.bridge.localSaveCount == beforePreferences + 1, "debounce coalesces the burst into one localDidSave")
         check(fake.bridge.snapshot.preferences["Clockin.ChimeIntervalMinutes"] == .integer(25)
-              && fake.bridge.snapshot.preferences[AppLanguage.key] == .string("en"), "debounce captures all final allowlisted values")
+              && fake.bridge.snapshot.preferences[AppLanguage.key] == nil, "debounce captures allowlisted values and skips the language")
 
         f.store.setPinned(true)
         await f.coordinator.start()?.value
@@ -188,7 +188,6 @@ import Foundation
         remote.data.hourlyRate = 51
         remote.preferences["Clockin.Theme"] = .string("remote-theme")
         remote.preferences["Clockin.GoalDailyHours"] = nil
-        remote.preferences[AppLanguage.key] = .string("tr")
         remote.wardrobe.homeLampOn.toggle(); remote.wardrobe.seeded = false
         let item = WardrobeCatalog.items.first { $0.unlock.price != nil }!
         remote.wardrobe.owned.insert(item.id)
@@ -201,8 +200,8 @@ import Foundation
         check(saved.hourlyRate == 51 && saved.pinVisible && f.store.pinVisible, "pinVisible survives apply in memory and on disk")
         check(f.defaults.string(forKey: "Clockin.Theme") == "remote-theme"
               && f.defaults.object(forKey: "Clockin.GoalDailyHours") == nil, "remote preferences apply and absent keys reset")
-        check(f.defaults.integer(forKey: "Clockin.UIScale") == 117 && f.language.string(forKey: AppLanguage.key) == "tr"
-              && f.defaults.object(forKey: AppLanguage.key) == nil, "remote apply preserves device keys and correct language suite")
+        check(f.defaults.integer(forKey: "Clockin.UIScale") == 117 && f.language.string(forKey: AppLanguage.key) == "en"
+              && f.defaults.object(forKey: AppLanguage.key) == nil, "remote apply preserves device keys, including the language")
         check(f.wardrobe.ledger == remote.ledger && f.wardrobe.state.homeLampOn == remote.wardrobe.homeLampOn
               && f.wardrobe.state.owned.contains(item.id) && f.wardrobe.state.seeded,
               "remote wardrobe and ledger persist together and retain local seeding")

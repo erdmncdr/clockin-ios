@@ -18,6 +18,11 @@
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>
+        <string>remote-notification</string>
     </array>
+    <!-- iCloud eszamanlamasi yalnizca yetkisi olan derlemede acilir; deger
+         yapilandirmadan gelir (Debug: YES, Release: NO). -->
+    <key>ClockinCloudSyncEnabled</key>
+    <string>$(CLOCKIN_CLOUD_SYNC)</string>
 </dict>
 </plist>

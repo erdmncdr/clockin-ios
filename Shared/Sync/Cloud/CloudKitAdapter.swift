@@ -1,5 +1,8 @@
 import CloudKit
 import Foundation
+import OSLog
+
+private let syncLog = Logger(subsystem: "com.erdmncdr.clockin", category: "sync")
 
 @available(iOS 17.0, macOS 14.0, *)
 enum ClockinCloudRecord {
@@ -204,7 +207,12 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
             if bridge.state.pending.isEmpty {
                 lastSuccessfulSync = clock.now
                 status = .upToDate
-            } else { report(.paused(.sendFailed)) }
+            } else {
+                // Kalan kayitlar yeni bir tetik beklemesin; ilk yuklemede 639
+                // kaydin 39'u bir sonraki acilisa kadar bekliyordu.
+                report(.paused(.sendFailed))
+                delayRetry(30)
+            }
         } catch is CancellationError { return }
         catch { if isCurrent(generation) { handle(error) } }
     }
@@ -279,6 +287,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
                 let record = try ClockinCloudRecord.encode(value, systemFields: adapter.bridge.state.systemFields[key])
                 return (record, (record["payload"] as? Data)?.count ?? 0)
             } catch {
+                syncLog.error("encode failed for \(key, privacy: .public): \(String(describing: error), privacy: .public)")
                 adapter.pass.deferRecord(key)
                 adapter.passFailed = true
                 adapter.report(.paused(.invalidData))
@@ -453,6 +462,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
 
     private func handle(_ error: any Error) {
         passFailed = true
+        syncLog.error("send error: \(String(describing: error), privacy: .public)")
         guard let cloud = error as? CKError else { report(.paused(.sendFailed)); return }
         switch cloud.code {
         case .quotaExceeded:
@@ -469,7 +479,10 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
         }
     }
 
-    private func report(_ value: SyncStatus) { status = value; bridge.report(value.message) }
+    private func report(_ value: SyncStatus) {
+        syncLog.notice("status: \(String(describing: value), privacy: .public)")
+        status = value; bridge.report(value.message)
+    }
     private func retryLaunch(minimum: TimeInterval = 0) {
         report(.waitingForNetwork)
         delayRetry(launchBackoff.nextDelay(minimum: minimum))

@@ -132,6 +132,12 @@ struct ClockinMacApp: App {
     init() {
         // 1.1.6'dan gelen tercihler, onlari okuyan her seyden once cevrilir.
         MacLegacyMigration.migrate(in: .standard)
+        #if DEBUG
+        // Review fixture: `--reset-language` returns this Mac to the system language.
+        if ProcessInfo.processInfo.arguments.contains("--reset-language") {
+            AppLanguage.shared?.removeObject(forKey: AppLanguage.key)
+        }
+        #endif
         AppLanguage.applyToSystem()
     }
 

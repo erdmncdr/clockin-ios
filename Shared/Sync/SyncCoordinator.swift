@@ -10,6 +10,12 @@ final class SyncCoordinator: ObservableObject {
     static let preferenceKey = "Clockin.CloudSyncEnabled" // Device-local; absent = on in a capable build.
     static let shared = SyncCoordinator()
 
+    /// Info.plist anahtari yapilandirmadan metin olarak gelir; Boolean da kabul edilir.
+    nonisolated static func capabilityValue(_ value: Any?) -> Bool {
+        if let flag = value as? Bool { return flag }
+        return (value as? String)?.uppercased() == "YES"
+    }
+
     /// The build carries the iCloud entitlement; the Settings section only shows then.
     var isSupported: Bool { supportsSync() }
     var isEnabled: Bool {
@@ -49,7 +55,7 @@ final class SyncCoordinator: ObservableObject {
     init(defaults: UserDefaults = .standard,
          supportsSync: @escaping @MainActor () -> Bool = {
              Bundle.main.bundleURL.pathExtension != "appex"
-                 && Bundle.main.object(forInfoDictionaryKey: capabilityKey) as? Bool == true
+                 && SyncCoordinator.capabilityValue(Bundle.main.object(forInfoDictionaryKey: capabilityKey))
          },
          makeStore: @escaping @MainActor () -> ClockStore = { SharedStore.clock },
          makeWardrobe: @escaping @MainActor () -> WardrobeStore = { WardrobeStore.shared },
@@ -310,6 +316,29 @@ final class SyncCoordinator: ObservableObject {
         if let localFailure { status = .paused(localFailure) }
         else if pendingFirstMerge != nil { status = .paused(postponed ? .postponed : .firstMerge) }
         else { status = transport?.status ?? .starting }
+        #if DEBUG
+        writeDiagnostics()
+        #endif
     }
+
+    #if DEBUG
+    /// Gelistirme derlemesinde durum, cihazdan `devicectl` ile okunabilen
+    /// Library/Caches altina yazilir; telefonun ekrani gorulmeden teshis icin.
+    private func writeDiagnostics() {
+        let state = bridge?.state
+        let lines = [
+            "at \(Date())",
+            "status \(String(describing: status))",
+            "firstMergePreview \(pendingFirstMerge.map { "local \($0.localCount) remote \($0.remoteCount) dup \($0.duplicates) merged \($0.mergedCount)" } ?? "none")",
+            "records \(state?.records.count ?? -1) pending \(state?.pending.count ?? -1) staged \(state?.staged.count ?? -1)",
+            "foreign \(state?.hasForeignStaged ?? false) firstMergeCompleted \(state?.firstMergeCompleted ?? false) account \(state?.accountID == nil ? "none" : "set")",
+            "issues \(issues.map(\.message))",
+            "store running \(store?.running.map { "start \($0.start.timeIntervalSinceReferenceDate) paused \($0.isPaused)" } ?? "none") sessions \(store?.data.sessions.count ?? -1)",
+            "recovery \(recoveryInbox.count)",
+        ]
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
+        try? lines.joined(separator: "\n").write(to: caches.appending(path: "sync-diagnostics.txt"), atomically: true, encoding: .utf8)
+    }
+    #endif
 }
 #endif

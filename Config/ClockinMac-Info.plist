@@ -24,5 +24,7 @@
 	<integer>0</integer>
 	<key>SUVerifyUpdateBeforeExtraction</key>
 	<true/>
+	<key>ClockinCloudSyncEnabled</key>
+	<string>$(CLOCKIN_CLOUD_SYNC)</string>
 </dict>
 </plist>

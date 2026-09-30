@@ -22,7 +22,6 @@ enum SyncPreferences {
         "Clockin.HistoryShowsTRY": "bool",
         "Clockin.InsightsHeatmapDayRange": "integer",
         "Clockin.InsightsHeatmapGrouping": "string",
-        "Clockin.Language": "string",
         "Clockin.LevelUpSoundEnabled": "bool",
         "Clockin.LongSessionReminderHours": "integer",
         "Clockin.MascotDefault": "string",
@@ -54,6 +53,9 @@ enum SyncPreferences {
         "SUEnableAutomaticChecks": "bool",
     ]
     static let deviceKeys: [String] = [
+        // App language is per device, as on Apple platforms: a Turkish Mac and
+        // an English iPhone must not switch each other.
+        "Clockin.Language",
         "Clockin.CloudSyncEnabled",
         "AppleLanguages",
         "Clockin.GoalPromptDismissedAt",
