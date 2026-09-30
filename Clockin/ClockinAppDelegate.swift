@@ -13,6 +13,15 @@ final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
         let sync = SyncCoordinator.shared
         sync.start()
         if sync.isEnabled { application.registerForRemoteNotifications() }
+        #if DEBUG
+        // Review fixture: `--clear-sync-inbox` clears the recovery inbox once sync is up.
+        if ProcessInfo.processInfo.arguments.contains("--clear-sync-inbox") {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(8))
+                SyncCoordinator.shared.acknowledgeAllRecoveries()
+            }
+        }
+        #endif
         cloudAccountObserver = NotificationCenter.default.addObserver(
             forName: .CKAccountChanged, object: nil, queue: nil
         ) { _ in
