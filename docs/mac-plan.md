@@ -172,9 +172,11 @@ da sabit pencere olur.
   izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
   Gerçek güncelleme provası aşama 4'te.
 - [x] 4. Geçiş ve yayın: Mac 2.0.0 (11) 2026-09-30'da mevcut Sparkle akışına
-  yayınlandı (`docs/releases/mac-2.0.0-11.md`). Web sitesindeki indirme hâlâ
-  1.1.6.
+  yayınlandı (`docs/releases/mac-2.0.0-11.md`); 2.0.1 (12) aynı gün sync
+  çökmesi düzeltmesiyle çıktı (`docs/releases/mac-2.0.1-12.md`). Web sitesi
+  sabit `Clockin.dmg`'ye bağlanıyor.
 - [x] 5. Senkron: CloudKit şeması production'da; iPhone 0.2 (43) TestFlight'ta
   (`docs/releases/ios-testflight-0.2-43.md`) ve Mac 2.0 senkronla çıktı.
-  Dil her cihazda ayrı. Sonraki işler: kurtarma sayfasının iPhone'da gerçek
-  bir değişiklikle denenmesi, web sitesinin 2.0'a geçirilmesi.
+  Dil her cihazda ayrı. 0.2 (46) iOS 27'deki sync çökmesini düzeltiyor
+  (`docs/releases/ios-testflight-0.2-46.md`). Sonraki iş: kurtarma sayfasının
+  iPhone'da gerçek bir değişiklikle denenmesi.
