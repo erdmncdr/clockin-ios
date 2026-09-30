@@ -48,6 +48,7 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (45) | [First production merge after development testing, file as reference](ios-testflight-0.2-45.md) |
 | 0.2 (46) | [Sync crash fix](ios-testflight-0.2-46.md) |
 | 0.2 (47) | Every timecard import is the reference for its period (`71e3ddd`) |
+| 0.2 (48) | [Serious overlaps only](ios-testflight-0.2-48.md) |
 
 Mac releases built from this repository:
 
