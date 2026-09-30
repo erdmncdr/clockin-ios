@@ -17,9 +17,10 @@ struct MacSettingsSection: View {
     var body: some View {
         Section("Menu bar") {
             Toggle("Show details in the menu bar", isOn: $showMenuBarDetails)
-            Text("Turn off to show only the Clockin icon. An iPhone’s Live Activity can also appear here: System Settings > Notifications > Allow Live Activities from iPhone.")
+            Text("Your iPhone’s Live Activity can also appear in the menu bar. Turn off “Allow Live Activities from iPhone” in iPhone Notifications to hide it.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            Button("Open iPhone notification settings") { IPhoneNotificationSettings.open() }
             Toggle("Minimal menu bar mode", isOn: Binding(
                 get: { minimalMode },
                 set: { MenuBarPanelView.setMinimalMode($0, store: store) }

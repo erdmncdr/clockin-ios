@@ -40,6 +40,7 @@ final class MacAppServices: ObservableObject {
     func start(store: ClockStore) {
         guard self.store == nil else { return }
         self.store = store
+        MacLiveActivityTip.shared.start(store: store)
         preferences = Preferences(.standard)
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .receive(on: RunLoop.main)

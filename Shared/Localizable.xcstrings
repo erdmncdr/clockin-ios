@@ -4575,6 +4575,16 @@
         }
       }
     },
+    "Dismiss tip": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İpucunu kapat"
+          }
+        }
+      }
+    },
     "Don't ask again": {
       "localizations": {
         "tr": {
@@ -8949,6 +8959,16 @@
         }
       }
     },
+    "Open Settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarları Aç"
+          }
+        }
+      }
+    },
     "Open Settings manually": {
       "localizations": {
         "tr": {
@@ -8975,6 +8995,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone Ayarları → Uygulamalar → Clockin → Canlı Etkinlikler'i aç."
+          }
+        }
+      }
+    },
+    "Open iPhone notification settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone bildirim ayarlarını aç"
           }
         }
       }
@@ -10989,6 +11019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Serini ve ilerlemeni gör"
+          }
+        }
+      }
+    },
+    "Seeing two timers in the menu bar?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunda iki sayaç mı görüyorsunuz?"
           }
         }
       }
@@ -13099,16 +13139,6 @@
         }
       }
     },
-    "Turn off to show only the Clockin icon. An iPhone’s Live Activity can also appear here: System Settings > Notifications > Allow Live Activities from iPhone.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yalnızca Clockin simgesini görmek için kapat. iPhone’un Canlı Etkinliği de menü çubuğunda görünebilir: Sistem Ayarları > Bildirimler > iPhone’dan Canlı Etkinliklere İzin Ver."
-          }
-        }
-      }
-    },
     "Turn on Pin timer in Settings or the menu bar panel to keep a floating timer above other windows. Drag it to move and resize it; each layout remembers its size. Money emphasizes session earnings and hourly rate. Compact keeps time and earnings in one row. Goal shows daily and monthly progress. All combines session details, goals and radio controls. Total emphasizes all-time earnings with today and session figures. Minimal mode hides the pinned timer.": {
       "localizations": {
         "tr": {
@@ -14585,6 +14615,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hedefine %@ var. Adım adım gidebiliriz."
+          }
+        }
+      }
+    },
+    "Your iPhone’s Live Activity can also appear in the menu bar.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone’unuzdaki Canlı Etkinlik menü çubuğunda da görünebilir."
+          }
+        }
+      }
+    },
+    "Your iPhone’s Live Activity can also appear in the menu bar. Turn off “Allow Live Activities from iPhone” in iPhone Notifications to hide it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone’unuzdaki Canlı Etkinlik menü çubuğunda da görünebilir. Gizlemek için iPhone Bildirimleri’nde “iPhone’dan Canlı Etkinliklere İzin Ver” seçeneğini kapatın."
           }
         }
       }

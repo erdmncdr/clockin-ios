@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+  -module-cache-path /tmp/clockin-macliveactivitytip-cache \
+  Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/ClockStore.swift \
+  Shared/Core/WardrobeBackup.swift Shared/Core/ImportComparison.swift \
+  Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift \
+  ClockinMac/MacLiveActivityTip.swift ClockinMac/IPhoneNotificationSettings.swift \
+  ClockinMac/MacLiveActivityTipCard.swift Tests/manual/macliveactivitytip/main.swift \
+  -o /tmp/clockin-macliveactivitytip-tests
+/tmp/clockin-macliveactivitytip-tests

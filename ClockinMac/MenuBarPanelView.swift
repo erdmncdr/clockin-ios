@@ -35,6 +35,7 @@ struct MenuBarPanelView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            MacLiveActivityTipCard(beforeOpenSettings: actions.close)
             if let version = updates.pendingVersion { updateReminder(version) }
             header
             earnings
