@@ -87,6 +87,7 @@ struct MacRootView: View {
         }
         .celebrationBlocked(by: navigation.sheet != nil)
         .syncFirstMergePrompt()
+        .timecardReimportPrompt()
         #if DEBUG
         // Review fixture: `--sync-section` shows the iCloud settings section on its own.
         .sheet(isPresented: .constant(ProcessInfo.processInfo.arguments.contains("--sync-section"))) {

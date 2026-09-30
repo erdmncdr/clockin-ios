@@ -132,6 +132,7 @@ struct RootView: View {
         }
         .sheet(isPresented: $showCompanion) { CompanionView() }
         .syncFirstMergePrompt()
+        .timecardReimportPrompt()
         .celebrationBlocked(by: showCompanion)
         .background(CelebrationWindowProbe())
         .onChange(of: verticalSizeClass) { _, _ in deskSuppressed = false }

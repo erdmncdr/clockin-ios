@@ -615,6 +615,34 @@
         }
       }
     },
+    "%lld entries look imported twice and add about %@. Import your timecard CSV covering everything from your first workday to today. Entries the file does not contain are removed after you review them.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entry looks imported twice and adds about %@. Import your timecard CSV covering everything from your first workday to today. Entries the file does not contain are removed after you review them."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entries look imported twice and add about %@. Import your timecard CSV covering everything from your first workday to today. Entries the file does not contain are removed after you review them."
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kayıt iki kez içe aktarılmış görünüyor ve yaklaşık %@ fazla sayılıyor. İlk iş gününden bugüne her şeyi kapsayan puantaj CSV'ni içe aktar. Dosyada olmayan kayıtlar, listeye baktıktan sonra silinir."
+          }
+        }
+      }
+    },
     "%lld entries overlap": {
       "localizations": {
         "tr": {
@@ -6947,6 +6975,16 @@
         }
       }
     },
+    "Later": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonra"
+          }
+        }
+      }
+    },
     "Latest available USD to TRY rate": {
       "localizations": {
         "tr": {
@@ -9670,7 +9708,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kenar çubuğundan Ayarlar’ı aç veya ⌘, tuşlarına bas, ardından Veri > Zaman kartlarını içe aktar’ı seç. Bir CSV dosyası seç ya da görev bloğunu veya zaman kartı sayfasını yapıştırıp İncele’ye bas. CSV’de ISO 8601 tarihleri içeren Start Time ve End Time sütunları gerekir. Yapıştırılan metinde İngilizce tarihler, durum, kaynak ve 24 saat biçiminde saatler bulunmalı; varsa tarih aralığını ve yılları da ekle. Tarihleri, süreyi ve onaylı toplam uyarısını kontrol et. Yeni kayıtları, eşleşen düzeltmeleri ve atlanan tekrarları incele. Eklemek istemediğin satırların seçimini kaldır. Yalnızca seçili satırlar içe aktarılır; eşleşen kayıtlar düzeltilir, tekrarlar atlanır."
+            "value": "Kenar çubuğundan Ayarlar’ı aç veya ⌘, tuşlarına bas, ardından Veri > Puantajları içe aktar’ı seç. Bir CSV dosyası seç ya da görev bloğunu veya puantaj sayfasını yapıştırıp İncele’ye bas. CSV’de ISO 8601 tarihleri içeren Start Time ve End Time sütunları gerekir. Yapıştırılan metinde İngilizce tarihler, durum, kaynak ve 24 saat biçiminde saatler bulunmalı; varsa tarih aralığını ve yılları da ekle. Tarihleri, süreyi ve onaylı toplam uyarısını kontrol et. Yeni kayıtları, eşleşen düzeltmeleri ve atlanan tekrarları incele. Eklemek istemediğin satırların seçimini kaldır. Yalnızca seçili satırlar içe aktarılır; eşleşen kayıtlar düzeltilir, tekrarlar atlanır."
           }
         }
       }
@@ -10131,6 +10169,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ücret takvimleri"
+          }
+        }
+      }
+    },
+    "Re-import your timecards": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puantajlarını yeniden içe aktar"
           }
         }
       }
@@ -12726,7 +12774,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaman kartı işinin resmi kaydıdır. Bu dönemde dosyada olmayan kayıtlar silinir; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Eşleşen kayıtlar dosyadaki saatleri alır."
+            "value": "Puantaj işinin resmi kaydıdır. Bu dönemde dosyada olmayan kayıtlar silinir; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Eşleşen kayıtlar dosyadaki saatleri alır."
           }
         }
       }
@@ -12736,7 +12784,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaman kartı işinin resmi kaydıdır. İçe aktarma önizlemesinde Bu dönemdeki kayıtlar bölümü dosyada olmayan her kaydı listeler; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Bunlar silinmek üzere seçili gelir. CSV dosyası ilk tarihinden son tarihine kadar her günü kapsar; yapıştırılan zaman kartları yalnızca içerdikleri günleri. Tümünü sakla ya da Seç ile bazılarını tutabilirsin. Silme onay ister."
+            "value": "Puantaj işinin resmi kaydıdır. İçe aktarma önizlemesinde Bu dönemdeki kayıtlar bölümü dosyada olmayan her kaydı listeler; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Bunlar silinmek üzere seçili gelir. CSV dosyası ilk tarihinden son tarihine kadar her günü kapsar; yapıştırılan puantajlar yalnızca içerdikleri günleri. Tümünü sakla ya da Seç ile bazılarını tutabilirsin. Silme onay ister."
           }
         }
       }

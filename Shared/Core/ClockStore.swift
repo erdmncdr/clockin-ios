@@ -11,6 +11,7 @@ final class ClockStore: ObservableObject {
             cachedByDay = nil
             cachedDailyDurations = nil
             cachedConflicts = nil
+            cachedImportedTwice = nil
             cachedCurrentRate = nil
             cachedMonthDuration = nil
         }
@@ -32,6 +33,7 @@ final class ClockStore: ObservableObject {
     /// her okumada yeniden siralama yapilmaz.
     private var cachedSessions: [WorkSession]?
     private var cachedConflicts: Set<UUID>?
+    private var cachedImportedTwice: (pairs: Int, extra: TimeInterval)?
     private var cachedRateRules: [RateRule]?
     private var cachedCurrentRate: (day: Date, rate: Double)?
     private var cachedMonthDuration: (month: Date, duration: TimeInterval)?
@@ -178,6 +180,15 @@ final class ClockStore: ObservableObject {
         if let cached = cachedConflicts { return cached }
         let found = SessionOverlap.conflicting(in: sessions)
         cachedConflicts = found
+        return found
+    }
+
+    /// Iki kez ice aktarilmis gorunen zaman karti kayitlari. Yeniden ice aktarma uyarisi
+    /// her cizimde okur; `data` degisene kadar saklanir.
+    var importedTwice: (pairs: Int, extra: TimeInterval) {
+        if let cached = cachedImportedTwice { return cached }
+        let found = SessionOverlap.importedTwice(in: data.sessions)
+        cachedImportedTwice = found
         return found
     }
 

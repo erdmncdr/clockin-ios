@@ -73,6 +73,30 @@ enum SessionOverlap {
         return sessions.filter { $0.id != id && conflicts(candidate, $0) }
     }
 
+    /// Iki zaman karti kaydinin baslangici da bitisi de bu kadar yakinsa ayni satirin iki
+    /// kopyasidir. Iki cihazda ayri ayri ice aktarilan dokumler birlesince ayni is birkac
+    /// dakika farkli iki kayit olarak kaliyordu (7 Agustos 11:51-21:09 ve 11:51-21:05 gibi).
+    /// Kartin kendi yazdigi cakismalar (gece yarisini ya da ay sonunu asan satirlar) boyle
+    /// yakin degildir ve sayilmaz.
+    static let copyTolerance: TimeInterval = 15 * 60
+
+    /// Iki kez ice aktarilmis gorunen zaman karti kayitlarinin sayisi ve fazladan sayilan sure.
+    static func importedTwice(in sessions: [WorkSession]) -> (pairs: Int, extra: TimeInterval) {
+        var pairs = 0
+        var extra: TimeInterval = 0
+        var open: [WorkSession] = []
+        for session in sessions.filter(isTimecard).sorted(by: { $0.start < $1.start }) {
+            open.removeAll { $0.end <= session.start }
+            for other in open where abs(other.start.timeIntervalSince(session.start)) <= copyTolerance
+                && abs(other.end.timeIntervalSince(session.end)) <= copyTolerance {
+                pairs += 1
+                extra += min(other.end, session.end).timeIntervalSince(max(other.start, session.start))
+            }
+            open.append(session)
+        }
+        return (pairs, extra)
+    }
+
     /// Listede baska bir kayitla gercekten cakisan her kaydin kimligi.
     ///
     /// Kayitlar baslangica gore siralanip tek gecise indirgeniyor: 600 kayitta

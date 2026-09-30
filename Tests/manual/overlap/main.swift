@@ -141,4 +141,20 @@ do {
           "a new manual entry over a timecard row warns")
 }
 
+// Iki cihazda ayri ice aktarilan dokumun kopyalari
+do {
+    func card(_ session: WorkSession) -> WorkSession { var copy = session; copy.source = "starfleet"; return copy }
+    let first = card(s(7, 11, 51, 21, 9)), copy = card(s(7, 11, 51, 21, 5))
+    let found = SessionOverlap.importedTwice(in: [first, copy])
+    check(found.pairs == 1 && abs(found.extra - (9 * 3600 + 14 * 60)) < 1,
+          "two timecard rows a few minutes apart are one row imported twice")
+    let monthEnd = card(s(31, 23, 38, 2, 58)), nextMonth = card(s(31, 23, 55, 0, 14))
+    check(SessionOverlap.importedTwice(in: [monthEnd, nextMonth]).pairs == 0,
+          "the timecard's own overlaps are not copies")
+    check(SessionOverlap.importedTwice(in: [s(7, 11, 51, 21, 9), s(7, 11, 51, 21, 5)]).pairs == 0,
+          "timer entries are not timecard copies")
+    check(SessionOverlap.importedTwice(in: [first, card(s(8, 11, 51, 21, 9))]).pairs == 0,
+          "the same hours on another day are not a copy")
+}
+
 print("\(checks) overlap checks passed")
