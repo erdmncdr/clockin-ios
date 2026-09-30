@@ -10,18 +10,21 @@ if [[ "$DRY_RUN" == 0 ]]; then
     git -C "$ROOT" rev-parse HEAD > "$WORK/source-commit.txt"
     git -C "$ROOT" status --porcelain --untracked-files=all > "$WORK/source-status.txt"
 fi
-step 'Archive ClockinMac with explicit distribution signing (no project edits).'
+# iCloud needs a provisioning profile, so signing is automatic: the archive is
+# development-signed and the export re-signs with Developer ID and an
+# Xcode-managed Developer ID profile that carries the iCloud container.
+step 'Archive ClockinMac with automatic signing.'
 run xcodebuild archive -project "$ROOT/Clockin.xcodeproj" -scheme ClockinMac \
     -configuration Release -destination 'generic/platform=macOS' \
     -archivePath "$ARCHIVE" -derivedDataPath "$DERIVED_DATA" \
     -disableAutomaticPackageResolution -onlyUsePackageVersionsFromResolvedFile \
+    -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
     'ARCHS=arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
-    DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_IDENTITY="$IDENTITY" CODE_SIGN_STYLE=Manual \
-    CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES 'OTHER_CODE_SIGN_FLAGS=--timestamp' \
-    ENABLE_HARDENED_RUNTIME=YES ENABLE_APP_SANDBOX=NO \
+    DEVELOPMENT_TEAM="$TEAM" 'OTHER_CODE_SIGN_FLAGS=--timestamp' \
+    ENABLE_HARDENED_RUNTIME=YES \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD"
-step 'Export the archive using the checked-in Developer ID options.'
-run xcodebuild -exportArchive -archivePath "$ARCHIVE" \
+step 'Export the archive with Developer ID signing and an Xcode-managed profile.'
+run xcodebuild -exportArchive -archivePath "$ARCHIVE" -allowProvisioningUpdates \
     -exportOptionsPlist "$TOOLS_DIR/ExportOptions.plist" -exportPath "$WORK/export"
 if [[ "$DRY_RUN" == 1 ]]; then
     step 'Inspect all Sparkle Mach-O files, XPC services, Updater.app, Autoupdate and framework signatures.'
