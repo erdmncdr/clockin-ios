@@ -1,6 +1,6 @@
 # Clockin 2.0.0
 
-- Clockin for Mac has been rebuilt on the iPhone app's code, with a new sidebar for Today, History, Insights and Companion. Your existing work history and preferences carry over.
+- Clockin for Mac has been rebuilt on the iPhone app's code, with a new sidebar for Today, History, Progress and Settings. Your existing work history and preferences carry over.
 - Insights brings goals and pace, momentum, earnings, records and shareable stats together. See how your recent work compares with your goals and when you are on pace to reach them.
 - Dress your companion with layered outfits, earn focus coins, unlock milestone accessories and spend coins in the shop. Arrange furniture and decorations in its home.
 - Track 46 badges, levels and streaks, with companion reactions, badge banners and level-up celebrations. Your existing progress carries over without replaying old celebrations.
@@ -14,4 +14,5 @@
 - History ranges now follow the calendar: 7D becomes Week, 30D becomes Month and 3M becomes 6 Months. Use the arrows to browse earlier periods; All still shows your entire history. Insights keeps its own rolling comparisons.
 - The interface size setting has been removed. Resize the window freely to fit your screen.
 - Global keyboard shortcuts no longer need Accessibility permission.
-- Mac and iPhone still keep their data separately. Cross-device sync is planned for a later release.
+- Sync with your iPhone through your private iCloud: sessions, the running timer, rates, goals, your companion's outfits, room and coins, and your choices follow you between devices. The first time both have history, Clockin shows how many entries each device has and how many are the same, saves a copy of your data and merges only when you choose Merge. Turn it off in Settings > iCloud.
+- Add Clockin widgets to your desktop or Notification Center.

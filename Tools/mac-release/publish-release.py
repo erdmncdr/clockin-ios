@@ -25,6 +25,9 @@ ROOT = Path(__file__).resolve().parents[2]
 TOOLS = ROOT / 'Tools/mac-release'
 OUTPUT = ROOT / 'build/mac-release'
 REPO = 'ismailakdag/clockin'
+# The app's source lives here; ismailakdag/clockin only hosts the DMG and the
+# Sparkle feed that existing Mac users already follow.
+SOURCE_REPO = 'erdmncdr/clockin-ios'
 API = f'https://api.github.com/repos/{REPO}'
 BASE = f'https://github.com/{REPO}/releases/download'
 FEED_URL = f'{BASE}/macos-updates/appcast.xml'
@@ -199,9 +202,13 @@ def publish(version):
     token = github_token()
     repo = api('GET', API, token)[1]
     require(repo.get('permissions', {}).get('push'), 'GitHub credential cannot publish to ' + REPO)
-    status, remote_commit = api('GET', f'{API}/commits/{commit}', token, allow=(404, 422))
+    status, remote_commit = api('GET', f'https://api.github.com/repos/{SOURCE_REPO}/commits/{commit}', token, allow=(404, 422))
     require(status == 200 and remote_commit['sha'] == commit,
-            'The build source commit must already exist in ismailakdag/clockin. Resolve licensing/source distribution before publishing; this script never pushes code.')
+            f'Push the build source commit to {SOURCE_REPO} before publishing; this script never pushes code.')
+    # The version tag lives in the feed repository, which does not hold this source;
+    # it marks that repository's current default branch, and the release names the source.
+    default_branch = repo['default_branch']
+    anchor = api('GET', f'{API}/commits/{default_branch}', token)[1]['sha']
     # Save old stable bytes locally before any public mutation.
     previous_feed = anonymous(FEED_URL)
     previous_download = anonymous(f'{BASE}/macos-updates/Clockin.dmg')
@@ -215,11 +222,12 @@ def publish(version):
     if status == 404:
         # A pre-existing tag must already identify the build commit.
         tag_status, tag_commit = api('GET', f'{API}/commits/{tag}', token, allow=(404, 422))
-        require(tag_status != 200 or tag_commit['sha'] == commit, 'Existing version tag points at another commit.')
+        require(tag_status != 200 or tag_commit['sha'] == anchor, 'Existing version tag points at another commit.')
         print('Creating draft versioned release, uploading immutable assets, then making it public.', flush=True)
         version_release = api('POST', f'{API}/releases', token, body={
-            'tag_name': tag, 'target_commitish': commit, 'name': f'Clockin for Mac {version}',
-            'body': notes.read_text().strip() + '\n\nRequires macOS 14 or later; Apple Silicon and Intel. Open the DMG and drag Clockin into Applications. The app and DMG are Developer ID signed and notarized.',
+            'tag_name': tag, 'target_commitish': anchor, 'name': f'Clockin for Mac {version}',
+            'body': notes.read_text().strip() + '\n\nRequires macOS 14 or later; Apple Silicon and Intel. Open the DMG and drag Clockin into Applications. The app and DMG are Developer ID signed and notarized.'
+                    + f'\n\nSource: {SOURCE_REPO}@{commit}.',
             'draft': True, 'prerelease': False, 'make_latest': 'false'})[1]
         for path in (dmg, release_dir / 'SHA256SUMS'):
             upload(token, version_release, path.name, path.read_bytes(), 'application/octet-stream')
@@ -228,8 +236,8 @@ def publish(version):
     else:
         require(not version_release['draft'] and not version_release['prerelease'],
                 'An incomplete draft/prerelease already exists. Inspect it manually; no assets were overwritten.')
-        remote_tag = api('GET', f'{API}/commits/{tag}', token)[1]
-        require(remote_tag['sha'] == commit, 'Existing release tag does not match the source commit.')
+        require(f'{SOURCE_REPO}@{commit}' in (version_release.get('body') or ''),
+                'Existing release was built from another source commit.')
         print('Resuming existing public release; checking immutable assets before touching the feed.', flush=True)
     downloaded = check_public(f'{BASE}/{tag}/{dmg.name}', dmg.read_bytes())
     check_public(f'{BASE}/{tag}/SHA256SUMS', (release_dir / 'SHA256SUMS').read_bytes())

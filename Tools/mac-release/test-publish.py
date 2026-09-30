@@ -112,9 +112,12 @@ class PublisherTests(unittest.TestCase):
             def api(method, url, token, **kwargs):
                 events.append((method, url, kwargs))
                 if url == publisher.API and method == 'GET':
-                    return 200, {'permissions': {'push': True}}
+                    return 200, {'permissions': {'push': True}, 'default_branch': 'main'}
                 if url.endswith('/commits/' + commit):
+                    self.assertIn(publisher.SOURCE_REPO, url)
                     return 200, {'sha': commit}
+                if url.endswith('/commits/main'):
+                    return 200, {'sha': 'b' * 40}
                 if url.endswith('/commits/macos-v2.0.0') or url.endswith('/releases/tags/macos-v2.0.0'):
                     return 404, None
                 return 200, {'id': 3, 'draft': False, 'prerelease': False}
