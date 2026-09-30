@@ -51,6 +51,7 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (48) | [Serious overlaps only](ios-testflight-0.2-48.md) |
 | 0.2 (49) | [Poll iCloud while open](ios-testflight-0.2-49.md) |
 | 0.2 (50) | [Ask to re-import doubled timecards](ios-testflight-0.2-50.md) |
+| 0.2 (51) | [Safer imports](ios-testflight-0.2-51.md) |
 
 Mac releases built from this repository:
 
@@ -62,3 +63,4 @@ Mac releases built from this repository:
 | 2.0.3 (14) | [Serious overlaps only](mac-2.0.3-14.md) |
 | 2.0.4 (15) | [Poll iCloud every minute while running](mac-2.0.4-15.md) |
 | 2.0.5 (16) | [Ask to re-import doubled timecards](mac-2.0.5-16.md) |
+| 2.0.6 (17) | [Mac UI refresh and safer imports](mac-2.0.6-17.md) |
