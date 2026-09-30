@@ -171,24 +171,10 @@ da sabit pencere olur.
   mod, sabit pencere ve beş düzeni, global kısayollar (Carbon; erişilebilirlik
   izni istemez), Sparkle, Applications'a taşıma, Clock menüsü, ⌘1–⌘4.
   Gerçek güncelleme provası aşama 4'te.
-- [ ] 4. Geçiş ve yayın: ilk açılış hazır (brief 03) ve gerçek 1.1.6
-  tercihlerinin kopyasıyla Debug'da prova edildi (ses, geçmiş, ısı haritası,
-  hedef işareti, kutlama tabanı doğru). Yayın hattı `Tools/mac-release/`
-  (brief 06, `docs/mac-releases.md`); 2.0.0 (11) Developer ID arşivi ve
-  doğrulaması yerelde geçti. Kalan: notarize (Apple'a gönderim), DMG ve
-  imzalı appcast, 1.1.6 → 2.0 yerinde Sparkle provası, ortakla kaynak ve
-  lisans konuşması, yayın (`publish.sh --yes`). Sürüm notu taslağı:
-  `docs/release-notes-mac-2.0.0.md`.
-- [ ] 5. Senkron: çekirdek ve CloudKit adaptörü hazır, uygulamalara bağlı
-  değil (brief 05, `docs/sync-design.md`). Geçmiş sınırlandı (brief 07/07b,
-  şema 2): kayıt başına en büyük K revizyon, kalıcı silme işareti, oturumda
-  değişmez `clockinStart`, cihaza özel kurtarma kutusu (50 kayıt / 256 KB),
-  girdi sınırları. 5 yıllık 3 cihazlı simülasyonda en büyük kayıt 13,6 KB,
-  yan dosya ~1,1 MB. `Tests/manual/sync`: 262 + 17 kontrol. Widget
-  uzantısına derlenmiyor. Gönderme yolu sağlamlaştırıldı ve uygulama tarafı
-  koordinatörü yazıldı (brief 08: 50 + 37 + 33 kontrol). Ayarlar'da iCloud
-  bölümü, ilk birleştirme önizlemesi ve eşzamanlama değişiklikleri ekranı
-  var; iki uygulamanın giriş noktaları bağlı. Hepsi `ClockinCloudSyncEnabled`
-  Info.plist anahtarı olmadan kapalı. Kalan: developer portal kurulumu
-  (senin), yetkiler + Info.plist anahtarı, arayüzün görsel kontrolü, iki
-  gerçek cihazla deneme, CloudKit şemasının production'a alınması.
+- [x] 4. Geçiş ve yayın: Mac 2.0.0 (11) 2026-09-30'da mevcut Sparkle akışına
+  yayınlandı (`docs/releases/mac-2.0.0-11.md`). Web sitesindeki indirme hâlâ
+  1.1.6.
+- [x] 5. Senkron: CloudKit şeması production'da; iPhone 0.2 (43) TestFlight'ta
+  (`docs/releases/ios-testflight-0.2-43.md`) ve Mac 2.0 senkronla çıktı.
+  Dil her cihazda ayrı. Sonraki işler: kurtarma sayfasının iPhone'da gerçek
+  bir değişiklikle denenmesi, web sitesinin 2.0'a geçirilmesi.

@@ -44,3 +44,10 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (40) | [Bass on a phone speaker](ios-testflight-0.2-40.md) |
 | 0.2 (41) | [Armour skins in HD](ios-testflight-0.2-41.md) |
 | 0.2 (42) | [A stern visor, no dark backdrop](ios-testflight-0.2-42.md) |
+| 0.2 (43) | [Sync with Clockin for Mac](ios-testflight-0.2-43.md) |
+
+Mac releases built from this repository:
+
+| Version | Record |
+|---|---|
+| 2.0.0 (11) | [Clockin for Mac on the iPhone code base, with sync](mac-2.0.0-11.md) |
