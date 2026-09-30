@@ -1,0 +1,24 @@
+regions: eyes ["285,170..317,193", "341,183..373,204"]
+regions: core 276,282..309,310; 596 luminance tones
+regions: antenna x=354...392 rows=60...87 dip=6 destination bottom=93; stem base=94; waist cut=340; original bottom 515; pulse stride=119
+e01.png 200ms hop=0 hip=0 antennaDy=0 blink=false pulse=0 bottom=515 opaque=67465
+e02.png 160ms hop=0 hip=6 antennaDy=6 blink=false pulse=0 bottom=515 opaque=67332
+e03.png 160ms hop=6 hip=6 antennaDy=0 blink=false pulse=1 bottom=509 opaque=67465
+e04.png 160ms hop=12 hip=6 antennaDy=0 blink=false pulse=2 bottom=503 opaque=67465
+e05.png 160ms hop=6 hip=6 antennaDy=0 blink=false pulse=1 bottom=509 opaque=67465
+e06.png 160ms hop=0 hip=0 antennaDy=6 blink=false pulse=0 bottom=515 opaque=67332
+e07.png 160ms hop=0 hip=-6 antennaDy=0 blink=false pulse=0 bottom=515 opaque=67465
+e08.png 160ms hop=0 hip=-6 antennaDy=0 blink=true pulse=0 bottom=515 opaque=67465
+e09.png 160ms hop=0 hip=-6 antennaDy=6 blink=true pulse=0 bottom=515 opaque=67332
+e10.png 160ms hop=0 hip=0 antennaDy=0 blink=false pulse=0 bottom=515 opaque=67465
+e11.png 160ms hop=6 hip=0 antennaDy=0 blink=false pulse=1 bottom=509 opaque=67465
+e12.png 160ms hop=12 hip=0 antennaDy=0 blink=false pulse=2 bottom=503 opaque=67465
+e13.png 160ms hop=6 hip=0 antennaDy=0 blink=false pulse=1 bottom=509 opaque=67465
+e14.png 160ms hop=0 hip=0 antennaDy=6 blink=false pulse=0 bottom=515 opaque=67332
+e15.png 160ms hop=0 hip=0 antennaDy=0 blink=false pulse=-1 bottom=515 opaque=67465
+e16.png 120ms hop=0 hip=0 antennaDy=6 blink=false pulse=0 bottom=515 opaque=67332
+verification: 16 frames 627x627; 2560ms; ground rest=515 hop=509/503; opaque source=67465, max delta=133
+verification: consecutive changed pixels [48996, 69816, 69626, 69626, 70946, 48996, 2531, 961, 48954, 69741, 69614, 69614, 69804, 1618, 1618, 961]; wrap=961; palette source-only; PNG round trips; source unchanged
+verification: outside-region changes=0; lost opaque silhouette pixels=0; lower-body changes=0; head-top changes=0; minimum joint overlap=7 opaque pixels; enclosed transparent holes=0 (source=0)
+verification: pulse levels=-1/0/1/2 stride=119, tone ordering preserved; wrap outside antenna=0
+all checks passed

@@ -9,7 +9,6 @@ const CLOCKIN_TRANSLATIONS = {
     "heroCopy": "Find your focus.<br>Clockin keeps track of your time and earnings.",
     "compatibility": "macOS 14 or later",
     "tour": "Take a little tour",
-    "meet": "Tap to say hello.",
     "try": "Try Clockin",
     "duration": "time well spent",
     "session": "This session",
@@ -22,7 +21,6 @@ const CLOCKIN_TRANSLATIONS = {
     "focus": "Focus",
     "break": "Take a break",
     "reward": "See your progress",
-    "scroll": "Scroll to explore",
     "productTitle": "Right at home on your Mac.",
     "productCopy": "Your time, earnings and progress.<br>Always within reach.",
     "tabTimer": "Your time",
@@ -30,7 +28,7 @@ const CLOCKIN_TRANSLATIONS = {
     "tabProgress": "Your progress",
     "realScreens": "Real screenshots from the app. Sample data.",
     "closing": "Here’s to a good day’s work.",
-    "footer": "On your Mac. At your pace.",
+    "footer": "Made for your Mac.",
     "downloadTitle": "Clockin is on its way.",
     "downloadCopy": "The Mac installer is being prepared. Once it’s ready, you’ll be able to download it right here.",
     "done": "Got it",
@@ -62,19 +60,16 @@ const CLOCKIN_TRANSLATIONS = {
     "workTitle": "One click.<br> Find your focus.",
     "workDescription": "You take the first step. Clockin keeps track of your time and what it’s worth.",
     "workSpeech": "Ready when you are.",
-    "workNote": "At your own pace.",
     "workAlt": "Clockin mascot working at a laptop",
     "breakTime": "10:00 / A moment to yourself",
     "breakTitle": "Make room<br> for a breather.",
     "breakDescription": "One hour in. Take a coffee break, then pick up right where you left off.",
     "breakSpeech": "Coffee’s on me. No rush.",
-    "breakNote": "Breaks belong in your day.",
     "breakAlt": "Clockin mascot taking a coffee break",
     "rewardTime": "13:40 / Nicely done",
     "rewardTitle": "See what your<br> time adds up to.",
     "rewardDescription": "Your hours, your earnings, your little wins. Look back on a day well spent.",
     "rewardSpeech": "Look how far you’ve come today.",
-    "rewardNote": "Every session, a step forward.",
     "rewardAlt": "Clockin mascot celebrating your progress",
     "start": "Start focusing",
     "resume": "Resume focus",
@@ -97,7 +92,6 @@ const CLOCKIN_TRANSLATIONS = {
     "heroCopy": "Sen işine odaklan.<br>Clockin süreni ve kazancını takip etsin.",
     "compatibility": "macOS 14 ve üzeri",
     "tour": "Birlikte bakalım",
-    "meet": "Dokun, tanışalım.",
     "try": "Clockin’i dene",
     "duration": "çalışma süren",
     "session": "Bu seans",
@@ -110,7 +104,6 @@ const CLOCKIN_TRANSLATIONS = {
     "focus": "Odaklan",
     "break": "Mola ver",
     "reward": "Karşılığını gör",
-    "scroll": "Keşfetmek için kaydır",
     "productTitle": "Mac’inde böyle görünür.",
     "productCopy": "Çalışma süren, kazancın ve ilerlemen.<br>Hepsi elinin altında.",
     "tabTimer": "Zamanın",
@@ -118,7 +111,7 @@ const CLOCKIN_TRANSLATIONS = {
     "tabProgress": "İlerlemen",
     "realScreens": "Uygulamadan gerçek görüntüler. Veriler örnektir.",
     "closing": "Güzel bir iş günü olsun.",
-    "footer": "Mac’inde, kendi ritminde.",
+    "footer": "Mac’in için yapıldı.",
     "downloadTitle": "Clockin yola çıkıyor.",
     "downloadCopy": "Mac kurulum paketi hazırlanıyor. Hazır olduğunda buradan tek tıkla indirebileceksin.",
     "done": "Tamam",
@@ -150,19 +143,16 @@ const CLOCKIN_TRANSLATIONS = {
     "workTitle": "Bir tık.<br> Ve odaktasın.",
     "workDescription": "İlk adımı sen at. Süreni ve emeğinin karşılığını Clockin takip etsin.",
     "workSpeech": "Hazırım. Hadi başlayalım.",
-    "workNote": "Kendi ritminde.",
     "workAlt": "Bilgisayarında çalışan Clockin maskotu",
     "breakTime": "10.00 / Bir nefes arası",
     "breakTitle": "Biraz da<br> kendine zaman.",
     "breakDescription": "Bir saati tamamladın. Kahve molası ver, sonra kaldığın yerden devam et.",
     "breakSpeech": "Kahveler benden. Acelemiz yok.",
-    "breakNote": "Mola da işin bir parçası.",
     "breakAlt": "Kahve molası veren Clockin maskotu",
     "rewardTime": "13.40 / İyi iş çıkardın",
     "rewardTitle": "Emeğinin<br> karşılığı burada.",
     "rewardDescription": "Çalıştığın saatler, kazancın, küçük zaferlerin. Gününe dönüp bir bak.",
     "rewardSpeech": "Bak, bugün ne kadar yol aldın.",
-    "rewardNote": "Her seans bir adım.",
     "rewardAlt": "İlerlemeni kutlayan Clockin maskotu",
     "start": "Çalışmaya başla",
     "resume": "Devam et",
@@ -201,8 +191,32 @@ const CLOCKIN_TRANSLATIONS = {
     themeLabel();
     document.dispatchEvent(new Event('clockin-language'));
   }
-  document.querySelectorAll('[data-language]').forEach(button=>button.addEventListener('click',()=>{ClockinPreferences.saveLanguage(button.dataset.language);apply(button.dataset.language);}));
-  document.querySelector('#theme-toggle').addEventListener('click',()=>ClockinPreferences.toggleTheme());
+  // View transitions where supported: a short cross-fade for language, and the
+  // new theme revealed as a circle growing from the toggle. Without support, or
+  // with reduced motion, the change is simply instant.
+  const calm=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function transition(change,className,origin){
+    if(!document.startViewTransition||calm()||document.hidden){change();return;}
+    const root=document.documentElement;
+    if(origin){
+      const r=origin.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+      root.style.setProperty('--vt-x',x+'px');root.style.setProperty('--vt-y',y+'px');
+      root.style.setProperty('--vt-r',Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y))+'px');
+    }
+    if(className)root.classList.add(className);
+    const vt=document.startViewTransition(change);
+    // A skipped transition (for example a hidden tab) still applies the change;
+    // its rejected promises are expected and must not surface as errors.
+    vt.ready.catch(()=>{});
+    vt.finished.catch(()=>{}).finally(()=>className&&root.classList.remove(className));
+  }
+  document.querySelectorAll('[data-language]').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.language===language)return;
+    ClockinPreferences.saveLanguage(button.dataset.language);
+    transition(()=>apply(button.dataset.language));
+  }));
+  const themeButton=document.querySelector('#theme-toggle');
+  themeButton.addEventListener('click',()=>transition(()=>ClockinPreferences.toggleTheme(),'theme-transition',themeButton));
   document.addEventListener('clockin-theme',themeLabel);
   apply(language);
 })();

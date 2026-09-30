@@ -2,9 +2,23 @@
 
 Static English/Turkish product page, with the existing app icon, mascot and genuine macOS UI captures populated with synthetic demo data. Native application source and private operational notes are not included in this website.
 
-Serve `dist/` with a static HTTP server. No install or build step is needed. Hosting is configured in `.openai/hosting.json`.
+Serve `dist/` with a static HTTP server. No install or build step is needed.
 
-The download action points to the verified public macOS 1.1.0 (4) DMG in `ismailakdag/clockin`. Subsequent updates come through the native app's signed `macos-updates/appcast.xml` feed. Update the pinned website URL when publishing a later Mac installer; do not use GitHub's shared latest-release URL because the repository also ships iPhone builds. The footer links to the public MIT-licensed source repository.
+## Hosting
+
+Netlify is the active hosting destination. `netlify.toml` sets the publish directory to `dist`; leave the build command empty. For a manual deployment, upload only the `dist/` folder (or a ZIP of its contents with `index.html` at the archive root). Future manual updates must target the same Netlify project's Deploys page. Git-based automatic deployment is not configured yet.
+
+The existing Sites deployment remains live; its configuration is retained in `.openai/hosting.json`. Publish future website changes to Netlify, not to Sites by default.
+
+Production URL: https://getclockin.netlify.app/. Netlify project ID: `406e1766-2c8b-4b61-99a1-f4736b8c512a`, team `erdmncdr`. Initial published deploy: `6aa7fd4d8b185570c5388b7c` (2026-09-14). Deploy updates through https://app.netlify.com/projects/getclockin/deploys. The user selected `getclockin` after Netlify reported `clockin` and `clockinapp` unavailable. The separate existing `erdoderdo` project was not modified.
+
+Deployment validation: all 24 public files returned HTTP 200 anonymously; JavaScript, CSS and PNG bytes matched the local originals. The live page rendered and English/Turkish switching worked without browser console errors.
+
+Downloads link to the fixed GitHub asset https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg (attachment, `application/octet-stream`), which `scripts/publish-mac.sh` replaces with every Mac release. The site itself hosts no installer and has no `_headers` file, so a Mac release does not deploy the site; Netlify bills every deploy and every byte it serves. Deploy only for site changes, with `python3 scripts/publish-mac-release.py website` from the repository. Do not use GitHub's shared latest-release URL because the repository also ships iPhone builds. In-app updates still come through the signed `macos-updates/appcast.xml` feed. The footer links to the public MIT-licensed source repository.
+
+Until 1.1.6 the DMG was served from `dist/downloads/` on Netlify and every release redeployed the site.
+
+2026-09-15 download fix: direct Netlify download returned HTTP 200 without redirects, attachment headers and the correct SHA-256. Clicking the live hero link in desktop Chrome completed a 12.1 MB download while keeping the website open. The download hover greeting remained functional; the refreshed live page reported no console errors. This check does not cover every embedded mobile browser.
 
 Screenshots were captured from a separate app bundle and separate demo JSON. They do not contain the user's work records. The site labels and companion copy switch between English and Turkish; genuine application captures retain the app’s English interface.
 

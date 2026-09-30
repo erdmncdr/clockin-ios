@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Deploys website/dist to Netlify. Run from the repository root or website/:
+
+    python3 website/tools/deploy [--dry-run]
+
+Netlify bills credits for every deploy and for every byte it serves, so the
+site is deployed only when its content changes. Mac releases do not deploy it:
+the download buttons point at a fixed GitHub asset
+(macos-updates/Clockin.dmg) that the release replaces.
+
+The Netlify personal access token is read at run time from the login Keychain
+(service `clockin-netlify`, see docs/mac-releases.md) and never printed.
+"""
+import io, json, os, pathlib, subprocess, sys, time, urllib.error, urllib.parse, urllib.request, zipfile
+
+SITE = os.environ.get('NETLIFY_SITE', 'getclockin.netlify.app')
+KEYCHAIN_SERVICE = 'clockin-netlify'
+DOWNLOAD_URL = 'https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg'
+DIST = pathlib.Path(__file__).resolve().parent.parent / 'dist'
+
+
+def fail(message):
+    print(f'\nSTOPPED: {message}', file=sys.stderr)
+    raise SystemExit(1)
+
+
+def token():
+    result = subprocess.run(['security', 'find-generic-password', '-s', KEYCHAIN_SERVICE, '-w'],
+                            text=True, capture_output=True)
+    value = result.stdout.strip()
+    if not value:
+        fail(f'No Netlify token in the Keychain (service "{KEYCHAIN_SERVICE}"). See docs/mac-releases.md.')
+    return value
+
+
+def api(method, url, bearer, data=None, content_type=None):
+    host = urllib.parse.urlparse(url).hostname
+    headers = {'User-Agent': 'clockin-website'}
+    if bearer:
+        assert host == 'api.netlify.com', host
+        headers['Authorization'] = 'Bearer ' + bearer
+    if content_type:
+        headers['Content-Type'] = content_type
+    request = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            body = response.read()
+            return json.loads(body) if body else None
+    except urllib.error.HTTPError as error:
+        detail = ''
+        try:
+            detail = json.loads(error.read()).get('error') or ''
+        except Exception:
+            pass
+        fail(f'{method} {urllib.parse.urlparse(url).path} returned HTTP {error.code} {detail}'.strip())
+
+
+def anonymous(url):
+    request = urllib.request.Request(url + ('&' if '?' in url else '?') + f'nocache={time.time_ns()}',
+                                     headers={'User-Agent': 'clockin-website'})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return response.read()
+
+
+def archive():
+    index = DIST / 'index.html'
+    if not index.exists():
+        fail(f'{DIST} has no index.html.')
+    if DOWNLOAD_URL not in index.read_text():
+        fail(f'index.html does not link to {DOWNLOAD_URL}.')
+    stray = sorted(path.name for path in DIST.rglob('*.dmg'))
+    if stray:
+        fail(f'dist still contains {", ".join(stray)}; the installer is served from GitHub.')
+    buffer = io.BytesIO()
+    files = 0
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipped:
+        for path in sorted(DIST.rglob('*')):
+            if path.is_file() and path.name != '.DS_Store':
+                zipped.write(path, path.relative_to(DIST).as_posix())
+                files += 1
+    return buffer.getvalue(), files
+
+
+def main():
+    data, files = archive()
+    print(f'{files} files, {len(data) / 1024:.0f} KB zipped')
+    if '--dry-run' in sys.argv:
+        print('Dry run: nothing was deployed.')
+        return
+    bearer = token()
+    print(f'Deploying to {SITE}')
+    deploy = api('POST', f'https://api.netlify.com/api/v1/sites/{SITE}/deploys', bearer,
+                 data=data, content_type='application/zip')
+    deadline = time.time() + 600
+    while deploy.get('state') != 'ready':
+        if deploy.get('state') == 'error' or time.time() > deadline:
+            fail(f'The deploy did not finish: {deploy.get("error_message") or deploy.get("state")}')
+        time.sleep(4)
+        deploy = api('GET', f'https://api.netlify.com/api/v1/deploys/{deploy["id"]}', bearer)
+    page = anonymous(f'https://{SITE}/')
+    if DOWNLOAD_URL.encode() not in page:
+        fail('The live page does not link to the GitHub download.')
+    print(f'Live: https://{SITE}')
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,37 @@
+Coordinates: top-left origin. Opaque = alpha >32. Pixels decoded/encoded as unassociated RGBA; no resampling of animation frames.
+SOURCE 1: eyes x=265...299, y=249...275, pixels=612; x=340...373, y=249...275, pixels=580; face screen x=234...388, y=208...315, pixels=13728
+  antenna x=217...252, y=103...143, pixels=1122; orange ball x=222...247, y=109...133, pixels=517; head candidate x=146...411, y=104...332, pixels=41523 [bob skipped]
+  key candidates: x=344...365, y=475...482, pixels=95; x=324...343, y=480...484, pixels=90; x=269...286, y=484...488, pixels=79; x=322...340, y=471...474, pixels=70; x=270...286, y=475...479, pixels=67; x=251...269, y=478...483, pixels=66; x=288...304, y=480...483, pixels=62; x=307...321, y=467...470, pixels=56; x=290...303, y=471...474, pixels=53; x=306...321, y=475...478, pixels=53; x=344...356, y=467...470, pixels=50; x=329...338, y=463...466, pixels=35; x=365...369, y=471...475, pixels=20; x=361...370, y=465...466, pixels=18
+SOURCE 2: eyes x=264...298, y=249...275, pixels=620; x=341...373, y=249...275, pixels=579; face screen x=234...388, y=208...315, pixels=13723
+  antenna x=217...252, y=104...143, pixels=1118; orange ball x=222...247, y=109...134, pixels=529; head candidate x=145...410, y=104...332, pixels=41496 [bob skipped]
+  key candidates: x=344...365, y=475...480, pixels=85; x=267...284, y=484...488, pixels=74; x=328...344, y=480...484, pixels=69; x=314...326, y=484...492, pixels=62; x=280...294, y=489...496, pixels=53; x=328...341, y=471...474, pixels=52; x=345...356, y=467...470, pixels=47; x=318...328, y=467...470, pixels=41; x=330...337, y=462...465, pixels=25; x=365...369, y=471...475, pixels=22; x=318...324, y=476...478, pixels=21; x=361...370, y=465...466, pixels=19; x=289...293, y=480...483, pixels=19
+  selected press key: x=298...313, y=493...496, pixels=64
+SOURCE 3: eyes x=265...299, y=249...275, pixels=625; x=340...373, y=249...275, pixels=579; face screen x=234...388, y=208...315, pixels=13714
+  antenna x=217...252, y=103...143, pixels=1133; orange ball x=222...247, y=109...133, pixels=517; head candidate x=146...411, y=104...331, pixels=41410 [bob skipped]
+  key candidates: x=248...270, y=476...483, pixels=102; x=326...343, y=479...487, pixels=94; x=299...317, y=497...501, pixels=85; x=345...364, y=475...479, pixels=83; x=269...286, y=484...490, pixels=82; x=310...326, y=466...469, pixels=64; x=329...344, y=462...465, pixels=63; x=311...325, y=475...478, pixels=55; x=329...342, y=470...474, pixels=54; x=345...357, y=466...470, pixels=48; x=362...370, y=462...466, pixels=37; x=349...356, y=457...460, pixels=31; x=364...369, y=471...475, pixels=23; x=313...317, y=461...463, pixels=14
+  selected press key: x=282...302, y=469...478, pixels=112
+SOURCE 4: eyes x=264...298, y=249...275, pixels=605; x=341...373, y=249...275, pixels=578; face screen x=233...388, y=208...315, pixels=13744
+  antenna x=217...252, y=103...143, pixels=1133; orange ball x=222...247, y=108...133, pixels=520; head candidate x=145...410, y=104...330, pixels=41251 [bob skipped]
+  key candidates: x=324...344, y=480...483, pixels=80; x=325...343, y=471...474, pixels=73; x=286...304, y=479...483, pixels=71; x=270...288, y=475...478, pixels=64; x=306...321, y=475...478, pixels=63; x=290...304, y=471...474, pixels=59; x=293...305, y=462...464, pixels=38; x=307...317, y=466...469, pixels=36; x=350...357, y=467...470, pixels=30
+t01.png: source=1, antenna dip=0px, blink=false, glow=false, 160ms; PASS 627x627 bottom=537 alpha>0=98691 alpha>32=98297
+t02.png: source=2, antenna dip=0px, blink=false, glow=true, 140ms; PASS 627x627 bottom=537 alpha>0=97367 alpha>32=96983
+t03.png: source=2, antenna dip=6px, blink=false, glow=false, 150ms; PASS 627x627 bottom=537 alpha>0=97271 alpha>32=96890
+t04.png: source=3, antenna dip=0px, blink=false, glow=true, 140ms; PASS 627x627 bottom=537 alpha>0=98276 alpha>32=97828
+t05.png: source=3, antenna dip=0px, blink=false, glow=false, 160ms; PASS 627x627 bottom=537 alpha>0=98276 alpha>32=97828
+t06.png: source=4, antenna dip=0px, blink=false, glow=false, 150ms; PASS 627x627 bottom=536 alpha>0=99437 alpha>32=98843
+t07.png: source=4, antenna dip=6px, blink=false, glow=false, 150ms; PASS 627x627 bottom=536 alpha>0=99341 alpha>32=98753
+t08.png: source=1, antenna dip=0px, blink=true, glow=false, 100ms; PASS 627x627 bottom=537 alpha>0=98691 alpha>32=98297
+t09.png: source=1, antenna dip=6px, blink=true, glow=false, 100ms; PASS 627x627 bottom=537 alpha>0=98595 alpha>32=98204
+t10.png: source=2, antenna dip=0px, blink=false, glow=true, 140ms; PASS 627x627 bottom=537 alpha>0=97367 alpha>32=96983
+t11.png: source=2, antenna dip=0px, blink=false, glow=false, 160ms; PASS 627x627 bottom=537 alpha>0=97367 alpha>32=96983
+t12.png: source=3, antenna dip=0px, blink=false, glow=true, 140ms; PASS 627x627 bottom=537 alpha>0=98276 alpha>32=97828
+t13.png: source=3, antenna dip=0px, blink=false, glow=false, 170ms; PASS 627x627 bottom=537 alpha>0=98276 alpha>32=97828
+t14.png: source=1, antenna dip=6px, blink=false, glow=false, 190ms; PASS 627x627 bottom=537 alpha>0=98595 alpha>32=98204
+SEAM changed pixels: 1229, opaque: 98297
+PASS: 14 frames, 2050ms; all 627x627; source body/laptop bottom rows unchanged (including original 536/537 variation).
+PASS: maximum alpha>0 / alpha>32 count difference 0.09860% (<1%).
+PASS: all consecutive frames distinct; changed pixels per transition (last is seam): [95698, 1288, 96692, 112, 95868, 1239, 97377, 1229, 95922, 64, 96573, 112, 95905, 1229]
+PASS: loop seam 1229 changed pixels, only an antenna return; <0.5% of canvas, confined to antenna, and <4000 pixels.
+PASS: exact PNG round trips; original RGBA palette only; antenna connected; pixels outside declared edits unchanged.
+PASS: source PNGs byte-unchanged. Sheet: /Users/erdemincedere/Clockin/clockin-main/website/tools/typing/sheet.png, 2512x157, nearest-neighbour, red baseline y=537.
+SKIPPED: head bob; candidate head shares its lower outline with neck/shoulders, so no uncertain body reconstruction is performed.
