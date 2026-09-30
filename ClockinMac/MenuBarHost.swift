@@ -17,11 +17,15 @@ extension MenuBarController.Host {
         return Self(
             status: {
                 // Idle there is nothing to compute: only the icon shows.
-                guard store.running != nil else { return MenuBarStatus(state: .idle, text: nil) }
+                guard let running = store.running else { return MenuBarStatus(state: .idle, text: nil) }
+                // This Mac's display preference leaves minimal mode and saved fields intact.
+                guard flag("Clockin.MacShowMenuBarDetails", true) else {
+                    return MenuBarStatus(state: running.isPaused ? .paused : .running, text: nil)
+                }
                 let now = Date()
                 return MenuBarStatus.make(
                     isRunning: true,
-                    isPaused: store.running?.isPaused == true,
+                    isPaused: running.isPaused,
                     sessionElapsed: store.elapsed(at: now),
                     sessionEarnings: store.currentEarnings(at: now),
                     currencyCode: store.currencyCode,

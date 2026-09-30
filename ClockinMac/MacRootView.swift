@@ -31,17 +31,15 @@ struct MacRootView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
-            List(selection: $navigation.section) {
-                Label("Today", systemImage: "timer").tag(MacSection.today)
-                Label("History", systemImage: "chart.bar.xaxis").tag(MacSection.history)
-                Label("Progress", systemImage: "chart.line.uptrend.xyaxis").tag(MacSection.progress)
-                Label("Settings", systemImage: "gearshape").tag(MacSection.settings)
+        detail
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MacTabBar(selection: $navigation.section)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity)
             }
-            .navigationSplitViewColumnWidth(min: 160, ideal: 180)
-        } detail: {
-            detail
-        }
         .allowsHitTesting(!showsCelebration && !celebrationFading)
         .accessibilityHidden(showsCelebration || celebrationFading)
         .task(id: showsCelebration) {

@@ -4,6 +4,7 @@ struct MacSettingsSection: View {
     @EnvironmentObject private var store: ClockStore
     @ObservedObject private var updates = UpdateChecker.shared
     @ObservedObject private var shortcuts = KeyboardShortcutController.shared
+    @AppStorage("Clockin.MacShowMenuBarDetails", store: .standard) private var showMenuBarDetails = true
     @AppStorage("Clockin.MinimalMode") private var minimalMode = false
     @AppStorage("Clockin.MinimalShowHours") private var showHours = true
     @AppStorage("Clockin.MinimalShowSeconds") private var showSeconds = false
@@ -15,15 +16,22 @@ struct MacSettingsSection: View {
 
     var body: some View {
         Section("Menu bar") {
+            Toggle("Show details in the menu bar", isOn: $showMenuBarDetails)
+            Text("Turn off to show only the Clockin icon. An iPhone’s Live Activity can also appear here: System Settings > Notifications > Allow Live Activities from iPhone.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             Toggle("Minimal menu bar mode", isOn: Binding(
                 get: { minimalMode },
                 set: { MenuBarPanelView.setMinimalMode($0, store: store) }
             ))
-            Toggle("Show hours", isOn: $showHours)
-            Toggle("Show seconds", isOn: $showSeconds).disabled(!showHours)
-            Toggle("Show earnings", isOn: $showEarnings)
-            Toggle("Show TRY equivalent", isOn: $showTRY)
-            Toggle("Show goal progress", isOn: $showGoal)
+            Group {
+                Toggle("Show hours", isOn: $showHours)
+                Toggle("Show seconds", isOn: $showSeconds).disabled(!showHours)
+                Toggle("Show earnings", isOn: $showEarnings)
+                Toggle("Show TRY equivalent", isOn: $showTRY)
+                Toggle("Show goal progress", isOn: $showGoal)
+            }
+            .disabled(!showMenuBarDetails)
         }
         Section("Pinned timer") {
             Toggle("Pin timer", isOn: Binding(get: { store.pinVisible }, set: { store.setPinned($0) }))

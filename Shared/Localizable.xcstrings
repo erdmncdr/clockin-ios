@@ -11333,6 +11333,16 @@
         }
       }
     },
+    "Show details in the menu bar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunda ayrıntıları göster"
+          }
+        }
+      }
+    },
     "Show earnings": {
       "localizations": {
         "tr": {
@@ -13055,6 +13065,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güncellemeleri durdurmak ve geçici sunucu kaydının silinmesini istemek için Clockin Ayarları'ndan kapat."
+          }
+        }
+      }
+    },
+    "Turn off to show only the Clockin icon. An iPhone’s Live Activity can also appear here: System Settings > Notifications > Allow Live Activities from iPhone.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca Clockin simgesini görmek için kapat. iPhone’un Canlı Etkinliği de menü çubuğunda görünebilir: Sistem Ayarları > Bildirimler > iPhone’dan Canlı Etkinliklere İzin Ver."
           }
         }
       }
