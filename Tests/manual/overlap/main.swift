@@ -111,4 +111,34 @@ do {
     check(!SessionOverlap.intersects(midnight, s(12, 0, 0, 1, 0)), "same-minute handoff works across midnight")
 }
 
+// Zaman karti resmi kayittir; birkac dakikalik binmeler ciddi degildir.
+do {
+    func card(_ session: WorkSession, _ source: String = "starfleet") -> WorkSession {
+        var copy = session; copy.source = source; return copy
+    }
+    let monthEnd = card(s(31, 23, 38, 2, 58)), nextMonth = card(s(31, 23, 55, 0, 14))
+    check(SessionOverlap.conflicting(in: [monthEnd, nextMonth]).isEmpty,
+          "two timecard rows that overlap are the timecard's own record, not a warning")
+    let timer = s(31, 23, 40, 1, 0)
+    check(SessionOverlap.conflicting(in: [monthEnd, timer]) == [monthEnd.id, timer.id],
+          "a timer entry that overlaps a timecard row is still flagged")
+    var corrected = timer
+    corrected.matchedExternalSource = "starfleet"
+    check(SessionOverlap.conflicting(in: [monthEnd, corrected]).isEmpty,
+          "a timer entry corrected by the timecard counts as timecard")
+    check(SessionOverlap.conflicting(in: [s(11, 9, 0, 12, 1), s(11, 12, 0, 15, 0)]).isEmpty,
+          "a one-minute overlap between long entries is not serious")
+    check(SessionOverlap.conflicting(in: [s(11, 9, 0, 12, 6), s(11, 12, 0, 15, 0)]).count == 2,
+          "more than five minutes of overlap is serious")
+    let tiny = s(11, 9, 0, 9, 3)
+    var tinyCopy = tiny; tinyCopy.id = UUID()
+    check(SessionOverlap.conflicting(in: [tiny, tinyCopy]).count == 2,
+          "two copies of a three-minute entry are still flagged")
+    check(SessionOverlap.touching(start: nextMonth.start, end: nextMonth.end, in: [monthEnd, nextMonth],
+                                  excluding: nextMonth.id).isEmpty,
+          "editing a timecard row does not warn about another timecard row")
+    check(SessionOverlap.touching(start: nextMonth.start, end: nextMonth.end, in: [monthEnd]).map(\.id) == [monthEnd.id],
+          "a new manual entry over a timecard row warns")
+}
+
 print("\(checks) overlap checks passed")

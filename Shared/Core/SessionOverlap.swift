@@ -35,17 +35,45 @@ enum SessionOverlap {
             && !isHandoff(otherStart, otherEnd, start, end)
     }
 
-    /// Verilen araliga degen kayitlar. Duzenleme sirasinda kaydin kendisi
-    /// `excluding` ile disarida birakilir, yoksa her kayit kendisiyle cakisir.
+    /// Bundan kisa bir ust uste binme uyari degildir: zaman kartlari dakikaya
+    /// yuvarlaniyor ve arka arkaya iki satir bir iki dakika ust uste binebiliyor.
+    static let minorOverlap: TimeInterval = 5 * 60
+
+    /// Zaman kartindan gelen ya da onunla duzeltilmis kayit.
+    static func isTimecard(_ session: WorkSession) -> Bool {
+        session.source != "Clockin" || session.matchedExternalSource != nil
+    }
+
+    /// Kullaniciya gosterilecek bir cakisma mi.
+    ///
+    /// Zaman karti isin resmi kaydidir: iki kart kaydi arasindaki cakisma (gece
+    /// yarisini ya da ay sonunu asan satirlar gibi) kartin kendi yazimidir,
+    /// kullanicinin burada cozecegi bir sey degil. Birkac dakikalik binmeler de
+    /// sayilmaz; ayni kisa kaydin iki kopyasi ise kisa olanin yarisindan fazla
+    /// ortustugu icin yine yakalanir.
+    static func conflicts(_ a: WorkSession, _ b: WorkSession) -> Bool {
+        guard !(isTimecard(a) && isTimecard(b)), intersects(a, b) else { return false }
+        let shared = min(a.end, b.end).timeIntervalSince(max(a.start, b.start))
+        let shorter = min(a.end.timeIntervalSince(a.start), b.end.timeIntervalSince(b.start))
+        return shared > minorOverlap || shared >= shorter / 2
+    }
+
+    /// Verilen araliga gercekten cakisan kayitlar. Duzenleme sirasinda kaydin
+    /// kendisi `excluding` ile disarida birakilir, yoksa her kayit kendisiyle
+    /// cakisir; duzenlenen kaydin kaynagi da ondan okunur. Yeni kayit elle
+    /// girilmistir.
     static func touching(start: Date, end: Date, in sessions: [WorkSession],
                          excluding id: UUID? = nil) -> [WorkSession] {
         guard end > start else { return [] }
-        return sessions.filter {
-            $0.id != id && intersects(start: start, end: end, otherStart: $0.start, otherEnd: $0.end)
-        }
+        let edited = id.flatMap { id in sessions.first { $0.id == id } }
+        var candidate = WorkSession(id: id ?? UUID(), start: start, end: end,
+                                    duration: end.timeIntervalSince(start), note: "", hourlyRate: 0,
+                                    source: edited?.source ?? "Clockin")
+        candidate.matchedExternalSource = edited?.matchedExternalSource
+        return sessions.filter { $0.id != id && conflicts(candidate, $0) }
     }
 
-    /// Listede baska bir kayitla cakisan her kaydin kimligi.
+    /// Listede baska bir kayitla gercekten cakisan her kaydin kimligi.
     ///
     /// Kayitlar baslangica gore siralanip tek gecise indirgeniyor: 600 kayitta
     /// her cifti denemek yuz seksen bin karsilastirma demek, bu ise gecmis
@@ -58,7 +86,7 @@ enum SessionOverlap {
         var open: [WorkSession] = []
         for session in ordered {
             open.removeAll { $0.end <= session.start }
-            for other in open where intersects(session, other) {
+            for other in open where conflicts(session, other) {
                 conflicted.insert(session.id)
                 conflicted.insert(other.id)
             }
