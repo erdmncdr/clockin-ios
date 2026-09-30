@@ -47,6 +47,7 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (43) | [Sync with Clockin for Mac](ios-testflight-0.2-43.md) |
 | 0.2 (45) | [First production merge after development testing, file as reference](ios-testflight-0.2-45.md) |
 | 0.2 (46) | [Sync crash fix](ios-testflight-0.2-46.md) |
+| 0.2 (47) | Every timecard import is the reference for its period (`71e3ddd`) |
 
 Mac releases built from this repository:
 
@@ -54,3 +55,4 @@ Mac releases built from this repository:
 |---|---|
 | 2.0.0 (11) | [Clockin for Mac on the iPhone code base, with sync](mac-2.0.0-11.md) |
 | 2.0.1 (12) | [Sync crash fix, environment reset, file as reference](mac-2.0.1-12.md) |
+| 2.0.2 (13) | [Every timecard import is the reference for its period](mac-2.0.2-13.md) |
