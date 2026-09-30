@@ -26,5 +26,18 @@ Live appcast: 2.0.0 (11) -> macos-v2.0.0/Clockin-2.0.0-11.dmg (19,566,083 bytes)
 
 Existing 1.1.6 users receive the update through Sparkle. Their data stays in
 `~/Library/Application Support/Clockin`; first launch translates old
-preferences once and does not replay old celebrations. The website download
-(getclockin.netlify.app) still serves 1.1.6.
+preferences once and does not replay old celebrations.
+
+## Website
+
+getclockin.netlify.app production deploy `6abcd212a1f80c626ec40ede`
+(2026-09-30): only `/index.html` changed, from the site-hosted
+`/downloads/Clockin-1.1.6-10.dmg` to the fixed
+`macos-updates/Clockin.dmg` (now 2.0.0 (11)), matching
+`clockin-main/website/dist/index.html`. The other 223 file hashes, including
+`/_headers` and `/privacy/`, and the `admin`, `live-activity` and
+`live-activity-tick` bundles, routes, rate limits and schedule were reused
+from the previous production deploy. The draft preview was checked first;
+production checks: 3 links to the fixed DMG, no 1.1.6 text, `/privacy/` 200,
+relay health protocol 2 with `pushConfigured: true`. The old 1.1.6 DMG is
+still hosted under `/downloads/` for existing links.
