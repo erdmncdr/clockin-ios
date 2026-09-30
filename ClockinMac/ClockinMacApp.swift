@@ -1,6 +1,7 @@
 import AppKit
 import CloudKit
 import Combine
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -29,6 +30,8 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         let sync = SyncCoordinator.shared
         sync.start()
         if sync.isEnabled { NSApplication.shared.registerForRemoteNotifications() }
+        // A menu bar app runs all day; it must not depend on push alone.
+        sync.setPolling(true)
         cloudAccountObserver = NotificationCenter.default.addObserver(
             forName: .CKAccountChanged, object: nil, queue: nil
         ) { _ in
@@ -113,6 +116,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        Logger(subsystem: "com.erdmncdr.clockin", category: "sync").notice("push delivered to the app")
         guard SyncCoordinator.shared.isEnabled,
               let notice = CKNotification(fromRemoteNotificationDictionary: userInfo) as? CKDatabaseNotification,
               notice.containerIdentifier == ClockinCloudRecord.containerID,

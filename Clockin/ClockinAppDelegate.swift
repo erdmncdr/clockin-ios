@@ -1,4 +1,5 @@
 import CloudKit
+import OSLog
 import UIKit
 
 final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
@@ -38,6 +39,7 @@ final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
     @MainActor
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
+        Logger(subsystem: "com.erdmncdr.clockin", category: "sync").notice("push delivered to the app")
         let sync = SyncCoordinator.shared
         guard sync.isEnabled,
               let notice = CKNotification(fromRemoteNotificationDictionary: userInfo) as? CKDatabaseNotification,

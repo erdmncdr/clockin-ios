@@ -1,6 +1,7 @@
 #if !WIDGET_EXTENSION
 import Combine
 import Foundation
+import OSLog
 
 /// App-process owner. Neither construction nor any trigger initializes stores/CloudKit while off.
 @available(iOS 17.0, macOS 14.0, *)
@@ -74,7 +75,27 @@ final class SyncCoordinator: ObservableObject {
         debounce = SyncWakeup(clock: clock)
     }
 
-    deinit { work?.cancel() }
+    deinit { work?.cancel(); poll?.cancel() }
+
+    /// Push can go missing: on 2026-09-30 a Mac running 2.0.3 received no CloudKit push for
+    /// changes the iPhone saved. While the app is in use it asks iCloud this often anyway;
+    /// with nothing new that is one small database-changes request.
+    static let pollInterval: Duration = .seconds(60)
+    private var poll: Task<Void, Never>?
+    private static let log = Logger(subsystem: "com.erdmncdr.clockin", category: "sync")
+
+    /// The Mac polls while the process runs; the iPhone only while a scene is active.
+    func setPolling(_ on: Bool) {
+        poll?.cancel(); poll = nil
+        guard on else { return }
+        poll = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.pollInterval)
+                guard !Task.isCancelled, let self else { return }
+                if self.isEnabled { self.start() }
+            }
+        }
+    }
 
     /// Retain shared once at process launch, including a headless intent launch. The task handle
     /// is optional for callers that must await completion (background push and offline checks).
@@ -99,7 +120,10 @@ final class SyncCoordinator: ObservableObject {
         start()
     }
 
-    func handleRemoteNotification() async { await start()?.value }
+    func handleRemoteNotification() async {
+        Self.log.notice("remote notification")
+        await start()?.value
+    }
 
     func accountMayHaveChanged() {
         guard isEnabled else { _ = turnOff(); return }
