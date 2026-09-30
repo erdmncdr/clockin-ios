@@ -85,6 +85,9 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
     private(set) var lastSuccessfulSync: Date? { didSet { didChange?() } }
     var didChange: (@MainActor @Sendable () -> Void)?
 
+    /// Debug builds talk to the Development environment, exported builds to Production.
+    static let environment = Bundle.main.object(forInfoDictionaryKey: "ClockinCloudEnvironment") as? String
+
     init(bridge: SyncBridge, clock: any SyncClock = SystemSyncClock()) {
         self.bridge = bridge; self.clock = clock; retry = SyncWakeup(clock: clock)
         container = CKContainer(identifier: ClockinCloudRecord.containerID)
@@ -129,6 +132,9 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
                 return
             }
             try bridge.setAccount(account)
+            if let environment = Self.environment, bridge.bindEnvironment(environment) {
+                syncLog.notice("sync state was from another CloudKit environment; starting over in \(environment, privacy: .public)")
+            }
             try bridge.reconcileLocalArchive()
             let serialized = try bridge.state.engineState.map { try SyncCoding.decode(CKSyncEngine.State.Serialization.self, $0) }
             guard await bridge.persist(), isCurrent(generation) else {

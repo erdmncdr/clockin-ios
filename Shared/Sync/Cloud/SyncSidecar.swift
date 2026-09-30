@@ -10,6 +10,8 @@ struct SyncSidecar: Codable, Sendable {
     var systemFields: [String: Data] = [:]
     var engineState: Data?
     var accountID: String?
+    /// CloudKit environment this state was synced against ("Development" or "Production").
+    var cloudEnvironment: String?
     var firstMergeCompleted = false
     var initialUploadAllowed = false
     var hasForeignStaged = false
@@ -285,6 +287,29 @@ struct SyncSidecar: Codable, Sendable {
               acknowledgedNotices.allSatisfy({ ($0 == "recovery-overflow" && recoveryOverflow)
                   || ($0 == "quarantine-overflow" && quarantineOverflow) }),
               byteCount <= byteBound else { throw SyncFailure.invalid("Sidecar limits exceeded") }
+    }
+
+    /// Development and Production are separate servers. State from the other one says nothing
+    /// about this server, so the device meets it like a new device with history: it fetches,
+    /// shows the first-merge preview when the server has foreign data, then uploads everything.
+    @discardableResult
+    mutating func bindEnvironment(_ environment: String) -> Bool {
+        guard cloudEnvironment != environment else { return false }
+        #if os(iOS)
+        // Sidecars before 0.2 (44) carry no environment, and only development builds had
+        // completed a first merge. TestFlight 0.2 (43) otherwise skipped the production merge.
+        let legacyForeign = cloudEnvironment == nil && environment == "Production" && firstMergeCompleted
+        #else
+        // The Mac tested sync with a separate Debug archive; untagged Mac state is from Production.
+        let legacyForeign = false
+        #endif
+        let foreign = cloudEnvironment != nil || legacyForeign
+        cloudEnvironment = environment
+        guard foreign else { touch(); return false }
+        firstMergeCompleted = false; initialUploadAllowed = false
+        staged = [:]; hasForeignStaged = false
+        resetTransport()
+        return true
     }
 
     // Account transitions halt the adapter. This state is retained for the original account.

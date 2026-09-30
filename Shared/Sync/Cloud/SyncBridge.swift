@@ -111,6 +111,8 @@ final class SyncBridge {
         guard id.utf8.count <= 1024 else { throw SyncFailure.invalid("Invalid account identity") }
         state.accountID = id; state.touch()
     }
+    @discardableResult
+    func bindEnvironment(_ environment: String) -> Bool { state.bindEnvironment(environment) }
     func resetTransport() { state.resetTransport() }
     func rememberSystemFields(_ fields: Data, for key: String) { state.rememberSystemFields(fields, for: key); state.touch() }
     func clearSystemFields(for key: String) { state.systemFields[key] = nil; state.touch() }

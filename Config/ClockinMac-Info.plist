@@ -26,5 +26,7 @@
 	<true/>
 	<key>ClockinCloudSyncEnabled</key>
 	<string>$(CLOCKIN_CLOUD_SYNC)</string>
+	<key>ClockinCloudEnvironment</key>
+	<string>$(CLOCKIN_CLOUD_ENVIRONMENT)</string>
 </dict>
 </plist>

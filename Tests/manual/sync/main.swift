@@ -369,5 +369,17 @@ try await approvalBridge!.approveFirstMerge(approvalBridge!.firstPreview(), arch
 try await queuedSave?.value
 check(approvalBridge!.state.pending.contains("Session:" + uuid(700).uuidString),
       "local save during first-merge sidecar write is tracked")
+var moved = firstSidecar
+moved.cloudEnvironment = "Development"
+check(moved.bindEnvironment("Production") && !moved.firstMergeCompleted && !moved.permitsUpload
+      && moved.engineState == nil && moved.systemFields.isEmpty && moved.pending == moved.records.keys.sorted(),
+      "state from another CloudKit environment meets the new server like a new device with history")
+try moved.validateLocalBounds(byteCount: SyncCoding.encode(moved).count)
+check(!moved.bindEnvironment("Production") && moved.cloudEnvironment == "Production",
+      "binding the same environment again keeps sync state")
+var untaggedMac = firstSidecar
+check(!untaggedMac.bindEnvironment("Production") && untaggedMac.firstMergeCompleted
+      && untaggedMac.engineState != nil && untaggedMac.cloudEnvironment == "Production",
+      "untagged Mac state is adopted by the environment it runs in")
 try await boundedChecks()
 emit("All \(checks) sync checks passed.")
