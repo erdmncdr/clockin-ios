@@ -191,10 +191,100 @@ do {
     let reference = s.compareImportedSessions(rows, scope: .wholeRange, fileIsReference: true)
     check(Set(reference.leftovers.map(\.id)) == [copy.id, stale.id, timer.id],
           "with the file as reference every entry in the period that the file lacks is offered")
-    s.importSessions(reference.sessionsToImport(excluding: []), removing: Set(reference.leftovers.map(\.id)))
+    s.importSessions(reference.sessionsToImport(excluding: []), removing: reference.leftovers)
     check(Set(s.sessions.map(\.id)).isSuperset(of: [kept.id, later.id]) && s.sessions.count == 3,
           "the period matches the file, entries outside it stay")
     check(abs(hours(s) - 17) < 0.01, "no doubled hours remain")
+}
+
+// Onizlemeden sonra ayni kimlik baska doneme tasinmissa silinmemeli.
+do {
+    let leftover = session(day: 4, 9, 0, 12, 0, source: "timeportal")
+    let (s, dir) = store([leftover]); defer { try? FileManager.default.removeItem(at: dir) }
+    let incoming = session(day: 4, 14, 0, 15, 0, source: "timeportal")
+    let review = s.compareImportedSessions([incoming], fileIsReference: true)
+    check(review.isCurrent(for: s.data.sessions), "new review matches its store snapshot")
+    check(review.leftovers.map(\.id) == [leftover.id], "review contains the original removal candidate")
+    check(s.updateSession(id: leftover.id, start: at(20, 9, 0), end: at(20, 12, 0), note: leftover.note),
+          "the reviewed candidate moves to a different day")
+    let before = s.sessions
+    check(!review.isCurrent(for: s.data.sessions), "review detects a changed store snapshot")
+    check(!s.importSessions([incoming], removing: review.leftovers),
+          "store refuses an import whose removal candidate changed since review")
+    check(s.sessions == before, "stale removal refusal also leaves incoming rows unapplied")
+    check(ClockStore(fileURL: s.archiveURL).sessions == before, "stale refusal preserves the saved archive")
+    check(s.importSessions([], removing: s.sessions), "unchanged reviewed values can still be deleted")
+    check(s.sessions.isEmpty, "freshly reviewed deletion removes only approved records")
+}
+
+// Bozuk bir orta satir, kayit yoklugu diye yorumlanmamali.
+do {
+    let csv = "Start Time,End Time\n2026-03-01T09:00:00Z,2026-03-01T10:00:00Z\n2026-03-02T09:00:00Z,unreadable\n2026-03-03T09:00:00Z,2026-03-03T10:00:00Z\n"
+    let parsed = try CSVImporter.parse(data: Data(csv.utf8), hourlyRate: 40)
+    check(parsed.skippedRowCount == 1 && parsed.sessions.count == 2,
+          "CSV reports a rejected row between valid rows")
+    check(!parsed.allowsDeletions, "incomplete CSV cannot authorize reference deletions")
+}
+
+do {
+    let csv = "Start Time,End Time\r\n2026-03-01T09:00:00Z,2026-03-01T10:00:00Z\r\n2026-03-02T09:00:00Z\r\n,,\r\n\r\n"
+    let parsed = try CSVImporter.parse(data: Data(csv.utf8), hourlyRate: 40)
+    check(parsed.sessions.count == 1 && parsed.skippedRowCount == 2,
+          "CSV counts missing fields and empty data rows but not blank lines")
+    let complete = try CSVImporter.parse(data: Data("Start Time,End Time,Notes\n2026-03-01T09:00:00Z,2026-03-01T10:00:00Z,\"one\ntwo\"\n".utf8), hourlyRate: 40)
+    check(complete.skippedRowCount == 0 && complete.allowsDeletions && complete.sessions[0].note == "one\ntwo",
+          "complete CSV with a quoted multiline field can still be a reference")
+}
+do {
+    let text = "Mar 1, 2026 - Mar 7, 2026 Monday March 2 Approved Project 09:00 10:00 Tuesday March 3 Approved Project unreadable 10:00 Wednesday March 4 Approved Project 09:00 10:00"
+    let parsed = try PastedTextImporter.parse(text, hourlyRate: 40)
+    check(parsed.sessions.count == 2 && parsed.skippedRowCount == 1 && !parsed.allowsDeletions,
+          "pasted timecards report an unreadable middle row and forbid deletion")
+    check(parsed.sessions.map { calendar.component(.day, from: $0.start) } == [2, 4],
+          "a malformed pasted row cannot consume the next row's times")
+    let blocks = "Monday\nMarch 2\nProject\n09:00\n10:00\nTuesday\nMarch 3\nApproved\nProject\n25:00\n10:00\nWednesday March 4 Approved Project 11:00 12:00"
+    let mixed = try PastedTextImporter.parse(blocks, hourlyRate: 40, now: at(7, 12, 0))
+    check(mixed.sessions.count == 2 && mixed.skippedRowCount == 1,
+          "mixed line and block formats keep readable rows and report invalid times")
+    let complete = try PastedTextImporter.parse("ThursdaySeptember 10 Approved Project 09:00 17:00", hourlyRate: 40)
+    check(complete.sessions.count == 1 && complete.allowsDeletions,
+          "complete pasted rows with joined weekday and month remain supported")
+}
+
+do {
+    let csv = "Start Time,End Time,Notes\n2026-03-01T09:00:00Z,2026-03-01T10:00:00Z,valid\n2026-03-02T09:00:00Z,2026-03-02T10:00:00Z,\"unfinished"
+    let parsed = try CSVImporter.parse(data: Data(csv.utf8), hourlyRate: 40)
+    check(parsed.sessions.count == 1 && parsed.skippedRowCount == 1 && !parsed.allowsDeletions,
+          "unterminated CSV quoting is reported instead of making a complete reference")
+}
+do {
+    let text = "September 1, 2026 - September 7, 2026 Monday September 1 Approved Project 09:00 10:00 September 2 Approved Project 09:00 10:00 Wednesday September 3 Approved Project 09:00 10:00"
+    let parsed = try PastedTextImporter.parse(text, hourlyRate: 40)
+    check(parsed.sessions.count == 2 && parsed.skippedRowCount == 1 && !parsed.allowsDeletions,
+          "a pasted date row with no weekday is reported while the page range is ignored")
+}
+
+do {
+    let candidate = session(9, 0, 12, 0, source: "timeportal")
+    let (s, dir) = store([candidate]); defer { try? FileManager.default.removeItem(at: dir) }
+    let review = s.compareImportedSessions([session(14, 0, 15, 0, source: "timeportal")], fileIsReference: true)
+    check(s.updateSession(id: candidate.id, start: candidate.start, end: at(4, 12, 30), note: candidate.note),
+          "the reviewed candidate changes only its end")
+    check(!s.importSessions([], removing: review.leftovers) && s.sessions.count == 1,
+          "store refuses deletion when only the reviewed end changed")
+    let current = s.sessions[0]
+    check(s.updateSession(id: current.id, start: current.start, end: current.end, note: "Edited after review"),
+          "the reviewed candidate changes only its note")
+    check(!s.importSessions([], removing: [current]), "store also protects edited reviewed metadata")
+}
+
+do {
+    let prefix = "Start Time,End Time\n2026-03-01T09:00:00Z,2026-03-01T10:00:00Z\n"
+    for suffix in ["\"", "\"\"", "\"\"\n"] {
+        let parsed = try CSVImporter.parse(data: Data((prefix + suffix).utf8), hourlyRate: 40)
+        check(parsed.skippedRowCount == 1 && !parsed.allowsDeletions,
+              "an empty quoted data row is reported, including at end of file")
+    }
 }
 
 print("\(checks) import checks passed")

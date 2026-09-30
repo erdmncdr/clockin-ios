@@ -15,13 +15,13 @@ enum CSVImportError: LocalizedError {
 }
 
 enum CSVImporter {
-    static func parse(data: Data, hourlyRate: Double) throws -> [WorkSession] {
+    static func parse(data: Data, hourlyRate: Double) throws -> TimecardParseResult {
         guard var text = String(data: data, encoding: .utf8) else { throw CSVImportError.unreadable }
         text = text.replacingOccurrences(of: "\u{feff}", with: "")
         let rows = parseRows(text)
-        guard let header = rows.first else { throw CSVImportError.noValidRows }
+        guard let header = rows.first, header.complete else { throw CSVImportError.noValidRows }
 
-        let names = header.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        let names = header.fields.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
         guard let startIndex = names.firstIndex(of: "start time"),
               let endIndex = names.firstIndex(of: "end time") else {
             throw CSVImportError.missingColumns
@@ -30,7 +30,9 @@ enum CSVImporter {
         let notesIndex = names.firstIndex(of: "notes")
         let sourceIndex = names.firstIndex(of: "time sheet source")
 
-        let sessions = rows.dropFirst().compactMap { row -> WorkSession? in
+        let sessions = rows.dropFirst().compactMap { parsed -> WorkSession? in
+            guard parsed.complete else { return nil }
+            let row = parsed.fields
             guard row.indices.contains(startIndex), row.indices.contains(endIndex),
                   let start = parseDate(row[startIndex]), let end = parseDate(row[endIndex]), end >= start else { return nil }
 
@@ -53,7 +55,7 @@ enum CSVImporter {
             )
         }
         guard !sessions.isEmpty else { throw CSVImportError.noValidRows }
-        return sessions
+        return TimecardParseResult(sessions: sessions, skippedRowCount: rows.count - 1 - sessions.count)
     }
 
     private static func value(at index: Int?, in row: [String]) -> String {
@@ -69,21 +71,23 @@ enum CSVImporter {
         return standard.date(from: value)
     }
 
-    static func parseRows(_ text: String) -> [[String]] {
+    private static func parseRows(_ text: String) -> [(fields: [String], complete: Bool)] {
         // Swift treats CRLF as one extended grapheme cluster. Normalize first so
         // Windows-style exports split into rows just like Unix-style CSV files.
         let text = text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
-        var rows: [[String]] = []
+        var rows: [(fields: [String], complete: Bool)] = []
         var row: [String] = []
         var field = ""
         var quoted = false
+        var rowStarted = false
         let characters = Array(text)
         var index = 0
 
         while index < characters.count {
             let character = characters[index]
+            if !character.isWhitespace { rowStarted = true }
             if quoted {
                 if character == "\"" {
                     if index + 1 < characters.count, characters[index + 1] == "\"" {
@@ -101,17 +105,18 @@ enum CSVImporter {
                 case ",": row.append(field); field = ""
                 case "\n":
                     row.append(field); field = ""
-                    if !row.allSatisfy({ $0.isEmpty }) { rows.append(row) }
+                    if rowStarted { rows.append((row, true)) }
                     row = []
+                    rowStarted = false
                 case "\r": break
                 default: field.append(character)
                 }
             }
             index += 1
         }
-        if !field.isEmpty || !row.isEmpty {
+        if rowStarted {
             row.append(field)
-            rows.append(row)
+            rows.append((row, !quoted))
         }
         return rows
     }

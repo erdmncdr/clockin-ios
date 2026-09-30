@@ -815,6 +815,16 @@
         }
       }
     },
+    "%lld rows could not be read. Deletion is disabled.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld satır okunamadı. Silme devre dışı."
+          }
+        }
+      }
+    },
     "%lld sessions": {
       "localizations": {
         "en": {
@@ -4465,6 +4475,16 @@
         }
       }
     },
+    "Deletion is disabled for incomplete timecards.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksik puantajlarda silme devre dışı."
+          }
+        }
+      }
+    },
     "Desk Mode": {
       "localizations": {
         "tr": {
@@ -5071,6 +5091,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kayıtlar"
+          }
+        }
+      }
+    },
+    "Entries changed. Review the updated import again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıtlar değişti. Güncellenen içe aktarmayı yeniden inceleyin."
           }
         }
       }

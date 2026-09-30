@@ -19,6 +19,7 @@ import Foundation
     func synchronize() async {
         guard !stopped else { return }
         sends += 1; status = .syncing
+        bridge.markFetchComplete(false)
         bridge.markFetchComplete(true); bridge.allowInitialUploadIfSafe()
         if bridge.state.permitsUpload {
             for key in bridge.state.pending {
@@ -118,6 +119,7 @@ import Foundation
             let archive = try Data(contentsOf: f.store.archiveURL)
             let preferences = f.defaults.dictionaryRepresentation() as NSDictionary
             check(!f.coordinator.isEnabled, "disabled capability/user setting is checked")
+            await f.coordinator.pollIfNeeded()?.value
             await f.coordinator.start()?.value
             f.coordinator.sceneDidBecomeActive(); f.coordinator.accountMayHaveChanged()
             await f.coordinator.handleRemoteNotification()
@@ -300,6 +302,15 @@ import Foundation
                                       duration: 3600, note: "other device", hourlyRate: 25, source: "Clockin")]
         try reviewTransport.deliver(foreign, date: review.clock.now.addingTimeInterval(10))
         check(review.coordinator.pendingFirstMerge?.remoteCount == 1 && review.store.sessions.isEmpty, "first merge preview publishes foreign counts without applying")
+        let reviewedRevision = review.coordinator.pendingFirstMerge?.revision
+        let sendsBeforePoll = reviewTransport.sends
+        var withdrewPreview = false
+        let previewObservation = review.coordinator.$pendingFirstMerge.sink { if $0 == nil { withdrewPreview = true } }
+        await review.coordinator.pollIfNeeded()?.value
+        check(reviewTransport.sends == sendsBeforePoll && !withdrewPreview
+              && review.coordinator.pendingFirstMerge?.revision == reviewedRevision,
+              "periodic polling preserves a pending first-merge preview without fetching")
+        previewObservation.cancel()
         review.coordinator.postponeFirstMerge()
         check(review.coordinator.status == .paused(.postponed) && review.store.sessions.isEmpty, "postpone keeps local state and pending preview")
         review.defaults.set("changed-after-preview", forKey: "Clockin.Theme"); review.notify()
@@ -313,6 +324,9 @@ import Foundation
         check(review.store.sessions.count == 1 && review.coordinator.pendingFirstMerge == nil
               && reviewTransport.bridge.state.firstBackupPath != nil, "approval backs up archive then applies and resumes sync")
         check(reviewTransport.bridge.localSaveCount == beforeApproval, "first merge approval produces no echo")
+        let sendsAfterApproval = reviewTransport.sends
+        await review.coordinator.pollIfNeeded()?.value
+        check(reviewTransport.sends > sendsAfterApproval, "polling resumes after first-merge approval")
         review.coordinator.setSyncEnabled(false)
         await review.coordinator.start()?.value
         let offCount = reviewTransport.bridge.localSaveCount

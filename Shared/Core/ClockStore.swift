@@ -558,7 +558,7 @@ final class ClockStore: ObservableObject {
             let granted = url.startAccessingSecurityScopedResource()
             defer { if granted { url.stopAccessingSecurityScopedResource() } }
             let imported = try CSVImporter.parse(data: Data(contentsOf: url), hourlyRate: hourlyRate)
-            importSessions(imported)
+            importSessions(imported.sessions)
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -567,7 +567,7 @@ final class ClockStore: ObservableObject {
     func importPastedText(_ text: String) {
         do {
             let imported = try PastedTextImporter.parse(text, hourlyRate: hourlyRate)
-            importSessions(imported)
+            importSessions(imported.sessions)
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -677,7 +677,7 @@ final class ClockStore: ObservableObject {
     }
 
     func previewPastedText(_ text: String) -> [WorkSession] {
-        (try? PastedTextImporter.parse(text, hourlyRate: hourlyRate)) ?? []
+        (try? PastedTextImporter.parse(text, hourlyRate: hourlyRate).sessions) ?? []
     }
 
     /// - Parameter fileIsReference: dosya donemin tek dogruluk kaynagi. Artik
@@ -716,7 +716,7 @@ final class ClockStore: ObservableObject {
             }
             return ImportComparisonItem(session: session, kind: .new)
         }
-        return ImportComparisonSummary(items: items,
+        return ImportComparisonSummary(items: items, reviewedSessions: data.sessions,
                                        leftovers: leftoverSessions(imported, scope: scope, touched: touched,
                                                                    anySource: fileIsReference))
     }
@@ -796,13 +796,18 @@ final class ClockStore: ObservableObject {
         statusMessage = String(localized: "Session deleted.", bundle: .app)
     }
 
-    /// - Parameter removing: silinecek kendi kayitlarinin kimlikleri. Ice
+    /// - Parameter removing: silinecek kayitlarin onizlemede gorulen degerleri. Ice
     ///   aktarma kendiliginden hicbir sey silmez; bu kume yalnizca kullanici
     ///   onizlemede acikca sectiginde dolar.
     @discardableResult
-    func importSessions(_ imported: [WorkSession], removing: Set<UUID> = []) -> Bool {
+    func importSessions(_ imported: [WorkSession], removing: [WorkSession] = []) -> Bool {
         guard imported.allSatisfy(\.hasValidDuration) else {
             statusMessage = String(localized: "Invalid session duration or dates.", bundle: .app)
+            return false
+        }
+        let current = Dictionary(data.sessions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        guard removing.allSatisfy({ current[$0.id] == $0 }) else {
+            statusMessage = String(localized: "Entries changed. Review the updated import again.", bundle: .app)
             return false
         }
         let previous = data
@@ -810,8 +815,9 @@ final class ClockStore: ObservableObject {
         // indeksler kayiyor ve eslesme aramasi silinecek kayitlari da goruyor.
         var removed = 0
         if !removing.isEmpty {
+            let removalIDs = Set(removing.map(\.id))
             let before = data.sessions.count
-            data.sessions.removeAll { removing.contains($0.id) }
+            data.sessions.removeAll { removalIDs.contains($0.id) }
             removed = before - data.sessions.count
         }
         var fresh: [WorkSession] = []

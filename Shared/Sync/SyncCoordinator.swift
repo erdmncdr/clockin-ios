@@ -92,9 +92,17 @@ final class SyncCoordinator: ObservableObject {
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.pollInterval)
                 guard !Task.isCancelled, let self else { return }
-                if self.isEnabled { self.start() }
+                self.pollIfNeeded()
             }
         }
+    }
+
+    @discardableResult
+    func pollIfNeeded() -> Task<Void, Never>? {
+        // Fetching withdraws firstPreview until completion. Let the user finish reviewing;
+        // explicit sync triggers and approval still capture/check the current revision.
+        guard isEnabled, pendingFirstMerge == nil, bridge?.state.needsFirstMergeReview != true else { return nil }
+        return start()
     }
 
     /// Retain shared once at process launch, including a headless intent launch. The task handle

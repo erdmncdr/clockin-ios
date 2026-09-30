@@ -157,4 +157,28 @@ do {
           "the same hours on another day are not a copy")
 }
 
+// Kopya grubu bir temsilci tutar; fazlalik duvar saati degil calisilan suredir.
+do {
+    func card(_ session: WorkSession, worked: TimeInterval = 8 * 3600) -> WorkSession {
+        var copy = session; copy.source = "starfleet"; copy.duration = worked; return copy
+    }
+    let copies = [card(s(11, 9, 0, 17, 0)), card(s(11, 9, 1, 17, 1)), card(s(11, 9, 2, 17, 2))]
+    let three = SessionOverlap.importedTwice(in: copies)
+    check(three.pairs == 2 && three.extra == 16 * 3600,
+          "three eight-hour copies contribute two redundant entries and sixteen hours")
+    let breaks = [card(s(11, 9, 0, 17, 0), worked: 6 * 3600), card(s(11, 9, 1, 17, 1), worked: 6 * 3600)]
+    check(SessionOverlap.importedTwice(in: breaks).extra == 6 * 3600,
+          "duplicate extra time excludes stored breaks")
+    let mixed = [card(s(11, 9, 0, 17, 0), worked: 5 * 3600), card(s(11, 9, 1, 17, 1)),
+                 card(s(11, 9, 2, 17, 2), worked: 6 * 3600)]
+    check(SessionOverlap.importedTwice(in: mixed).extra == 11 * 3600,
+          "the longest worked duration is retained as the representative")
+    check(SessionOverlap.importedTwice(in: mixed.reversed()).extra == 11 * 3600,
+          "representative choice is independent of input order")
+    let separate = copies + [card(s(12, 9, 0, 17, 0)), card(s(12, 9, 1, 17, 1))]
+    let groups = SessionOverlap.importedTwice(in: separate)
+    check(groups.pairs == 3 && groups.extra == 24 * 3600,
+          "independent copy groups each retain one representative")
+}
+
 print("\(checks) overlap checks passed")

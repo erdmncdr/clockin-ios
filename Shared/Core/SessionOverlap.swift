@@ -82,19 +82,39 @@ enum SessionOverlap {
 
     /// Iki kez ice aktarilmis gorunen zaman karti kayitlarinin sayisi ve fazladan sayilan sure.
     static func importedTwice(in sessions: [WorkSession]) -> (pairs: Int, extra: TimeInterval) {
-        var pairs = 0
-        var extra: TimeInterval = 0
-        var open: [WorkSession] = []
-        for session in sessions.filter(isTimecard).sorted(by: { $0.start < $1.start }) {
-            open.removeAll { $0.end <= session.start }
-            for other in open where abs(other.start.timeIntervalSince(session.start)) <= copyTolerance
-                && abs(other.end.timeIntervalSince(session.end)) <= copyTolerance {
-                pairs += 1
-                extra += min(other.end, session.end).timeIntervalSince(max(other.start, session.start))
+        let ordered = sessions.filter(isTimecard).sorted { $0.start < $1.start }
+        var parents = Array(ordered.indices)
+        func root(_ index: Int) -> Int {
+            var current = index
+            while parents[current] != current {
+                parents[current] = parents[parents[current]]
+                current = parents[current]
             }
-            open.append(session)
+            return current
         }
-        return (pairs, extra)
+        var open: [Int] = []
+        for (index, session) in ordered.enumerated() {
+            open.removeAll {
+                ordered[$0].end <= session.start
+                    || session.start.timeIntervalSince(ordered[$0].start) > copyTolerance
+            }
+            for other in open where abs(ordered[other].end.timeIntervalSince(session.end)) <= copyTolerance {
+                // Eslesen kopyalar ayni gruba girer; uc kopya uc cift diye sayilmaz.
+                let group = root(index), otherGroup = root(other)
+                if group != otherGroup { parents[group] = otherGroup }
+            }
+            open.append(index)
+        }
+        var groups: [Int: (count: Int, total: TimeInterval, longest: TimeInterval)] = [:]
+        for (index, session) in ordered.enumerated() {
+            let key = root(index)
+            let group = groups[key] ?? (count: 0, total: 0, longest: 0)
+            groups[key] = (group.count + 1, group.total + session.duration, max(group.longest, session.duration))
+        }
+        // Molalar duvar saatine dahil olabilir; kazanci sisiren sakli calisma suresidir.
+        return groups.values.reduce((pairs: 0, extra: 0)) {
+            ($0.pairs + $1.count - 1, $0.extra + $1.total - $1.longest)
+        }
     }
 
     /// Listede baska bir kayitla gercekten cakisan her kaydin kimligi.

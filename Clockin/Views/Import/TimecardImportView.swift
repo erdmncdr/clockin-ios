@@ -11,6 +11,7 @@ struct TimecardImportView: View {
     @State private var text = ""
     @State private var showsFileImporter = false
     @State private var errorMessage: String?
+    @State private var reviewNotice: String?
     @State private var phase: Phase = .source
     @FocusState private var isEditingText: Bool
 
@@ -88,11 +89,7 @@ struct TimecardImportView: View {
                             .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     case .review(let review):
                         Button("Import") {
-                            if removalIDs(review).isEmpty {
-                                confirm(review)
-                            } else {
-                                showsDeleteConfirmation = true
-                            }
+                            requestConfirmation(review)
                         }
                         .disabled(!canImport(review))
                     case .result:
@@ -203,7 +200,16 @@ struct TimecardImportView: View {
 
     @ViewBuilder private func reviewSections(_ review: TimecardImportReview) -> some View {
         Section {
+            if let reviewNotice {
+                Label(reviewNotice, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+            }
             Text(review.sourceTitle).font(.headline)
+            if review.parsed.skippedRowCount > 0 {
+                Label("\(review.parsed.skippedRowCount) rows could not be read. Deletion is disabled.",
+                      systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+            }
             LabeledContent("Recognized entries", value: "\(review.sessions.count)")
             LabeledContent("Imported duration", value: DurationText.compact(review.duration))
             LabeledContent("Selected to import") {
@@ -239,11 +245,7 @@ struct TimecardImportView: View {
 
         Section {
             Button(importButtonTitle(review)) {
-                if removalIDs(review).isEmpty {
-                    confirm(review)
-                } else {
-                    showsDeleteConfirmation = true
-                }
+                requestConfirmation(review)
             }
             .buttonStyle(PrimaryActionButtonStyle(palette: palette))
             .buttonPressHaptic(false)
@@ -267,16 +269,21 @@ struct TimecardImportView: View {
                 ForEach(ImportScope.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden()
-            if review.leftovers.isEmpty {
+            if !review.allowsDeletions {
+                Text("Deletion is disabled for incomplete timecards.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            if review.leftovers.isEmpty && review.allowsDeletions {
                 Text("Every entry in this period is in the file.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-            } else {
+            } else if !review.leftovers.isEmpty {
                 Picker("These entries", selection: $leftoverAction.hapticSelection($selectionFeedback)) {
                     ForEach(LeftoverAction.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented).labelsHidden()
-                if leftoverAction == .deleteAll {
+                .disabled(!review.allowsDeletions)
+                if review.allowsDeletions && leftoverAction == .deleteAll {
                     Label("\(review.leftovers.count) entries will be deleted. This cannot be undone.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.subheadline)
@@ -286,15 +293,20 @@ struct TimecardImportView: View {
         } header: {
             Text("Entries in this period")
         } footer: {
-            Text(String(localized: "Timecards are the record of your work. Entries in this period that the file does not contain are deleted, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.", bundle: .app)
-                 + " " + scope.explanation)
+            if review.allowsDeletions {
+                Text(String(localized: "Timecards are the record of your work. Entries in this period that the file does not contain are deleted, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.", bundle: .app)
+                     + " " + scope.explanation)
+            } else {
+                Text(scope.explanation)
+            }
         }
         .listRowBackground(palette.surface)
 
         if !review.leftovers.isEmpty {
             Section {
                 ForEach(review.leftovers) { session in
-                    leftoverRow(session)
+                    leftoverRow(session, allowsDeletion: review.allowsDeletions)
+                        .disabled(!review.allowsDeletions)
                 }
             } header: {
                 Text("Not in the file (\(review.leftovers.count))")
@@ -303,9 +315,9 @@ struct TimecardImportView: View {
         }
     }
 
-    @ViewBuilder private func leftoverRow(_ session: WorkSession) -> some View {
-        let marked = leftoverAction == .deleteAll
-            || (leftoverAction == .choose && chosenLeftovers.contains(session.id))
+    @ViewBuilder private func leftoverRow(_ session: WorkSession, allowsDeletion: Bool) -> some View {
+        let marked = allowsDeletion && (leftoverAction == .deleteAll
+            || (leftoverAction == .choose && chosenLeftovers.contains(session.id)))
         HStack(spacing: 12) {
             if leftoverAction == .choose {
                 Image(systemName: marked ? "checkmark.circle.fill" : "circle")
@@ -328,7 +340,7 @@ struct TimecardImportView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            guard leftoverAction == .choose else { return }
+            guard allowsDeletion, leftoverAction == .choose else { return }
             selectionFeedback.send(.selection)
             if chosenLeftovers.contains(session.id) {
                 chosenLeftovers.remove(session.id)
@@ -341,7 +353,8 @@ struct TimecardImportView: View {
     }
 
     private func removalIDs(_ review: TimecardImportReview) -> Set<UUID> {
-        switch leftoverAction {
+        guard review.allowsDeletions else { return [] }
+        return switch leftoverAction {
         case .keep: []
         case .deleteAll: Set(review.leftovers.map(\.id))
         case .choose: chosenLeftovers.intersection(review.leftovers.map(\.id))
@@ -421,11 +434,11 @@ struct TimecardImportView: View {
     private func reviewText() {
         isEditingText = false
         do {
-            let sessions = try PastedTextImporter.parse(text, hourlyRate: store.hourlyRate)
+            let parsed = try PastedTextImporter.parse(text, hourlyRate: store.hourlyRate)
             excluded = []
             // Kopyalanan sayfa donemin tamami olmayabilir; yalnizca kopyalanan gunler esas alinir.
             scope = .daysInFile
-            prepareReview(sessions, sourceTitle: String(localized: "Pasted timecards", bundle: .app),
+            prepareReview(parsed, sourceTitle: String(localized: "Pasted timecards", bundle: .app),
                           approvedDuration: PastedTextImporter.approvedSummaryDuration(in: text))
         } catch {
             errorMessage = error.localizedDescription
@@ -438,35 +451,61 @@ struct TimecardImportView: View {
             let url = try result.get()
             let granted = url.startAccessingSecurityScopedResource()
             defer { if granted { url.stopAccessingSecurityScopedResource() } }
-            let sessions = try CSVImporter.parse(data: Data(contentsOf: url), hourlyRate: store.hourlyRate)
+            let parsed = try CSVImporter.parse(data: Data(contentsOf: url), hourlyRate: store.hourlyRate)
             excluded = []
             // Dokum ilk gunden son gune kadar donemin tamamidir.
             scope = .wholeRange
-            prepareReview(sessions, sourceTitle: url.lastPathComponent)
+            prepareReview(parsed, sourceTitle: url.lastPathComponent)
         } catch {
             errorMessage = error.localizedDescription
             Haptics.play(.validationFailed)
         }
     }
 
-    private func prepareReview(_ sessions: [WorkSession], sourceTitle: String, approvedDuration: TimeInterval? = nil) {
-        let summary = store.compareImportedSessions(sessions, scope: scope, fileIsReference: true)
-        phase = .review(TimecardImportReview(sessions: sessions, summary: summary,
-                                           sourceTitle: sourceTitle, approvedDuration: approvedDuration))
+    private func prepareReview(_ parsed: TimecardParseResult, sourceTitle: String, approvedDuration: TimeInterval? = nil) {
+        let summary = store.compareImportedSessions(parsed.sessions, scope: scope, fileIsReference: true)
+        let review = TimecardImportReview(parsed: parsed, summary: summary,
+                                         sourceTitle: sourceTitle, approvedDuration: approvedDuration)
+        if !review.allowsDeletions {
+            leftoverAction = .keep
+            chosenLeftovers = []
+        }
+        phase = .review(review)
         errorMessage = nil
+        reviewNotice = nil
     }
 
     /// Kapsam degisince artik listesi bastan hesaplanir. Secili satirlar
     /// korunur; yeni kapsamda kalmayanlar `removalIDs` icinde elenir.
     private func rebuildReview() {
         guard case .review(let review) = phase else { return }
-        prepareReview(review.sessions, sourceTitle: review.sourceTitle,
+        prepareReview(review.parsed, sourceTitle: review.sourceTitle,
                       approvedDuration: review.approvedDuration)
     }
 
+    private func validateReview(_ review: TimecardImportReview) -> Bool {
+        guard review.summary.isCurrent(for: store.data.sessions) else {
+            showsDeleteConfirmation = false
+            chosenLeftovers = []
+            leftoverAction = .keep
+            rebuildReview()
+            reviewNotice = String(localized: "Entries changed. Review the updated import again.", bundle: .app)
+            return false
+        }
+        return true
+    }
+
+    private func requestConfirmation(_ review: TimecardImportReview) {
+        guard validateReview(review) else { return }
+        if removalIDs(review).isEmpty { confirm(review) }
+        else { showsDeleteConfirmation = true }
+    }
+
     private func confirm(_ review: TimecardImportReview) {
-        guard case .review = phase else { return }
-        guard store.importSessions(selected(review), removing: removalIDs(review)) else {
+        guard case .review = phase, validateReview(review) else { return }
+        let ids = removalIDs(review)
+        let removing = review.leftovers.filter { ids.contains($0.id) }
+        guard store.importSessions(selected(review), removing: removing) else {
             Haptics.play(.validationFailed)
             phase = .result(store.statusMessage ?? String(localized: "Could not import entries.", bundle: .app))
             return
@@ -481,7 +520,11 @@ struct TimecardImportView: View {
 }
 
 private struct TimecardImportReview {
-    let sessions: [WorkSession]
+    let parsed: TimecardParseResult
+    var sessions: [WorkSession] { parsed.sessions }
+    var allowsDeletions: Bool {
+        parsed.allowsDeletions && (approvedDuration.map { abs($0 - duration) <= 60 } ?? true)
+    }
     let sourceTitle: String
     let approvedDuration: TimeInterval?
     let leftovers: [WorkSession]
@@ -491,9 +534,9 @@ private struct TimecardImportReview {
     var duplicateItems: [ImportComparisonItem] = []
     var duration: TimeInterval = 0
 
-    init(sessions: [WorkSession], summary: ImportComparisonSummary,
+    init(parsed: TimecardParseResult, summary: ImportComparisonSummary,
          sourceTitle: String, approvedDuration: TimeInterval?) {
-        self.sessions = sessions
+        self.parsed = parsed
         self.sourceTitle = sourceTitle
         self.approvedDuration = approvedDuration
         self.leftovers = summary.leftovers

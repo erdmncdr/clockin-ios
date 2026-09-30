@@ -1,5 +1,11 @@
 import Foundation
 
+struct TimecardParseResult {
+    let sessions: [WorkSession]
+    let skippedRowCount: Int
+    var allowsDeletions: Bool { skippedRowCount == 0 }
+}
+
 enum ImportMatchKind: String, Identifiable {
     case new
     case matched
@@ -63,14 +69,19 @@ enum ImportScope: String, CaseIterable, Identifiable, Sendable {
 
 struct ImportComparisonSummary {
     let items: [ImportComparisonItem]
+    /// Onizlemenin hesaplandigi arsiv; duzeltme ve silme ayni degerleri esas almali.
+    let reviewedSessions: [WorkSession]
     /// Kapsama giren, ama dosyadaki hicbir satirla eslesmeyen kendi kayitlarin.
     /// Ice aktarma bunlara kendiliginden dokunmaz.
     let leftovers: [WorkSession]
 
-    init(items: [ImportComparisonItem], leftovers: [WorkSession] = []) {
+    init(items: [ImportComparisonItem], reviewedSessions: [WorkSession], leftovers: [WorkSession] = []) {
         self.items = items
+        self.reviewedSessions = reviewedSessions
         self.leftovers = leftovers
     }
+
+    func isCurrent(for sessions: [WorkSession]) -> Bool { reviewedSessions == sessions }
 
     var newItems: [ImportComparisonItem] { items.filter { $0.kind == .new } }
     var matchedItems: [ImportComparisonItem] { items.filter { $0.kind == .matched } }

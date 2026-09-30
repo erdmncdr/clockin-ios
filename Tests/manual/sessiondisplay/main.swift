@@ -67,11 +67,11 @@ check(unchanged.note == session.note && unchanged.source == session.source
       "note display never rewrites saved metadata")
 let pasted = try PastedTextImporter.parse(
     "Monday September 14 Approved Synthetic import A 09:00 10:00",
-    hourlyRate: 25, now: Date(timeIntervalSince1970: 1_789_646_400))
+    hourlyRate: 25, now: Date(timeIntervalSince1970: 1_789_646_400)).sessions
 check(pasted.count == 1 && pasted[0].source == "Synthetic import A", "real pasted parser retains synthetic source")
 check(SessionDisplay.subtitle(pasted[0]) == "Approved", "real pasted entry hides source inside generated note")
 let csv = "Start Time,End Time,Time Sheet Source,Notes\n2026-09-14T09:00:00Z,2026-09-14T10:00:00Z,Synthetic import B,\n"
-let imported = try CSVImporter.parse(data: Data(csv.utf8), hourlyRate: 25)
+let imported = try CSVImporter.parse(data: Data(csv.utf8), hourlyRate: 25).sessions
 check(imported.count == 1 && imported[0].source == "Synthetic import B", "real CSV parser retains synthetic source")
 check(SessionDisplay.subtitle(imported[0]) == "Imported timecard", "real CSV entry uses neutral fallback")
 print("\(checks) session display checks passed")

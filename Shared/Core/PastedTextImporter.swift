@@ -13,13 +13,39 @@ enum PastedTextImporter {
     private static let statuses = Set(["approved", "submitted", "draft", "unapproved"])
     private static let ignoredSources = Set(["new", "new entry", "submit selected", "hours", "total", "timecards", "me", "my time"])
 
-    static func parse(_ text: String, hourlyRate: Double, now: Date = .now) throws -> [WorkSession] {
+    static func parse(_ text: String, hourlyRate: Double, now: Date = .now) throws -> TimecardParseResult {
+        let cleaned = clean(text)
+        let range = extractDateRange(from: cleaned.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression))
+        // Her puantaj kendi blogunda okunur; bozuk satir sonraki satirin saatlerini alamaz.
+        let weekday = "Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday"
+        let month = "January|February|March|April|May|June|July|August|September|October|November|December"
+        // Gun adi eksik tarih satirlari da reddedilen satirdir; yilli sayfa basligi degildir.
+        let pattern = "(?i)\\b(?:(?:\(weekday))(?:\\s*(?:\(month))\\s+\\d{1,2}\\b)?|(?:\(month))\\s+\\d{1,2}\\b(?!\\s*,?\\s*\\d{4}))"
+        let regex = try NSRegularExpression(pattern: pattern)
+        let starts = regex.matches(in: cleaned, range: NSRange(cleaned.startIndex..., in: cleaned))
+            .compactMap { Range($0.range, in: cleaned)?.lowerBound }
+        var sessions: [WorkSession] = []
+        var skipped = 0
+        for (index, start) in starts.enumerated() {
+            let end = index + 1 < starts.count ? starts[index + 1] : cleaned.endIndex
+            let entry = String(cleaned[start..<end])
+            if let parsed = try? parseEntry(entry, hourlyRate: hourlyRate, now: now, range: range) {
+                sessions.append(contentsOf: parsed)
+            } else {
+                skipped += 1
+            }
+        }
+        guard !sessions.isEmpty else { throw PastedImportError.noEntries }
+        return TimecardParseResult(sessions: sessions, skippedRowCount: skipped)
+    }
+
+    private static func parseEntry(_ text: String, hourlyRate: Double, now: Date,
+                                   range: ClosedRange<Date>?) throws -> [WorkSession] {
         let lines = text.components(separatedBy: .newlines)
             .map(clean)
             .filter { !$0.isEmpty }
         let flattened = lines.joined(separator: " ")
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-        let range = extractDateRange(from: flattened)
         let pattern = #"(?i)\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s+(Approved|Submitted|Draft|Unapproved)\s+(.+?)\s+(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})(?:\s+(\d+)\s*([MH]))?"#
         if let regex = try? NSRegularExpression(pattern: pattern), !flattened.isEmpty {
             let matches = regex.matches(in: flattened, range: NSRange(flattened.startIndex..., in: flattened))

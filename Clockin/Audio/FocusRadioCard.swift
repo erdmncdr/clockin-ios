@@ -29,6 +29,11 @@ struct FocusRadioCard: View {
                         } label: {
                             Image(systemName: "ellipsis").frame(width: 44, height: 44)
                         }
+                        #if os(macOS)
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        #endif
                         .accessibilityLabel("Focus radio options")
                     }
                 }
