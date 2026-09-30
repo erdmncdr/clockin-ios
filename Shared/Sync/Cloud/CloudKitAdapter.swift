@@ -99,13 +99,15 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
         if engine != nil { await synchronize(); return }
         if let launchTask { await launchTask.value; return }
         guard retryAfter.map({ $0 <= clock.now }) ?? true else { scheduleRetry(); return }
-        let task = Task { [weak self] in
-            guard let self else { return }
-            await self.performLaunch()
-            self.launchTask = nil
-        }
+        // Detached for the same reason as the pass below.
+        let task = Task.detached { [weak self] in _ = await self?.runLaunch() }
         launchTask = task
         await task.value
+    }
+
+    private func runLaunch() async {
+        await performLaunch()
+        launchTask = nil
     }
 
     private func performLaunch() async {
@@ -171,19 +173,25 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
             return
         }
         guard pass.request() else { return }
-        let task = Task { [weak self] in
-            guard let self else { return }
-            repeat {
-                guard !self.stopped, !self.halted, self.engine === engine else { break }
-                if self.retryAfter.map({ $0 > self.clock.now }) == true { self.scheduleRetry(); break }
-                self.retryAfter = nil; self.retry.cancel()
-                await self.synchronizePass(engine)
-            } while self.pass.finishPass()
-            self.pass.cancel()
-            self.syncTask = nil
-        }
+        // A task inherits CKSyncEngine's "inside a delegate callback" marker from the task
+        // that created it. A retry scheduled from handleEvent, or a save applied from a
+        // fetched record, would then call fetchChanges as if from the callback, and
+        // CloudKit traps ("Cannot await a call into CKSyncEngine from within a delegate
+        // callback"). TestFlight 0.2 (43) crashed this way on iOS 27.
+        let task = Task.detached { [weak self] in _ = await self?.runPasses(engine) }
         syncTask = task
         await task.value
+    }
+
+    private func runPasses(_ engine: CKSyncEngine) async {
+        repeat {
+            guard !stopped, !halted, self.engine === engine else { break }
+            if retryAfter.map({ $0 > clock.now }) == true { scheduleRetry(); break }
+            retryAfter = nil; retry.cancel()
+            await synchronizePass(engine)
+        } while pass.finishPass()
+        pass.cancel()
+        syncTask = nil
     }
 
     private func synchronizePass(_ engine: CKSyncEngine) async {
