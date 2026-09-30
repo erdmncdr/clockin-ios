@@ -87,6 +87,12 @@ struct MacRootView: View {
         }
         .celebrationBlocked(by: navigation.sheet != nil)
         .syncFirstMergePrompt()
+        #if DEBUG
+        // Review fixture: `--sync-section` shows the iCloud settings section on its own.
+        .sheet(isPresented: .constant(ProcessInfo.processInfo.arguments.contains("--sync-section"))) {
+            Form { SyncSettingsSection() }.formStyle(.grouped).frame(width: 480, height: 360)
+        }
+        #endif
         .background(CelebrationWindowProbe())
         // Barindirilan gorunum bir sahnede degil; evre pencereden gelir.
         .environment(\.scenePhase, services.scenePhase)

@@ -47,6 +47,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { scroll in
             Form {
                 Section {
                     navigationRow(String(localized: "How to use Clockin", bundle: .app), systemImage: "questionmark.circle") {
@@ -54,6 +55,8 @@ struct SettingsView: View {
                         sheet = .guide
                     }
                 }
+                // Senkron durumu ve degisiklikleri ustte; listenin dibinde bulunmuyordu.
+                SyncSettingsSection().id("sync")
                 Section("Today") {
                     NavigationLink {
                         DashboardPinOptions()
@@ -125,11 +128,19 @@ struct SettingsView: View {
                     openPolicy: { openPrivacySheet(.privacyPolicy) }
                 )
                 #endif
-                SyncSettingsSection()
                 dataSection
                 Section("About") {
                     LabeledContent("Version", value: versionText)
                 }
+            }
+            #if DEBUG
+            // Review fixture: `--settings-sync` scrolls to the iCloud section.
+            .task {
+                guard ProcessInfo.processInfo.arguments.contains("--settings-sync") else { return }
+                try? await Task.sleep(for: .milliseconds(600))
+                scroll.scrollTo("sync", anchor: .top)
+            }
+            #endif
             }
             .hapticFeedback(selectionFeedback)
             #if os(iOS)

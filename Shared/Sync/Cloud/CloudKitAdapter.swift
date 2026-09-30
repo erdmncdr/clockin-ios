@@ -403,6 +403,12 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
     }
 
     private func decodeOrQuarantine(_ record: CKRecord) -> SyncRecord? {
+        // Another device may still carry a preference that is now device-local.
+        // It is not bad data; ignore it instead of raising a quarantine notice.
+        let name = record.recordID.recordName
+        if name.hasPrefix("Preference:"), SyncPreferences.deviceKeys.contains(String(name.dropFirst("Preference:".count))) {
+            return nil
+        }
         do { return try ClockinCloudRecord.decode(record) }
         catch {
             let bytes = (record["payload"] as? Data) ?? ClockinCloudRecord.systemFields(record)

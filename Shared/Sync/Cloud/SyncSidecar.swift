@@ -142,6 +142,20 @@ struct SyncSidecar: Codable, Sendable {
         }
     }
 
+    /// A preference that became device-local (the app language did) leaves its old
+    /// record behind. Without this the whole sidecar failed validation on load and
+    /// sync stopped; the value itself stays in UserDefaults on each device.
+    mutating func retireDevicePreferences() {
+        let retired = Set(SyncPreferences.deviceKeys.map { "Preference:" + $0 })
+        guard !retired.isDisjoint(with: Set(records.keys).union(staged.keys)) else { return }
+        for key in retired {
+            records[key] = nil; staged[key] = nil; systemFields[key] = nil
+        }
+        pending.removeAll { retired.contains($0) }
+        recoveryInbox.removeAll { retired.contains($0.recordKey) }
+        touch()
+    }
+
     /// Clears everything the user has seen at once.
     mutating func acknowledgeAllRecoveries() {
         recoveryInbox.removeAll()
@@ -295,7 +309,8 @@ actor SyncSidecarStore {
 
     func load() throws -> SyncSidecar? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        let state = try SyncCoding.decode(SyncSidecar.self, Data(contentsOf: url))
+        var state = try SyncCoding.decode(SyncSidecar.self, Data(contentsOf: url))
+        state.retireDevicePreferences()
         guard state.schema == 2 else { throw SyncFailure.unsupportedVersion }
         guard SyncBounds.identifier(state.deviceID) else { throw SyncFailure.invalid("Missing device identity") }
         for (key, record) in [state.records, state.staged].flatMap({ $0 }) {
