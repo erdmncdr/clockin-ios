@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="Track your time and earnings on your Mac with Clockin. A little work companion, by your side.">
+  <title>Clockin — Make time feel well spent.</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preload" as="image" type="image/avif" href="assets/companion/hello-loop/h01.avif" fetchpriority="high">
+  <link rel="stylesheet" href="style.css">
+  <script src="preferences.js"></script>
+  <script src="locale.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="sprite.js" defer></script>
+  <script src="companion.js" defer></script>
+  <script src="journey.js" defer></script>
+  <link rel="stylesheet" href="journey.css">
+  <link rel="stylesheet" href="preferences.css">
+  <link rel="stylesheet" href="motion.css">
+</head>
+<body>
+  <a class="skip-link" href="#main"><span data-i18n="skip">Skip to content</span></a>
+  <header class="site-header wrap">
+    <a class="brand" href="#" aria-label="Clockin home" data-i18n-aria-label="homeLabel"><img src="assets/clockin-icon-96.png" width="46" height="46" alt=""><span>clockin</span></a>
+    <nav aria-label="Main navigation" data-i18n-aria-label="navLabel"><a href="#uygulama"><span data-i18n="explore">Explore Clockin</span></a><a class="small-download" data-download href="https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg"><span data-i18n="download">Download for Mac</span></a><div class="site-preferences"><div class="language-picker" role="group" aria-label="Language / Dil"><button type="button" data-language="en" lang="en" aria-label="English" aria-pressed="true">EN</button><button type="button" data-language="tr" lang="tr" aria-label="Türkçe" aria-pressed="false">TR</button></div><button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to dark mode"><svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 14.2A8.8 8.8 0 0 1 9.8 3.6 8.8 8.8 0 1 0 20.4 14.2Z"/></svg><svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button></div></nav>
+  </header>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title"><span data-i18n="heroTitle">Make time<br>feel well spent.</span></h1>
+        <p><span data-i18n="heroCopy">Find your focus.<br>Clockin keeps track of your time and earnings.</span></p>
+        <a class="download-button" data-download href="https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg><span data-i18n="download">Download for Mac</span></a>
+        <p class="compatibility"><span data-i18n="compatibility">macOS 14 or later</span> <span aria-hidden="true">/</span> Apple Silicon & Intel</p>
+      </div>
+      <div class="hero-art companion" data-mood="hello">
+        <div class="speech-bubble"><p id="companion-speech">Hi, I’m Clockin.<br>Shall we get to work?</p><button id="start-tour"><span data-i18n="tour">Take a little tour</span></button></div>
+        <button class="mascot-character" id="meet-companion" aria-label="Meet the Clockin mascot and see its next pose" data-i18n-aria-label="mascotLabel"><span class="mascot-rig"><span class="mascot-shadow" aria-hidden="true"></span><span class="mascot-sway"><span class="mascot-body"><picture><source type="image/avif" srcset="assets/companion/hello-loop/h01.avif"><img id="companion-image" src="assets/mascot-hello.png" width="627" height="627" alt="" fetchpriority="high"></picture></span></span></span></button>
+      </div>
+    </section>
+    <section class="journey" id="uygulama" aria-label="An example workday with Clockin" data-i18n-aria-label="journeyLabel" data-scene="work">
+      <div class="journey-sticky">
+        <div class="journey-backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="journey-orbit" aria-hidden="true"></div>
+        <div class="journey-top"><span><img src="assets/clockin-icon-64.png" width="26" height="26" alt=""> <span data-i18n="try">Try Clockin</span></span></div>
+        <div class="journey-layout">
+          <div class="journey-copy">
+            <span class="day-moment" id="day-moment">09:00 / A fresh start</span>
+            <h2 id="journey-title" aria-live="polite">One click.<br> Find your focus.</h2>
+            <p id="journey-description">You take the first step. Clockin keeps track of your time and what it’s worth.</p>
+            <div class="journey-speech"><span class="mascot-body"><picture><source type="image/avif" srcset="assets/companion/typing/t01-314.avif"><img id="journey-mascot" src="assets/companion/frame1.png" width="160" height="160" alt="Clockin mascot working at a laptop" loading="lazy" decoding="async"></picture></span><p id="journey-speech">Ready when you are.</p></div>
+          </div>
+          <div class="demo-space">
+            <div class="demo-window" aria-label="Interactive Clockin demo" data-i18n-aria-label="demoLabel">
+              <div class="demo-titlebar"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>clockin</span><span class="demo-label">Demo</span></div>
+              <div class="demo-timer" id="demo-timer-panel">
+                <div class="demo-state"><span></span><span id="demo-status">Ready when you are</span></div>
+                <div class="timer-face"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="110"/><circle class="timer-track" cx="120" cy="120" r="110"/></svg><div><span id="demo-time">00:00:00</span><small><span data-i18n="duration">time well spent</span></small></div></div>
+                <div class="demo-earnings"><span><span data-i18n="session">This session</span></span><strong id="demo-money">₺0,00</strong></div>
+                <button class="demo-action" id="demo-toggle">Start focusing <svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg></button>
+                <p class="demo-disclaimer"><span data-i18n="sampleRate">Sample timer · TRY 300 / hour</span></p>
+              </div>
+              <div class="demo-summary" id="demo-summary" aria-hidden="true" inert>
+                <span class="summary-label"><span data-i18n="today">Your work today</span></span><strong id="summary-money">TRY 1,250.00</strong><p><span data-i18n="summaryCopy">4 hours, 10 minutes. A little further along.</span></p>
+                <svg class="earnings-chart" viewBox="0 0 320 150" role="img" aria-label="Sample daily earnings chart: earnings rise to TRY 1,250" data-i18n-aria-label="chartLabel"><path class="chart-grid" d="M0 30H320M0 85H320M0 140H320"/><path class="chart-area" d="M0 140 C30 140 38 119 65 119 S110 102 138 90 S171 90 190 75 S224 65 242 42 S288 36 316 9 L316 150H0Z"/><path class="chart-line" pathLength="1" d="M0 140 C30 140 38 119 65 119 S110 102 138 90 S171 90 190 75 S224 65 242 42 S288 36 316 9"/></svg>
+                <div class="chart-times"><span>09.00</span><span>13.40</span></div>
+                <div class="level-up"><div><span data-i18n="levelTitle">A little more progress.</span><small><span data-i18n="levelCopy">Earn experience with every session.</span></small></div><b>+250 XP</b></div>
+                <p class="demo-disclaimer"><span data-i18n="sampleDay">An example workday</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="journey-bottom"><nav aria-label="Demo scenes" data-i18n-aria-label="sceneLabel"><button data-journey="0" aria-current="step"><span>01</span> <span data-i18n="focus">Focus</span></button><button data-journey="1"><span>02</span> <span data-i18n="break">Take a break</span></button><button data-journey="2"><span>03</span> <span data-i18n="reward">See your progress</span></button></nav></div>
+        <div class="journey-progress" aria-hidden="true"><span></span></div>
+      </div>
+    </section>
+    <section class="product-section" id="ekranlar" aria-labelledby="product-title">
+      <div class="wrap product-intro"><h2 id="product-title"><span data-i18n="productTitle">Right at home on your Mac.</span></h2><p><span data-i18n="productCopy">Your time, earnings and progress.<br>Always within reach.</span></p></div>
+      <div class="screen-picker" role="group" aria-label="Choose an app screen" data-i18n-aria-label="screenLabel"><span class="picker-pill" aria-hidden="true"></span><button data-screen="timer" aria-pressed="true"><span data-i18n="tabTimer">Your time</span></button><button data-screen="history" aria-pressed="false"><span data-i18n="tabHistory">Your earnings</span></button><button data-screen="progress" aria-pressed="false"><span data-i18n="tabProgress">Your progress</span></button></div>
+      <div class="product-stage wrap" id="product-stage" data-active="timer">
+        <figure class="app-screen" data-image="timer"><picture><source type="image/avif" srcset="assets/app-timer-480.avif 480w, assets/app-timer-720.avif 720w, assets/app-timer-1080.avif 1080w" sizes="(max-width: 560px) min(420px, calc(100vw - 40px)), (max-width: 800px) 30vw, 340px"><img src="assets/app-timer-720.png" width="720" height="1240" alt="Clockin timer: work duration, live earnings and focus mascot. Sample data." data-i18n-alt="timerAlt" loading="lazy" decoding="async"></picture></figure>
+        <figure class="app-screen" data-image="history"><picture><source type="image/avif" srcset="assets/app-history-480.avif 480w, assets/app-history-720.avif 720w, assets/app-history-1080.avif 1080w" sizes="(max-width: 560px) min(420px, calc(100vw - 40px)), (max-width: 800px) 30vw, 340px"><img src="assets/app-history-720.png" width="720" height="1240" alt="Clockin history: daily earnings chart and work averages. Sample data." data-i18n-alt="historyAlt" loading="lazy" decoding="async"></picture></figure>
+        <figure class="app-screen" data-image="progress"><picture><source type="image/avif" srcset="assets/app-progress-480.avif 480w, assets/app-progress-720.avif 720w, assets/app-progress-1080.avif 1080w" sizes="(max-width: 560px) min(420px, calc(100vw - 40px)), (max-width: 800px) 30vw, 340px"><img src="assets/app-progress-720.png" width="720" height="1240" alt="Clockin progress: level, experience points and work streak. Sample data." data-i18n-alt="progressAlt" loading="lazy" decoding="async"></picture></figure>
+      </div>
+      <p class="screen-caption" aria-live="polite">Start, take a break, pick up where you left off.</p>
+      <p class="demo-note"><span data-i18n="realScreens">Real screenshots from the app. Sample data.</span></p>
+    </section>
+    <section class="closing wrap" aria-labelledby="closing-title"><picture><source type="image/avif" srcset="assets/mascot-coffee-314.avif"><img src="assets/mascot-coffee.png" width="160" height="160" alt="Clockin mascot taking a coffee break" data-i18n-alt="coffeeAlt" loading="lazy" decoding="async"></picture><h2 id="closing-title"><span data-i18n="closing">Here’s to a good day’s work.</span></h2><a class="download-button" data-download href="https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg"><span data-i18n="download">Download for Mac</span></a></section>
+  </main>
+  <footer class="site-footer wrap"><a class="wordmark" href="#">clockin</a><span><span data-i18n="footer">Made for your Mac.</span></span><a class="source-link" href="https://github.com/ismailakdag/clockin" target="_blank" rel="noopener noreferrer"><span data-i18n="sourceLink">Source on GitHub</span></a><span>© 2026 Clockin</span></footer>
+</body>
+</html>

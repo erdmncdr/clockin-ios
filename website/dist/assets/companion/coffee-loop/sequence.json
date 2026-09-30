@@ -1,0 +1,56 @@
+{
+  "frames" : [
+    {
+      "file" : "c01.png",
+      "ms" : 260
+    },
+    {
+      "file" : "c02.png",
+      "ms" : 220
+    },
+    {
+      "file" : "c03.png",
+      "ms" : 220
+    },
+    {
+      "file" : "c04.png",
+      "ms" : 110
+    },
+    {
+      "file" : "c05.png",
+      "ms" : 220
+    },
+    {
+      "file" : "c06.png",
+      "ms" : 340
+    },
+    {
+      "file" : "c07.png",
+      "ms" : 300
+    },
+    {
+      "file" : "c08.png",
+      "ms" : 300
+    },
+    {
+      "file" : "c09.png",
+      "ms" : 540
+    },
+    {
+      "file" : "c10.png",
+      "ms" : 330
+    },
+    {
+      "file" : "c11.png",
+      "ms" : 330
+    },
+    {
+      "file" : "c12.png",
+      "ms" : 380
+    },
+    {
+      "file" : "c13.png",
+      "ms" : 320
+    }
+  ]
+}

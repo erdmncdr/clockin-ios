@@ -1,0 +1,2294 @@
+{
+  "files" : [
+    {
+      "bytes" : 5314,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 2408,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/clockin-icon-64.png",
+      "group" : "icon",
+      "hasTransparency" : true,
+      "height" : 64,
+      "source" : "dist/assets/clockin-icon.png",
+      "thresholdsRequired" : false,
+      "width" : 64
+    },
+    {
+      "bytes" : 9817,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 5572,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/clockin-icon-96.png",
+      "group" : "icon",
+      "hasTransparency" : true,
+      "height" : 96,
+      "source" : "dist/assets/clockin-icon.png",
+      "thresholdsRequired" : false,
+      "width" : 96
+    },
+    {
+      "bytes" : 1934,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 556,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/favicon-32.png",
+      "group" : "icon",
+      "hasTransparency" : true,
+      "height" : 32,
+      "source" : "dist/assets/clockin-icon.png",
+      "thresholdsRequired" : false,
+      "width" : 32
+    },
+    {
+      "bytes" : 28119,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 20388,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/apple-touch-icon.png",
+      "group" : "icon",
+      "hasTransparency" : true,
+      "height" : 180,
+      "source" : "dist/assets/clockin-icon.png",
+      "thresholdsRequired" : false,
+      "width" : 180
+    },
+    {
+      "bytes" : 193561,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/app-timer-720.png",
+      "group" : "screenshot-fallback",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "source" : "dist/assets/app-timer-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 255779,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/app-history-720.png",
+      "group" : "screenshot-fallback",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "source" : "dist/assets/app-history-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 149871,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 0,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0
+      },
+      "file" : "dist/assets/app-progress-720.png",
+      "group" : "screenshot-fallback",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "source" : "dist/assets/app-progress-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 21867,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 40,
+        "opaquePixels" : 396480,
+        "opaqueRGBMean" : 1.0660235068603712
+      },
+      "file" : "dist/assets/app-timer-480.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 826,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-timer-large.png",
+      "thresholdsRequired" : false,
+      "width" : 480
+    },
+    {
+      "bytes" : 38920,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 33,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0.9378248207885305
+      },
+      "file" : "dist/assets/app-timer-720.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-timer-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 60963,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 28,
+        "opaquePixels" : 2008800,
+        "opaqueRGBMean" : 0.8296047391477499
+      },
+      "file" : "dist/assets/app-timer-1080.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1860,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-timer-large.png",
+      "thresholdsRequired" : false,
+      "width" : 1080
+    },
+    {
+      "bytes" : 22520,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 36,
+        "opaquePixels" : 396480,
+        "opaqueRGBMean" : 1.001153483992467
+      },
+      "file" : "dist/assets/app-history-480.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 826,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-history-large.png",
+      "thresholdsRequired" : false,
+      "width" : 480
+    },
+    {
+      "bytes" : 39244,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 31,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0.8824376493428913
+      },
+      "file" : "dist/assets/app-history-720.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-history-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 62467,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 26,
+        "opaquePixels" : 2008800,
+        "opaqueRGBMean" : 0.7686778176025488
+      },
+      "file" : "dist/assets/app-history-1080.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1860,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-history-large.png",
+      "thresholdsRequired" : false,
+      "width" : 1080
+    },
+    {
+      "bytes" : 17108,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 32,
+        "opaquePixels" : 396480,
+        "opaqueRGBMean" : 0.7371569814366424
+      },
+      "file" : "dist/assets/app-progress-480.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 826,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-progress-large.png",
+      "thresholdsRequired" : false,
+      "width" : 480
+    },
+    {
+      "bytes" : 30065,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 31,
+        "opaquePixels" : 892800,
+        "opaqueRGBMean" : 0.6785121714456391
+      },
+      "file" : "dist/assets/app-progress-720.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1240,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-progress-large.png",
+      "thresholdsRequired" : false,
+      "width" : 720
+    },
+    {
+      "bytes" : 49806,
+      "errors" : {
+        "alphaMean" : 0,
+        "opaqueChannelP999" : 26,
+        "opaquePixels" : 2008800,
+        "opaqueRGBMean" : 0.6129983074472322
+      },
+      "file" : "dist/assets/app-progress-1080.avif",
+      "group" : "screenshot",
+      "hasTransparency" : false,
+      "height" : 1860,
+      "quality" : 0.82,
+      "source" : "dist/assets/app-progress-large.png",
+      "thresholdsRequired" : false,
+      "width" : 1080
+    },
+    {
+      "bytes" : 43822,
+      "errors" : {
+        "alphaMean" : 0.017169936585700877,
+        "opaqueChannelP999" : 73,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.3557646553179734
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e01.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e01.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17404,
+      "errors" : {
+        "alphaMean" : 0.03435230638159763,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.500791489900589
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e01-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e01.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43319,
+      "errors" : {
+        "alphaMean" : 0.016951178875127502,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65057,
+        "opaqueRGBMean" : 2.3516967172377043
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e02.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e02.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17371,
+      "errors" : {
+        "alphaMean" : 0.037111038987382855,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15771,
+        "opaqueRGBMean" : 3.3038065647919175
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e02-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e02.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43530,
+      "errors" : {
+        "alphaMean" : 0.017826209717421,
+        "opaqueChannelP999" : 76,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.381578072154768
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e03.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e03.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17537,
+      "errors" : {
+        "alphaMean" : 0.035234695119477466,
+        "opaqueChannelP999" : 65,
+        "opaquePixels" : 15790,
+        "opaqueRGBMean" : 3.504116529449018
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e03-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e03.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43614,
+      "errors" : {
+        "alphaMean" : 0.017157218114155912,
+        "opaqueChannelP999" : 77,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.383977773343362
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e04.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e04.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17201,
+      "errors" : {
+        "alphaMean" : 0.03340906324800195,
+        "opaqueChannelP999" : 62,
+        "opaquePixels" : 15790,
+        "opaqueRGBMean" : 3.3012877348532825
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e04-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e04.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43530,
+      "errors" : {
+        "alphaMean" : 0.017826209717421,
+        "opaqueChannelP999" : 76,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.381578072154768
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e05.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e05.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17537,
+      "errors" : {
+        "alphaMean" : 0.035234695119477466,
+        "opaqueChannelP999" : 65,
+        "opaquePixels" : 15790,
+        "opaqueRGBMean" : 3.504116529449018
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e05-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e05.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43626,
+      "errors" : {
+        "alphaMean" : 0.017014771232852322,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65057,
+        "opaqueRGBMean" : 2.355980140492184
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e06.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e06.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17327,
+      "errors" : {
+        "alphaMean" : 0.034159600795164106,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15774,
+        "opaqueRGBMean" : 3.4930687629432398
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e06-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e06.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43578,
+      "errors" : {
+        "alphaMean" : 0.01640682829300306,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.347460358880685
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e07.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e07.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17471,
+      "errors" : {
+        "alphaMean" : 0.03563024869163049,
+        "opaqueChannelP999" : 62,
+        "opaquePixels" : 15790,
+        "opaqueRGBMean" : 3.2945535148828373
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e07-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e07.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 42058,
+      "errors" : {
+        "alphaMean" : 0.01640682829300306,
+        "opaqueChannelP999" : 71,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.1388347378492742
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e08.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e08.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17119,
+      "errors" : {
+        "alphaMean" : 0.03563024869163049,
+        "opaqueChannelP999" : 67,
+        "opaquePixels" : 15790,
+        "opaqueRGBMean" : 3.1811906269791006
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e08-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e08.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 41892,
+      "errors" : {
+        "alphaMean" : 0.016361041795441192,
+        "opaqueChannelP999" : 70,
+        "opaquePixels" : 65057,
+        "opaqueRGBMean" : 2.1393495959953066
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e09.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e09.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17049,
+      "errors" : {
+        "alphaMean" : 0.03550853990019879,
+        "opaqueChannelP999" : 67,
+        "opaquePixels" : 15771,
+        "opaqueRGBMean" : 3.1950415319256864
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e09-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e09.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43822,
+      "errors" : {
+        "alphaMean" : 0.017169936585700877,
+        "opaqueChannelP999" : 73,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.3557646553179734
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e10.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e10.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17404,
+      "errors" : {
+        "alphaMean" : 0.03435230638159763,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.500791489900589
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e10-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e10.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43795,
+      "errors" : {
+        "alphaMean" : 0.016500944982435792,
+        "opaqueChannelP999" : 76,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.3846173525514094
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e11.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e11.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17463,
+      "errors" : {
+        "alphaMean" : 0.03564039109091647,
+        "opaqueChannelP999" : 66,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.6694316047193904
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e11-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e11.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43916,
+      "errors" : {
+        "alphaMean" : 0.01636867287836817,
+        "opaqueChannelP999" : 77,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.3832153949273693
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e12.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e12.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17600,
+      "errors" : {
+        "alphaMean" : 0.03773986774311331,
+        "opaqueChannelP999" : 64,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.505983663648452
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e12-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e12.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43795,
+      "errors" : {
+        "alphaMean" : 0.016500944982435792,
+        "opaqueChannelP999" : 76,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.3846173525514094
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e13.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e13.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17463,
+      "errors" : {
+        "alphaMean" : 0.03564039109091647,
+        "opaqueChannelP999" : 66,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.6694316047193904
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e13-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e13.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43626,
+      "errors" : {
+        "alphaMean" : 0.017014771232852322,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65057,
+        "opaqueRGBMean" : 2.355980140492184
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e14.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e14.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17327,
+      "errors" : {
+        "alphaMean" : 0.034159600795164106,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15774,
+        "opaqueRGBMean" : 3.4930687629432398
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e14-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e14.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43863,
+      "errors" : {
+        "alphaMean" : 0.017169936585700877,
+        "opaqueChannelP999" : 73,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.360978505021976
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e15.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e15.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17386,
+      "errors" : {
+        "alphaMean" : 0.03435230638159763,
+        "opaqueChannelP999" : 62,
+        "opaquePixels" : 15793,
+        "opaqueRGBMean" : 3.4616180164207773
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e15-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e15.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43626,
+      "errors" : {
+        "alphaMean" : 0.017014771232852322,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65057,
+        "opaqueRGBMean" : 2.355980140492184
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e16.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate-loop/e16.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17327,
+      "errors" : {
+        "alphaMean" : 0.034159600795164106,
+        "opaqueChannelP999" : 63,
+        "opaquePixels" : 15774,
+        "opaqueRGBMean" : 3.4930687629432398
+      },
+      "file" : "dist/assets/companion/celebrate-loop/e16-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/celebrate-loop/e16.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 43720,
+      "errors" : {
+        "alphaMean" : 0.017169936585700877,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 65147,
+        "opaqueRGBMean" : 2.356803331951842
+      },
+      "file" : "dist/assets/companion/celebrate.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/celebrate.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46440,
+      "errors" : {
+        "alphaMean" : 0.019812834972744317,
+        "opaqueChannelP999" : 81,
+        "opaquePixels" : 100825,
+        "opaqueRGBMean" : 1.9276733614348294
+      },
+      "file" : "dist/assets/companion/coffee-loop/c01.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c01.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18612,
+      "errors" : {
+        "alphaMean" : 0.03634021664164875,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 24660,
+        "opaqueRGBMean" : 2.952514193025142
+      },
+      "file" : "dist/assets/companion/coffee-loop/c01-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c01.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46530,
+      "errors" : {
+        "alphaMean" : 0.02177147959066871,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 100825,
+        "opaqueRGBMean" : 1.930665344243326
+      },
+      "file" : "dist/assets/companion/coffee-loop/c02.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c02.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18668,
+      "errors" : {
+        "alphaMean" : 0.03667491581808593,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 24660,
+        "opaqueRGBMean" : 2.952689916193566
+      },
+      "file" : "dist/assets/companion/coffee-loop/c02-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c02.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46520,
+      "errors" : {
+        "alphaMean" : 0.01922778528167599,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 100775,
+        "opaqueRGBMean" : 1.9288646324319854
+      },
+      "file" : "dist/assets/companion/coffee-loop/c03.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c03.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18657,
+      "errors" : {
+        "alphaMean" : 0.03802385492312061,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 24649,
+        "opaqueRGBMean" : 2.9588218588989412
+      },
+      "file" : "dist/assets/companion/coffee-loop/c03-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c03.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 45589,
+      "errors" : {
+        "alphaMean" : 0.019248134836147932,
+        "opaqueChannelP999" : 86,
+        "opaquePixels" : 100775,
+        "opaqueRGBMean" : 1.902565120317539
+      },
+      "file" : "dist/assets/companion/coffee-loop/c04.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c04.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18286,
+      "errors" : {
+        "alphaMean" : 0.03712118138666883,
+        "opaqueChannelP999" : 59,
+        "opaquePixels" : 24649,
+        "opaqueRGBMean" : 2.874315388048197
+      },
+      "file" : "dist/assets/companion/coffee-loop/c04-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c04.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46530,
+      "errors" : {
+        "alphaMean" : 0.02177147959066871,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 100825,
+        "opaqueRGBMean" : 1.930665344243326
+      },
+      "file" : "dist/assets/companion/coffee-loop/c05.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c05.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18668,
+      "errors" : {
+        "alphaMean" : 0.03667491581808593,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 24660,
+        "opaqueRGBMean" : 2.952689916193566
+      },
+      "file" : "dist/assets/companion/coffee-loop/c05-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c05.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49577,
+      "errors" : {
+        "alphaMean" : 0.022081810296365825,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 108076,
+        "opaqueRGBMean" : 1.9133418458615543
+      },
+      "file" : "dist/assets/companion/coffee-loop/c06.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c06.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 20372,
+      "errors" : {
+        "alphaMean" : 0.04582335997403546,
+        "opaqueChannelP999" : 57,
+        "opaquePixels" : 26360,
+        "opaqueRGBMean" : 2.8346611026808297
+      },
+      "file" : "dist/assets/companion/coffee-loop/c06-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c06.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 42338,
+      "errors" : {
+        "alphaMean" : 0.014120047109218603,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 94480,
+        "opaqueRGBMean" : 1.8878598645215918
+      },
+      "file" : "dist/assets/companion/coffee-loop/c07.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c07.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17152,
+      "errors" : {
+        "alphaMean" : 0.028702989979309507,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 23241,
+        "opaqueRGBMean" : 2.9092121681511123
+      },
+      "file" : "dist/assets/companion/coffee-loop/c07-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c07.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 42335,
+      "errors" : {
+        "alphaMean" : 0.013952163284825084,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 94431,
+        "opaqueRGBMean" : 1.8853730942875397
+      },
+      "file" : "dist/assets/companion/coffee-loop/c08.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c08.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17119,
+      "errors" : {
+        "alphaMean" : 0.02803359162643515,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 23233,
+        "opaqueRGBMean" : 2.912767758504426
+      },
+      "file" : "dist/assets/companion/coffee-loop/c08-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c08.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 42338,
+      "errors" : {
+        "alphaMean" : 0.014120047109218603,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 94480,
+        "opaqueRGBMean" : 1.8878598645215918
+      },
+      "file" : "dist/assets/companion/coffee-loop/c09.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c09.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17152,
+      "errors" : {
+        "alphaMean" : 0.028702989979309507,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 23241,
+        "opaqueRGBMean" : 2.9092121681511123
+      },
+      "file" : "dist/assets/companion/coffee-loop/c09-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c09.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 40648,
+      "errors" : {
+        "alphaMean" : 0.013290802764486975,
+        "opaqueChannelP999" : 78,
+        "opaquePixels" : 92968,
+        "opaqueRGBMean" : 1.9051429882683648
+      },
+      "file" : "dist/assets/companion/coffee-loop/c10.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c10.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 16195,
+      "errors" : {
+        "alphaMean" : 0.025650127794231002,
+        "opaqueChannelP999" : 58,
+        "opaquePixels" : 22883,
+        "opaqueRGBMean" : 2.811708837710673
+      },
+      "file" : "dist/assets/companion/coffee-loop/c10-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c10.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 40606,
+      "errors" : {
+        "alphaMean" : 0.013583327610021139,
+        "opaqueChannelP999" : 78,
+        "opaquePixels" : 92920,
+        "opaqueRGBMean" : 1.9027084230162146
+      },
+      "file" : "dist/assets/companion/coffee-loop/c11.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c11.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 16154,
+      "errors" : {
+        "alphaMean" : 0.026126820560671834,
+        "opaqueChannelP999" : 58,
+        "opaquePixels" : 22874,
+        "opaqueRGBMean" : 2.8140392294016494
+      },
+      "file" : "dist/assets/companion/coffee-loop/c11-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c11.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 42338,
+      "errors" : {
+        "alphaMean" : 0.014120047109218603,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 94480,
+        "opaqueRGBMean" : 1.8878598645215918
+      },
+      "file" : "dist/assets/companion/coffee-loop/c12.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c12.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 17152,
+      "errors" : {
+        "alphaMean" : 0.028702989979309507,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 23241,
+        "opaqueRGBMean" : 2.9092121681511123
+      },
+      "file" : "dist/assets/companion/coffee-loop/c12-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c12.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49577,
+      "errors" : {
+        "alphaMean" : 0.022081810296365825,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 108076,
+        "opaqueRGBMean" : 1.9133418458615543
+      },
+      "file" : "dist/assets/companion/coffee-loop/c13.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee-loop/c13.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 20372,
+      "errors" : {
+        "alphaMean" : 0.04582335997403546,
+        "opaqueChannelP999" : 57,
+        "opaquePixels" : 26360,
+        "opaqueRGBMean" : 2.8346611026808297
+      },
+      "file" : "dist/assets/companion/coffee-loop/c13-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/coffee-loop/c13.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46440,
+      "errors" : {
+        "alphaMean" : 0.019812834972744317,
+        "opaqueChannelP999" : 81,
+        "opaquePixels" : 100825,
+        "opaqueRGBMean" : 1.9276733614348294
+      },
+      "file" : "dist/assets/companion/coffee1.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee1.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 49577,
+      "errors" : {
+        "alphaMean" : 0.022081810296365825,
+        "opaqueChannelP999" : 80,
+        "opaquePixels" : 108076,
+        "opaqueRGBMean" : 1.9133418458615543
+      },
+      "file" : "dist/assets/companion/coffee2.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee2.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 42338,
+      "errors" : {
+        "alphaMean" : 0.014120047109218603,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 94480,
+        "opaqueRGBMean" : 1.8878598645215918
+      },
+      "file" : "dist/assets/companion/coffee3.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee3.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 40648,
+      "errors" : {
+        "alphaMean" : 0.013290802764486975,
+        "opaqueChannelP999" : 78,
+        "opaquePixels" : 92968,
+        "opaqueRGBMean" : 1.9051429882683648
+      },
+      "file" : "dist/assets/companion/coffee4.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/coffee4.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 50018,
+      "errors" : {
+        "alphaMean" : 0.014333717431173992,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 96262,
+        "opaqueRGBMean" : 2.880465119500253
+      },
+      "file" : "dist/assets/companion/frame1.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/frame1.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 48811,
+      "errors" : {
+        "alphaMean" : 0.014969641008422171,
+        "opaqueChannelP999" : 88,
+        "opaquePixels" : 95065,
+        "opaqueRGBMean" : 2.8054208523992354
+      },
+      "file" : "dist/assets/companion/frame2.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/frame2.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 49347,
+      "errors" : {
+        "alphaMean" : 0.01609904128161494,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 95806,
+        "opaqueRGBMean" : 2.8903443764830317
+      },
+      "file" : "dist/assets/companion/frame3.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/frame3.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 51842,
+      "errors" : {
+        "alphaMean" : 0.016577255811705573,
+        "opaqueChannelP999" : 90,
+        "opaquePixels" : 96948,
+        "opaqueRGBMean" : 2.890511752004511
+      },
+      "file" : "dist/assets/companion/frame4.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/frame4.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46233,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1293432838492032
+      },
+      "file" : "dist/assets/companion/hello-loop/h01.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h01.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46220,
+      "errors" : {
+        "alphaMean" : 0.017037664481633255,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 2.127277937475933
+      },
+      "file" : "dist/assets/companion/hello-loop/h02.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h02.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46763,
+      "errors" : {
+        "alphaMean" : 0.01806277328815732,
+        "opaqueChannelP999" : 69,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1326854760051184
+      },
+      "file" : "dist/assets/companion/hello-loop/h03.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h03.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46212,
+      "errors" : {
+        "alphaMean" : 0.017190286140172817,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 2.12972714002991
+      },
+      "file" : "dist/assets/companion/hello-loop/h04.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h04.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46763,
+      "errors" : {
+        "alphaMean" : 0.01806277328815732,
+        "opaqueChannelP999" : 69,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1326854760051184
+      },
+      "file" : "dist/assets/companion/hello-loop/h05.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h05.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46361,
+      "errors" : {
+        "alphaMean" : 0.017037664481633255,
+        "opaqueChannelP999" : 71,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 2.1502431292480457
+      },
+      "file" : "dist/assets/companion/hello-loop/h06.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h06.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46381,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.159977808202017
+      },
+      "file" : "dist/assets/companion/hello-loop/h07.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h07.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46337,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 71,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1519511780444374
+      },
+      "file" : "dist/assets/companion/hello-loop/h08.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h08.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46233,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1293432838492032
+      },
+      "file" : "dist/assets/companion/hello-loop/h09.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h09.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 44761,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 65,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 1.9410306658434227
+      },
+      "file" : "dist/assets/companion/hello-loop/h10.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h10.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 44741,
+      "errors" : {
+        "alphaMean" : 0.017037664481633255,
+        "opaqueChannelP999" : 65,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 1.9405564659842929
+      },
+      "file" : "dist/assets/companion/hello-loop/h11.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h11.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46233,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1293432838492032
+      },
+      "file" : "dist/assets/companion/hello-loop/h12.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h12.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46220,
+      "errors" : {
+        "alphaMean" : 0.017037664481633255,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 2.127277937475933
+      },
+      "file" : "dist/assets/companion/hello-loop/h13.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h13.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46763,
+      "errors" : {
+        "alphaMean" : 0.01806277328815732,
+        "opaqueChannelP999" : 69,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1326854760051184
+      },
+      "file" : "dist/assets/companion/hello-loop/h14.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h14.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46212,
+      "errors" : {
+        "alphaMean" : 0.017190286140172817,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74446,
+        "opaqueRGBMean" : 2.12972714002991
+      },
+      "file" : "dist/assets/companion/hello-loop/h15.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h15.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 46763,
+      "errors" : {
+        "alphaMean" : 0.01806277328815732,
+        "opaqueChannelP999" : 69,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.1326854760051184
+      },
+      "file" : "dist/assets/companion/hello-loop/h16.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/hello-loop/h16.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 50018,
+      "errors" : {
+        "alphaMean" : 0.014333717431173992,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 96262,
+        "opaqueRGBMean" : 2.880465119500253
+      },
+      "file" : "dist/assets/companion/typing/t01.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t01.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19785,
+      "errors" : {
+        "alphaMean" : 0.03610694145807132,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23551,
+        "opaqueRGBMean" : 4.607490127807736
+      },
+      "file" : "dist/assets/companion/typing/t01-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t01.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48830,
+      "errors" : {
+        "alphaMean" : 0.014969641008422171,
+        "opaqueChannelP999" : 88,
+        "opaquePixels" : 95065,
+        "opaqueRGBMean" : 2.8055260435842144
+      },
+      "file" : "dist/assets/companion/typing/t02.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t02.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19321,
+      "errors" : {
+        "alphaMean" : 0.03281066169012942,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23257,
+        "opaqueRGBMean" : 4.475054105573949
+      },
+      "file" : "dist/assets/companion/typing/t02-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t02.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48718,
+      "errors" : {
+        "alphaMean" : 0.014839912598663543,
+        "opaqueChannelP999" : 88,
+        "opaquePixels" : 94983,
+        "opaqueRGBMean" : 2.8021716166752646
+      },
+      "file" : "dist/assets/companion/typing/t03.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t03.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19295,
+      "errors" : {
+        "alphaMean" : 0.03353077203943365,
+        "opaqueChannelP999" : 75,
+        "opaquePixels" : 23239,
+        "opaqueRGBMean" : 4.464334380423713
+      },
+      "file" : "dist/assets/companion/typing/t03-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t03.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49385,
+      "errors" : {
+        "alphaMean" : 0.01609904128161494,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 95806,
+        "opaqueRGBMean" : 2.8840886792058953
+      },
+      "file" : "dist/assets/companion/typing/t04.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t04.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19487,
+      "errors" : {
+        "alphaMean" : 0.034818856748752486,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23431,
+        "opaqueRGBMean" : 4.5853498925924345
+      },
+      "file" : "dist/assets/companion/typing/t04-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t04.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49347,
+      "errors" : {
+        "alphaMean" : 0.01609904128161494,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 95806,
+        "opaqueRGBMean" : 2.8903443764830317
+      },
+      "file" : "dist/assets/companion/typing/t05.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t05.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19492,
+      "errors" : {
+        "alphaMean" : 0.034818856748752486,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23431,
+        "opaqueRGBMean" : 4.6046548020428775
+      },
+      "file" : "dist/assets/companion/typing/t05-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t05.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 51842,
+      "errors" : {
+        "alphaMean" : 0.016577255811705573,
+        "opaqueChannelP999" : 90,
+        "opaquePixels" : 96948,
+        "opaqueRGBMean" : 2.890511752004511
+      },
+      "file" : "dist/assets/companion/typing/t06.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t06.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 20663,
+      "errors" : {
+        "alphaMean" : 0.03695890299809323,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23668,
+        "opaqueRGBMean" : 4.549715508985409
+      },
+      "file" : "dist/assets/companion/typing/t06-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t06.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 51792,
+      "errors" : {
+        "alphaMean" : 0.016727333775936142,
+        "opaqueChannelP999" : 90,
+        "opaquePixels" : 96867,
+        "opaqueRGBMean" : 2.889759498418794
+      },
+      "file" : "dist/assets/companion/typing/t07.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t07.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 20607,
+      "errors" : {
+        "alphaMean" : 0.037202320580956634,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23650,
+        "opaqueRGBMean" : 4.5419309372797745
+      },
+      "file" : "dist/assets/companion/typing/t07-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t07.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48639,
+      "errors" : {
+        "alphaMean" : 0.014333717431173992,
+        "opaqueChannelP999" : 90,
+        "opaquePixels" : 96262,
+        "opaqueRGBMean" : 2.745378931111619
+      },
+      "file" : "dist/assets/companion/typing/t08.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t08.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19375,
+      "errors" : {
+        "alphaMean" : 0.03610694145807132,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23551,
+        "opaqueRGBMean" : 4.498535094051208
+      },
+      "file" : "dist/assets/companion/typing/t08-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t08.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48527,
+      "errors" : {
+        "alphaMean" : 0.014031017808403858,
+        "opaqueChannelP999" : 90,
+        "opaquePixels" : 96180,
+        "opaqueRGBMean" : 2.746700630761766
+      },
+      "file" : "dist/assets/companion/typing/t09.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t09.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19315,
+      "errors" : {
+        "alphaMean" : 0.03482899914803846,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23534,
+        "opaqueRGBMean" : 4.487521599954675
+      },
+      "file" : "dist/assets/companion/typing/t09-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t09.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48830,
+      "errors" : {
+        "alphaMean" : 0.014969641008422171,
+        "opaqueChannelP999" : 88,
+        "opaquePixels" : 95065,
+        "opaqueRGBMean" : 2.8055260435842144
+      },
+      "file" : "dist/assets/companion/typing/t10.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t10.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19321,
+      "errors" : {
+        "alphaMean" : 0.03281066169012942,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23257,
+        "opaqueRGBMean" : 4.475054105573949
+      },
+      "file" : "dist/assets/companion/typing/t10-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t10.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 48811,
+      "errors" : {
+        "alphaMean" : 0.014969641008422171,
+        "opaqueChannelP999" : 88,
+        "opaquePixels" : 95065,
+        "opaqueRGBMean" : 2.8054208523992354
+      },
+      "file" : "dist/assets/companion/typing/t11.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t11.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19313,
+      "errors" : {
+        "alphaMean" : 0.03281066169012942,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23257,
+        "opaqueRGBMean" : 4.474581129695719
+      },
+      "file" : "dist/assets/companion/typing/t11-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t11.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49385,
+      "errors" : {
+        "alphaMean" : 0.01609904128161494,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 95806,
+        "opaqueRGBMean" : 2.8840886792058953
+      },
+      "file" : "dist/assets/companion/typing/t12.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t12.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19487,
+      "errors" : {
+        "alphaMean" : 0.034818856748752486,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23431,
+        "opaqueRGBMean" : 4.5853498925924345
+      },
+      "file" : "dist/assets/companion/typing/t12-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t12.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49347,
+      "errors" : {
+        "alphaMean" : 0.01609904128161494,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 95806,
+        "opaqueRGBMean" : 2.8903443764830317
+      },
+      "file" : "dist/assets/companion/typing/t13.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t13.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19492,
+      "errors" : {
+        "alphaMean" : 0.034818856748752486,
+        "opaqueChannelP999" : 72,
+        "opaquePixels" : 23431,
+        "opaqueRGBMean" : 4.6046548020428775
+      },
+      "file" : "dist/assets/companion/typing/t13-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t13.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 49873,
+      "errors" : {
+        "alphaMean" : 0.014031017808403858,
+        "opaqueChannelP999" : 91,
+        "opaquePixels" : 96180,
+        "opaqueRGBMean" : 2.8838393290358355
+      },
+      "file" : "dist/assets/companion/typing/t14.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/companion/typing/t14.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 19743,
+      "errors" : {
+        "alphaMean" : 0.03482899914803846,
+        "opaqueChannelP999" : 74,
+        "opaquePixels" : 23534,
+        "opaqueRGBMean" : 4.599883855981417
+      },
+      "file" : "dist/assets/companion/typing/t14-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/companion/typing/t14.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46182,
+      "errors" : {
+        "alphaMean" : 0.019812834972744317,
+        "opaqueChannelP999" : 81,
+        "opaquePixels" : 100825,
+        "opaqueRGBMean" : 1.9280370278535417
+      },
+      "file" : "dist/assets/mascot-coffee.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/mascot-coffee.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    },
+    {
+      "bytes" : 18612,
+      "errors" : {
+        "alphaMean" : 0.03634021664164875,
+        "opaqueChannelP999" : 60,
+        "opaquePixels" : 24660,
+        "opaqueRGBMean" : 2.952514193025142
+      },
+      "file" : "dist/assets/mascot-coffee-314.avif",
+      "group" : "mascot-half",
+      "hasTransparency" : true,
+      "height" : 314,
+      "quality" : 0.95,
+      "source" : "dist/assets/mascot-coffee.png",
+      "thresholdsRequired" : true,
+      "width" : 314
+    },
+    {
+      "bytes" : 46220,
+      "errors" : {
+        "alphaMean" : 0.01708090728488613,
+        "opaqueChannelP999" : 68,
+        "opaquePixels" : 74502,
+        "opaqueRGBMean" : 2.130953978864102
+      },
+      "file" : "dist/assets/mascot-hello.avif",
+      "group" : "mascot-full",
+      "hasTransparency" : true,
+      "height" : 627,
+      "quality" : 0.94,
+      "source" : "dist/assets/mascot-hello.png",
+      "thresholdsRequired" : true,
+      "width" : 627
+    }
+  ],
+  "metric" : "sRGB 8-bit straight RGB, source alpha == 255; pooled per-channel nearest-rank 99.9 percentile; alpha MAE across all pixels. Resized images compared against high-quality scaled source. PNG quality is null. Mascot thresholds: RGB MAE <=1.5, p999 <=24, alpha MAE <=1. Screenshot errors informational.",
+  "originalChecksumsFNV1a64" : {
+    "dist/assets/app-history-large.png" : "1a6ab33ca2ba3682",
+    "dist/assets/app-progress-large.png" : "8142adf8d007191c",
+    "dist/assets/app-timer-large.png" : "f380a6f0c26ef97a",
+    "dist/assets/clockin-icon.png" : "1fddaf6178a15d51",
+    "dist/assets/companion/celebrate-loop/e01.png" : "676ef07a26d71871",
+    "dist/assets/companion/celebrate-loop/e02.png" : "1d11900a3630664e",
+    "dist/assets/companion/celebrate-loop/e03.png" : "9b1955e90d1bf024",
+    "dist/assets/companion/celebrate-loop/e04.png" : "3bc332fc5beb5a52",
+    "dist/assets/companion/celebrate-loop/e05.png" : "9b1955e90d1bf024",
+    "dist/assets/companion/celebrate-loop/e06.png" : "313107dbe095d323",
+    "dist/assets/companion/celebrate-loop/e07.png" : "573822a66b6be436",
+    "dist/assets/companion/celebrate-loop/e08.png" : "4fbd411aff83cdbe",
+    "dist/assets/companion/celebrate-loop/e09.png" : "1b7750f8d41aefd0",
+    "dist/assets/companion/celebrate-loop/e10.png" : "676ef07a26d71871",
+    "dist/assets/companion/celebrate-loop/e11.png" : "c875f70be5f608a3",
+    "dist/assets/companion/celebrate-loop/e12.png" : "5e2a140d87a1e2b6",
+    "dist/assets/companion/celebrate-loop/e13.png" : "c875f70be5f608a3",
+    "dist/assets/companion/celebrate-loop/e14.png" : "313107dbe095d323",
+    "dist/assets/companion/celebrate-loop/e15.png" : "e06b414e2a3382e8",
+    "dist/assets/companion/celebrate-loop/e16.png" : "313107dbe095d323",
+    "dist/assets/companion/celebrate.png" : "6e4041b7d9aeaf1f",
+    "dist/assets/companion/coffee-loop/c01.png" : "1a5029b6eeb548f7",
+    "dist/assets/companion/coffee-loop/c02.png" : "18aae4f280120c9b",
+    "dist/assets/companion/coffee-loop/c03.png" : "7133e0b299c2cd53",
+    "dist/assets/companion/coffee-loop/c04.png" : "4255e0d69a55a311",
+    "dist/assets/companion/coffee-loop/c05.png" : "18aae4f280120c9b",
+    "dist/assets/companion/coffee-loop/c06.png" : "f7cb53083a2da41b",
+    "dist/assets/companion/coffee-loop/c07.png" : "d035ec7a733a2f4b",
+    "dist/assets/companion/coffee-loop/c08.png" : "25ad0f1b6ec75292",
+    "dist/assets/companion/coffee-loop/c09.png" : "d035ec7a733a2f4b",
+    "dist/assets/companion/coffee-loop/c10.png" : "fb55c3092121e844",
+    "dist/assets/companion/coffee-loop/c11.png" : "4b29ea9703cfbeee",
+    "dist/assets/companion/coffee-loop/c12.png" : "d035ec7a733a2f4b",
+    "dist/assets/companion/coffee-loop/c13.png" : "f7cb53083a2da41b",
+    "dist/assets/companion/coffee1.png" : "1a5029b6eeb548f7",
+    "dist/assets/companion/coffee2.png" : "f7cb53083a2da41b",
+    "dist/assets/companion/coffee3.png" : "d035ec7a733a2f4b",
+    "dist/assets/companion/coffee4.png" : "fb55c3092121e844",
+    "dist/assets/companion/frame1.png" : "54f5118f572587f4",
+    "dist/assets/companion/frame2.png" : "fec7f17ee3ee9976",
+    "dist/assets/companion/frame3.png" : "2671906c434cbd75",
+    "dist/assets/companion/frame4.png" : "02f30425ff5620d1",
+    "dist/assets/companion/hello-loop/h01.png" : "2b9c1871e62603a2",
+    "dist/assets/companion/hello-loop/h02.png" : "6f2f91bbb411a87a",
+    "dist/assets/companion/hello-loop/h03.png" : "73b2217b8856d9e3",
+    "dist/assets/companion/hello-loop/h04.png" : "3f1548ebbf1b6688",
+    "dist/assets/companion/hello-loop/h05.png" : "73b2217b8856d9e3",
+    "dist/assets/companion/hello-loop/h06.png" : "5b0af007587b5fe6",
+    "dist/assets/companion/hello-loop/h07.png" : "48d35052ea958a93",
+    "dist/assets/companion/hello-loop/h08.png" : "b39aa0fd32308a76",
+    "dist/assets/companion/hello-loop/h09.png" : "2b9c1871e62603a2",
+    "dist/assets/companion/hello-loop/h10.png" : "1d29068689770211",
+    "dist/assets/companion/hello-loop/h11.png" : "711fb83cbb80ffb6",
+    "dist/assets/companion/hello-loop/h12.png" : "2b9c1871e62603a2",
+    "dist/assets/companion/hello-loop/h13.png" : "6f2f91bbb411a87a",
+    "dist/assets/companion/hello-loop/h14.png" : "73b2217b8856d9e3",
+    "dist/assets/companion/hello-loop/h15.png" : "3f1548ebbf1b6688",
+    "dist/assets/companion/hello-loop/h16.png" : "73b2217b8856d9e3",
+    "dist/assets/companion/typing/t01.png" : "54f5118f572587f4",
+    "dist/assets/companion/typing/t02.png" : "64a9c38512eb8c24",
+    "dist/assets/companion/typing/t03.png" : "bd2722082bd6d0ff",
+    "dist/assets/companion/typing/t04.png" : "3916c0079856bdfd",
+    "dist/assets/companion/typing/t05.png" : "c1d228fb3b72f66c",
+    "dist/assets/companion/typing/t06.png" : "2040080888e26fe1",
+    "dist/assets/companion/typing/t07.png" : "6c6e57adb4bf7da9",
+    "dist/assets/companion/typing/t08.png" : "c1f44dfee496e794",
+    "dist/assets/companion/typing/t09.png" : "d0606b7c6d8d9a4b",
+    "dist/assets/companion/typing/t10.png" : "64a9c38512eb8c24",
+    "dist/assets/companion/typing/t11.png" : "4af11c63609ec999",
+    "dist/assets/companion/typing/t12.png" : "3916c0079856bdfd",
+    "dist/assets/companion/typing/t13.png" : "c1d228fb3b72f66c",
+    "dist/assets/companion/typing/t14.png" : "89cd205d8ec460ef",
+    "dist/assets/mascot-coffee.png" : "74cf75ccca1e28bd",
+    "dist/assets/mascot-hello.png" : "8344b090015c92c0"
+  },
+  "schemaVersion" : 1,
+  "status" : "complete",
+  "summary" : {
+    "allGeneratedAssetBytes" : 5017669,
+    "originalPNGBytes" : 14547122,
+    "replacementAVIFBytes" : 3332690,
+    "replacementPolicy" : "One full-size AVIF per mascot PNG plus one 720w AVIF per screenshot. Excludes icon, half-size alternatives, other screenshot widths and PNG fallbacks; originals remain on disk.",
+    "savedBytes" : 11214432,
+    "savedPercent" : 77.09038255127028
+  }
+}

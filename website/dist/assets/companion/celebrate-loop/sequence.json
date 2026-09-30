@@ -1,0 +1,68 @@
+{
+  "frames" : [
+    {
+      "file" : "e01.png",
+      "ms" : 200
+    },
+    {
+      "file" : "e02.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e03.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e04.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e05.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e06.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e07.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e08.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e09.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e10.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e11.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e12.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e13.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e14.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e15.png",
+      "ms" : 160
+    },
+    {
+      "file" : "e16.png",
+      "ms" : 120
+    }
+  ]
+}
