@@ -3,8 +3,6 @@ import SwiftUI
 /// Ayarlardaki iCloud bolumu. Yalnizca iCloud yetkisi olan derlemede gorunur.
 struct SyncSettingsSection: View {
     @ObservedObject private var sync = SyncCoordinator.shared
-    @State private var showMerge = false
-    @State private var showReview = false
 
     var body: some View {
         if sync.isSupported {
@@ -24,12 +22,14 @@ struct SyncSettingsSection: View {
                             Text(last, format: .relative(presentation: .named))
                         }
                     }
+                    // Sayfa olarak acilir: iPhone'da Form satirina bagli sheet, durum
+                    // her degistiginde satir yenilenince kendiliginden kapaniyordu.
                     if sync.pendingFirstMerge != nil {
-                        Button("Review the first merge") { showMerge = true }
+                        NavigationLink("Review the first merge") { SyncFirstMergeView(embedded: true) }
                     }
                     let count = sync.recoveryInbox.count + sync.issues.count
                     if count > 0 {
-                        Button { showReview = true } label: {
+                        NavigationLink { SyncReviewView(embedded: true) } label: {
                             LabeledContent("Sync changes") { Text(verbatim: String(count)) }
                         }
                     }
@@ -39,21 +39,24 @@ struct SyncSettingsSection: View {
             } footer: {
                 Text("Your work, goals, companion and choices move between your iPhone and Mac through your private iCloud. Clockin has no server and no account.")
             }
-            .sheet(isPresented: $showMerge) { SyncFirstMergeView().macSheetFrame(width: 480, height: 460) }
-            .sheet(isPresented: $showReview) { SyncReviewView().macSheetFrame() }
         }
     }
 }
 
 /// Ilk kez baska bir cihazin gecmisi geldiginde birlestirmeden once sorulur.
 struct SyncFirstMergeView: View {
+    /// Ayarlarin gezinme yiginina itildiginde kendi yiginini kurmaz.
+    var embedded = false
     @ObservedObject private var sync = SyncCoordinator.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @State private var merging = false
 
     var body: some View {
-        NavigationStack {
+        if embedded { content } else { NavigationStack { content } }
+    }
+
+    private var content: some View {
             Form {
                 if let preview = sync.pendingFirstMerge {
                     Section {
@@ -95,18 +98,21 @@ struct SyncFirstMergeView: View {
             .inlineNavigationTitle()
             .tint(palette.accent)
             .interactiveDismissDisabled(merging)
-        }
     }
 }
 
 /// Senkronda yerini baskasina birakan degerler ve uygulanamayan kayitlar.
 struct SyncReviewView: View {
+    var embedded = false
     @ObservedObject private var sync = SyncCoordinator.shared
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: ClockStore
 
     var body: some View {
-        NavigationStack {
+        if embedded { content } else { NavigationStack { content } }
+    }
+
+    private var content: some View {
             List {
                 if sync.recoveryInbox.isEmpty && sync.issues.isEmpty {
                     Text("Nothing needs your attention.")
@@ -141,14 +147,15 @@ struct SyncReviewView: View {
             .navigationTitle("Sync changes")
             .inlineNavigationTitle()
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                if !embedded {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                }
                 if !sync.recoveryInbox.isEmpty || sync.issues.contains(where: { $0.kind == .notice }) {
-                    ToolbarItem(placement: .cancellationAction) {
+                    ToolbarItem(placement: embedded ? .primaryAction : .cancellationAction) {
                         Button("Clear all") { sync.acknowledgeAllRecoveries() }
                     }
                 }
             }
-        }
     }
 }
 
