@@ -14,14 +14,13 @@ struct TimecardImportView: View {
     @State private var phase: Phase = .source
     @FocusState private var isEditingText: Bool
 
-    /// Artik kayitlarin ayarlari. Varsayilan hicbir sey silmez; silme geri
-    /// alinamadigi icin secim her zaman kullanicidan gelir.
-    @State private var scope: ImportScope = .daysInFile
-    @State private var leftoverAction: LeftoverAction = .keep
+    /// Artik kayitlarin ayarlari. Zaman karti isin resmi kaydidir: donemde
+    /// dosyada karsiligi olmayan her kayit, onceki dokumlerden kalanlar dahil,
+    /// silinmek uzere secili gelir. Silme yine onizleme ve onaydan sonra olur;
+    /// kullanici "Tumunu sakla" ya da "Sec" ile vazgecebilir.
+    @State private var scope: ImportScope = .wholeRange
+    @State private var leftoverAction: LeftoverAction = .deleteAll
     @State private var chosenLeftovers: Set<UUID> = []
-    /// Dosya donemin tek dogruluk kaynagi: donemde dosyada karsiligi olmayan
-    /// her kayit, onceki dokumlerden kalanlar dahil, silinmek uzere listelenir.
-    @State private var fileIsReference = false
     @State private var showsDeleteConfirmation = false
     /// Secimden cikarilan yeni/duzeltme satirlari. Mac'teki gibi hepsi secili
     /// baslar; bos kume "hepsini al" demek, boylece yeni bir satir sessizce
@@ -111,14 +110,7 @@ struct TimecardImportView: View {
                 }
             }
             .onChange(of: scope) { _, _ in rebuildReview() }
-            .onChange(of: fileIsReference) { _, isReference in
-                selectionFeedback.send(.selection)
-                // Esas alinan dosya donemin tamamini kapsar; silinecekler
-                // yine listede gorunur ve onay ister.
-                leftoverAction = isReference ? .deleteAll : .keep
-                if isReference, scope != .wholeRange { scope = .wholeRange } else { rebuildReview() }
-            }
-            .alert("Delete your own entries?", isPresented: $showsDeleteConfirmation) {
+            .alert("Delete entries not in the file?", isPresented: $showsDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 if case .review(let review) = phase {
                     Button("Import and delete \(removalIDs(review).count)", role: .destructive) {
@@ -127,11 +119,7 @@ struct TimecardImportView: View {
                 }
             } message: {
                 if case .review(let review) = phase {
-                    if fileIsReference {
-                        Text("\(removalIDs(review).count) entries that are not in the file will be removed from this period. This cannot be undone.")
-                    } else {
-                        Text("\(removalIDs(review).count) Clockin entries will be removed from this period along with the import. This cannot be undone.")
-                    }
+                    Text("\(removalIDs(review).count) entries that are not in the file will be removed from this period. This cannot be undone.")
                 }
             }
         }
@@ -275,20 +263,12 @@ struct TimecardImportView: View {
     /// kullanici burada secer.
     @ViewBuilder private func leftoverSections(_ review: TimecardImportReview) -> some View {
         Section {
-            Toggle("Use this file as the reference", isOn: $fileIsReference)
-        } footer: {
-            Text("Everything in the period below that the file does not contain is marked for deletion, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.")
-        }
-        .listRowBackground(palette.surface)
-
-        Section {
             Picker("Period", selection: $scope.hapticSelection($selectionFeedback)) {
                 ForEach(ImportScope.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden()
             if review.leftovers.isEmpty {
-                Text(fileIsReference ? "Every entry in this period is in the file."
-                                     : "No Clockin entries of your own are left over in this period.")
+                Text("Every entry in this period is in the file.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
@@ -304,9 +284,10 @@ struct TimecardImportView: View {
                 }
             }
         } header: {
-            Text(fileIsReference ? "Entries in this period" : "Your own entries")
+            Text("Entries in this period")
         } footer: {
-            Text(scope.explanation + " " + String(localized: "Entries the file already covers are not listed here.", bundle: .app))
+            Text(String(localized: "Timecards are the record of your work. Entries in this period that the file does not contain are deleted, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.", bundle: .app)
+                 + " " + scope.explanation)
         }
         .listRowBackground(palette.surface)
 
@@ -442,6 +423,8 @@ struct TimecardImportView: View {
         do {
             let sessions = try PastedTextImporter.parse(text, hourlyRate: store.hourlyRate)
             excluded = []
+            // Kopyalanan sayfa donemin tamami olmayabilir; yalnizca kopyalanan gunler esas alinir.
+            scope = .daysInFile
             prepareReview(sessions, sourceTitle: String(localized: "Pasted timecards", bundle: .app),
                           approvedDuration: PastedTextImporter.approvedSummaryDuration(in: text))
         } catch {
@@ -457,6 +440,8 @@ struct TimecardImportView: View {
             defer { if granted { url.stopAccessingSecurityScopedResource() } }
             let sessions = try CSVImporter.parse(data: Data(contentsOf: url), hourlyRate: store.hourlyRate)
             excluded = []
+            // Dokum ilk gunden son gune kadar donemin tamamidir.
+            scope = .wholeRange
             prepareReview(sessions, sourceTitle: url.lastPathComponent)
         } catch {
             errorMessage = error.localizedDescription
@@ -465,7 +450,7 @@ struct TimecardImportView: View {
     }
 
     private func prepareReview(_ sessions: [WorkSession], sourceTitle: String, approvedDuration: TimeInterval? = nil) {
-        let summary = store.compareImportedSessions(sessions, scope: scope, fileIsReference: fileIsReference)
+        let summary = store.compareImportedSessions(sessions, scope: scope, fileIsReference: true)
         phase = .review(TimecardImportReview(sessions: sessions, summary: summary,
                                            sourceTitle: sourceTitle, approvedDuration: approvedDuration))
         errorMessage = nil
@@ -489,8 +474,7 @@ struct TimecardImportView: View {
         Haptics.play(.importFinished)
         chosenLeftovers = []
         excluded = []
-        leftoverAction = .keep
-        fileIsReference = false
+        leftoverAction = .deleteAll
         // Ortak mesaj sonraki islemlerle degisebilir; bu islemin sonucunu sakla.
         phase = .result(store.statusMessage ?? String(localized: "Import finished.", bundle: .app))
     }

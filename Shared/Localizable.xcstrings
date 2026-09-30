@@ -4387,6 +4387,16 @@
         }
       }
     },
+    "Delete entries not in the file?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyada olmayan kayıtlar silinsin mi?"
+          }
+        }
+      }
+    },
     "Delete entry": {
       "localizations": {
         "tr": {
@@ -4423,16 +4433,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu oturum silinsin mi?"
-          }
-        }
-      }
-    },
-    "Delete your own entries?": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kendi kayıtların silinsin mi?"
           }
         }
       }
@@ -5057,22 +5057,22 @@
         }
       }
     },
+    "Entries not in the file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyada olmayan kayıtlar"
+          }
+        }
+      }
+    },
     "Entries recorded on both devices are kept once. A copy of this device's data is saved before anything changes, and nothing is merged until you choose Merge.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "İki cihazda da olan kayıtlar bir kez tutulur. Bir şey değişmeden önce bu cihazdaki verinin bir kopyası alınır; Birleştir'i seçene kadar hiçbir şey birleşmez."
-          }
-        }
-      }
-    },
-    "Entries the file already covers are not listed here.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dosyanın zaten kapsadığı kayıtlar burada listelenmez."
           }
         }
       }
@@ -5255,16 +5255,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Odaklandığın her saat arkadaşını güçlendirir."
-          }
-        }
-      }
-    },
-    "Everything in the period below that the file does not contain is marked for deletion, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aşağıdaki dönemde dosyada olmayan her kayıt silinmek üzere işaretlenir; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Eşleşen kayıtlar dosyadaki saatleri alır."
           }
         }
       }
@@ -6463,16 +6453,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone Ayarları → Uygulamalar → Clockin → Canlı Etkinlikler'de aşağıdaki iki seçeneği de aç."
-          }
-        }
-      }
-    },
-    "In the import review, Your own entries lists Clockin entries not covered by the incoming rows. Days in file checks only dates with imported rows; Whole range checks every day from the first to the last imported date. Review these entries and choose what to keep or delete before importing. Deletions require confirmation. Import older history first and check totals before adding newer exports.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İçe aktarma incelemesinde Kendi kayıtların, gelen satırların kapsamadığı Clockin kayıtlarını listeler. Dosyadaki günler yalnızca içe aktarılan satırı olan tarihleri denetler; Tüm aralık ilk ve son içe aktarılan tarih arasındaki her günü denetler. İçe aktarmadan önce bu kayıtları incele ve neyi saklayıp neyi sileceğini seç. Silmeler onay ister. Önce eski geçmişi içe aktar ve daha yeni dosyaları eklemeden önce toplamları denetle."
           }
         }
       }
@@ -8229,16 +8209,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gece kuşu"
-          }
-        }
-      }
-    },
-    "No Clockin entries of your own are left over in this period.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu dönemde dışarıda kalan kendi Clockin kaydın yok."
           }
         }
       }
@@ -10655,16 +10625,6 @@
         }
       }
     },
-    "Review your own entries": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kendi kayıtlarını incele"
-          }
-        }
-      }
-    },
     "Rhythm": {
       "localizations": {
         "tr": {
@@ -12761,6 +12721,26 @@
         }
       }
     },
+    "Timecards are the record of your work. Entries in this period that the file does not contain are deleted, including entries from earlier imports and the second copy of a doubled entry. Matching entries take the file's times.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaman kartı işinin resmi kaydıdır. Bu dönemde dosyada olmayan kayıtlar silinir; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Eşleşen kayıtlar dosyadaki saatleri alır."
+          }
+        }
+      }
+    },
+    "Timecards are the record of your work. In the import review, Entries in this period lists every entry the file does not contain, including entries from earlier imports and the second copy of a doubled entry, selected for deletion. A CSV file covers every day from its first to its last date; pasted timecards cover only the days they contain. Choose Keep all, or Choose to keep some. Deletions require confirmation.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaman kartı işinin resmi kaydıdır. İçe aktarma önizlemesinde Bu dönemdeki kayıtlar bölümü dosyada olmayan her kaydı listeler; önceki içe aktarmalardan kalanlar ve iki kez girilmiş bir kaydın ikinci kopyası dahil. Bunlar silinmek üzere seçili gelir. CSV dosyası ilk tarihinden son tarihine kadar her günü kapsar; yapıştırılan zaman kartları yalnızca içerdikleri günleri. Tümünü sakla ya da Seç ile bazılarını tutabilirsin. Silme onay ister."
+          }
+        }
+      }
+    },
     "Timer started %@": {
       "localizations": {
         "tr": {
@@ -13337,16 +13317,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu tarihi kullan"
-          }
-        }
-      }
-    },
-    "Use this file as the reference": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu dosyayı esas al"
           }
         }
       }
