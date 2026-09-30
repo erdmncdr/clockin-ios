@@ -142,6 +142,17 @@ check(preview.localCount == 2 && preview.remoteCount == 3 && preview.duplicates 
 check(preview.merge.records[alias.key] != nil, "unapplied remote duplicate remains its own retained identity")
 check(preview.merge.recoveries.isEmpty, "unapplied remote duplicate creates no local recovery notice")
 check(SyncCore.importKey(session(1)) == "1800000000|1800000060|60", "duplicate key matches ClockStore integer-second import key")
+// An approved first merge keeps shared entries once; identical aliases are not "replaced" news.
+do {
+    var merged = blank(); merged.data.sessions = [session(1), session(2, start: 200, note: "kept")]
+    let sameAlias = try record(.session, uuid(5).uuidString, session(5), device: "local")
+    let noteAlias = try record(.session, uuid(6).uuidString, session(6, start: 200, note: "other note"), device: "local")
+    let entries = [SyncRecovery(recordKey: sameAlias.key, version: sameAlias.winner!, reason: "Import-key duplicate"),
+                   SyncRecovery(recordKey: noteAlias.key, version: noteAlias.winner!, reason: "Import-key duplicate")]
+    let kept = SyncSidecar.worthKeeping(entries, merged: merged)
+    check(kept.count == 1 && kept[0].recordKey == noteAlias.key,
+          "first merge drops identical duplicate aliases and keeps one whose note differs")
+}
 var deletedAlias = preview.merge.snapshot; deletedAlias.data.sessions.removeAll { $0.start == date(200) }
 let aliasDeletes = try SyncCore.diff(previous: preview.merge.snapshot, current: deletedAlias, known: preview.merge.records, stamp: stamp("local", 1001))
 check(aliasDeletes.filter { $0.kind == .session && $0.winner?.deleted == true }.count == 2, "deleting collapsed session tombstones all known UUID aliases")

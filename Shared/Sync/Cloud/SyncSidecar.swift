@@ -115,7 +115,7 @@ struct SyncSidecar: Codable, Sendable {
         // Only send records which the fetched server does not already contain.
         pending = records.keys.filter { key in records[key] != staged[key] && !localIssues.contains { $0.recordKey == key } }.sorted()
         addQuarantine(preview.merge.quarantine)
-        addRecoveries(preview.merge.recoveries)
+        addRecoveries(Self.worthKeeping(preview.merge.recoveries, merged: preview.merge.snapshot))
         staged = [:]; hasForeignStaged = false; firstMergeCompleted = true; firstBackupPath = backup.url.path
         touch()
     }
@@ -123,6 +123,30 @@ struct SyncSidecar: Codable, Sendable {
     mutating func acknowledge(_ record: SyncRecord, systemFields fields: Data) {
         rememberSystemFields(fields, for: record.key)
         if records[record.key] == record { pending.removeAll { $0 == record.key } }
+        touch()
+    }
+
+    /// The user approved "entries recorded on both devices are kept once" in the preview.
+    /// An alias identical to the entry that was kept tells them nothing new; one whose
+    /// note, rate or source differs is still worth a look. The first merge of 585 shared
+    /// entries otherwise filled the 50-entry inbox and evicted everything else.
+    static func worthKeeping(_ entries: [SyncRecovery], merged: SyncSnapshot) -> [SyncRecovery] {
+        var kept: [String: WorkSession] = [:]
+        for session in merged.data.sessions { kept[SyncCore.importKey(session)] = session }
+        return entries.filter { entry in
+            guard entry.reason == "Import-key duplicate",
+                  let alias = try? SyncCoding.decode(WorkSession.self, entry.version.payload),
+                  let survivor = kept[SyncCore.importKey(alias)] else { return true }
+            return alias.note != survivor.note || alias.hourlyRate != survivor.hourlyRate
+                || alias.source != survivor.source || alias.matchedExternalSource != survivor.matchedExternalSource
+        }
+    }
+
+    /// Clears everything the user has seen at once.
+    mutating func acknowledgeAllRecoveries() {
+        recoveryInbox.removeAll()
+        recoveryOverflow = false
+        cleanAcknowledgments()
         touch()
     }
 

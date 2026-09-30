@@ -118,5 +118,6 @@ final class SyncBridge {
     func quarantine(_ entry: SyncQuarantine) { state.addQuarantine([entry]); state.touch() }
     func removeQuarantine(at index: Int) { state.removeQuarantine(at: index) }
     func acknowledgeNotices(_ ids: [String]) { state.acknowledgeNotices(ids) }
+    func acknowledgeAllRecoveries() { state.acknowledgeAllRecoveries() }
     func report(_ message: String) { transportError = message }
 }

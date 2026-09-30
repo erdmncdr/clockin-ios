@@ -144,6 +144,13 @@ final class SyncCoordinator: ObservableObject {
         start() // Persist acknowledgment through the same serialized worker.
     }
 
+    func acknowledgeAllRecoveries() {
+        guard isEnabled, let bridge else { return }
+        bridge.acknowledgeAllRecoveries()
+        refreshPublishedState()
+        start()
+    }
+
     private func turnOff() -> Task<Void, Never>? {
         guard work != nil || transport != nil || store != nil else { status = .off; return shutdown }
         generation += 1

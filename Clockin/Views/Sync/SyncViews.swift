@@ -142,6 +142,11 @@ struct SyncReviewView: View {
             .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                if !sync.recoveryInbox.isEmpty || sync.issues.contains(where: { $0.kind == .notice }) {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Clear all") { sync.acknowledgeAllRecoveries() }
+                    }
+                }
             }
         }
     }

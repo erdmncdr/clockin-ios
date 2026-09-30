@@ -3119,6 +3119,16 @@
         }
       }
     },
+    "Clear all": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü temizle"
+          }
+        }
+      }
+    },
     "Click Clockin in the menu bar to open its panel. Check the session timer, earnings, today’s work and goals, then clock in, pause, resume or clock out without opening the main window. The panel also has radio, pin and minimal-mode controls. Click outside, click the menu bar item again or press Esc to close it. Right-click the menu bar item for Open, Check for Updates and Quit.": {
       "localizations": {
         "tr": {
