@@ -57,3 +57,4 @@ Mac releases built from this repository:
 | 2.0.0 (11) | [Clockin for Mac on the iPhone code base, with sync](mac-2.0.0-11.md) |
 | 2.0.1 (12) | [Sync crash fix, environment reset, file as reference](mac-2.0.1-12.md) |
 | 2.0.2 (13) | [Every timecard import is the reference for its period](mac-2.0.2-13.md) |
+| 2.0.3 (14) | [Serious overlaps only](mac-2.0.3-14.md) |
