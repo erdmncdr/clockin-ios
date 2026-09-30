@@ -99,9 +99,9 @@ final class SyncCoordinator: ObservableObject {
 
     @discardableResult
     func pollIfNeeded() -> Task<Void, Never>? {
-        // Fetching withdraws firstPreview until completion. Let the user finish reviewing;
-        // explicit sync triggers and approval still capture/check the current revision.
-        guard isEnabled, pendingFirstMerge == nil, bridge?.state.needsFirstMergeReview != true else { return nil }
+        // Hazir onizleme inceleme boyunca korunur. Eksik/basarisiz fetch sonrasi
+        // onizleme yoksa polling yeniden veri cekerek incelemeyi geri getirir.
+        guard isEnabled, pendingFirstMerge == nil else { return nil }
         return start()
     }
 

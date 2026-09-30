@@ -223,7 +223,7 @@ struct TimecardImportView: View {
             LabeledContent("Duplicate • skipped", value: "\(review.duplicateItems.count)")
             if let approved = review.approvedDuration {
                 LabeledContent("Page Approved", value: DurationText.compact(approved))
-                if abs(approved - review.duration) > 60 {
+                if !review.matchesApprovedTotal {
                     Label("Copied rows are partial, totals do not match.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.orange)
                 } else {
@@ -516,40 +516,6 @@ struct TimecardImportView: View {
         leftoverAction = .deleteAll
         // Ortak mesaj sonraki islemlerle degisebilir; bu islemin sonucunu sakla.
         phase = .result(store.statusMessage ?? String(localized: "Import finished.", bundle: .app))
-    }
-}
-
-private struct TimecardImportReview {
-    let parsed: TimecardParseResult
-    var sessions: [WorkSession] { parsed.sessions }
-    var allowsDeletions: Bool {
-        parsed.allowsDeletions && (approvedDuration.map { abs($0 - duration) <= 60 } ?? true)
-    }
-    let sourceTitle: String
-    let approvedDuration: TimeInterval?
-    let leftovers: [WorkSession]
-    let summary: ImportComparisonSummary
-    var newItems: [ImportComparisonItem] = []
-    var matchedItems: [ImportComparisonItem] = []
-    var duplicateItems: [ImportComparisonItem] = []
-    var duration: TimeInterval = 0
-
-    init(parsed: TimecardParseResult, summary: ImportComparisonSummary,
-         sourceTitle: String, approvedDuration: TimeInterval?) {
-        self.parsed = parsed
-        self.sourceTitle = sourceTitle
-        self.approvedDuration = approvedDuration
-        self.leftovers = summary.leftovers
-        self.summary = summary
-        // Gruplar ve toplam bir kez hazirlanir; satirlar tekrar taramaz.
-        for item in summary.items {
-            duration += item.session.duration
-            switch item.kind {
-            case .new: newItems.append(item)
-            case .matched: matchedItems.append(item)
-            case .duplicate: duplicateItems.append(item)
-            }
-        }
     }
 }
 

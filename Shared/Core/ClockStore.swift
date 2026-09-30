@@ -693,7 +693,8 @@ final class ClockStore: ObservableObject {
         var indexByKey: [String: Int] = [:]
         for (index, session) in data.sessions.enumerated() {
             let key = Self.deduplicationKey(session)
-            if indexByKey[key] == nil { indexByKey[key] = index }
+            if let previous = indexByKey[key], data.sessions[previous].id.uuidString < session.id.uuidString { continue }
+            indexByKey[key] = index
         }
         // Dosyanin dokundugu kayitlar artikta sayilmasin: bir satirla eslesen
         // ya da zaten ayni olan bir kayit zaten dosyanin karsiligidir.
@@ -831,7 +832,8 @@ final class ClockStore: ObservableObject {
         var indexByKey: [String: Int] = [:]
         for (index, session) in data.sessions.enumerated() {
             let key = Self.deduplicationKey(session)
-            if indexByKey[key] == nil { indexByKey[key] = index }
+            if let previous = indexByKey[key], data.sessions[previous].id.uuidString < session.id.uuidString { continue }
+            indexByKey[key] = index
         }
         for session in imported {
             let key = Self.deduplicationKey(session)
@@ -920,7 +922,11 @@ final class ClockStore: ObservableObject {
             guard local.source == "Clockin" || local.matchedExternalSource != nil
                     || local.source == external.source else { continue }
             guard let overlap = sharedTime(local, external) else { continue }
-            if best == nil || overlap > best!.overlap { best = (index, overlap) }
+            // Esit adaylarda arsiv sirasi degil, kalici kimlik karar verir.
+            if best == nil || overlap > best!.overlap
+                || (overlap == best!.overlap && local.id.uuidString < data.sessions[best!.index].id.uuidString) {
+                best = (index, overlap)
+            }
         }
         return best?.index
     }

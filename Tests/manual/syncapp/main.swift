@@ -10,6 +10,8 @@ import Foundation
     var sends = 0
     var stopped = false
     var afterSend: TestSignal?
+    var failNextFetch = false
+    var nextFetchRecords: [SyncRecord] = []
     init(_ bridge: SyncBridge) { self.bridge = bridge }
     func launch() async {
         launches += 1
@@ -20,6 +22,15 @@ import Foundation
         guard !stopped else { return }
         sends += 1; status = .syncing
         bridge.markFetchComplete(false)
+        do {
+            if !nextFetchRecords.isEmpty { try bridge.receive(nextFetchRecords) }
+            nextFetchRecords = []
+        } catch { status = .paused(.invalidData); return }
+        if failNextFetch {
+            failNextFetch = false
+            status = .paused(.sendFailed)
+            return
+        }
         bridge.markFetchComplete(true); bridge.allowInitialUploadIfSafe()
         if bridge.state.permitsUpload {
             for key in bridge.state.pending {
@@ -313,6 +324,21 @@ import Foundation
         previewObservation.cancel()
         review.coordinator.postponeFirstMerge()
         check(review.coordinator.status == .paused(.postponed) && review.store.sessions.isEmpty, "postpone keeps local state and pending preview")
+        let postponedSends = reviewTransport.sends
+        await review.coordinator.pollIfNeeded()?.value
+        check(reviewTransport.sends == postponedSends && review.coordinator.pendingFirstMerge != nil,
+              "polling also preserves a postponed usable preview")
+        // Adapter gibi: fetch onizlemeyi kaldirir, hata otomatik yeniden deneme kurmaz.
+        reviewTransport.failNextFetch = true
+        await review.coordinator.start()?.value
+        check(review.coordinator.pendingFirstMerge == nil && reviewTransport.bridge.state.needsFirstMergeReview,
+              "failed refresh leaves foreign data staged without a usable preview")
+        let failedSends = reviewTransport.sends
+        await review.coordinator.pollIfNeeded()?.value
+        check(reviewTransport.sends == failedSends + 1 && review.coordinator.pendingFirstMerge?.remoteCount == 1,
+              "polling recovers the first-merge preview after a failed refresh")
+        check(review.store.sessions.isEmpty && !reviewTransport.bridge.state.permitsUpload,
+              "fetch recovery does not approve, apply or upload staged foreign data")
         review.defaults.set("changed-after-preview", forKey: "Clockin.Theme"); review.notify()
         await review.clock.registered(1)
         await review.coordinator.approveFirstMerge()
@@ -334,6 +360,45 @@ import Foundation
         check(reviewTransport.bridge.localSaveCount == offCount && review.coordinator.status == .off,
               "turning sync off detaches store hooks")
         await review.cleanup()
+
+        let partial = try Fixture(); try await partial.begin(approved: false)
+        let partialTransport = partial.transport!
+        var partialSnapshot = partialTransport.bridge.snapshot
+        partialSnapshot.data.sessions = foreign.data.sessions
+        var partialRemote = SyncSidecar(deviceID: "partial-device")
+        try partialRemote.capture(previous: nil, current: partialSnapshot, at: partial.clock.now)
+        partialTransport.nextFetchRecords = Array(partialRemote.records.values)
+        partialTransport.failNextFetch = true
+        await partial.coordinator.start()?.value
+        check(partial.coordinator.pendingFirstMerge == nil && partialTransport.bridge.state.needsFirstMergeReview,
+              "partially received first fetch requires review but cannot publish a preview")
+        let partialSends = partialTransport.sends
+        await partial.coordinator.pollIfNeeded()?.value
+        check(partialTransport.sends == partialSends + 1 && partial.coordinator.pendingFirstMerge?.remoteCount == 1,
+              "polling completes an incomplete first fetch and publishes its first preview")
+        check(partial.store.sessions.isEmpty && !partialTransport.bridge.state.permitsUpload,
+              "partial first-fetch recovery retains the approval gate")
+        await partial.cleanup()
+
+        // Yalnizca uzak tema degisince sync ayni kayitlari UUID sirasina koyar.
+        let reordered = try Fixture()
+        var first = foreign.data.sessions[0]
+        first.id = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")!
+        var second = first
+        second.id = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        second.start += 86400; second.end += 86400
+        check(reordered.store.importSessions([first, second]), "ordering fixture stores sessions in insertion order")
+        try await reordered.begin()
+        let importReview = reordered.store.compareImportedSessions([first, second], fileIsReference: true)
+        let beforeOrder = reordered.store.data.sessions
+        var themeOnly = reordered.transport!.bridge.snapshot
+        themeOnly.preferences["Clockin.Theme"] = .string("Paper")
+        try reordered.transport!.deliver(themeOnly, date: reordered.clock.now.addingTimeInterval(100))
+        check(beforeOrder != reordered.store.data.sessions && Set(beforeOrder) == Set(reordered.store.data.sessions),
+              "theme-only sync really reorders unchanged session values through the store apply path")
+        check(importReview.isCurrent(for: reordered.store.data.sessions),
+              "theme-only sync preserves the existing import review")
+        await reordered.cleanup()
         print("All \(count) sync app checks passed.")
     }
 }

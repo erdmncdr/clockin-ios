@@ -19,28 +19,36 @@ enum PastedTextImporter {
         // Her puantaj kendi blogunda okunur; bozuk satir sonraki satirin saatlerini alamaz.
         let weekday = "Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday"
         let month = "January|February|March|April|May|June|July|August|September|October|November|December"
-        // Gun adi eksik tarih satirlari da reddedilen satirdir; yilli sayfa basligi degildir.
-        let pattern = "(?i)\\b(?:(?:\(weekday))(?:\\s*(?:\(month))\\s+\\d{1,2}\\b)?|(?:\(month))\\s+\\d{1,2}\\b(?!\\s*,?\\s*\\d{4}))"
+        // Satir basi tarih + durum, blokta ise ayri tarih satiridir. Kaynak
+        // adindaki gun/ay sozcukleri ve yilli sayfa basligi bu gramera uymaz.
+        // Gun adi eksik tarih + durum da ayrilir, ama parseEntry onu reddeder.
+        let status = "Approved|Submitted|Draft|Unapproved"
+        let date = "(?:\(month))\\s+\\d{1,2}\\b"
+        let pattern = "(?i)\\b(?:(?:(?:\(weekday))\\s*)?\(date)(?=\\s+(?:\(status))\\b)|(?:\(weekday))\\s*\(date)(?=[ \\t]*(?:\\r|\\n|$)))"
         let regex = try NSRegularExpression(pattern: pattern)
         let starts = regex.matches(in: cleaned, range: NSRange(cleaned.startIndex..., in: cleaned))
             .compactMap { Range($0.range, in: cleaned)?.lowerBound }
         var sessions: [WorkSession] = []
+        var parsedStatuses: [UUID: TimecardRowStatus] = [:]
         var skipped = 0
         for (index, start) in starts.enumerated() {
             let end = index + 1 < starts.count ? starts[index + 1] : cleaned.endIndex
             let entry = String(cleaned[start..<end])
             if let parsed = try? parseEntry(entry, hourlyRate: hourlyRate, now: now, range: range) {
-                sessions.append(contentsOf: parsed)
+                for row in parsed {
+                    sessions.append(row.session)
+                    parsedStatuses[row.session.id] = row.status
+                }
             } else {
                 skipped += 1
             }
         }
         guard !sessions.isEmpty else { throw PastedImportError.noEntries }
-        return TimecardParseResult(sessions: sessions, skippedRowCount: skipped)
+        return TimecardParseResult(sessions: sessions, skippedRowCount: skipped, statuses: parsedStatuses)
     }
 
     private static func parseEntry(_ text: String, hourlyRate: Double, now: Date,
-                                   range: ClosedRange<Date>?) throws -> [WorkSession] {
+                                   range: ClosedRange<Date>?) throws -> [(session: WorkSession, status: TimecardRowStatus?)] {
         let lines = text.components(separatedBy: .newlines)
             .map(clean)
             .filter { !$0.isEmpty }
@@ -49,7 +57,7 @@ enum PastedTextImporter {
         let pattern = #"(?i)\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s+(Approved|Submitted|Draft|Unapproved)\s+(.+?)\s+(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})(?:\s+(\d+)\s*([MH]))?"#
         if let regex = try? NSRegularExpression(pattern: pattern), !flattened.isEmpty {
             let matches = regex.matches(in: flattened, range: NSRange(flattened.startIndex..., in: flattened))
-            let parsed = matches.compactMap { match -> WorkSession? in
+            let parsed = matches.compactMap { match -> (session: WorkSession, status: TimecardRowStatus?)? in
                 func capture(_ position: Int) -> String? {
                     guard let range = Range(match.range(at: position), in: flattened) else { return nil }
                     return String(flattened[range]).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -59,13 +67,14 @@ enum PastedTextImporter {
                       let status = capture(3), let source = capture(4),
                       let startText = capture(5), let endText = capture(6),
                       let day = resolveDate(month: month, day: dayNumber, range: range, now: now) else { return nil }
-                return makeSession(day: day, startText: startText, endText: endText,
-                                   status: status, source: source, hourlyRate: hourlyRate)
+                guard let session = makeSession(day: day, startText: startText, endText: endText,
+                                                status: status, source: source, hourlyRate: hourlyRate) else { return nil }
+                return (session, TimecardRowStatus(rawValue: status.lowercased()))
             }
             if !parsed.isEmpty { return parsed }
         }
 
-        var results: [WorkSession] = []
+        var results: [(session: WorkSession, status: TimecardRowStatus?)] = []
         var index = 0
 
         while index + 1 < lines.count {
@@ -106,10 +115,11 @@ enum PastedTextImporter {
                               !ignoredSources.contains(block[next].lowercased()) else { return nil }
                         return block[next]
                     } ?? "Pasted timecard"
-                    results.append(WorkSession(
+                    let session = WorkSession(
                         id: UUID(), start: start, end: end, duration: end.timeIntervalSince(start),
                         note: "\(status) • \(source)", hourlyRate: hourlyRate, source: source
-                    ))
+                    )
+                    results.append((session, TimecardRowStatus(rawValue: status.lowercased())))
                 }
             }
             index = max(index + 1, endIndex)
