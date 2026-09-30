@@ -49,6 +49,7 @@ Clockin repository, so their paths start with `iOS/`.
 | 0.2 (46) | [Sync crash fix](ios-testflight-0.2-46.md) |
 | 0.2 (47) | Every timecard import is the reference for its period (`71e3ddd`) |
 | 0.2 (48) | [Serious overlaps only](ios-testflight-0.2-48.md) |
+| 0.2 (49) | [Poll iCloud while open](ios-testflight-0.2-49.md) |
 
 Mac releases built from this repository:
 
@@ -58,3 +59,4 @@ Mac releases built from this repository:
 | 2.0.1 (12) | [Sync crash fix, environment reset, file as reference](mac-2.0.1-12.md) |
 | 2.0.2 (13) | [Every timecard import is the reference for its period](mac-2.0.2-13.md) |
 | 2.0.3 (14) | [Serious overlaps only](mac-2.0.3-14.md) |
+| 2.0.4 (15) | [Poll iCloud every minute while running](mac-2.0.4-15.md) |
