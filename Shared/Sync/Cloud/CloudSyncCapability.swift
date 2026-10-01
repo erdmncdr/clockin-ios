@@ -15,11 +15,16 @@ enum CloudSyncCapability {
             "com.apple.developer.icloud-services" as CFString, nil) as? [String]
         return permits(containers: containers, services: services)
         #else
-        // SecTask iOS'un herkese acik SDK'sinda yok. Mach-O okuyucusu
-        // (`signedEntitlements`) App Store'un yeniden imzaladigi ikilide hic
-        // calistirilmadi; yanlis "hayir" tum iPhone'larda sync'i sessizce kapatirdi.
-        // Dagitilan iOS derlemeleri her zaman yetkili imzalanir, bu yuzden acik.
-        return true
+        // SecTask iOS'un herkese acik SDK'sinda yok; imzadaki XML yetki blogu okunur.
+        // Okunamazsa (bilinmeyen bicim) acik kalir: dagitilan derlemeler hep yetkili
+        // imzalanir ve yanlis "hayir" tum iPhone'larda sync'i sessizce kapatirdi.
+        // Okunan blokta iCloud yoksa (takimsiz, ad-hoc simulator derlemesi) CloudKit'e
+        // hic girilmez; kurucu orada yakalanamayan bir exception ile cokuyordu.
+        guard let url = Bundle.main.executableURL,
+              let bytes = try? Data(contentsOf: url, options: .mappedIfSafe),
+              let entitlements = signedEntitlements(in: bytes) else { return true }
+        return permits(containers: entitlements["com.apple.developer.icloud-container-identifiers"] as? [String],
+                       services: entitlements["com.apple.developer.icloud-services"] as? [String])
         #endif
     }()
 
