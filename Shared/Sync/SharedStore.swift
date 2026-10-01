@@ -13,6 +13,9 @@ enum SharedStore {
     static let clock: ClockStore = {
         AppGroup.migrateLegacyDataIfNeeded()
         let store = ClockStore(fileURL: AppGroup.dataFileURL)
+        #if os(iOS)
+        RemoteClockInNotification.shared.start(store: store)
+        #endif
         SessionMirror.shared.start(observing: store)
         return store
     }()

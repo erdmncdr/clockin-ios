@@ -1,5 +1,21 @@
 import Foundation
 
+/// Outcome of a completed app sync wake. Approval gates aren't failures;
+/// transport, validation and persistence errors are, even after a partial apply.
+enum SyncFetchResult: Equatable, Sendable {
+    case newData, noData, failed
+
+    static func result(appliedChanges: Bool, status: SyncStatus) -> Self {
+        switch status {
+        case .off: return .noData
+        case .upToDate, .paused(.firstMerge), .paused(.postponed):
+            return appliedChanges ? .newData : .noData
+        case .starting, .syncing, .waitingForNetwork, .accountProblem, .paused:
+            return .failed
+        }
+    }
+}
+
 // Shared by the real transport and offline harnesses. No CloudKit access is needed.
 @MainActor
 protocol SyncTransport: AnyObject {

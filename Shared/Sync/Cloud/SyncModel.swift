@@ -15,7 +15,7 @@ enum SyncFailure: Error, Equatable {
     case invalid(String), unknownCatalog, unsupportedVersion, stalePreview, backupRequired, accountChanged
 }
 
-struct SyncSnapshot: Sendable {
+struct SyncSnapshot: Equatable, Sendable {
     var data: ClockinData
     var preferences: [String: SyncPreference] = [:]
     var wardrobe: WardrobeState = .init()

@@ -52,6 +52,7 @@ final class SyncCoordinator: ObservableObject {
     private var postponed = false
     private var localFailure: SyncPauseReason?
     private var generation = 0
+    private var appliedChangeRevision: UInt64 = 0
 
     init(defaults: UserDefaults = .standard,
          supportsSync: @escaping @MainActor () -> Bool = {
@@ -128,9 +129,12 @@ final class SyncCoordinator: ObservableObject {
         start()
     }
 
-    func handleRemoteNotification() async {
+    @discardableResult
+    func handleRemoteNotification() async -> SyncFetchResult {
         Self.log.notice("remote notification")
+        let revision = appliedChangeRevision
         await start()?.value
+        return SyncFetchResult.result(appliedChanges: revision != appliedChangeRevision, status: status)
     }
 
     func accountMayHaveChanged() {
@@ -324,6 +328,9 @@ final class SyncCoordinator: ObservableObject {
             }
             preferences.apply(snapshot.preferences)
             wardrobe.applySynced(prepared)
+            if capture(store: store, wardrobe: wardrobe, preferences: preferences) != local {
+                appliedChangeRevision &+= 1
+            }
             refreshServices()
             debounce.cancel()
             // Delayed defaults notifications from this apply see this exact baseline; no echo.

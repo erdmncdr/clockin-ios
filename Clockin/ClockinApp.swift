@@ -60,7 +60,7 @@ struct ClockinApp: App {
                 .onChange(of: themeRaw) { _, _ in
                     SessionMirror.shared.refresh()
                 }
-                .onChange(of: scenePhase) { _, phase in
+                .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active || phase == .background {
                         SessionMirror.shared.refresh()
                     }

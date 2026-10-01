@@ -45,8 +45,14 @@ final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
               let notice = CKNotification(fromRemoteNotificationDictionary: userInfo) as? CKDatabaseNotification,
               notice.containerIdentifier == ClockinCloudRecord.containerID,
               notice.databaseScope == .private else { return .noData }
-        await sync.handleRemoteNotification()
+        let result = await sync.handleRemoteNotification()
         await SessionMirror.shared.finishPendingUpdates()
-        return .noData
+        Logger(subsystem: "com.erdmncdr.clockin", category: "sync")
+            .notice("push fetch result: \(String(describing: result), privacy: .public)")
+        switch result {
+        case .newData: return .newData
+        case .noData: return .noData
+        case .failed: return .failed
+        }
     }
 }

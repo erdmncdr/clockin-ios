@@ -24,6 +24,7 @@ struct RootView: View {
     @State private var goalEditorRequest = false
     @State private var progressSection: ProgressSection = .goals
     @ObservedObject private var nudges = NudgeController.shared
+    @ObservedObject private var remoteClockInNavigation = RemoteClockInNavigation.shared
     @ObservedObject private var reminder = LongSessionReminderController.shared
     @State private var showCompanion = false
     @State private var tab: AppTab = .today
@@ -78,6 +79,9 @@ struct RootView: View {
             // Sekmeler masa modunun altinda yasamaya devam eder; dik cevirince
             // acik ekran ve kaydirma yeri kaybolmaz.
             tabs
+                // An explicit notification tap also closes tab-owned sheets and
+                // navigation paths, including those on History or Progress.
+                .id(remoteClockInNavigation.request)
                 .accessibilityHidden(showsDeskMode)
             #if DEBUG
             // Review fixture: the landscape layout drawn at landscape size and
@@ -186,6 +190,14 @@ struct RootView: View {
                 tab = .today
                 nudges.openToday = false
             }
+        }
+        .onChange(of: remoteClockInNavigation.request, initial: true) { _, request in
+            guard request != nil else { return }
+            tab = .today
+            deskSuppressed = true
+            showCompanion = false
+            deskSummary = nil
+            celebrationShare = nil
         }
         .onChange(of: chimeEnabled) { _, _ in updateChimes() }
         .onChange(of: chimeInterval) { _, _ in updateChimes() }
