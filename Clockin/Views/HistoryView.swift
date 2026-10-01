@@ -17,7 +17,6 @@ struct HistoryView: View {
     @State private var sheet: SessionSheet?
     @State private var pendingDelete: WorkSession?
     #if os(macOS)
-    @AppStorage("Clockin.HistoryGroupByDay") private var groupByDay = true
     @State private var expandedDays: Set<Date> = []
     @State private var selectedSessionID: UUID?
     @State private var selectionDelivery = MacDeferredValue<UUID?>()
@@ -68,36 +67,29 @@ struct HistoryView: View {
                 .listRowBackground(palette.surface)
                 #endif
                 #if os(macOS)
+                // Mac'te "Gune gore / Oturumlar" secicisi kaldirildi; liste hep gune gore.
                 Group {
-                    if groupByDay {
-                        ForEach(days, id: \.day) { group in
-                            Section {
-                                if expandedDays.contains(group.day) {
-                                    ForEach(group.sessions) { session in
-                                        macSessionRow(session, snapshot: snapshot, converting: converting, conflicts: conflicts)
-                                    }
-                                }
-                            } header: {
-                                Button {
-                                    selectedSessionID = nil
-                                    if !expandedDays.insert(group.day).inserted { expandedDays.remove(group.day) }
-                                } label: {
-                                    HStack {
-                                        Image(systemName: expandedDays.contains(group.day) ? "chevron.down" : "chevron.right")
-                                        dayHeader(group, conflicts: conflicts, showTRY: converting)
-                                    }
-                                    .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                                .accessibilityValue(expandedDays.contains(group.day) ? "Expanded" : "Collapsed")
-                            }
-                        }
-                    } else {
+                    ForEach(days, id: \.day) { group in
                         Section {
-                            ForEach(snapshot.sessions.sorted { $0.start > $1.start }) { session in
-                                macSessionRow(session, snapshot: snapshot, converting: converting, conflicts: conflicts)
+                            if expandedDays.contains(group.day) {
+                                ForEach(group.sessions) { session in
+                                    macSessionRow(session, snapshot: snapshot, converting: converting, conflicts: conflicts)
+                                }
                             }
+                        } header: {
+                            Button {
+                                selectedSessionID = nil
+                                if !expandedDays.insert(group.day).inserted { expandedDays.remove(group.day) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: expandedDays.contains(group.day) ? "chevron.down" : "chevron.right")
+                                    dayHeader(group, conflicts: conflicts, showTRY: converting)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                            .accessibilityValue(expandedDays.contains(group.day) ? "Expanded" : "Collapsed")
                         }
                     }
                 }
@@ -153,16 +145,9 @@ struct HistoryView: View {
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("History")
+            #if os(iOS)
+            // Mac'te yeni kayit Bugun'deki + ile eklenir; Gecmis'in arac cubugu bos.
             .toolbar {
-                #if os(macOS)
-                ToolbarItem {
-                    Picker("Session list", selection: $groupByDay) {
-                        Text("By day").tag(true)
-                        Text("Sessions").tag(false)
-                    }
-                    .pickerStyle(.segmented)
-                }
-                #endif
                 ToolbarItem(placement: .trailingBar) {
                     Button { sheet = .newEntry } label: {
                         Image(systemName: "plus")
@@ -170,10 +155,10 @@ struct HistoryView: View {
                     .accessibilityLabel("Add past entry")
                 }
             }
+            #endif
         }
         #if os(macOS)
         .onChange(of: period.pageID) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
-        .onChange(of: groupByDay) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
         .onChange(of: store.sessions) { _, sessions in
             if let selectedSessionID, !sessions.contains(where: { $0.id == selectedSessionID }) {
                 selectionDelivery.submit(nil, to: $selectedSessionID)
@@ -203,7 +188,7 @@ struct HistoryView: View {
     #if os(macOS)
     private func macSessionRow(_ session: WorkSession, snapshot: EarningsSnapshot,
                                converting: Bool, conflicts: Set<UUID>) -> some View {
-        SessionRow(session: session, showsDay: !groupByDay,
+        SessionRow(session: session, showsDay: false,
                    conflicts: conflicts.contains(session.id),
                    historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
             .tag(session.id)

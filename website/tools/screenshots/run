@@ -34,7 +34,7 @@ SETTINGS=(-Clockin.Theme "$THEME" -Clockin.GoalDailyHours 8 -Clockin.GoalMonthly
           # The default companion and room, not whatever this Mac has unlocked.
           -Clockin.WardrobeState "{}"
           # Six months of history, so the chart is worth showing.
-          -Clockin.HistoryRange 6M -Clockin.HistoryGroupByDay -bool YES
+          -Clockin.HistoryRange 6M
           -AppleLanguages "(en)" -AppleLocale en_US
           # A fixed window, so every shot is the same size.
           "-NSWindow Frame ClockinMainWindow" "160 40 960 860 0 0 1512 949 "
