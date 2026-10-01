@@ -25,13 +25,28 @@ struct DeskModeView: View {
             let earned = store.running == nil ? todayEarnings : store.currentEarnings(at: now)
 
             timerBlock(elapsed: elapsed, earned: earned, day: store.runningDayIfNotToday(at: now))
+                #if os(macOS)
+                .frame(maxWidth: 600)
+                .padding(28)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                .overlay { RoundedRectangle(cornerRadius: 24).strokeBorder(.white.opacity(0.12), lineWidth: 0.5) }
+                .fixedSize(horizontal: false, vertical: true)
+                #endif
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 // Bugun ve kontroller ayni alt satirda, dugmelerin ortasina hizali.
                 .overlay(alignment: .bottom) {
                     HStack(alignment: .center) {
                         todaySummary(duration: todayDuration, earnings: todayEarnings)
+                            #if os(macOS)
+                            .padding(12)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            #endif
                         Spacer(minLength: 16)
                         controls.buttonPressHaptic(false)
+                            #if os(macOS)
+                            .padding(10)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            #endif
                     }
                 }
                 .padding(.horizontal, 24)
@@ -45,6 +60,20 @@ struct DeskModeView: View {
         }
         .background {
             if showHome {
+                #if os(macOS)
+                GeometryReader { screen in
+                    // 3:2 oda ekrani doldurur; pencere ve arkadas guvenli alanda kalir.
+                    let size = MacDeskFraming.roomSize(in: screen.size)
+                    CompanionHomeView()
+                        .frame(width: size.width, height: size.height)
+                        .offset(y: -MacDeskFraming.topCrop(in: screen.size))
+                        .frame(width: screen.size.width, height: screen.size.height, alignment: .top)
+                        .clipped()
+                        .overlay { palette.background.opacity(0.12) }
+                }
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
+                #else
                 // The room keeps its own shape and its edges melt into the
                 // screen instead of ending in hard bars. It sits low, so the
                 // companion watches the timer from the bottom edge, between
@@ -68,6 +97,7 @@ struct DeskModeView: View {
                     }
                     .allowsHitTesting(false)
                     .ignoresSafeArea()
+                #endif
             }
         }
         .background { palette.background.ignoresSafeArea() }
@@ -157,6 +187,20 @@ struct DeskModeView: View {
     @ViewBuilder private var controls: some View {
         if let running = store.running {
             HStack(spacing: 10) {
+                #if os(macOS)
+                Button(running.isPaused ? "Resume" : "Pause", systemImage: running.isPaused ? "play.fill" : "pause.fill") {
+                    running.isPaused ? store.resume() : store.pause()
+                    sendSessionFeedback(running.isPaused ? .sessionResumed : .sessionPaused)
+                }
+                .buttonStyle(.borderedProminent)
+                Button("Clock out", systemImage: "stop.fill") {
+                    if let session = store.clockOut() {
+                        sendSessionFeedback(.sessionEnded)
+                        onClockOut(session)
+                    }
+                }
+                .buttonStyle(.bordered).tint(.red)
+                #else
                 roundButton(systemImage: running.isPaused ? "play.fill" : "pause.fill",
                             label: running.isPaused ? "Resume" : "Pause",
                             foreground: .primary, background: palette.surfaceStroke) {
@@ -170,6 +214,7 @@ struct DeskModeView: View {
                         onClockOut(session)
                     }
                 }
+                #endif
             }
         } else {
             Button {
@@ -178,12 +223,18 @@ struct DeskModeView: View {
             } label: {
                 Label("Clock in", systemImage: "play.fill")
                     .font(.subheadline.weight(.semibold))
+                    #if os(iOS)
                     .padding(.horizontal, 16)
                     .frame(height: 40)
                     .foregroundStyle(palette.actionForeground)
                     .background(palette.accent, in: Capsule())
+                    #endif
             }
+            #if os(macOS)
+            .buttonStyle(.borderedProminent).controlSize(.large)
+            #else
             .buttonStyle(.pressable)
+            #endif
         }
     }
 

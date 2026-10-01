@@ -8,6 +8,9 @@ struct InsightsAggregateHeatmapView: View {
     let grouping: InsightsGrouping
     let currencyCode: String
     @State private var selectedStart: Date?
+    #if os(macOS)
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #endif
 
     var body: some View {
         let selected = periods.first { $0.start == selectedStart } ?? periods.last
@@ -35,6 +38,17 @@ struct InsightsAggregateHeatmapView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    #if os(macOS)
+                    .modifier(MacPeriodNavigation(capturesScroll: false) { direction in
+                        guard let selected, let index = periods.firstIndex(where: { $0.id == selected.id }),
+                              periods.indices.contains(index + direction) else { return }
+                        let next = periods[index + direction]
+                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) {
+                            selectedStart = next.start
+                            proxy.scrollTo(next.id, anchor: .center)
+                        }
+                    })
+                    #endif
                 }
                 .onAppear {
                     if let last = periods.last { proxy.scrollTo(last.id, anchor: .trailing) }
@@ -96,6 +110,9 @@ struct InsightsAggregateHeatmapView: View {
         }
         .buttonStyle(.pressable)
         .buttonPressHaptic(false)
+        #if os(macOS)
+        .help("\(title(period)) · \(DurationText.compact(period.duration)) · \(period.earnings.money(code: currencyCode))")
+        #endif
         .accessibilityLabel(title(period))
         .accessibilityValue("\(DurationText.compact(period.duration)), \(period.earnings.money(code: currencyCode))\(selected ? ", " + String(localized: "selected", bundle: .app) : "")")
         .accessibilityHint("Shows period hours, earnings and available conversion below the grid")

@@ -51,6 +51,9 @@ extension View {
         frame(minWidth: min(width, 460), idealWidth: width, maxWidth: .infinity,
               minHeight: min(height, 420), idealHeight: height, maxHeight: .infinity)
             .formStyle(.grouped)
+            .pickerStyle(.menu)
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
         #else
         self
         #endif
@@ -60,6 +63,39 @@ extension View {
     func macReadableWidth(_ width: CGFloat = 720) -> some View {
         #if os(macOS)
         frame(maxWidth: width).frame(maxWidth: .infinity)
+        #else
+        self
+        #endif
+    }
+
+    /// Cam cubugun altinda kayar; son satir cubugun ustune cikabilir.
+    func macTabBarClearance() -> some View {
+        #if os(macOS)
+        contentMargins(.bottom, MacTabBar.clearance, for: .scrollContent)
+        #else
+        self
+        #endif
+    }
+
+    func macPageColumn() -> some View {
+        #if os(macOS)
+        padding(.horizontal, 12).macReadableWidth(800)
+        #else
+        self
+        #endif
+    }
+
+    func macHoverFeedback() -> some View {
+        #if os(macOS)
+        modifier(MacControlHover())
+        #else
+        self
+        #endif
+    }
+
+    func macSettingsField() -> some View {
+        #if os(macOS)
+        frame(width: 110).textFieldStyle(.roundedBorder)
         #else
         self
         #endif

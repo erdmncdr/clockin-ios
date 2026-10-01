@@ -7,6 +7,9 @@ struct MonthPerformanceView: View {
     let interval: DateInterval
     let currencyCode: String
     let showTRY: Bool
+    #if os(macOS)
+    var onPage: (Int) -> Void = { _ in }
+    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -35,6 +38,9 @@ struct MonthPerformanceView: View {
                         .id(interval)
                         .transition(.opacity)
                 }
+                #if os(macOS)
+                .modifier(MacPeriodNavigation(onPage: onPage))
+                #endif
                 Text("Hours: daily bars and cumulative solid line.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
@@ -79,6 +85,11 @@ struct MonthPerformanceView: View {
         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
         .frame(height: 160)
         .accessibilityLabel("Monthly worked hours")
+        #if os(macOS)
+        .modifier(MacChartReadout(values: performance.cumulative.map { point in
+            (point.day, String(localized: "\(point.day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month())) · Daily \(DurationText.compact(point.daily)) · Total \(DurationText.compact(point.cumulative))", bundle: .app))
+        }))
+        #endif
     }
 
     private func metric(_ title: LocalizedStringKey, _ value: String) -> some View {

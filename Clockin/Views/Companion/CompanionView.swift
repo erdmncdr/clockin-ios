@@ -60,8 +60,13 @@ struct CompanionView: View {
                     CompanionCategoryTabs(selection: $category, accent: palette.accent, surface: palette.surface)
                     Text("\(displayedItems.count) items")
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    #if os(macOS)
+                    Text("Click any item to preview it. Owned and locked items stay together in their category.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                    #else
                     Text("Tap any item to preview it. Owned and locked items stay together in their category.")
                         .font(.footnote).foregroundStyle(.secondary)
+                    #endif
                     ForEach(displayedCategories) { section in
                         let items = displayedItems.filter { $0.category == section }
                         if !items.isEmpty {
@@ -102,7 +107,7 @@ struct CompanionView: View {
                         selected: wardrobe.selected(item), accent: palette.accent, surface: palette.surface
                     ) { WardrobeThumbnail(item: item) }
                 }
-                .buttonStyle(.plain).buttonPressHaptic(false)
+                .buttonStyle(.plain).macHoverFeedback().buttonPressHaptic(false)
                 .accessibilityElement(children: .combine)
                 .accessibilityHint("Preview before choosing")
                 .accessibilityIdentifier("companion.item.\(item.id)")

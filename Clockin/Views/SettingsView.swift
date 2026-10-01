@@ -44,104 +44,13 @@ struct SettingsView: View {
     @State private var showExporter = false
 
     @State private var selectionFeedback = HapticSignal()
+    #if os(macOS)
+    @State private var category: MacSettingsCategory? = .general
+    #endif
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { scroll in
-            Form {
-                Section {
-                    navigationRow(String(localized: "How to use Clockin", bundle: .app), systemImage: "questionmark.circle") {
-                        rateIsFocused = false
-                        sheet = .guide
-                    }
-                }
-                // Senkron durumu ve degisiklikleri ustte; listenin dibinde bulunmuyordu.
-                SyncSettingsSection().id("sync")
-                Section("Today") {
-                    NavigationLink {
-                        DashboardPinOptions()
-                    } label: {
-                        // Accent icon like the other rows; a bare Label took the
-                        // system tint and stayed green in every theme.
-                        Label { Text("Pinned controls") } icon: {
-                            Image(systemName: "pin").foregroundStyle(palette.accent)
-                        }
-                    }
-                }
-                #if os(macOS)
-                MacSettingsSection()
-                #endif
-                paySection
-                Section {
-                    #if os(iOS)
-                    Toggle("Haptics", isOn: $hapticsEnabled.hapticSelection($selectionFeedback))
-                    #endif
-                    Toggle("Level-up sound", isOn: $levelUpSoundEnabled.hapticSelection($selectionFeedback))
-                    Toggle("Focus companion", isOn: $mascotEnabled.hapticSelection($selectionFeedback))
-                    if mascotEnabled {
-                        companionBehavior
-                        Button("Outfits, coins and home") { sheet = .companion }
-                    }
-                } header: {
-                    Text("Appearance")
-                } footer: {
-                    #if os(macOS)
-                    Text("Gentle feedback for completed actions. The level-up sound plays while Clockin is open.")
-                    #else
-                    Text("Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.")
-                    #endif
-                }
-                NudgeSettingsSection()
-                Section {
-                    Picker("Theme", selection: $themeRaw.hapticSelection($selectionFeedback)) {
-                        ForEach(ClockinThemeChoice.allCases) { theme in
-                            Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
-                        }
-                    }
-                    Picker("Language", selection: languageSelection) {
-                        Text("Automatic").tag(AppLanguage.automatic)
-                        ForEach([AppLanguage.turkish, .english]) { language in
-                            Text(verbatim: language.nativeName ?? language.rawValue).tag(language)
-                        }
-                    }
-                } footer: {
-                    #if os(macOS)
-                    Text("Automatic follows your Mac's language.")
-                    #else
-                    Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
-                    #endif
-                }
-                #if os(iOS)
-                Section {
-                    Toggle("Show home in desk mode", isOn: $showHome.hapticSelection($selectionFeedback))
-                    Toggle("Desk mode in landscape", isOn: $deskModeEnabled.hapticSelection($selectionFeedback))
-                        .onChange(of: deskModeEnabled) { _, _ in DeskMode.refreshOrientations() }
-                } footer: {
-                    Text("Turn sideways for a large, always-on work timer.")
-                }
-                #endif
-                FocusSettingsSection()
-                LongSessionReminderSettingsSection()
-                #if os(iOS)
-                LiveActivityPrivacySection(
-                    openSetup: { openPrivacySheet(.liveActivitySetup) },
-                    openPolicy: { openPrivacySheet(.privacyPolicy) }
-                )
-                #endif
-                dataSection
-                Section("About") {
-                    LabeledContent("Version", value: versionText)
-                }
-            }
-            #if DEBUG
-            // Review fixture: `--settings-sync` scrolls to the iCloud section.
-            .task {
-                guard ProcessInfo.processInfo.arguments.contains("--settings-sync") else { return }
-                try? await Task.sleep(for: .milliseconds(600))
-                scroll.scrollTo("sync", anchor: .top)
-            }
-            #endif
-            }
+            settingsContent
             .hapticFeedback(selectionFeedback)
             #if os(iOS)
             .dismissDecimalKeyboard(isEditing: rateIsFocused || earlierRateIsFocused) {
@@ -181,6 +90,7 @@ struct SettingsView: View {
             .sheet(item: $pendingRate, onDismiss: { syncRateText() }) { draft in
                 RateChangePrompt(value: draft.value)
                     .environmentObject(store)
+                    .macSheetFrame(width: 460, height: 520)
                     .preferredColorScheme(palette.colorScheme)
             }
             .hapticFeedback(.destructiveConfirmation, trigger: confirmRemoveSplit) { _, new in new }
@@ -260,6 +170,211 @@ struct SettingsView: View {
         }
     }
 
+    @ViewBuilder
+    private var settingsContent: some View {
+        #if os(macOS)
+        macSettings
+        #else
+        ScrollViewReader { scroll in
+            Form {
+                helpSection
+                // Senkron durumu ve degisiklikleri ustte; listenin dibinde bulunmuyordu.
+                SyncSettingsSection().id("sync")
+                todaySection
+                paySection
+                appearanceSection
+                NudgeSettingsSection()
+                languageThemeSection
+                #if os(iOS)
+                Section {
+                    Toggle("Show home in desk mode", isOn: $showHome.hapticSelection($selectionFeedback))
+                    Toggle("Desk mode in landscape", isOn: $deskModeEnabled.hapticSelection($selectionFeedback))
+                        .onChange(of: deskModeEnabled) { _, _ in DeskMode.refreshOrientations() }
+                } footer: {
+                    Text("Turn sideways for a large, always-on work timer.")
+                }
+                #endif
+                FocusSettingsSection()
+                LongSessionReminderSettingsSection()
+                #if os(iOS)
+                LiveActivityPrivacySection(
+                    openSetup: { openPrivacySheet(.liveActivitySetup) },
+                    openPolicy: { openPrivacySheet(.privacyPolicy) }
+                )
+                #endif
+                dataSection
+                aboutSection
+            }
+            #if DEBUG
+            // Review fixture: `--settings-sync` scrolls to the iCloud section.
+            .task {
+                guard ProcessInfo.processInfo.arguments.contains("--settings-sync") else { return }
+                try? await Task.sleep(for: .milliseconds(600))
+                scroll.scrollTo("sync", anchor: .top)
+            }
+            #endif
+        }
+        #endif
+    }
+
+    private var helpSection: some View {
+        Section {
+            navigationRow(String(localized: "How to use Clockin", bundle: .app), systemImage: "questionmark.circle") {
+                rateIsFocused = false
+                sheet = .guide
+            }
+        }
+    }
+
+    private var todaySection: some View {
+        Section("Today") {
+            NavigationLink {
+                DashboardPinOptions()
+            } label: {
+                // Accent icon like the other rows; a bare Label took the
+                // system tint and stayed green in every theme.
+                Label { Text("Pinned controls") } icon: {
+                    Image(systemName: "pin").foregroundStyle(palette.accent)
+                }
+            }
+        }
+    }
+
+    private var appearanceSection: some View {
+        Section {
+            #if os(iOS)
+            Toggle("Haptics", isOn: $hapticsEnabled.hapticSelection($selectionFeedback))
+            #endif
+            Toggle("Level-up sound", isOn: $levelUpSoundEnabled.hapticSelection($selectionFeedback))
+            Toggle("Focus companion", isOn: $mascotEnabled.hapticSelection($selectionFeedback))
+            if mascotEnabled {
+                companionBehavior
+                Button("Outfits, coins and home") { sheet = .companion }
+            }
+        } header: {
+            Text("Appearance")
+        } footer: {
+            #if os(macOS)
+            Text("Gentle feedback for completed actions. The level-up sound plays while Clockin is open.")
+            if mascotEnabled {
+                Text("Auto follows your session. Unlock Victory at 10h, Stretch at 25h, Dance at 50h, and Music at 100h of total work, including your active session.")
+            }
+            #else
+            Text("Gentle feedback for taps, selections, and completed actions. The level-up sound plays while Clockin is open and follows the silent switch.")
+            #endif
+        }
+    }
+
+    private var languageThemeSection: some View {
+        Section {
+            Picker("Theme", selection: $themeRaw.hapticSelection($selectionFeedback)) {
+                ForEach(ClockinThemeChoice.allCases) { theme in
+                    Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
+                }
+            }
+            Picker("Language", selection: languageSelection) {
+                Text("Automatic").tag(AppLanguage.automatic)
+                ForEach([AppLanguage.turkish, .english]) { language in
+                    Text(verbatim: language.nativeName ?? language.rawValue).tag(language)
+                }
+            }
+        } footer: {
+            #if os(macOS)
+            Text("Automatic follows your Mac's language.")
+            #else
+            Text("Automatic follows your iPhone's language. The widgets and the Live Activity change with the app.")
+            #endif
+        }
+    }
+
+    private var aboutSection: some View {
+        Section("About") {
+            LabeledContent("Version", value: versionText)
+        }
+    }
+
+    #if os(macOS)
+    private var macSettings: some View {
+        HStack(spacing: 0) {
+            List(MacSettingsCategory.allCases, selection: $category) { item in
+                Label(LocalizedStringKey(item.rawValue), systemImage: item.symbol)
+                    .tag(item)
+                    .padding(.vertical, 5)
+            }
+            .listStyle(.sidebar)
+            .frame(width: 190)
+            .accessibilityLabel("Settings categories")
+            Divider()
+            Form {
+                switch category ?? .general {
+                case .general:
+                    languageThemeSection
+                    appearanceSection
+                    todaySection
+                    MacSettingsSection(category: .general)
+                case .timer:
+                    Section {
+                        Button("Goals & Pace") {
+                            MacNavigation.shared.openGoals()
+                        }
+                    } footer: {
+                        Text("Set daily and monthly hours in Progress.")
+                    }
+                    FocusSettingsSection()
+                case .pay:
+                    paySection
+                case .menuBar:
+                    MacSettingsSection(category: .menuBar)
+                case .notifications:
+                    NudgeSettingsSection()
+                    LongSessionReminderSettingsSection()
+                    MacSettingsSection(category: .notifications)
+                case .icloud:
+                    SyncSettingsSection()
+                case .data:
+                    dataSection
+                case .help:
+                    helpSection
+                    MacSettingsSection(category: .help)
+                    aboutSection
+                }
+            }
+            .formStyle(.grouped)
+            .pickerStyle(.menu)
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .id(category)
+        }
+        .frame(minWidth: 700)
+        .onAppear { LanguageSwitch.shared.reopenSettings = false }
+        .navigationTitle("Settings")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done", systemImage: "chevron.left") {
+                    commitEarlierRate()
+                    commitRate()
+                    rateIsFocused = false
+                    earlierRateIsFocused = false
+                    if pendingRate == nil { MacNavigation.shared.closeSettings() }
+                }
+            }
+        }
+        .onChange(of: category) { _, _ in
+            commitEarlierRate()
+            commitRate()
+            rateIsFocused = false
+            earlierRateIsFocused = false
+        }
+        #if DEBUG
+        .onAppear {
+            if ProcessInfo.processInfo.arguments.contains("--settings-sync") { category = .icloud }
+        }
+        #endif
+    }
+    #endif
+
     private func openPrivacySheet(_ destination: SettingsSheet) {
         commitEarlierRate()
         commitRate()
@@ -272,9 +387,13 @@ struct SettingsView: View {
         Section {
             HStack {
                 Text("Hourly rate")
+                #if os(macOS)
+                Spacer()
+                #endif
                 TextField("Hourly rate", text: $rateText)
                     .decimalPadKeyboard()
                     .multilineTextAlignment(.trailing)
+                    .macSettingsField()
                     .focused($rateIsFocused)
                     .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)
                     .onSubmit { rateIsFocused = false }
@@ -287,9 +406,13 @@ struct SettingsView: View {
                                displayedComponents: .date)
                     HStack {
                         Text("Earlier rate")
+                        #if os(macOS)
+                        Spacer()
+                        #endif
                         TextField("Earlier rate", text: $earlierRateText)
                             .decimalPadKeyboard()
                             .multilineTextAlignment(.trailing)
+                            .macSettingsField()
                             .focused($earlierRateIsFocused)
                             .decimalInputRegion(active: rateIsFocused || earlierRateIsFocused)
                             .onSubmit { earlierRateIsFocused = false }
@@ -323,20 +446,28 @@ struct SettingsView: View {
         // yetiyor, saatlik esikler icin saniyede bir bos yere yeniden ciziyordu.
         TimelineView(.periodic(from: .now, by: 60)) { context in
             let hours = store.allDuration(at: context.date) / 3600
+            #if os(macOS)
+            companionBehaviorPicker(hours: hours)
+            #else
             VStack(alignment: .leading, spacing: 8) {
-                Picker("Default behavior", selection: Binding(
-                    get: { CompanionMode.resolve(mascotDefault, totalHours: hours).rawValue },
-                    set: { mascotDefault = CompanionMode.resolve($0, totalHours: hours).rawValue }
-                )) {
-                    ForEach(CompanionMode.allCases) { mode in
-                        Text(mode.menuLabel(totalHours: hours))
-                            .tag(mode.rawValue)
-                            .disabled(!mode.isUnlocked(totalHours: hours))
-                    }
-                }
+                companionBehaviorPicker(hours: hours)
                 Text("Auto follows your session. Unlock Victory at 10h, Stretch at 25h, Dance at 50h, and Music at 100h of total work, including your active session.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            #endif
+        }
+    }
+
+    private func companionBehaviorPicker(hours: Double) -> some View {
+        Picker("Default behavior", selection: Binding(
+            get: { CompanionMode.resolve(mascotDefault, totalHours: hours).rawValue },
+            set: { mascotDefault = CompanionMode.resolve($0, totalHours: hours).rawValue }
+        )) {
+            ForEach(CompanionMode.allCases) { mode in
+                Text(mode.menuLabel(totalHours: hours))
+                    .tag(mode.rawValue)
+                    .disabled(!mode.isUnlocked(totalHours: hours))
             }
         }
     }
@@ -407,6 +538,9 @@ struct SettingsView: View {
             earlierRateIsFocused = false
             if pendingRate == nil { action() }
         } label: {
+            #if os(macOS)
+            Label(title, systemImage: systemImage)
+            #else
             HStack {
                 // Ikon, ayni bolumdeki dugmelerin ikonlariyla ayni renkte kalsin.
                 Label {
@@ -420,6 +554,7 @@ struct SettingsView: View {
                     .foregroundStyle(.tertiary)
             }
             .contentShape(Rectangle())
+            #endif
         }
         .foregroundStyle(.primary)
     }
@@ -552,7 +687,11 @@ private struct RateChangePrompt: View {
                            displayedComponents: .date)
                 Text(impact(from: day)).font(.callout).foregroundStyle(.secondary)
                 Button("Use this date") { save(from: day) }
+                    #if os(macOS)
+                    .buttonStyle(.bordered)
+                    #else
                     .buttonStyle(.borderedProminent)
+                    #endif
             }
             Text("Always: \(impact(from: nil))")
                 .font(.callout).foregroundStyle(.secondary)

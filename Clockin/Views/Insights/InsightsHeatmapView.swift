@@ -59,8 +59,13 @@ struct InsightsHeatmapView: View {
                 Text("All").tag(0)
             }
             .pickerStyle(.segmented).labelsHidden()
+            #if os(macOS)
+            Text("Each square is a day. Scroll across and click a day for details.")
+                .font(.caption).foregroundStyle(.secondary)
+            #else
             Text("Each square is a day. Swipe across and tap a day for details.")
                 .font(.caption).foregroundStyle(.secondary)
+            #endif
             ScrollViewReader { proxy in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
@@ -112,6 +117,16 @@ struct InsightsHeatmapView: View {
                             .padding(.bottom, 8)
                         }
                         .frame(height: 352)
+                        #if os(macOS)
+                        .modifier(MacPeriodNavigation(capturesScroll: false) { direction in
+                            guard let next = calendar.date(byAdding: .day, value: direction, to: selected),
+                                  next <= today, next >= (weeks.first ?? today) else { return }
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) {
+                                selectedDay = next
+                                if let week = weeks.last(where: { $0 <= next }) { proxy.scrollTo(week, anchor: .center) }
+                            }
+                        })
+                        #endif
                         // A week cut by the edge fades out beside the weekday
                         // labels instead of showing half a date.
                         .mask {
@@ -161,6 +176,10 @@ struct InsightsHeatmapView: View {
 
     private func dayCell(_ day: Date, today: Date, selected: Date) -> some View {
         let duration = daily[day, default: 0]
+        #if os(macOS)
+        let tooltip = [day.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month()),
+                       DurationText.compact(duration), earnings[day, default: 0].money(code: currencyCode)].joined(separator: " · ")
+        #endif
         return Button { selectedDay = day } label: {
             RoundedRectangle(cornerRadius: 6)
                 .fill(day > today ? Color.clear : heatColor(hours: duration / 3600))
@@ -180,6 +199,9 @@ struct InsightsHeatmapView: View {
         }
         .buttonStyle(.pressable)
         .buttonPressHaptic(false)
+        #if os(macOS)
+        .help(tooltip)
+        #endif
         .disabled(day > today)
         .opacity(day > today ? 0 : 1)
         .accessibilityHidden(day > today)

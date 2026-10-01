@@ -20,6 +20,7 @@ struct HistoryView: View {
     @AppStorage("Clockin.HistoryGroupByDay") private var groupByDay = true
     @State private var expandedDays: Set<Date> = []
     @State private var selectedSessionID: UUID?
+    @State private var hoveredSessionID: UUID?
     #endif
 
     var body: some View {
@@ -46,8 +47,14 @@ struct HistoryView: View {
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY,
                         onPage: { page($0, period: period) })
                     if let performance = history.performance {
+                        #if os(macOS)
+                        MonthPerformanceView(performance: performance,
+                            interval: period.interval, currencyCode: store.currencyCode, showTRY: converting,
+                            onPage: { page($0, period: period) })
+                        #else
                         MonthPerformanceView(performance: performance,
                             interval: period.interval, currencyCode: store.currencyCode, showTRY: converting)
+                        #endif
                     }
                     if converting && history.hasMissingRates {
                         Text("Some rates are unavailable")
@@ -128,6 +135,12 @@ struct HistoryView: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
             .insetGroupedList()
+            #if os(macOS)
+            .contentMargins(.horizontal, 28, for: .scrollContent)
+            .contentMargins(.top, 16, for: .scrollContent)
+            .macReadableWidth(840)
+            .macTabBarClearance()
+            #endif
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("History")
@@ -185,7 +198,8 @@ struct HistoryView: View {
                    conflicts: conflicts.contains(session.id),
                    historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
             .tag(session.id)
-            .listRowBackground(palette.surface)
+            .listRowBackground(hoveredSessionID == session.id ? palette.accent.opacity(0.09) : palette.surface)
+            .onHover { hoveredSessionID = $0 ? session.id : nil }
             .onTapGesture(count: 2) { sheet = .edit(session) }
             .contextMenu {
                 Button("Edit", systemImage: "pencil") { sheet = .edit(session) }
@@ -198,7 +212,12 @@ struct HistoryView: View {
         HStack(spacing: 8) {
             if range != .all {
                 Button { page(-1, period: period) } label: {
-                    Image(systemName: "chevron.left").frame(width: 44, height: 44)
+                    Image(systemName: "chevron.left")
+                        #if os(macOS)
+                        .frame(width: 16, height: 20)
+                        #else
+                        .frame(width: 44, height: 44)
+                        #endif
                 }
                 .accessibilityLabel("Previous period")
             }
@@ -210,13 +229,22 @@ struct HistoryView: View {
                 .accessibilityAddTraits(.isHeader)
             if range != .all {
                 Button { page(1, period: period) } label: {
-                    Image(systemName: "chevron.right").frame(width: 44, height: 44)
+                    Image(systemName: "chevron.right")
+                        #if os(macOS)
+                        .frame(width: 16, height: 20)
+                        #else
+                        .frame(width: 44, height: 44)
+                        #endif
                 }
                 .disabled(!period.canGoForward)
                 .accessibilityLabel("Next period")
             }
         }
+        #if os(macOS)
+        .buttonStyle(.bordered).controlSize(.small)
+        #else
         .buttonStyle(.borderless)
+        #endif
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: period.pageID)
         // The row's first text is the centred title, and List would start the
         // separator under it, halfway across. Start it at the edge like the rest.

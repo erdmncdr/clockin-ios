@@ -10,6 +10,9 @@ import SwiftUI
 struct HitTargetButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            #if os(macOS)
+            .modifier(MacControlHover())
+            #endif
             .pressHaptic(isPressed: configuration.isPressed)
             .contentShape(Rectangle())
     }
@@ -18,3 +21,15 @@ struct HitTargetButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == HitTargetButtonStyle {
     static var hitTarget: HitTargetButtonStyle { HitTargetButtonStyle() }
 }
+
+#if os(macOS)
+struct MacControlHover: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var hovering = false
+    func body(content: Content) -> some View {
+        content
+            .background(.primary.opacity(hovering && isEnabled ? 0.06 : 0), in: RoundedRectangle(cornerRadius: 6))
+            .onHover { hovering = $0 }
+    }
+}
+#endif

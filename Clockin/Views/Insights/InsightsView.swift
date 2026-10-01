@@ -41,7 +41,9 @@ struct InsightsView: View {
                 reportsCard(stats)
             }
             .padding(16)
+                    .macPageColumn()
         }
+        .macTabBarClearance()
         .scrollBounceBehavior(.basedOnSize)
     }
 

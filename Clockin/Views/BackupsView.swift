@@ -95,7 +95,7 @@ struct BackupsView: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.plain).macHoverFeedback()
         .disabled(!backup.isReadable)
         .accessibilityHint(backup.isReadable ? "Restores this backup after confirmation" : "")
     }

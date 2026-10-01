@@ -27,7 +27,11 @@ struct DashboardPinButton: View {
         } label: {
             Label(pinned ? "Unpin from Today" : "Pin to Today", systemImage: pinned ? "pin.slash" : "pin")
                 .font(compact ? .caption : .body)
+                #if os(macOS)
+                .frame(minHeight: 20, alignment: .leading)
+                #else
                 .frame(minHeight: 44, alignment: .leading)
+                #endif
         }
         .accessibilityIdentifier("dashboard.pin.\(feature.rawValue)")
         .accessibilityValue(pinned ? "Pinned" : "Not pinned")

@@ -281,6 +281,22 @@
         }
       }
     },
+    "%@ · Daily %@ · Total %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Daily %@ · Total %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Günlük %2$@ · Toplam %3$@"
+          }
+        }
+      }
+    },
     "%@ · Next rank at level %lld": {
       "localizations": {
         "tr": {
@@ -2843,6 +2859,22 @@
         }
       }
     },
+    "Category": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategori"
+          }
+        }
+      }
+    },
     "Celebrating focus companion": {
       "localizations": {
         "tr": {
@@ -3195,12 +3227,76 @@
         }
       }
     },
+    "Click Clock in on Today to start. Pause keeps the session open, Resume continues it, and Clock out saves it. Cancel session asks before discarding your active work.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click Clock in on Today to start. Pause keeps the session open, Resume continues it, and Clock out saves it. Cancel session asks before discarding your active work."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlamak için Bugün bölümünde İşe başla’ya tıklayın. Duraklat oturumu açık tutar, Devam et sürdürür, İşi bitir kaydeder. Oturumu iptal et, süren çalışmayı silmeden önce onay ister."
+          }
+        }
+      }
+    },
     "Click Clockin in the menu bar to open its panel. Check the session timer, earnings, today’s work and goals, then clock in, pause, resume or clock out without opening the main window. The panel also has radio, pin and minimal-mode controls. Click outside, click the menu bar item again or press Esc to close it. Right-click the menu bar item for Open, Check for Updates and Quit.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Paneli açmak için menü çubuğundaki Clockin’e tıkla. Oturum süresini, kazancını, bugünkü çalışmanı ve hedeflerini gör; ana pencereyi açmadan giriş yap, duraklat, devam et veya çıkış yap. Panelde radyo, sabitleme ve minimal mod kontrolleri de bulunur. Kapatmak için dışarıya veya menü çubuğu öğesine tekrar tıkla ya da Esc’ye bas. Aç, Güncellemeleri denetle ve Çık için menü çubuğu öğesine sağ tıkla."
+          }
+        }
+      }
+    },
+    "Click a day in the chart to inspect it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click a day in the chart to inspect it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İncelemek için grafikte bir güne tıklayın."
+          }
+        }
+      }
+    },
+    "Click a month in the chart to inspect it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click a month in the chart to inspect it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İncelemek için grafikte bir aya tıklayın."
+          }
+        }
+      }
+    },
+    "Click any item to preview it. Owned and locked items stay together in their category.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click any item to preview it. Owned and locked items stay together in their category."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizlemek için bir öğeye tıklayın. Sahip olduğunuz ve kilitli öğeler kendi kategorilerinde birlikte gösterilir."
           }
         }
       }
@@ -3501,6 +3597,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kapat"
+          }
+        }
+      }
+    },
+    "Close Desk Mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Desk Mode"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masa Modunu kapat"
           }
         }
       }
@@ -3811,6 +3923,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "İstatistik PNG'sini panoya kopyala"
+          }
+        }
+      }
+    },
+    "Could not connect. Click play to retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not connect. Click play to retry."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı kurulamadı. Yeniden denemek için oynat’a tıklayın."
           }
         }
       }
@@ -4295,6 +4423,22 @@
         }
       }
     },
+    "Data & import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data & import"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veri ve içe aktarma"
+          }
+        }
+      }
+    },
     "Data Dense": {
       "localizations": {
         "tr": {
@@ -4705,6 +4849,22 @@
         }
       }
     },
+    "Each square is a day. Scroll across and click a day for details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each square is a day. Scroll across and click a day for details."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her kare bir gündür. Yatay kaydırın ve ayrıntılar için bir güne tıklayın."
+          }
+        }
+      }
+    },
     "Each square is a day. Swipe across and tap a day for details.": {
       "localizations": {
         "tr": {
@@ -4861,6 +5021,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kazanç / çalışılan gün"
+          }
+        }
+      }
+    },
+    "Earnings chart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earnings chart"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kazanç grafiği"
           }
         }
       }
@@ -5293,6 +5469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Her %lld dk"
+          }
+        }
+      }
+    },
+    "Every 75 levels, your badge gains a new design. Click any rank to preview it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every 75 levels, your badge gains a new design. Click any rank to preview it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her 75 seviyede rozetiniz yeni bir tasarım kazanır. Önizlemek için bir rütbeye tıklayın."
           }
         }
       }
@@ -5737,6 +5929,22 @@
         }
       }
     },
+    "General": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel"
+          }
+        }
+      }
+    },
     "Gentle feedback for completed actions. The level-up sound plays while Clockin is open.": {
       "localizations": {
         "tr": {
@@ -6067,6 +6275,22 @@
         }
       }
     },
+    "Help & about": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help & about"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yardım ve hakkında"
+          }
+        }
+      }
+    },
     "Hey, where did you go?": {
       "localizations": {
         "tr": {
@@ -6113,6 +6337,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçmiş liste görünümleri"
+          }
+        }
+      }
+    },
+    "History opens on the current month. Choose Week, Month, 6 months or All. Swipe horizontally with two fingers over the chart, click its arrows, or use Left and Right while the chart is focused or hovered. Each gesture changes one period; vertical scrolling still scrolls the page. Hover for values or click to inspect a day or month. Future days cannot be inspected. USD/TRY uses historical daily rates and keeps missing-rate amounts in USD. Overnight work belongs to its start day.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History opens on the current month. Choose Week, Month, 6 months or All. Swipe horizontally with two fingers over the chart, click its arrows, or use Left and Right while the chart is focused or hovered. Each gesture changes one period; vertical scrolling still scrolls the page. Hover for values or click to inspect a day or month. Future days cannot be inspected. USD/TRY uses historical daily rates and keeps missing-rate amounts in USD. Overnight work belongs to its start day."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş, içinde bulunduğunuz ayla açılır. Hafta, Ay, 6 ay veya Tümü’nü seçin. Grafikte iki parmakla yatay kaydırın, okları tıklayın veya grafik odaktayken ya da işaretçi üzerindeyken Sol ve Sağ okları kullanın. Her hareket bir dönem değiştirir; dikey kaydırma sayfayı kaydırır. Değerler için üzerine gelin, gün veya ayı incelemek için tıklayın. Gelecek günler incelenemez. USD/TRY geçmiş günlük kurları kullanır; kuru bulunamayan tutarlar USD olarak kalır. Gece yarısını aşan çalışma başladığı güne aittir."
           }
         }
       }
@@ -6263,6 +6503,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kızgın değilim. Sadece hayal kırıklığına uğradım."
+          }
+        }
+      }
+    },
+    "If you forgot to start, click Start with elapsed time on Today while no session is running. Enter hours and minutes, review the preview, then click Start.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you forgot to start, click Start with elapsed time on Today while no session is running. Enter hours and minutes, review the preview, then click Start."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlatmayı unuttuysanız açık oturum yokken Bugün bölümünde Geçen süreyle başlat’a tıklayın. Saat ve dakikayı girin, önizlemeyi kontrol edin ve Başlat’a tıklayın."
           }
         }
       }
@@ -6435,6 +6691,22 @@
         }
       }
     },
+    "In Settings > Companion nudges, choose playful Grumpy or supportive Friendly reminders. Turn Nudges on or click Allow notifications to grant permission. Your companion checks in after 45 minutes and 2 hours of a paused session, an hour after leaving below your daily goal, at 21:00 for an unfinished goal, and at 20:30 for a streak at risk. Expected work days and the usual start time come from the previous 28 days, with weekday mornings as the starting default. No-work reminders cover the next week; after at least three quiet days, return reminders target days 3 and 7. At most two nudges arrive per calendar day, normally at least two hours apart; the second pause reminder is the exception to spacing. Nothing is scheduled between 22:00 and 08:00. Notifications stay silent while Clockin is open; the companion shows its mood instead. Open Companion from Today; equipping an item brings a small reaction. Clicking a nudge opens Today. Resume or finish work to update the plan, or turn Nudges off anytime.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Settings > Companion nudges, choose playful Grumpy or supportive Friendly reminders. Turn Nudges on or click Allow notifications to grant permission. Your companion checks in after 45 minutes and 2 hours of a paused session, an hour after leaving below your daily goal, at 21:00 for an unfinished goal, and at 20:30 for a streak at risk. Expected work days and the usual start time come from the previous 28 days, with weekday mornings as the starting default. No-work reminders cover the next week; after at least three quiet days, return reminders target days 3 and 7. At most two nudges arrive per calendar day, normally at least two hours apart; the second pause reminder is the exception to spacing. Nothing is scheduled between 22:00 and 08:00. Notifications stay silent while Clockin is open; the companion shows its mood instead. Open Companion from Today; equipping an item brings a small reaction. Clicking a nudge opens Today. Resume or finish work to update the plan, or turn Nudges off anytime."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar > Arkadaş hatırlatmaları'nda şakacı Huysuz ya da destekleyici Samimi hatırlatmaları seç. İzin vermek için Hatırlatmalar'ı aç ya da Bildirimlere izin ver'e tıkla. Arkadaşın, duraklatılmış bir oturumun 45. dakikasında ve 2. saatinde, günlük hedefinin altında ayrıldıktan bir saat sonra, bitmemiş bir hedef için 21:00'de ve tehlikedeki bir seri için 20:30'da seni yoklar. Beklenen iş günleri ve olağan başlangıç saati önceki 28 günden çıkarılır; başlangıçta hafta içi sabahlar varsayılır. Çalışma olmayan günlerin hatırlatmaları önümüzdeki haftayı kapsar; en az üç sessiz günden sonra dönüş hatırlatmaları 3. ve 7. günleri hedefler. Bir takvim gününde en fazla iki hatırlatma gelir, normalde en az iki saat arayla; ikinci duraklatma hatırlatması bu aralığın istisnasıdır. 22:00 ile 08:00 arasında hiçbir şey planlanmaz. Clockin açıkken bildirimler sessiz kalır; bunun yerine arkadaşın ruh halini gösterir. Arkadaşını Bugün'den aç; bir eşya kuşanmak küçük bir tepki getirir. Bir hatırlatmaya tıklamak Bugün'ü açar. Planı güncellemek için çalışmaya devam et ya da bitir, veya Hatırlatmalar'ı istediğin zaman kapat."
+          }
+        }
+      }
+    },
     "In Settings > Companion nudges, choose playful Grumpy or supportive Friendly reminders. Turn Nudges on or tap Allow notifications to grant permission. Your companion checks in after 45 minutes and 2 hours of a paused session, an hour after leaving below your daily goal, at 21:00 for an unfinished goal, and at 20:30 for a streak at risk. Expected work days and the usual start time come from the previous 28 days, with weekday mornings as the starting default. No-work reminders cover the next week; after at least three quiet days, return reminders target days 3 and 7. At most two nudges arrive per calendar day, normally at least two hours apart; the second pause reminder is the exception to spacing. Nothing is scheduled between 22:00 and 08:00. Notifications stay silent while Clockin is open; the companion shows its mood instead. Open Companion from Today; equipping an item brings a small reaction. Tapping a nudge opens Today. Resume or finish work to update the plan, or turn Nudges off anytime.": {
       "localizations": {
         "tr": {
@@ -6501,6 +6773,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar'da Veriler > Yedeği dışa aktar taşınabilir bir JSON kopyası paylaşır. Otomatik yedekler, kaydedilmiş kopyaları tarihleri ve kayıt sayılarıyla listeler; geri yüklemek için birini aç. Clockin, kullandığın sürece günde bir kez otomatik kopya kaydeder. Dosyadan geri yükle bir JSON yedeği seçmeni sağlar. Geri yükleme mevcut kayıtları ve çalışan sayacı değiştirir, ama önce mevcut verini kaydeder. O kopyaya dönmek için Otomatik yedekler'i kullan."
+          }
+        }
+      }
+    },
+    "In Settings, choose Off, 8 h, 10 h (default), or 12 h for Long session reminder and allow notifications. Breaks do not count. Still working? lets you Clock out in the background, Set end time in the app, or Remind in 1 hour for this session. The end time must be between when you last resumed and now. Pausing, ending or cancelling the session, or choosing Off clears the reminder. An already reached threshold prompts once per session, including after reopening Clockin; only Remind in 1 hour requests another alert. Clicking the notification body opens Clockin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Settings, choose Off, 8 h, 10 h (default), or 12 h for Long session reminder and allow notifications. Breaks do not count. Still working? lets you Clock out in the background, Set end time in the app, or Remind in 1 hour for this session. The end time must be between when you last resumed and now. Pausing, ending or cancelling the session, or choosing Off clears the reminder. An already reached threshold prompts once per session, including after reopening Clockin; only Remind in 1 hour requests another alert. Clicking the notification body opens Clockin."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar'da Uzun oturum hatırlatıcısı için Kapalı, 8 sa, 10 sa (varsayılan) ya da 12 sa'yi seç ve bildirimlere izin ver. Molalar sayılmaz. Hâlâ çalışıyor musun? bildirimi, bu oturum için arka planda Mesaiyi bitir'i, uygulamada Bitiş saatini ayarla'yı ya da 1 saat sonra hatırlat'ı sunar. Bitiş saati, en son devam ettiğin an ile şimdi arasında olmalı. Oturumu duraklatmak, bitirmek, iptal etmek ya da Kapalı'yı seçmek hatırlatıcıyı temizler. Zaten aşılmış bir eşik, Clockin yeniden açılsa bile oturum başına bir kez uyarır; yalnızca 1 saat sonra hatırlat yeni bir uyarı ister. Bildirimin gövdesine tıklamak Clockin'i açar."
           }
         }
       }
@@ -8671,6 +8959,22 @@
         }
       }
     },
+    "Notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimler"
+          }
+        }
+      }
+    },
     "Notifications allowed, sounds disabled": {
       "localizations": {
         "tr": {
@@ -8969,12 +9273,44 @@
         }
       }
     },
+    "Open Progress > Badges, or click your level on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Choose a mission tier: Launch, Orbit, Lunar, Solar, Galactic or Eternal. Click a mission for its goal, progress and reward preview. Eternal holds the four hardest achievements. Collection missions count different purchases, including earlier ones, but exclude free gifts and grant no coins or XP. Current-streak badges lock again when a streak ends.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Progress > Badges, or click your level on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Choose a mission tier: Launch, Orbit, Lunar, Solar, Galactic or Eternal. Click a mission for its goal, progress and reward preview. Eternal holds the four hardest achievements. Collection missions count different purchases, including earlier ones, but exclude free gifts and grant no coins or XP. Current-streak badges lock again when a streak ends."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seviyeni, XP'ni, serilerini ve tüm rozetleri görmek için İlerleme > Rozetler'i aç ya da Bugün'de seviyene tıkla. Ayrıntılar için XP nasıl kazanılır'ı aç. Bir görev kademesi seç: Fırlatma, Yörünge, Ay, Güneş, Galaktik ya da Ebedi. Hedefini, ilerlemesini ve ödül önizlemesini görmek için bir göreve tıkla. Ebedi en zor dört başarıyı barındırır. Koleksiyon görevleri, öncekiler dahil farklı satın alımları sayar; ücretsiz hediyeleri saymaz ve jeton ya da XP vermez. Güncel seri rozetleri seri bitince yeniden kilitlenir."
+          }
+        }
+      }
+    },
     "Open Progress > Badges, or tap your level on Today, to see your level, XP, streaks and all badges. Expand How XP works for the breakdown. Choose a mission tier: Launch, Orbit, Lunar, Solar, Galactic or Eternal. Tap a mission for its goal, progress and reward preview. Eternal holds the four hardest achievements. Collection missions count different purchases, including earlier ones, but exclude free gifts and grant no coins or XP. Current-streak badges lock again when a streak ends.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Seviyeni, XP'ni, serilerini ve tüm rozetleri görmek için İlerleme > Rozetler'i aç ya da Bugün'de seviyene dokun. Ayrıntılar için XP nasıl kazanılır'ı aç. Bir görev kademesi seç: Fırlatma, Yörünge, Ay, Güneş, Galaktik ya da Ebedi. Hedefini, ilerlemesini ve ödül önizlemesini görmek için bir göreve dokun. Ebedi en zor dört başarıyı barındırır. Koleksiyon görevleri, öncekiler dahil farklı satın alımları sayar; ücretsiz hediyeleri saymaz ve jeton ya da XP vermez. Güncel seri rozetleri seri bitince yeniden kilitlenir."
+          }
+        }
+      }
+    },
+    "Open Progress > Goals to plan your month. Goals & Pace opens directly; no extra card to click. Set monthly and daily hours, then choose how many days you work each week. Remaining workdays are approximate: remaining calendar days including today, multiplied by workdays per week and rounded up. Today's hours are credited when calculating the full-day target. Apply the quarter-hour suggestion to change your daily goal. The outlook uses up to seven finished calendar days, including days without work; today's partial day counts toward progress but not the average. Solid and dashed lines show actual and projected totals, with a dotted monthly target. The daily chart compares work against your saved daily goal. Estimates use session start dates, match your current plan and stay on-device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Progress > Goals to plan your month. Goals & Pace opens directly; no extra card to click. Set monthly and daily hours, then choose how many days you work each week. Remaining workdays are approximate: remaining calendar days including today, multiplied by workdays per week and rounded up. Today's hours are credited when calculating the full-day target. Apply the quarter-hour suggestion to change your daily goal. The outlook uses up to seven finished calendar days, including days without work; today's partial day counts toward progress but not the average. Solid and dashed lines show actual and projected totals, with a dotted monthly target. The daily chart compares work against your saved daily goal. Estimates use session start dates, match your current plan and stay on-device."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayını planlamak için İlerleme > Hedefler'i aç. Hedefler ve Tempo doğrudan açılır; ek bir karta tıklaman gerekmez. Aylık ve günlük saatleri belirle, sonra haftada kaç gün çalıştığını seç. Kalan iş günleri yaklaşıktır: bugün dahil kalan takvim günleri, haftalık iş günüyle çarpılıp yukarı yuvarlanır. Tam gün hedefi hesaplanırken bugünkü saatler de sayılır. Günlük hedefini değiştirmek için çeyrek saatlik öneriyi uygula. Görünüm, çalışılmayan günler dahil en fazla yedi tamamlanmış takvim gününü kullanır; bugünün yarım günü ilerlemeye sayılır ama ortalamaya girmez. Düz ve kesikli çizgiler gerçek ve tahmini toplamları, noktalı çizgi aylık hedefi gösterir. Günlük grafik, çalışmayı kayıtlı günlük hedefinle karşılaştırır. Tahminler oturumların başlangıç tarihlerini kullanır, güncel planına uyar ve cihazda kalır."
           }
         }
       }
@@ -9493,6 +9829,22 @@
         }
       }
     },
+    "Pay & currency": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay & currency"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücret ve para birimi"
+          }
+        }
+      }
+    },
     "Pay settings": {
       "localizations": {
         "tr": {
@@ -9789,6 +10141,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tercih"
+          }
+        }
+      }
+    },
+    "Press Command-comma (⌘,) or click the gear on Today, then choose Data & import > Import timecards. Choose a CSV file or paste a task block or timecards page and select Review. CSV needs Start Time and End Time columns with ISO 8601 dates. Pasted text needs English dates, a status, source, and 24-hour times; include the date range and years when available. Check dates, duration and any Approved total warning. Review New, Matched corrections and Duplicate skipped entries. Deselect any rows you want to leave out. Only selected rows are imported; matched entries are corrected and duplicates are skipped.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press Command-comma (⌘,) or click the gear on Today, then choose Data & import > Import timecards. Choose a CSV file or paste a task block or timecards page and select Review. CSV needs Start Time and End Time columns with ISO 8601 dates. Pasted text needs English dates, a status, source, and 24-hour times; include the date range and years when available. Check dates, duration and any Approved total warning. Review New, Matched corrections and Duplicate skipped entries. Deselect any rows you want to leave out. Only selected rows are imported; matched entries are corrected and duplicates are skipped."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command-virgül (⌘,) tuşlarına basın veya Bugün’deki dişliye tıklayın; ardından Veri ve içe aktarma > Puantajları içe aktar’ı seçin. Bir CSV dosyası seç ya da görev bloğunu veya puantaj sayfasını yapıştırıp İncele’ye bas. CSV’de ISO 8601 tarihleri içeren Start Time ve End Time sütunları gerekir. Yapıştırılan metinde İngilizce tarihler, durum, kaynak ve 24 saat biçiminde saatler bulunmalı; varsa tarih aralığını ve yılları da ekle. Tarihleri, süreyi ve onaylı toplam uyarısını kontrol et. Yeni kayıtları, eşleşen düzeltmeleri ve atlanan tekrarları incele. Eklemek istemediğin satırların seçimini kaldır. Yalnızca seçili satırlar içe aktarılır; eşleşen kayıtlar düzeltilir, tekrarlar atlanır."
           }
         }
       }
@@ -11273,6 +11641,22 @@
         }
       }
     },
+    "Set daily and monthly hours in Progress.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set daily and monthly hours in Progress."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük ve aylık çalışma hedeflerinizi İlerleme bölümünde ayarlayın."
+          }
+        }
+      }
+    },
     "Set daily goal to %@": {
       "localizations": {
         "tr": {
@@ -11359,6 +11743,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar ve otomatik güncellemeler"
+          }
+        }
+      }
+    },
+    "Settings categories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings categories"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayar kategorileri"
           }
         }
       }
@@ -12899,6 +13299,22 @@
         }
       }
     },
+    "Timer & goals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer & goals"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayaç ve hedefler"
+          }
+        }
+      }
+    },
     "Timer started %@": {
       "localizations": {
         "tr": {
@@ -13395,6 +13811,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güncellemeler"
+          }
+        }
+      }
+    },
+    "Use Left and Right arrow keys to change period.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Left and Right arrow keys to change period."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dönemi değiştirmek için Sol ve Sağ ok tuşlarını kullanın."
           }
         }
       }
@@ -14499,6 +14931,22 @@
         }
       }
     },
+    "Your companion celebrates new levels across every tab and in desk mode. Click to dismiss, or use Share to open your stats card. Celebrations wait while a sheet or alert is open. New badge banners open Progress > Badges when clicked; several unlocks show up to three badges and a remaining count. Existing progress is marked seen when this feature first starts. During active use, playful reactions to money targets, streak milestones and session actions are limited to once every 20 seconds. Pride for achievements has its own four-second window. Goal and money reactions are checked on the next minute refresh. Reduce Motion keeps a still companion; turning Focus companion off leaves celebration text only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your companion celebrates new levels across every tab and in desk mode. Click to dismiss, or use Share to open your stats card. Celebrations wait while a sheet or alert is open. New badge banners open Progress > Badges when clicked; several unlocks show up to three badges and a remaining count. Existing progress is marked seen when this feature first starts. During active use, playful reactions to money targets, streak milestones and session actions are limited to once every 20 seconds. Pride for achievements has its own four-second window. Goal and money reactions are checked on the next minute refresh. Reduce Motion keeps a still companion; turning Focus companion off leaves celebration text only."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arkadaşın yeni seviyeleri her sekmede ve masa modunda kutlar. Kapatmak için tıkla ya da istatistik kartını açmak için Paylaş'ı kullan. Bir sayfa ya da uyarı açıkken kutlamalar bekler. Yeni rozet bildirimlerine tıklamak İlerleme > Rozetler'i açar; birden fazla rozet açıldığında en fazla üçü ve kalan sayı gösterilir. Bu özellik ilk açıldığında mevcut ilerleme görülmüş sayılır. Aktif kullanımda para hedeflerine, seri başarılarına ve oturum işlemlerine verilen şakacı tepkiler 20 saniyede bir ile sınırlıdır. Başarılar için gurur tepkisinin kendi dört saniyelik aralığı vardır. Hedef ve para tepkileri bir sonraki dakika yenilemesinde denetlenir. Hareketi Azalt açıkken arkadaşın hareketsiz kalır; Odak arkadaşını kapatmak yalnızca kutlama metnini bırakır."
+          }
+        }
+      }
+    },
     "Your companion celebrates new levels across every tab and in desk mode. Tap to dismiss, or use Share to open your stats card. Celebrations wait while a sheet or alert is open. New badge banners open Progress > Badges when tapped; several unlocks show up to three badges and a remaining count. Existing progress is marked seen when this feature first starts. During active use, playful reactions to money targets, streak milestones and session actions are limited to once every 20 seconds. Pride for achievements has its own four-second window. Goal and money reactions are checked on the next minute refresh. Reduce Motion keeps a still companion; turning Focus companion off leaves celebration text only.": {
       "localizations": {
         "tr": {
@@ -15030,6 +15478,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud saklama alanı dolu. Bekleyen değişiklikler bu cihazda saklanıyor."
+          }
+        }
+      }
+    },
+    "iPhone notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone notifications"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone bildirimleri"
           }
         }
       }

@@ -426,7 +426,7 @@ struct TimecardImportView: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.plain).macHoverFeedback()
         .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
         .accessibilityHint(isOn ? "Will be imported. Double tap to leave it out." : "Left out. Double tap to import it.")
     }

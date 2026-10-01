@@ -91,6 +91,7 @@ struct DashboardView: View {
                 .padding(.top, 6)
                 .macReadableWidth()
             }
+            .macTabBarClearance()
             .scrollBounceBehavior(.basedOnSize)
             .pinnedHeader { header }
             .background(palette.background)
@@ -104,7 +105,12 @@ struct DashboardView: View {
             let args = ProcessInfo.processInfo.arguments
             if let i = args.firstIndex(of: "--open-sheet"), args.indices.contains(i + 1) {
                 switch args[i + 1] {
-                case "settings": sheet = .settings
+                case "settings":
+                    #if os(macOS)
+                    MacNavigation.shared.open(.settings)
+                    #else
+                    sheet = .settings
+                    #endif
                 case "customize": sheet = .customize
                 case "entry": sheet = .newEntry
                 case "companion": sheet = .companion
@@ -118,7 +124,11 @@ struct DashboardView: View {
                 LanguageSwitch.shared.reopenSettings = false
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
+                #if os(macOS)
+                withTransaction(transaction) { MacNavigation.shared.open(.settings) }
+                #else
                 withTransaction(transaction) { sheet = .settings }
+                #endif
             }
         }
         .onDisappear { appeared = false }
@@ -184,42 +194,66 @@ struct DashboardView: View {
             Spacer(minLength: 8)
             Button { sheet = .customize } label: {
                 Image(systemName: "slider.horizontal.3")
+                    #if os(macOS)
+                    .frame(width: 18, height: 18)
+                    #else
                     .font(.headline)
                     .frame(width: 36, height: 36)
                     .background(palette.surface, in: Circle())
                     .overlay { Circle().stroke(palette.surfaceStroke) }
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
+                    #endif
             }
+            #if os(macOS)
+            .buttonStyle(.bordered)
+            #else
             .buttonStyle(.pressable)
+            #endif
             .foregroundStyle(palette.accent)
             .accessibilityLabel("Customize Today")
             .accessibilityIdentifier("dashboard.customize")
             Button {
                 #if os(macOS)
-                // Mac'te ayarlar kenar cubugunda; ayni ekrani sheet olarak acma.
+                // Mac'te ayarlar ana pencerede ayri sayfa olarak acilir.
                 MacNavigation.shared.open(.settings)
                 #else
                 sheet = .settings
                 #endif
             } label: {
                 Image(systemName: "gearshape")
+                    #if os(macOS)
+                    .frame(width: 18, height: 18)
+                    #else
                     .font(.headline)
                     .frame(width: 36, height: 36)
                     .background(palette.surface, in: Circle())
                     .overlay { Circle().stroke(palette.surfaceStroke) }
+                    #endif
             }
+            #if os(macOS)
+            .buttonStyle(.bordered)
+            #else
             .buttonStyle(.pressable)
+            #endif
             .foregroundStyle(palette.accent)
             .accessibilityLabel("Settings")
             Button { sheet = .newEntry } label: {
                 Image(systemName: "plus")
+                    #if os(macOS)
+                    .frame(width: 18, height: 18)
+                    #else
                     .font(.headline)
                     .frame(width: 36, height: 36)
                     .background(palette.surface, in: Circle())
                     .overlay { Circle().stroke(palette.surfaceStroke) }
+                    #endif
             }
+            #if os(macOS)
+            .buttonStyle(.bordered)
+            #else
             .buttonStyle(.pressable)
+            #endif
             .foregroundStyle(palette.accent)
             .accessibilityLabel("Add past entry")
         }
