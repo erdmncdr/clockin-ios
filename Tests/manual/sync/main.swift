@@ -321,7 +321,7 @@ let brokenDisk = SyncSidecarStore(archiveURL: blocking.appendingPathComponent("c
 do { try await brokenDisk.save(firstSidecar); fatalError("expected disk failure") }
 catch { try check(Data(contentsOf: archiveURL) == originalBytes, "sidecar disk failure cannot roll back primary save") }
 var applied = 0
-let bridge = SyncBridge(state: firstSidecar, snapshot: firstPlan.merge.snapshot, disk: disk) { _ in applied += 1 }
+let bridge = SyncBridge(state: firstSidecar, snapshot: firstPlan.merge.snapshot, disk: disk) { _, _ in applied += 1 }
 try bridge.receive([try record(.preference, "Clockin.Theme", SyncPreference.string("Blue"), device: "remote", time: 3000)])
 check(applied == 1, "inert bridge delivers remote projection only through application callback")
 var malformedIdle = start
@@ -330,14 +330,14 @@ let rejectedIdle = try merge([malformedIdle])
 check(rejectedIdle.quarantine.count == 1, "running wire format requires an explicit state including idle")
 var recoveredArchive = firstPlan.merge.snapshot
 recoveredArchive.data.sessions.append(session(500, start: 5000))
-let relaunchBridge = SyncBridge(state: firstSidecar, snapshot: recoveredArchive, disk: disk) { _ in }
+let relaunchBridge = SyncBridge(state: firstSidecar, snapshot: recoveredArchive, disk: disk) { _, _ in }
 try relaunchBridge.reconcileLocalArchive(at: date(3000))
 check(relaunchBridge.state.pending.contains("Session:" + uuid(500).uuidString),
       "launch detects primary archive save that preceded a sidecar failure")
 let postRemote = bridge.snapshot
 try bridge.localDidSave(postRemote, at: date(3001))
 check(!bridge.state.pending.contains("Preference:Clockin.Theme"), "bridge save callback after remote apply does not echo")
-let rejectedBridge = SyncBridge(state: firstSidecar, snapshot: firstPlan.merge.snapshot, disk: disk) { _ in
+let rejectedBridge = SyncBridge(state: firstSidecar, snapshot: firstPlan.merge.snapshot, disk: disk) { _, _ in
     throw SyncFailure.invalid("Simulated primary write failure")
 }
 let beforeRejected = try SyncCoding.encode(rejectedBridge.state)
@@ -351,7 +351,7 @@ try approvalState.capture(previous: nil, current: localFirst, at: date(1000))
 var approvalBridge: SyncBridge?
 var queuedSave: Task<Void, any Error>?
 approvalBridge = SyncBridge(state: approvalState, snapshot: localFirst,
-                            disk: SyncSidecarStore(archiveURL: directory.appendingPathComponent("approval/clockin.json"))) { merged in
+                            disk: SyncSidecarStore(archiveURL: directory.appendingPathComponent("approval/clockin.json"))) { merged, _ in
     queuedSave = Task { @MainActor in
         var edited = merged
         edited.data.sessions.append(session(700, start: 7000))

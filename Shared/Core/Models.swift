@@ -90,6 +90,12 @@ struct RateRule: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+// Bildirim karari sayacin yasina degil, verinin gelis yoluna dayanir.
+enum RunningApplyProvenance: Sendable {
+    case remoteChange
+    case initialImport
+}
+
 struct RunningSession: Codable, Equatable, Sendable {
     var start: Date
     var accumulated: TimeInterval

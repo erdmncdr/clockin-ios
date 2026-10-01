@@ -29,4 +29,13 @@ else
  swiftc "${flags[@]}" Shared/Sync/LiveActivityDecision.swift Tests/manual/iphonefollowsmac/decision.swift \
   -o /tmp/clockin-follow-decision-tests
  /tmp/clockin-follow-decision-tests
+ probe="$(mktemp -d /tmp/clockin-follow-lifecycle.XXXXXX)"
+ trap 'rm -rf "$probe"' EXIT
+ python3 Tests/manual/iphonefollowsmac/extract-mirror.py "$probe"
+ swiftc "${flags[@]}" Shared/Core/AppLanguage.swift Shared/Core/Models.swift \
+  Shared/Theme/ClockinThemeChoice.swift \
+  Shared/Sync/ClockinActivityState.swift Shared/Sync/LiveActivityDecision.swift \
+  "$probe/Attributes.swift" "$probe/ExtractedMirror.swift" Tests/manual/iphonefollowsmac/activity.swift \
+  -o "$probe/lifecycle"
+ "$probe/lifecycle"
 fi

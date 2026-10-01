@@ -14,6 +14,7 @@ import Foundation
     var nextFetchRecords: [SyncRecord] = []
     var nextSnapshot: SyncSnapshot?
     private var pushSender = SyncSidecar(deviceID: "push-device")
+    private var editSender = SyncSidecar(deviceID: "other-device")
     private var previousPushSnapshot: SyncSnapshot?
     init(_ bridge: SyncBridge) { self.bridge = bridge }
     func launch() async {
@@ -55,11 +56,10 @@ import Foundation
     func accountMayHaveChanged() async { await launch() }
     func stop() async { stopped = true; status = .off }
     func deliver(_ snapshot: SyncSnapshot, date: Date) throws {
-        var remote = SyncSidecar(deviceID: "other-device")
-        try remote.capture(previous: nil, current: bridge.snapshot, at: date)
-        try remote.capture(previous: bridge.snapshot, current: snapshot, at: date.addingTimeInterval(1))
+        try editSender.capture(previous: nil, current: bridge.snapshot, at: date)
+        try editSender.capture(previous: bridge.snapshot, current: snapshot, at: date.addingTimeInterval(1))
         do {
-            try bridge.receive(Array(remote.records.values))
+            try bridge.receive(Array(editSender.records.values))
             bridge.markFetchComplete(true)
         } catch {
             status = .paused(.invalidData)
@@ -84,6 +84,8 @@ import Foundation
     var languageAccesses = 0
     var transportCreations = 0
     var supported = true
+    var backupStarted: TestSignal?
+    var backupRelease: TestSignal?
     lazy var coordinator = SyncCoordinator(defaults: defaults, supportsSync: { [unowned self] in supported },
         makeStore: { [unowned self] in storeCreations += 1; return store },
         makeWardrobe: { [unowned self] in wardrobeCreations += 1; return wardrobe },
@@ -91,7 +93,15 @@ import Foundation
         makeTransport: { [unowned self] bridge in
             transportCreations += 1
             let fake = FakeTransport(bridge); transport = fake; return fake
-        }, refreshServices: { [unowned self] in refreshes += 1 }, clock: clock)
+        }, refreshServices: { [unowned self] in refreshes += 1 }, clock: clock,
+        backup: { [unowned self] in try await backupArchive($0, revision: $1) })
+
+    func backupArchive(_ url: URL, revision: UInt64) async throws -> SyncBackupReceipt {
+        backupStarted?.signal()
+        await backupRelease?.wait()
+        let disk = SyncSidecarStore(archiveURL: url)
+        return try await disk.backup(archiveURL: url, revision: revision)
+    }
 
     init() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("syncapp-" + UUID().uuidString)
@@ -132,6 +142,80 @@ import Foundation
         try? FileHandle.standardOutput.write(contentsOf: Data(("ok: " + name + "\n").utf8))
     }
     @MainActor static func main() async throws {
+        for restore in [false, true] {
+            let baseline = try Fixture()
+            try await baseline.begin()
+            var posted: [Date] = []
+            let notifier = RemoteClockInNotification(defaults: baseline.defaults, isActive: { false },
+                canNotify: { true }, post: { posted.append($0) })
+            let start = Date.now.addingTimeInterval(-600)
+            if restore {
+                notifier.start(store: baseline.store)
+                var archive = ClockinData()
+                archive.running = .init(start: start, accumulated: 0, resumedAt: start, note: "restored")
+                let url = baseline.directory.appending(path: "restore.json")
+                try JSONEncoder().encode(archive).write(to: url)
+                check(baseline.store.restoreBackup(from: url), "coordinator fixture restores a phone timer")
+            } else {
+                baseline.store.clockIn(at: start)
+                notifier.start(store: baseline.store)
+            }
+            var edited = baseline.transport!.bridge.snapshot
+            baseline.store.cancelRunning()
+            await baseline.coordinator.start()?.value
+            edited.data.running?.resumedAt = nil
+            try baseline.transport!.deliver(edited, date: baseline.clock.now.addingTimeInterval(3600))
+            await notifier.finishPendingUpdates()
+            check(baseline.store.running?.start == start && posted.isEmpty,
+                "\(restore ? "restore" : "upgrade/attach") then discard then later remote edit applies silently")
+            edited.data.running = .init(start: start.addingTimeInterval(120), accumulated: 0,
+                resumedAt: start.addingTimeInterval(120), note: "new remote start")
+            try baseline.transport!.deliver(edited, date: baseline.clock.now.addingTimeInterval(7200))
+            await notifier.finishPendingUpdates()
+            check(posted == [start.addingTimeInterval(120)], "genuinely new remote start still notifies after baseline recovery")
+            await baseline.cleanup()
+        }
+
+        for old in [true, false] {
+            let first = try Fixture()
+            try await first.begin(approved: false)
+            var active = true
+            var posted: [Date] = []
+            let notifier = RemoteClockInNotification(defaults: first.defaults, isActive: { active },
+                canNotify: { true }, post: { posted.append($0) })
+            notifier.start(store: first.store)
+            var imported = first.transport!.bridge.snapshot
+            let start = Date.now.addingTimeInterval(old ? -7 * 86400 : -60)
+            imported.data.running = .init(start: start, accumulated: 30, resumedAt: nil, note: "initial import")
+            try first.transport!.deliver(imported, date: first.clock.now)
+            check(first.coordinator.pendingFirstMerge != nil && first.store.running == nil && posted.isEmpty,
+                "first merge stages a \(old ? "historical" : "recent") timer without notification")
+            let began = TestSignal(), release = TestSignal()
+            first.backupStarted = began; first.backupRelease = release
+            let approval = Task { await first.coordinator.approveFirstMerge() }
+            await began.wait()
+            check(first.store.running == nil && active, "approval is suspended at backup while foregrounded")
+            active = false
+            release.signal()
+            await approval.value
+            await notifier.finishPendingUpdates()
+            check(first.store.running?.start == start && first.coordinator.pendingFirstMerge == nil && posted.isEmpty,
+                "first merge finishing in background silently baselines its \(old ? "historical" : "recent") timer")
+            first.store.cancelRunning()
+            await first.coordinator.start()?.value
+            imported.data.running?.note = "later edit"
+            try first.transport!.deliver(imported, date: first.clock.now.addingTimeInterval(3600))
+            await notifier.finishPendingUpdates()
+            check(first.store.running?.start == start && posted.isEmpty,
+                "discard and later edit of first-import timer stays silent")
+            let delayed = Date.now.addingTimeInterval(-8 * 86400)
+            imported.data.running = .init(start: delayed, accumulated: 30, resumedAt: nil, note: "delayed remote start")
+            try first.transport!.deliver(imported, date: first.clock.now.addingTimeInterval(7200))
+            await notifier.finishPendingUpdates()
+            check(posted == [delayed], "later new remote start notifies even when older than the imported timer")
+            await first.cleanup()
+        }
+
         let push = try Fixture()
         try await push.begin()
         check(await push.coordinator.handleRemoteNotification() == .noData, "empty push fetch returns noData")

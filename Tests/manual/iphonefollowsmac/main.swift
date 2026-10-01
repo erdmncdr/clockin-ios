@@ -92,6 +92,97 @@ import Foundation
         check(!broken.applySynced(remote(840)), "failed archive apply is rejected")
         await brokenNotifier.finishPendingUpdates()
         check(posted.count == 1, "failed archive apply never notifies")
+
+        let loadedURL = directory.appending(path: "loaded.json")
+        let beforeUpgrade = ClockStore(fileURL: loadedURL, now: { date })
+        beforeUpgrade.clockIn(at: date.addingTimeInterval(-1200))
+        let loaded = ClockStore(fileURL: loadedURL, now: { date })
+        let loadedNotifier = makeNotifier()
+        loadedNotifier.start(store: loaded)
+        var edited = loaded.data
+        check(edited.running != nil, "upgrade fixture loads the existing phone timer")
+        loaded.cancelRunning()
+        edited.running?.resumedAt = nil
+        _ = loaded.applySynced(edited)
+        await loadedNotifier.finishPendingUpdates()
+        check(posted.count == 1, "upgrade/load then discard then remote edit stays silent without an echo first")
+
+        let backup = directory.appending(path: "restore.json")
+        var restored = remote(-600)
+        try JSONEncoder().encode(restored).write(to: backup)
+        loaded.cancelRunning()
+        check(loaded.restoreBackup(from: backup), "valid running backup restores")
+        await loadedNotifier.finishPendingUpdates()
+        check(posted.count == 1, "successful restore itself stays silent")
+        loaded.cancelRunning()
+        restored.running?.resumedAt = nil
+        _ = loaded.applySynced(restored)
+        await loadedNotifier.finishPendingUpdates()
+        check(posted.count == 1, "restore then discard then remote edit stays silent")
+
+        let same = remote(-300).running!
+        loaded.didApplySyncedRunning.send((previous: same, current: same, provenance: .remoteChange))
+        loaded.cancelRunning()
+        _ = loaded.applySynced(remote(-300, paused: true))
+        await loadedNotifier.finishPendingUpdates()
+        check(posted.count == 1, "same-start sync arrival establishes a silent baseline")
+
+        let historyDomain = domain + "-history"
+        let historyDefaults = UserDefaults(suiteName: historyDomain)!
+        defer { historyDefaults.removePersistentDomain(forName: historyDomain) }
+        historyDefaults.set(false, forKey: RemoteClockInNotification.enabledKey)
+        let legacy = (0..<1500).map { date.addingTimeInterval(Double($0) - 10000) }
+        historyDefaults.set(legacy, forKey: RemoteClockInNotification.handledStartsKey)
+        let historyStore = ClockStore(fileURL: directory.appending(path: "history.json"), now: { date })
+        var historyPosts: [Date] = []
+        func historyNotifier() -> RemoteClockInNotification {
+            RemoteClockInNotification(defaults: historyDefaults, isActive: { false },
+                canNotify: { true }, post: { historyPosts.append($0) })
+        }
+        func recentCount() -> Int {
+            (historyDefaults.array(forKey: RemoteClockInNotification.handledStartsKey) as? [Date] ?? []).count
+        }
+        var history: RemoteClockInNotification? = historyNotifier()
+        history!.start(store: historyStore)
+        check(recentCount() <= 256, "legacy unbounded history is pruned on idle attachment while setting is off")
+        for i in 0..<1500 {
+            historyStore.clockIn(at: date.addingTimeInterval(Double(i) - 5000))
+            historyStore.cancelRunning()
+        }
+        check(recentCount() <= 256 && historyPosts.isEmpty, "1500 local starts remain bounded while notifications are off")
+        let localCutoff = historyDefaults.object(forKey: RemoteClockInNotification.handledCutoffKey) as? Date
+        check(localCutoff != nil, "pruning persists a notification eligibility cutoff")
+        for i in 0..<400 { _ = historyStore.applySynced(remote(Double(i) - 2000)) }
+        await history!.finishPendingUpdates()
+        let cutoff = historyDefaults.object(forKey: RemoteClockInNotification.handledCutoffKey) as! Date
+        check(recentCount() <= 256 && cutoff > localCutoff! && historyPosts.isEmpty,
+              "remote arrivals also prune and advance cutoff while opted out")
+        history = nil
+        historyStore.cancelRunning()
+        historyDefaults.set(true, forKey: RemoteClockInNotification.enabledKey)
+        let reopened = historyNotifier()
+        reopened.start(store: historyStore)
+        _ = historyStore.applySynced(remote(-10000))
+        await reopened.finishPendingUpdates()
+        check(historyPosts.isEmpty, "evicted legacy start cannot notify after notifier recreation")
+        _ = historyStore.applySynced(remote(-5000))
+        await reopened.finishPendingUpdates()
+        check(historyPosts.isEmpty, "evicted local start cannot notify after re-enabling")
+        _ = historyStore.applySynced(remote(-1601))
+        await reopened.finishPendingUpdates()
+        check(historyPosts.isEmpty, "recent retained local start also stays silent")
+        var boundary = remote(-1601)
+        boundary.running?.start = cutoff
+        _ = historyStore.applySynced(boundary)
+        await reopened.finishPendingUpdates()
+        check(historyPosts.isEmpty, "cutoff equality is ineligible after relaunch")
+        _ = historyStore.applySynced(remote(-30000))
+        await reopened.finishPendingUpdates()
+        check(historyPosts.isEmpty && historyDefaults.object(forKey: RemoteClockInNotification.handledCutoffKey) as? Date == cutoff,
+              "previously unseen start below watermark is silent and cannot move cutoff backwards")
+        _ = historyStore.applySynced(remote(-1000))
+        await reopened.finishPendingUpdates()
+        check(historyPosts == [date.addingTimeInterval(-1000)], "new remote start above retained cutoff still notifies")
         print("All \(count) iPhone follow checks passed.")
     }
 }

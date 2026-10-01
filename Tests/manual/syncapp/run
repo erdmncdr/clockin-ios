@@ -10,7 +10,8 @@ sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/Cloc
  Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift
  Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Companion/WardrobeEarnings.swift
  Clockin/Views/Companion/WardrobeStore.swift Shared/Sync/Cloud/*.swift
- Shared/Sync/SyncAppState.swift Shared/Sync/SyncCoordinator.swift Tests/manual/syncapp/Support.swift Tests/manual/syncsend/TestClock.swift)
+ Shared/Sync/SyncAppState.swift Shared/Sync/SyncCoordinator.swift Clockin/Notifications/RemoteClockInNotification.swift
+ Tests/manual/syncapp/Support.swift Tests/manual/syncsend/TestClock.swift)
 flags=(-swift-version 6 -strict-concurrency=complete -warnings-as-errors -module-cache-path /tmp/clockin-syncapp-cache)
 if [[ "${1:-}" == "typecheck" ]]; then
  for target in 'macosx arm64-apple-macosx14.0' 'iphonesimulator arm64-apple-ios17.0-simulator'; do

@@ -169,36 +169,42 @@ final class SessionMirror {
         lastState = state
         enqueueActivityOperation { [weak self] in
             guard self?.lastState == state else { return }
-            let activities = Activity<ClockinActivityAttributes>.activities
+            let activities = Activity<ClockinActivityAttributes>.activities.sorted { $0.id < $1.id }
             let content = ActivityContent(state: state, staleDate: state.staleDate)
             let remote = LiveActivityPrivacy.enabled && LiveActivityPush.endpoint != nil && !state.isPaused
-            let replace = activities.contains {
-                $0.attributes.currencyCode != currencyCode
-                    || ((remote || $0.attributes.remoteUpdatesUntil != nil)
-                        && !$0.attributes.displayState($0.content.state).hasSameCalculation(as: state))
-                    || (remote && ($0.attributes.remoteUpdatesUntil == nil || $0.attributes.localState == nil))
-                    || (!remote && $0.attributes.remoteUpdatesUntil != nil)
+            let matching = activities.first { activity in
+                guard activity.attributes.currencyCode == currencyCode else { return false }
+                if remote {
+                    return activity.attributes.remoteUpdatesUntil != nil
+                        && activity.attributes.localState?.hasSameCalculation(as: state) == true
+                }
+                return activity.attributes.remoteUpdatesUntil == nil
             }
+            // Kesilmis bir degisimden kalan uygun karti once bul. Yeni istek
+            // reddedilse bile eski kartlar ve relay kayitlari temizlenebilmeli.
+            let retainedID = (matching ?? activities.first)?.id
+            if let retainedID { await Self.endAll(except: retainedID) }
+            if !LiveActivityPrivacy.enabled {
+                for activity in activities where activity.id == retainedID {
+                    await LiveActivityPush.shared.stop(id: activity.id, token: activity.pushToken,
+                        expiresAt: activity.attributes.remoteUpdatesUntil)
+                }
+            }
+            guard self?.lastState == state else { return }
             switch LiveActivityDecision.action(running: true, hasActivity: !activities.isEmpty,
-                needsReplacement: replace, appIsActive: UIApplication.shared.applicationState == .active) {
+                needsReplacement: matching == nil, appIsActive: UIApplication.shared.applicationState == .active) {
             case .request:
                 _ = Self.request(currencyCode: currencyCode, content: content)
             case .replace:
-                // Request is synchronous. A denied/failed request leaves the old
-                // card intact, even in the foreground (e.g. activity limits).
+                // Tek yedek kart, istek basarisiz olursa yerinde kalir. Islem
+                // yeni karttan sonra kesilirse sonraki yenileme onu secer.
                 if let replacementID = Self.request(currencyCode: currencyCode, content: content) {
                     await Self.endAll(except: replacementID)
                 }
             case .keep:
-                // Immutable currency/localState cannot safely carry this change:
-                // a queued remote tick would reconstruct the old calculation.
-                // Foreground refresh retries replacement with the latest state.
-                if !LiveActivityPrivacy.enabled {
-                    for activity in activities {
-                        await LiveActivityPush.shared.stop(id: activity.id, token: activity.pushToken,
-                            expiresAt: activity.attributes.remoteUpdatesUntil)
-                    }
-                }
+                // Eski relay tick'i sabit localState'i geri getirebilir;
+                // yedek karti degistirmeden on plan yenilemesini bekle.
+                break
             case .update:
                 await Self.updateAll(content)
                 for activity in Activity<ClockinActivityAttributes>.activities {

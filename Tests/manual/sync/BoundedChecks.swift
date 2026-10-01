@@ -181,7 +181,7 @@ func rawUnion(_ a: SyncRecord, _ b: SyncRecord) -> SyncRecord {
     initial.preferences["Clockin.Theme"] = .string("Carbon")
     var seeded = SyncSidecar(deviceID: "limits"); seeded.firstMergeCompleted = true
     try seeded.capture(previous: nil, current: initial, at: date(100))
-    let bridge = SyncBridge(state: seeded, snapshot: initial, disk: store) { _ in }
+    let bridge = SyncBridge(state: seeded, snapshot: initial, disk: store) { _, _ in }
     var oversized = initial
     oversized.data.sessions[0].note = String(repeating: "n", count: 2001)
     oversized.preferences["Clockin.Theme"] = .string(String(repeating: "x", count: 257))
@@ -319,7 +319,7 @@ func rawUnion(_ a: SyncRecord, _ b: SyncRecord) -> SyncRecord {
     let disagreeing = conflicts.records.values.filter { $0.kind == .session }.map { value -> SyncRecord in
         var result = value; result.sessionFact = .init(clockinStart: date(99999)); return result
     }
-    let conflictBridge = SyncBridge(state: conflicts, snapshot: conflictSource, disk: store) { _ in }
+    let conflictBridge = SyncBridge(state: conflicts, snapshot: conflictSource, disk: store) { _, _ in }
     let rejected = try conflictBridge.receive(disagreeing)
     check(Set(rejected) == Set(disagreeing.map(\.key)) && conflictBridge.state.quarantine.count == 100,
           "all 110 rejected keys reach transport even when quarantine evicts ten envelopes")

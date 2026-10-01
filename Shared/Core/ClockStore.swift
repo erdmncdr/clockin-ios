@@ -23,7 +23,7 @@ final class ClockStore: ObservableObject {
     let didPersist = PassthroughSubject<Void, Never>()
     /// Presentation-only hooks, synchronous on MainActor after successful persistence.
     let didClockInLocally = PassthroughSubject<Date, Never>()
-    let didApplySyncedRunning = PassthroughSubject<(previous: RunningSession?, current: RunningSession?), Never>()
+    let didApplySyncedRunning = PassthroughSubject<(previous: RunningSession?, current: RunningSession?, provenance: RunningApplyProvenance), Never>()
     var archiveURL: URL { fileURL }
 
     private let fileURL: URL
@@ -1079,13 +1079,13 @@ final class ClockStore: ObservableObject {
     /// Remote applies use the same atomic write/backup path. Publish only after it succeeds;
     /// on failure the previous data (including its timer) remains visible. No local-save echo.
     @discardableResult
-    func applySynced(_ incoming: ClockinData) -> Bool {
+    func applySynced(_ incoming: ClockinData, provenance: RunningApplyProvenance = .remoteChange) -> Bool {
         let previousRunning = data.running
         var candidate = incoming
         candidate.pinVisible = data.pinVisible
         guard save(candidate, notify: false) else { return false }
         timerPersistenceError = nil
-        didApplySyncedRunning.send((previous: previousRunning, current: data.running))
+        didApplySyncedRunning.send((previous: previousRunning, current: data.running, provenance: provenance))
         return true
     }
 

@@ -35,6 +35,7 @@ final class SyncCoordinator: ObservableObject {
     private let languageDefaults: @MainActor () -> UserDefaults?
     private let makeTransport: @MainActor (SyncBridge) -> any SyncTransport
     private let refreshServices: @MainActor () -> Void
+    private let backup: SyncBridge.Backup?
     private let clock: any SyncClock
     private let debounce: SyncWakeup
     private var store: ClockStore?
@@ -68,11 +69,12 @@ final class SyncCoordinator: ObservableObject {
              SessionMirror.shared.refresh()
              SessionMirror.shared.refreshChimes(force: true)
          },
-         clock: any SyncClock = SystemSyncClock()) {
+         clock: any SyncClock = SystemSyncClock(), backup: SyncBridge.Backup? = nil) {
         self.defaults = defaults; self.supportsSync = supportsSync
         self.makeStore = makeStore; self.makeWardrobe = makeWardrobe
         self.languageDefaults = languageDefaults; self.makeTransport = makeTransport
         self.refreshServices = refreshServices; self.clock = clock
+        self.backup = backup
         debounce = SyncWakeup(clock: clock)
     }
 
@@ -226,9 +228,9 @@ final class SyncCoordinator: ObservableObject {
                 self.store = store; self.wardrobe = wardrobe; self.preferences = preferences
                 // Capture after the disk await so concurrent local edits during startup are included.
                 let snapshot = capture(store: store, wardrobe: wardrobe, preferences: preferences)
-                let bridge = SyncBridge(state: state, snapshot: snapshot, disk: disk) { [weak self] snapshot in
+                let bridge = SyncBridge(state: state, snapshot: snapshot, disk: disk, backup: backup) { [weak self] snapshot, provenance in
                     guard let self, self.isEnabled else { throw CancellationError() }
-                    try self.apply(snapshot)
+                    try self.apply(snapshot, provenance: provenance)
                 }
                 self.bridge = bridge
                 localFailure = nil
@@ -310,7 +312,7 @@ final class SyncCoordinator: ObservableObject {
         debounce.schedule(at: clock.now.addingTimeInterval(0.5)) { [weak self] in self?.localDidPersist() }
     }
 
-    private func apply(_ snapshot: SyncSnapshot) throws {
+    private func apply(_ snapshot: SyncSnapshot, provenance: RunningApplyProvenance) throws {
         guard isEnabled, let store, let wardrobe, let preferences else { throw CancellationError() }
         let local = capture(store: store, wardrobe: wardrobe, preferences: preferences)
         do {
@@ -322,7 +324,7 @@ final class SyncCoordinator: ObservableObject {
             applying = true
             defer { applying = false }
             // No preference/wardrobe publication, including UserDefaults, before this succeeds.
-            guard store.applySynced(snapshot.data) else {
+            guard store.applySynced(snapshot.data, provenance: provenance) else {
                 localFailure = .storage
                 throw SyncFailure.invalid("Primary archive save failed")
             }

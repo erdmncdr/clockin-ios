@@ -3,7 +3,8 @@ import Foundation
 // Inert until explicitly created. The application owns primary saves and UI.
 @MainActor
 final class SyncBridge {
-    typealias Apply = @MainActor @Sendable (SyncSnapshot) throws -> Void
+    typealias Apply = @MainActor @Sendable (SyncSnapshot, RunningApplyProvenance) throws -> Void
+    typealias Backup = @MainActor @Sendable (URL, UInt64) async throws -> SyncBackupReceipt
     var willReceive: (@MainActor @Sendable () -> Void)?
     var didChange: (@MainActor @Sendable () -> Void)?
     /// Diagnostic count of accepted full local captures (not a persisted revision counter).
@@ -17,10 +18,13 @@ final class SyncBridge {
     private(set) var fetchComplete = false
     private let disk: SyncSidecarStore
     private let apply: Apply
+    private let backup: Backup
     private var applyingRemote = false
 
-    init(state: SyncSidecar, snapshot: SyncSnapshot, disk: SyncSidecarStore, apply: @escaping Apply) {
+    init(state: SyncSidecar, snapshot: SyncSnapshot, disk: SyncSidecarStore,
+         backup: Backup? = nil, apply: @escaping Apply) {
         self.state = state; self.snapshot = snapshot; self.disk = disk; self.apply = apply
+        self.backup = backup ?? { try await disk.backup(archiveURL: $0, revision: $1) }
     }
 
     // Call after the primary save succeeds, for all three stores, on the main actor.
@@ -49,7 +53,7 @@ final class SyncBridge {
         var candidate = state
         var rejected: [String] = []
         let merge = try candidate.receive(records, snapshot: snapshot, onReject: { rejected = $0 })
-        if let merge { try applyMerged(merge.snapshot) }
+        if let merge { try applyMerged(merge.snapshot, provenance: .remoteChange) }
         state = candidate
         // Transport must not infer rejection from the capped quarantine, which may have evicted bytes.
         return rejected
@@ -80,18 +84,18 @@ final class SyncBridge {
     // Call only after the user approves this exact preview. Edits during backup invalidate it.
     func approveFirstMerge(_ preview: SyncFirstPreview, archiveURL: URL) async throws {
         guard preview.revision == state.revision else { throw SyncFailure.stalePreview }
-        let backup = try await disk.backup(archiveURL: archiveURL, revision: preview.revision)
+        let backup = try await backup(archiveURL, preview.revision)
         var candidate = state
         try candidate.commit(preview, backup: backup)
-        try applyMerged(preview.merge.snapshot)
+        try applyMerged(preview.merge.snapshot, provenance: .initialImport)
         state = candidate
         _ = await persist()
     }
 
-    private func applyMerged(_ merged: SyncSnapshot) throws {
+    private func applyMerged(_ merged: SyncSnapshot, provenance: RunningApplyProvenance) throws {
         applyingRemote = true
         defer { applyingRemote = false }
-        try apply(merged)
+        try apply(merged, provenance)
         snapshot = merged
     }
 
