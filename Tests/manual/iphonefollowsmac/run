@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/ClockStore.swift
+ Shared/Core/WardrobeBackup.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift
+ Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift
+ Clockin/Notifications/RemoteClockInNotification.swift
+ Clockin/Notifications/RemoteClockInNotification+iOS.swift Tests/manual/iphonefollowsmac/main.swift)
+flags=(-swift-version 6 -strict-concurrency=complete -warnings-as-errors -parse-as-library -module-cache-path /tmp/clockin-follow-cache)
+if [[ "${1:-}" == "typecheck" ]]; then
+ sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+ xcrun --sdk iphonesimulator swiftc "${flags[@]}" -sdk "$sdk" \
+  -target arm64-apple-ios17.0-simulator -typecheck "${sources[@]}"
+ echo "PASS iPhone detector/store and notification adapter: iOS Simulator"
+ xcrun --sdk iphonesimulator swiftc "${flags[@]}" -sdk "$sdk" \
+  -target arm64-apple-ios17.0-simulator -typecheck "${sources[@]}" \
+  Shared/Theme/ClockinThemeChoice.swift Shared/Sync/AppGroup.swift Shared/Core/ExchangeRates.swift \
+  Shared/Sync/ClockinSnapshot.swift Shared/Sync/ClockinSnapshot+Store.swift Shared/Sync/SharedStore.swift \
+  Shared/Sync/ClockinActivityState.swift Shared/Sync/ClockinActivityAttributes.swift \
+  Shared/Sync/LiveActivityDecision.swift Shared/Sync/SessionMirror.swift \
+  Shared/Sync/LiveActivityPush.swift Shared/Sync/LiveActivityPrivacy.swift \
+  Shared/Sync/LiveActivityRegistry.swift Shared/Sync/LiveActivityRegistrationStatus.swift \
+  Shared/Mascot/CompanionAccessory.swift Clockin/Audio/FocusChimeSound.swift \
+  Tests/manual/iphonefollowsmac/PlatformSupport.swift
+ echo "PASS iPhone mirror, ActivityKit and relay client: iOS Simulator"
+else
+ swiftc "${flags[@]}" -parse-as-library "${sources[@]}" -o /tmp/clockin-follow-tests
+ /tmp/clockin-follow-tests
+ swiftc "${flags[@]}" Shared/Sync/LiveActivityDecision.swift Tests/manual/iphonefollowsmac/decision.swift \
+  -o /tmp/clockin-follow-decision-tests
+ /tmp/clockin-follow-decision-tests
+fi

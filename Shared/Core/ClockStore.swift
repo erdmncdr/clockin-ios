@@ -21,11 +21,9 @@ final class ClockStore: ObservableObject {
 
     /// Emitted synchronously on the main actor, only after a successful local write.
     let didPersist = PassthroughSubject<Void, Never>()
-    #if os(macOS)
     /// Presentation-only hooks, synchronous on MainActor after successful persistence.
     let didClockInLocally = PassthroughSubject<Date, Never>()
     let didApplySyncedRunning = PassthroughSubject<(previous: RunningSession?, current: RunningSession?), Never>()
-    #endif
     var archiveURL: URL { fileURL }
 
     private let fileURL: URL
@@ -267,9 +265,7 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.running = running
         guard persistTimerChange(previous: previous) else { return }
-        #if os(macOS)
         didClockInLocally.send(running.start)
-        #endif
     }
 
     func cancelRunning() {
@@ -1084,16 +1080,12 @@ final class ClockStore: ObservableObject {
     /// on failure the previous data (including its timer) remains visible. No local-save echo.
     @discardableResult
     func applySynced(_ incoming: ClockinData) -> Bool {
-        #if os(macOS)
         let previousRunning = data.running
-        #endif
         var candidate = incoming
         candidate.pinVisible = data.pinVisible
         guard save(candidate, notify: false) else { return false }
         timerPersistenceError = nil
-        #if os(macOS)
         didApplySyncedRunning.send((previous: previousRunning, current: data.running))
-        #endif
         return true
     }
 

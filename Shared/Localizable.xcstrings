@@ -3345,6 +3345,16 @@
         }
       }
     },
+    "Clocked in on your Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesai Mac'te başladı"
+          }
+        }
+      }
+    },
     "Clocked in.": {
       "localizations": {
         "tr": {
@@ -8691,6 +8701,16 @@
         }
       }
     },
+    "Notify when the timer starts on another device": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puantaj başka bir cihazda başladığında bildir"
+          }
+        }
+      }
+    },
     "Nova": {
       "localizations": {
         "tr": {
@@ -8915,6 +8935,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Devam etmek için Clockin'i aç."
+          }
+        }
+      }
+    },
+    "Open Clockin to show the timer on the Lock Screen and in the Dynamic Island.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puantajı Kilit Ekranı’nda ve Dinamik Ada’da Canlı Etkinlik olarak görmek için Clockin’i açın."
           }
         }
       }

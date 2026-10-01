@@ -12,6 +12,9 @@ import Foundation
     var afterSend: TestSignal?
     var failNextFetch = false
     var nextFetchRecords: [SyncRecord] = []
+    var nextSnapshot: SyncSnapshot?
+    private var pushSender = SyncSidecar(deviceID: "push-device")
+    private var previousPushSnapshot: SyncSnapshot?
     init(_ bridge: SyncBridge) { self.bridge = bridge }
     func launch() async {
         launches += 1
@@ -23,6 +26,13 @@ import Foundation
         sends += 1; status = .syncing
         bridge.markFetchComplete(false)
         do {
+            if let nextSnapshot {
+                self.nextSnapshot = nil
+                try pushSender.capture(previous: previousPushSnapshot, current: nextSnapshot,
+                    at: .now.addingTimeInterval(Double(sends) * 10))
+                previousPushSnapshot = nextSnapshot
+                try bridge.receive(Array(pushSender.records.values))
+            }
             if !nextFetchRecords.isEmpty { try bridge.receive(nextFetchRecords) }
             nextFetchRecords = []
         } catch { status = .paused(.invalidData); return }
@@ -122,6 +132,37 @@ import Foundation
         try? FileHandle.standardOutput.write(contentsOf: Data(("ok: " + name + "\n").utf8))
     }
     @MainActor static func main() async throws {
+        let push = try Fixture()
+        try await push.begin()
+        check(await push.coordinator.handleRemoteNotification() == .noData, "empty push fetch returns noData")
+        var arrived = push.transport!.bridge.snapshot
+        let start = Date.now.addingTimeInterval(-120)
+        arrived.data.running = RunningSession(start: start, accumulated: 0, resumedAt: start, note: "")
+        push.transport!.nextSnapshot = arrived
+        check(await push.coordinator.handleRemoteNotification() == .newData, "applied running fetch returns newData")
+        check(push.store.running?.start == start && push.refreshes == 1, "push apply refreshes mirrors with the persisted timer")
+        check(await push.coordinator.handleRemoteNotification() == .noData, "later empty pass does not reuse an earlier apply")
+        push.transport!.nextSnapshot = arrived
+        check(await push.coordinator.handleRemoteNotification() == .noData, "identical fetched snapshot is noData even when applied")
+        let refreshesBeforeEnd = push.refreshes
+        arrived.data.running = nil
+        push.transport!.nextSnapshot = arrived
+        let endedResult = await push.coordinator.handleRemoteNotification()
+        check(endedResult == .newData, "remote clock-out fetch returns newData")
+        check(push.store.running == nil && push.refreshes == refreshesBeforeEnd + 1, "remote idle reaches mirror refresh without an active scene")
+        push.transport!.failNextFetch = true
+        check(await push.coordinator.handleRemoteNotification() == .failed, "failed fetch returns failed")
+        for status: SyncStatus in [.waitingForNetwork, .accountProblem, .paused(.storage), .paused(.invalidData),
+            .paused(.sendFailed), .paused(.quota), .paused(.retryLimit), .starting, .syncing] {
+            check(SyncFetchResult.result(appliedChanges: true, status: status) == .failed,
+                  "failure takes precedence over partial data: \(status)")
+        }
+        for status: SyncStatus in [.off, .paused(.firstMerge), .paused(.postponed)] {
+            check(SyncFetchResult.result(appliedChanges: false, status: status) == .noData,
+                  "disabled/review gates report noData: \(status)")
+        }
+        await push.cleanup()
+
         // Nothing gets constructed or mutated while either gate is off, even with triggers.
         for unsupported in [true, false] {
             let f = try Fixture()

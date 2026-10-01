@@ -65,7 +65,9 @@ extension ClockinActivityState {
     var isPaused: Bool { pausedAt != nil }
 
     /// An old, queued push must never overwrite a pause, rate or theme change.
-    /// Those changes replace the activity (and thus invalidate its push token).
+    /// Those changes require replacement (and thus invalidate its push token).
+    /// In the background SessionMirror retains the old card until foreground;
+    /// mixing new content with this activity's old localState would regress on a tick.
     func hasSameCalculation(as other: Self) -> Bool {
         timerStart == other.timerStart && pausedAt == other.pausedAt
             && hourlyRate == other.hourlyRate && usdTryRate == other.usdTryRate

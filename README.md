@@ -91,6 +91,8 @@ Tests/manual/sync/run send # offline send policy, per-pass bounds and cancellabl
 Tests/manual/syncapp/run # real stores and coordinator with a fake transport; no CloudKit calls
 Tests/manual/syncapp/run typecheck # macOS and iOS Simulator, Swift 6 strict concurrency / warnings as errors
 Tests/manual/macliveactivitytip/run # Mac-only sync-arrival tip, local dismissal and Settings URL fallback
+Tests/manual/iphonefollowsmac/run # remote-start notification detector and background Live Activity decisions
+Tests/manual/iphonefollowsmac/run typecheck # same detector/store sources on iOS Simulator, Swift 6 strict concurrency
 
 swiftc -swift-version 6 -strict-concurrency=complete -D WIDGET_EXTENSION -module-cache-path /tmp/clockin-wardrobe-cache Shared/Core/AppLanguage.swift Shared/Mascot/MascotMotion.swift Shared/Mascot/MascotFrames.swift Shared/Mascot/ArmorHD.swift Shared/Mascot/ArmorHDPixels.swift Shared/Mascot/ArmorHDParts.swift Shared/Mascot/ArmorHDCache.swift Shared/Mascot/WardrobeArt.swift Shared/Mascot/CompanionAccessory.swift Clockin/Celebrations/CelebrationRules.swift Shared/Core/Models.swift Shared/Core/WardrobeBackup.swift Shared/Mascot/Wardrobe.swift Shared/Mascot/WardrobePalette.swift Shared/Mascot/WardrobeSkins.swift Shared/Mascot/WardrobeCatalog.swift Clockin/Views/Goals/GoalProgress.swift Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift Clockin/Views/Companion/WardrobeEarnings.swift Shared/Mascot/RoomArrangement.swift Shared/Mascot/RoomPlacement.swift Shared/Mascot/HomeSceneLayout.swift Shared/Mascot/HeritageArt.swift Tests/manual/wardrobe/main.swift -o /tmp/clockin-wardrobe-tests && /tmp/clockin-wardrobe-tests
 swift -module-cache-path /tmp/clockin-art-module-cache Tests/manual/skins/run.swift
@@ -206,4 +208,3 @@ notes, corrections, and unchanged source metadata after a Codable round trip.
 
 `PARITY.md` compares the two apps: what is shared, what only one of them has,
 and what differs on purpose.
-

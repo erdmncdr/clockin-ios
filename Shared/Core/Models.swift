@@ -112,7 +112,7 @@ struct RunningSession: Codable, Equatable, Sendable {
     }
 }
 
-struct ClockinData: Codable, Sendable {
+struct ClockinData: Codable, Equatable, Sendable {
     var hourlyRate: Double = 25
     var currencyCode: String = "USD"
     var running: RunningSession?

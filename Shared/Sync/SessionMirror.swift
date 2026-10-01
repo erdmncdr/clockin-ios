@@ -1,6 +1,7 @@
 #if !WIDGET_EXTENSION
 #if os(iOS)
 import ActivityKit
+import UIKit
 #endif
 import Combine
 import Foundation
@@ -72,11 +73,18 @@ final class SessionMirror {
 
     // Bildirim yaniti tamamlanmadan arka plan aynalarini bitir.
     func finishPendingUpdates() async {
+        // Also reconcile synchronously: objectWillChange schedules a later task,
+        // which must not be the only route from a silent fetch to clock-out.
+        sync()
+        #if os(iOS)
+        // End the card before waiting for notification scheduling/network cleanup.
+        await activityTask?.value
+        await RemoteClockInNotification.shared.finishPendingUpdates()
+        #endif
         await LongSessionReminderController.shared.finishPendingUpdates()
         await FocusChimeController.shared.finishPendingUpdates()
         await NudgeController.shared.finishPendingUpdates()
         #if os(iOS)
-        await activityTask?.value
         await LiveActivityPush.shared.finishPendingUploads()
         #endif
     }
@@ -171,15 +179,33 @@ final class SessionMirror {
                     || (remote && ($0.attributes.remoteUpdatesUntil == nil || $0.attributes.localState == nil))
                     || (!remote && $0.attributes.remoteUpdatesUntil != nil)
             }
-            if replace { await Self.endAll() }
-            guard self?.lastState == state else { return }
-            if Activity<ClockinActivityAttributes>.activities.isEmpty {
-                Self.request(currencyCode: currencyCode, content: content)
-            } else {
+            switch LiveActivityDecision.action(running: true, hasActivity: !activities.isEmpty,
+                needsReplacement: replace, appIsActive: UIApplication.shared.applicationState == .active) {
+            case .request:
+                _ = Self.request(currencyCode: currencyCode, content: content)
+            case .replace:
+                // Request is synchronous. A denied/failed request leaves the old
+                // card intact, even in the foreground (e.g. activity limits).
+                if let replacementID = Self.request(currencyCode: currencyCode, content: content) {
+                    await Self.endAll(except: replacementID)
+                }
+            case .keep:
+                // Immutable currency/localState cannot safely carry this change:
+                // a queued remote tick would reconstruct the old calculation.
+                // Foreground refresh retries replacement with the latest state.
+                if !LiveActivityPrivacy.enabled {
+                    for activity in activities {
+                        await LiveActivityPush.shared.stop(id: activity.id, token: activity.pushToken,
+                            expiresAt: activity.attributes.remoteUpdatesUntil)
+                    }
+                }
+            case .update:
                 await Self.updateAll(content)
                 for activity in Activity<ClockinActivityAttributes>.activities {
                     LiveActivityPush.shared.observe(activity)
                 }
+            case .end:
+                await Self.endAll()
             }
         }
     }
@@ -193,11 +219,11 @@ final class SessionMirror {
         }
     }
 
-    private static func request(currencyCode: String, content: ActivityContent<ClockinActivityAttributes.ContentState>) {
+    private static func request(currencyCode: String, content: ActivityContent<ClockinActivityAttributes.ContentState>) -> String? {
         let remote = LiveActivityPrivacy.enabled && LiveActivityPush.endpoint != nil && !content.state.isPaused
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             if remote { LiveActivityPush.shared.activityCouldNotStart() }
-            return
+            return nil
         }
         if let activity = try? Activity.request(
             attributes: ClockinActivityAttributes(currencyCode: currencyCode,
@@ -206,15 +232,17 @@ final class SessionMirror {
             content: content, pushType: remote ? .token : nil
         ) {
             LiveActivityPush.shared.observe(activity)
+            return activity.id
         } else if remote {
             LiveActivityPush.shared.activityCouldNotStart()
         }
+        return nil
     }
 
     // `Activity` Sendable degil; ana aktorden bir goreve gecirilemiyor. Bu
     // yuzden etkinlikler ana aktor disinda, kullanildiklari yerde alinir.
-    nonisolated private static func endAll() async {
-        for activity in Activity<ClockinActivityAttributes>.activities {
+    nonisolated private static func endAll(except retainedID: String? = nil) async {
+        for activity in Activity<ClockinActivityAttributes>.activities where activity.id != retainedID {
             let id = activity.id
             let token = activity.pushToken
             let expiry = activity.attributes.remoteUpdatesUntil

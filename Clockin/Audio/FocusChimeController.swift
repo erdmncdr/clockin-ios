@@ -318,6 +318,14 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
     }
 
     private static func handle(id: String, category: String, action: String, reminderStart: Date?) async {
+        #if os(iOS)
+        if id.hasPrefix(RemoteClockInNotification.identifierPrefix) {
+            if action == UNNotificationDefaultActionIdentifier {
+                RemoteClockInNavigation.shared.openToday()
+            }
+            return
+        }
+        #endif
         if id.hasPrefix(NudgePlanner.prefix) {
             if action == UNNotificationDefaultActionIdentifier { NudgeController.shared.openToday = true }
             return
