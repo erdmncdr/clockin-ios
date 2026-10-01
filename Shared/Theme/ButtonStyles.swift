@@ -29,7 +29,26 @@ struct MacControlHover: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(.primary.opacity(hovering && isEnabled ? 0.06 : 0), in: RoundedRectangle(cornerRadius: 6))
-            .onHover { hovering = $0 }
+            .modifier(MacDeferredHover(hovering: $hovering))
     }
 }
+
+extension MacDeferredValue {
+    func submit(_ value: Value, to binding: Binding<Value>) {
+        submit(value, read: { binding.wrappedValue }, write: { binding.wrappedValue = $0 })
+    }
+}
+
+/// Boyutu degistirmeyen hover vurgulari icin ortak, ertelenmis sinir.
+struct MacDeferredHover: ViewModifier {
+    @Binding var hovering: Bool
+    @State private var delivery = MacDeferredValue<Bool>()
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { delivery.submit($0, to: $hovering) }
+            .onDisappear { delivery.submit(false, to: $hovering) }
+    }
+}
+
 #endif

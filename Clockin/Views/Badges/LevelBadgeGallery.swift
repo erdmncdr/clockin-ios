@@ -7,6 +7,9 @@ struct LevelBadgeGallery: View {
     @Environment(\.palette) private var palette
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var previewVisible = true
+    #if os(macOS)
+    @State private var visibilityDelivery = MacDeferredValue<Bool>()
+    #endif
     @State private var selection: Int
     init(currentLevel: Int, xp: Int) {
         self.currentLevel = currentLevel; self.xp = xp
@@ -26,7 +29,13 @@ struct LevelBadgeGallery: View {
                         .onGeometryChange(for: Bool.self) { proxy in
                             let rect = proxy.frame(in: .named("rankGallery"))
                             return rect.maxY > 0 && rect.minY < viewportHeight
-                        } action: { previewVisible = $0 }
+                        } action: {
+                            #if os(macOS)
+                            visibilityDelivery.submit($0, to: $previewVisible)
+                            #else
+                            previewVisible = $0
+                            #endif
+                        }
                     #if os(macOS)
                     Text("Every 75 levels, your badge gains a new design. Click any rank to preview it.")
                         .font(.subheadline).foregroundStyle(.secondary)

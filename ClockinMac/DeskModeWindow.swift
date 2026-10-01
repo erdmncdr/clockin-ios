@@ -26,7 +26,7 @@ final class DeskModeWindowController: NSWindowController, NSWindowDelegate {
             let host = NSHostingView(rootView: MacDeskModeContent()
                 .environmentObject(SharedStore.clock)
                 .environmentObject(SharedStore.exchangeRates))
-            host.sizingOptions = [.minSize]
+            host.sizingOptions = []
             window.contentView = host
             window.center()
             self.window = window

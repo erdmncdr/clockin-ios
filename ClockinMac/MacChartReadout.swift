@@ -5,6 +5,7 @@ import SwiftUI
 struct MacChartReadout: ViewModifier {
     let values: [(date: Date, text: String)]
     @State private var readout: String?
+    @State private var delivery = MacDeferredValue<String?>()
 
     func body(content: Content) -> some View {
         content
@@ -19,10 +20,10 @@ struct MacChartReadout: ViewModifier {
                                     guard frame.contains(location),
                                           let date = proxy.value(atX: location.x - frame.minX, as: Date.self),
                                           Calendar.current.startOfDay(for: date) <= Calendar.current.startOfDay(for: .now) else {
-                                        readout = nil; return
+                                        delivery.submit(nil, to: $readout); return
                                     }
-                                    readout = values.first { Calendar.current.isDate($0.date, inSameDayAs: date) }?.text
-                                case .ended: readout = nil
+                                    delivery.submit(values.first { Calendar.current.isDate($0.date, inSameDayAs: date) }?.text, to: $readout)
+                                case .ended: delivery.submit(nil, to: $readout)
                                 }
                             }
                     }
@@ -35,6 +36,8 @@ struct MacChartReadout: ViewModifier {
                         .allowsHitTesting(false)
                 }
             }
-            .onChange(of: values.map(\.text)) { _, _ in readout = nil }
+            .onChange(of: values.map(\.date)) { _, _ in delivery.submit(nil, to: $readout) }
+            .onChange(of: values.map(\.text)) { _, _ in delivery.submit(nil, to: $readout) }
+            .onDisappear { delivery.submit(nil, to: $readout) }
     }
 }

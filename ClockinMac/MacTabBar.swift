@@ -6,29 +6,16 @@ struct MacTabBar: View {
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var selection: MacSection?
-    @Namespace private var selectionAnimation
-    @State private var hoveredSection: MacSection?
 
-    var body: some View {
-        Group {
-            if #available(macOS 26, *) {
-                GlassEffectContainer(spacing: 4) {
-                    tabs.glassEffect(.regular.interactive(), in: .capsule)
-                }
-            } else {
-                tabs
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay {
-                        Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 0.5)
-                            .allowsHitTesting(false)
-                    }
-                    .shadow(color: .black.opacity(0.16), radius: 12, y: 4)
-            }
+    private var selectionIndex: CGFloat {
+        switch selection ?? .today {
+        case .history: 1
+        case .progress: 2
+        default: 0
         }
-        .frame(maxWidth: 320)
     }
 
-    private var tabs: some View {
+    var body: some View {
         HStack(spacing: 4) {
             tab(.today, title: "Today", symbol: "timer")
             tab(.history, title: "History", symbol: "chart.bar.xaxis")
@@ -36,12 +23,48 @@ struct MacTabBar: View {
         }
         .padding(6)
         .frame(height: Self.height)
+        .background {
+            // Tek kalici secim mercegi; olcum State'e yazilmaz, cubuk boyunu etkilemez.
+            GeometryReader { geometry in
+                let width = max(0, (geometry.size.width - 20) / 3)
+                selectionGlass
+                    .frame(width: width, height: Self.height - 12)
+                    .offset(x: 6 + selectionIndex * (width + 4), y: 6)
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: selectionIndex)
+            }
+            .allowsHitTesting(false)
+        }
+        .background {
+            if #available(macOS 26, *) {
+                Capsule().fill(.clear).glassEffect(.clear.interactive(), in: .capsule)
+            } else {
+                Capsule().fill(.ultraThinMaterial)
+            }
+        }
+        .overlay {
+            Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 0.5)
+                .allowsHitTesting(false)
+        }
+        .shadow(color: .black.opacity(0.14), radius: 12, y: 4)
+        .frame(maxWidth: 320)
+    }
+
+    @ViewBuilder private var selectionGlass: some View {
+        if #available(macOS 26, *) {
+            Capsule().fill(.white.opacity(0.10))
+                .glassEffect(.clear, in: .capsule)
+                .overlay { Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 0.5) }
+        } else {
+            Capsule().fill(.primary.opacity(0.10))
+                .overlay { Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 0.5) }
+        }
     }
 
     private func tab(_ section: MacSection, title: LocalizedStringKey, symbol: String) -> some View {
         let selected = (selection ?? .today) == section
         return Button {
-            withAnimation(reduceMotion ? nil : .snappy(duration: 0.3)) { selection = section }
+            guard selection != section else { return }
+            selection = section
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.system(size: 18, weight: .medium)).frame(height: 20)
@@ -49,25 +72,10 @@ struct MacTabBar: View {
             }
             .foregroundStyle(selected ? palette.accent : Color.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background {
-                if selected {
-                    if #available(macOS 26, *) {
-                        Capsule().fill(.clear)
-                            .glassEffect(.regular.tint(palette.accent.opacity(0.22)).interactive(), in: .capsule)
-                            .glassEffectID("selection", in: selectionAnimation)
-                    } else {
-                        Capsule().fill(palette.accent.opacity(0.16))
-                            .matchedGeometryEffect(id: "selection", in: selectionAnimation)
-                    }
-                }
-            }
-            .background {
-                Capsule().fill(.primary.opacity(hoveredSection == section ? 0.06 : 0))
-            }
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .onHover { hovering in hoveredSection = hovering ? section : nil }
+        .macHoverFeedback()
         .accessibilityLabel(Text(title))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }

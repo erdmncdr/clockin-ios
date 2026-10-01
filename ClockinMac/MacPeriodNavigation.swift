@@ -29,8 +29,11 @@ private struct MacPeriodEventRegion: NSViewRepresentable {
 
     func makeNSView(context: Context) -> Region { Region() }
     func updateNSView(_ view: Region, context: Context) {
-        view.enabled = enabled
-        view.capturesScroll = capturesScroll
+        if view.enabled != enabled || view.capturesScroll != capturesScroll {
+            view.resetInput()
+            view.enabled = enabled
+            view.capturesScroll = capturesScroll
+        }
         view.onPage = onPage
     }
     static func dismantleNSView(_ view: Region, coordinator: ()) { view.stopMonitoring() }
@@ -41,6 +44,7 @@ private struct MacPeriodEventRegion: NSViewRepresentable {
         var onPage: ((Int) -> Void)?
         private var monitor: Any?
         private var scroll = MacPeriodScroll()
+        private var generation = 0
 
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
@@ -61,6 +65,11 @@ private struct MacPeriodEventRegion: NSViewRepresentable {
         func stopMonitoring() {
             if let monitor { NSEvent.removeMonitor(monitor) }
             monitor = nil
+            resetInput()
+        }
+
+        func resetInput() {
+            generation += 1
             scroll = MacPeriodScroll()
         }
 
@@ -72,8 +81,8 @@ private struct MacPeriodEventRegion: NSViewRepresentable {
             if event.type == .keyDown {
                 guard !event.isARepeat, event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty,
                       !(window.firstResponder is NSTextView), !(window.firstResponder is NSTextField) else { return event }
-                if event.keyCode == 123 { onPage?(-1); return nil }
-                if event.keyCode == 124 { onPage?(1); return nil }
+                if event.keyCode == 123 { deliverPage(-1); return nil }
+                if event.keyCode == 124 { deliverPage(1); return nil }
                 return event
             }
             guard capturesScroll else { return event }
@@ -85,8 +94,19 @@ private struct MacPeriodEventRegion: NSViewRepresentable {
             else { phase = .none }
             let result = scroll.update(x: event.scrollingDeltaX, y: event.scrollingDeltaY, phase: phase,
                 momentum: !event.momentumPhase.isEmpty, precise: event.hasPreciseScrollingDeltas, time: event.timestamp)
-            if let direction = result.direction { onPage?(direction) }
+            if let direction = result.direction { deliverPage(direction) }
             return result.consumed ? nil : event
+        }
+
+        private func deliverPage(_ direction: Int) {
+            let ticket = generation
+            let sourceWindow = window
+            DispatchQueue.main.async { [weak self, weak sourceWindow] in
+                guard let self, ticket == self.generation, self.enabled,
+                      let sourceWindow, self.window === sourceWindow, sourceWindow.isKeyWindow,
+                      sourceWindow.attachedSheet == nil, !self.isHiddenOrHasHiddenAncestor else { return }
+                self.onPage?(direction)
+            }
         }
     }
 }

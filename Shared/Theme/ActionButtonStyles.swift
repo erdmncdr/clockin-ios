@@ -9,20 +9,29 @@ import SwiftUI
 struct PrimaryActionButtonStyle: PrimitiveButtonStyle {
     let palette: ClockinPalette
     func makeBody(configuration: Configuration) -> some View {
-        Button(configuration).buttonStyle(.borderedProminent).tint(palette.accent).controlSize(.large)
+        Button(role: configuration.role, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.borderedProminent).tint(palette.accent).controlSize(.large)
     }
 }
 
 struct SecondaryActionButtonStyle: PrimitiveButtonStyle {
     let palette: ClockinPalette
     func makeBody(configuration: Configuration) -> some View {
-        Button(configuration).buttonStyle(.bordered).tint(palette.accent).controlSize(.large)
+        Button(role: configuration.role, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.bordered).controlSize(.large)
     }
 }
 
 struct DangerActionButtonStyle: PrimitiveButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        Button(configuration).buttonStyle(.bordered).tint(.red).controlSize(.large)
+        Button(role: .destructive, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.borderedProminent).tint(.red).controlSize(.large)
     }
 }
 #else

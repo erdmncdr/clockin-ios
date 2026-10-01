@@ -26,11 +26,7 @@ struct DeskModeView: View {
 
             timerBlock(elapsed: elapsed, earned: earned, day: store.runningDayIfNotToday(at: now))
                 #if os(macOS)
-                .frame(maxWidth: 600)
-                .padding(28)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                .overlay { RoundedRectangle(cornerRadius: 24).strokeBorder(.white.opacity(0.12), lineWidth: 0.5) }
-                .fixedSize(horizontal: false, vertical: true)
+                .modifier(MacDeskTimerPanel())
                 #endif
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 // Bugun ve kontroller ayni alt satirda, dugmelerin ortasina hizali.

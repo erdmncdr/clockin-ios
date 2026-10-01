@@ -20,7 +20,7 @@ struct HistoryView: View {
     @AppStorage("Clockin.HistoryGroupByDay") private var groupByDay = true
     @State private var expandedDays: Set<Date> = []
     @State private var selectedSessionID: UUID?
-    @State private var hoveredSessionID: UUID?
+    @State private var selectionDelivery = MacDeferredValue<UUID?>()
     #endif
 
     var body: some View {
@@ -61,7 +61,12 @@ struct HistoryView: View {
                             .font(.caption).foregroundStyle(.orange)
                     }
                 }
+                #if os(macOS)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                #else
                 .listRowBackground(palette.surface)
+                #endif
                 #if os(macOS)
                 Group {
                     if groupByDay {
@@ -84,6 +89,7 @@ struct HistoryView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                 .accessibilityValue(expandedDays.contains(group.day) ? "Expanded" : "Collapsed")
                             }
                         }
@@ -95,6 +101,7 @@ struct HistoryView: View {
                         }
                     }
                 }
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 .animation(nil, value: period.pageID)
                 #else
                 ForEach(days, id: \.day) { group in
@@ -134,12 +141,14 @@ struct HistoryView: View {
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
-            .insetGroupedList()
             #if os(macOS)
+            .listStyle(.plain)
             .contentMargins(.horizontal, 28, for: .scrollContent)
             .contentMargins(.top, 16, for: .scrollContent)
             .macReadableWidth(840)
             .macTabBarClearance()
+            #else
+            .insetGroupedList()
             #endif
             .scrollContentBackground(.hidden)
             .background(palette.background)
@@ -163,11 +172,11 @@ struct HistoryView: View {
             }
         }
         #if os(macOS)
-        .onChange(of: period.pageID) { _, _ in selectedSessionID = nil }
-        .onChange(of: groupByDay) { _, _ in selectedSessionID = nil }
+        .onChange(of: period.pageID) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
+        .onChange(of: groupByDay) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
         .onChange(of: store.sessions) { _, sessions in
             if let selectedSessionID, !sessions.contains(where: { $0.id == selectedSessionID }) {
-                self.selectedSessionID = nil
+                selectionDelivery.submit(nil, to: $selectedSessionID)
             }
         }
         #endif
@@ -198,8 +207,7 @@ struct HistoryView: View {
                    conflicts: conflicts.contains(session.id),
                    historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
             .tag(session.id)
-            .listRowBackground(hoveredSessionID == session.id ? palette.accent.opacity(0.09) : palette.surface)
-            .onHover { hoveredSessionID = $0 ? session.id : nil }
+            .modifier(MacHistoryRowHover(accent: palette.accent))
             .onTapGesture(count: 2) { sheet = .edit(session) }
             .contextMenu {
                 Button("Edit", systemImage: "pencil") { sheet = .edit(session) }

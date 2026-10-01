@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Compare active phone source against the task base, expanding only extracted views."""
 from pathlib import Path
-import difflib,re,subprocess,json
-BASE='6546b420b3ee81f8bdf43c61daef4404b2b00ffd'
+import argparse,difflib,re,subprocess,json
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--base', default='6546b420b3ee81f8bdf43c61daef4404b2b00ffd')
+BASE = parser.parse_args().base
 root=Path(__file__).resolve().parents[3]
 
 def active_ios(source,debug=False):
@@ -67,10 +69,13 @@ def normalize(source,file,debug):
     return re.sub(r'\s+','',s)
 
 files=subprocess.check_output(['git','diff','--name-only',BASE],cwd=root,text=True).splitlines()
+files += subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=root,text=True).splitlines()
+files = sorted(set(files))
 failures=[];count=0
 for file in files:
     if not file.endswith('.swift') or not file.startswith(('Clockin/','Shared/')):continue
-    old=subprocess.check_output(['git','show',f'{BASE}:{file}'],cwd=root,text=True)
+    prior=subprocess.run(['git','show',f'{BASE}:{file}'],cwd=root,text=True,capture_output=True)
+    old=prior.stdout if prior.returncode == 0 else ''
     new=(root/file).read_text()
     for debug in [False,True]:
         a,b=normalize(old,file,debug),normalize(new,file,debug)

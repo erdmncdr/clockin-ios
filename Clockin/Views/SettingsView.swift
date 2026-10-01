@@ -299,56 +299,64 @@ struct SettingsView: View {
             List(MacSettingsCategory.allCases, selection: $category) { item in
                 Label(LocalizedStringKey(item.rawValue), systemImage: item.symbol)
                     .tag(item)
-                    .padding(.vertical, 5)
             }
             .listStyle(.sidebar)
+            .tint(Color(nsColor: .controlAccentColor))
+            .scrollContentBackground(.automatic)
             .frame(width: 190)
             .accessibilityLabel("Settings categories")
             Divider()
-            Form {
-                switch category ?? .general {
-                case .general:
-                    languageThemeSection
-                    appearanceSection
-                    todaySection
-                    MacSettingsSection(category: .general)
-                case .timer:
-                    Section {
-                        Button("Goals & Pace") {
-                            MacNavigation.shared.openGoals()
+            VStack(alignment: .leading, spacing: 0) {
+                Text(LocalizedStringKey((category ?? .general).rawValue))
+                    .font(.title2.bold())
+                    .accessibilityAddTraits(.isHeader)
+                    .padding(.horizontal, 28).padding(.top, 24).padding(.bottom, 8)
+                Form {
+                    switch category ?? .general {
+                    case .general:
+                        languageThemeSection
+                        appearanceSection
+                        todaySection
+                        MacSettingsSection(category: .general)
+                    case .timer:
+                        Section {
+                            Button("Goals & Pace") {
+                                MacNavigation.shared.openGoals()
+                            }
+                        } footer: {
+                            Text("Set daily and monthly hours in Progress.")
                         }
-                    } footer: {
-                        Text("Set daily and monthly hours in Progress.")
+                        FocusSettingsSection()
+                    case .pay:
+                        paySection
+                    case .menuBar:
+                        MacSettingsSection(category: .menuBar)
+                    case .notifications:
+                        NudgeSettingsSection()
+                        LongSessionReminderSettingsSection()
+                        MacSettingsSection(category: .notifications)
+                    case .icloud:
+                        SyncSettingsSection()
+                    case .data:
+                        dataSection
+                    case .help:
+                        helpSection
+                        MacSettingsSection(category: .help)
+                        aboutSection
                     }
-                    FocusSettingsSection()
-                case .pay:
-                    paySection
-                case .menuBar:
-                    MacSettingsSection(category: .menuBar)
-                case .notifications:
-                    NudgeSettingsSection()
-                    LongSessionReminderSettingsSection()
-                    MacSettingsSection(category: .notifications)
-                case .icloud:
-                    SyncSettingsSection()
-                case .data:
-                    dataSection
-                case .help:
-                    helpSection
-                    MacSettingsSection(category: .help)
-                    aboutSection
                 }
+                .formStyle(.grouped)
+                .pickerStyle(.menu)
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
             }
-            .formStyle(.grouped)
-            .pickerStyle(.menu)
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .id(category)
         }
-        .frame(minWidth: 700)
-        .onAppear { LanguageSwitch.shared.reopenSettings = false }
+        .onAppear {
+            if LanguageSwitch.shared.reopenSettings { LanguageSwitch.shared.reopenSettings = false }
+        }
         .navigationTitle("Settings")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
