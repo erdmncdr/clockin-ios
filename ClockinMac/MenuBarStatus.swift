@@ -53,8 +53,8 @@ struct MenuBarStatus: Equatable {
     }
 
     static func goalPercent(_ elapsed: TimeInterval, goal: Double) -> Int {
-        guard goal > 0 else { return 0 }
-        return min(999, max(0, Int((elapsed / 3600 / goal * 100).rounded())))
+        guard goal.isFinite, goal > 0 else { return 0 }
+        return Int(clampingFinite: min(999, max(0, (elapsed / 3600 / goal * 100).rounded())))
     }
 
     /// Whole units only: the menu bar has little room. The formatters are made
@@ -73,9 +73,10 @@ struct MenuBarStatus: Equatable {
             if code == "TRY" { made.currencySymbol = "₺" }
             made.minimumFractionDigits = 0
             made.maximumFractionDigits = 0
+            if formatters.count >= 16 { formatters.removeAll() }
             formatters[cacheKey] = made
             return made
         }()
-        return formatter.string(from: NSNumber(value: value)) ?? "\(code) \(Int(value.rounded()))"
+        return formatter.string(from: NSNumber(value: value)) ?? "\(code) \(value.rounded())"
     }
 }

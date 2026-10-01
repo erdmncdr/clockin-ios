@@ -85,6 +85,11 @@ wardrobe-art also checks their cached 80 px output.
 
 ```bash
 Tests/manual/sync/run # includes bounded-history algebra, recovery limits and five-year simulation
+Tests/manual/sync/run persistence # buyuk pass, sessiz poll, kapanis ve hatali yazma sayilari
+Tests/manual/sync/run capability # yedi yetkisiz acilis; container veya ag islemi yok
+Tests/manual/crashaudit/run # bozuk veri, yinelenen kimlik, tarih/sayi sinirlari ve imza okuyucu
+Tests/manual/crashaudit/platform-run # yerel font/ikon/uyari ve iOS SDK denetimi
+python3 Tests/manual/crashaudit/typecheck.py # dort hedef; macOS 14/15 ve iOS 17, belgelenen macro ikameleri
 Tests/manual/sync/run typecheck
 Tests/manual/sync/run codec
 Tests/manual/sync/run send # offline send policy, per-pass bounds and cancellable retry scheduling
@@ -131,6 +136,14 @@ swiftc -swift-version 6 Shared/Core/AppLanguage.swift Shared/Core/Models.swift S
 swiftc -swift-version 6 -strict-concurrency=complete Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift Tests/manual/sessiondisplay/main.swift -o /tmp/clockin-sessiondisplay-tests && /tmp/clockin-sessiondisplay-tests
 swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-registry-cache Shared/Sync/LiveActivityRegistry.swift Tests/manual/liveactivityregistry/main.swift -o /tmp/clockin-registry-tests && /tmp/clockin-registry-tests
 ```
+
+The crash-audit SDK check uses the locally cached Sparkle framework (or
+`SPARKLE_FRAMEWORK_DIR`) and makes no network requests. In this restricted host,
+SwiftUI's macro plugin cannot start its nested sandbox. The harness therefore
+uses an explicit palette `EnvironmentKey`, the public `SwiftUI.State` property
+wrapper through a type alias, and a non-observing `LanguageSwitch` boundary copy.
+These checks cover availability and Swift 6 isolation, not macro expansion,
+signed launch or UI behavior on macOS 14/15. Production sources are not rewritten.
 
 The rolling check covers right-indexed glyph diffs, length changes, timer carries,
 increasing/decreasing semantic values, prefix/suffix currencies, Turkish formatting,

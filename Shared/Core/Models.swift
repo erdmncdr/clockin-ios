@@ -164,7 +164,10 @@ struct ClockinArchive {
             }
         }
         var data = try JSONDecoder().decode(Unchecked.self, from: bytes).data
-        let rejected = data.sessions.indices.filter { !data.sessions[$0].hasValidDuration }
+        var seen = Set<UUID>()
+        let rejected = data.sessions.indices.filter {
+            !data.sessions[$0].hasValidDuration || !seen.insert(data.sessions[$0].id).inserted
+        }
         let rejectRunning = data.running.map { !$0.hasValidDuration(at: date) } ?? false
         let count = rejected.count + (rejectRunning ? 1 : 0)
         guard count > 0 else { return Self(data: data, quarantine: nil, rejectedCount: 0) }
@@ -184,7 +187,8 @@ struct ClockinArchive {
         if rejectRunning, let running = fields["running"] { quarantine.append(running) }
         else { quarantine.append(contentsOf: "null".utf8) }
         quarantine.append(contentsOf: "}".utf8)
-        data.sessions.removeAll { !$0.hasValidDuration }
+        let rejectedIndices = Set(rejected)
+        data.sessions = data.sessions.enumerated().compactMap { rejectedIndices.contains($0.offset) ? nil : $0.element }
         if rejectRunning { data.running = nil }
         return Self(data: data, quarantine: quarantine, rejectedCount: count)
     }
@@ -353,7 +357,9 @@ enum LiveTimerRange {
     /// Geriye alinmis baslangic yedi gunu asabilir. Bitisi simdiden en az
     /// yedi gun ileri tutmak, geciken widget yenilemelerinde sayaci durdurmaz.
     static func interval(from origin: Date, at date: Date = .now) -> ClosedRange<Date> {
-        origin...max(origin, date).addingTimeInterval(7 * 86_400)
+        let date = SessionDuration.isValidDate(date) ? date : .distantPast
+        let origin = SessionDuration.isValidDate(origin) ? origin : date
+        return origin...max(origin, date).addingTimeInterval(7 * 86_400)
     }
 }
 
@@ -362,9 +368,19 @@ extension Double {
     /// cagrida yeniden kuruluyordu; `FormatStyle` deger tipi oldugu icin
     /// ayni ciktiyi kurulum maliyeti olmadan uretir.
     func money(code: String, maxFractionDigits: Int = 2) -> String {
-        let maximum = max(0, maxFractionDigits)
+        let maximum = min(20, max(0, maxFractionDigits))
         let minimum = min(2, maximum)
         return formatted(.currency(code: code).precision(.fractionLength(minimum...maximum)))
+    }
+}
+
+extension Int {
+    // Double(Int.max) yukariya yuvarlanir; Int'e cevirmeden once karsilastir.
+    init(clampingFinite value: Double) {
+        if value.isNaN { self = 0 }
+        else if value >= Double(Int.max) { self = .max }
+        else if value <= Double(Int.min) { self = .min }
+        else { self = Int(value) }
     }
 }
 

@@ -11,19 +11,21 @@ struct ArmorHDPixels {
   let anchors: ArmorHDAnchors
   let frame: String
 
-  init(_ source: CGImage, frame: String, anchors: ArmorHDAnchors) {
+  init?(_ source: CGImage, frame: String, anchors: ArmorHDAnchors) {
     self.anchors = anchors
     self.frame = frame
     let n = 157
     var bytes = [UInt8](repeating: 0, count: n * n * 4)
-    bytes.withUnsafeMutableBytes { data in
-      let c = CGContext(
+    let decoded = bytes.withUnsafeMutableBytes { data in
+      guard let c = CGContext(
         data: data.baseAddress, width: n, height: n, bitsPerComponent: 8, bytesPerRow: n * 4,
         space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
       c.interpolationQuality = .none
       c.draw(source, in: CGRect(x: 0, y: 0, width: n, height: n))
+      return true
     }
+    guard decoded else { return nil }
     cells = (0..<n * n).map { i in
       let p = i * 4
       let a = Int(bytes[p + 3])
@@ -313,7 +315,7 @@ struct ArmorHDPixels {
       func fitted(_ path: CGPath) -> CGPath {
         guard tag > 20 else { return path }
         var transform = headTransform
-        return path.copy(using: &transform)!
+    return path.copy(using: &transform) ?? path
       }
       guard region.count >= (kind == 4 ? 1 : 3) else { continue }
       var edges = [Int: [Int]]()
@@ -704,10 +706,10 @@ struct ArmorHDVisor {
         closed
         ? ArmorHDShape.poly(points) : ArmorHDShape.smooth(points, tension: angry ? 0.12 : 0.22)
       var transform = toWorld
-      slits.append(path.copy(using: &transform)!)
+      slits.append(path.copy(using: &transform) ?? path)
       var core = CGAffineTransform(translationX: cx, y: cy)
         .scaledBy(x: 0.82, y: 0.45).translatedBy(x: -cx, y: -cy).concatenating(toWorld)
-      hot.append(path.copy(using: &core)!)
+      hot.append(path.copy(using: &core) ?? path)
     }
     eyes = slits
     cores = hot

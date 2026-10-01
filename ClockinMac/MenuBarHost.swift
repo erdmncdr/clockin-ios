@@ -61,7 +61,7 @@ extension MenuBarController.Host {
                         quit: { NSApp.terminate(nil) }
                     ))
                     // Uyari store'u ortamdan okur; ortam nesnelerinin icinde kalmali.
-                    .timerPersistenceAlert()
+                    .timerPersistenceAlert(store: store)
                     .environmentObject(store)
                     .environmentObject(exchangeRates)
                     .environmentObject(FocusRadioController.shared)

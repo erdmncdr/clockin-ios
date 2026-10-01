@@ -67,8 +67,11 @@ struct ArmorHDShade {
     c.saveGState()
     c.addPath(path)
     c.clip()
-    let gradient = CGGradient(
-      colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: stops)!
+    guard let gradient = CGGradient(
+      colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: stops) else {
+      c.restoreGState()
+      return
+    }
     c.drawLinearGradient(
       gradient, start: start, end: end,
       options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
@@ -76,7 +79,7 @@ struct ArmorHDShade {
   }
   func translated(_ path: CGPath, _ x: CGFloat, _ y: CGFloat) -> CGPath {
     var t = CGAffineTransform(translationX: x, y: y)
-    return path.copy(using: &t)!
+    return path.copy(using: &t) ?? path
   }
   func part(
     _ path: CGPath, _ tone: ArmorHDTone, pale: Bool = false, polish: Double = 1,
@@ -145,12 +148,13 @@ struct ArmorHDShade {
           height: max(1.5, b.height * 0.16))
       c.translateBy(x: spot.midX, y: spot.midY)
       c.scaleBy(x: spot.width / 2, y: spot.height / 2)
-      let g = CGGradient(
+      if let g = CGGradient(
         colorsSpace: CGColorSpaceCreateDeviceRGB(),
         colors: [ArmorHDColor.white.alpha(0.48 * polish), ArmorHDColor.white.alpha(0)] as CFArray,
-        locations: [0, 1])!
-      c.drawRadialGradient(
-        g, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 1, options: [])
+        locations: [0, 1]) {
+        c.drawRadialGradient(
+          g, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 1, options: [])
+      }
       c.restoreGState()
     }
     stroke(translated(path, 0.8, 1), ArmorHDColor.white.alpha(0.26), 0.9)

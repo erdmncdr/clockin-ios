@@ -59,6 +59,7 @@ final class SyncCoordinator: ObservableObject {
          supportsSync: @escaping @MainActor () -> Bool = {
              Bundle.main.bundleURL.pathExtension != "appex"
                  && SyncCoordinator.capabilityValue(Bundle.main.object(forInfoDictionaryKey: capabilityKey))
+                 && CloudSyncCapability.isEntitled
          },
          makeStore: @escaping @MainActor () -> ClockStore = { SharedStore.clock },
          makeWardrobe: @escaping @MainActor () -> WardrobeStore = { WardrobeStore.shared },
@@ -131,6 +132,22 @@ final class SyncCoordinator: ObservableObject {
         start()
     }
 
+    // Ag islemi baslatmadan, askidaki tercihleri ve sidecar'i kalici kil.
+    @discardableResult
+    func flushPersistence() async -> Bool {
+        if debounce.deadline != nil { localDidPersist(scheduleSync: false) }
+        return await bridge?.persist() ?? true
+    }
+
+    func prepareForTermination() async {
+        setPolling(false)
+        _ = await flushPersistence()
+        let closingBridge = bridge
+        _ = turnOff()
+        // Ag iptalinin cevabini beklemek cikisi kilitlemesin. Son yerel durum yeterli.
+        _ = await closingBridge?.persist()
+    }
+
     @discardableResult
     func handleRemoteNotification() async -> SyncFetchResult {
         Self.log.notice("remote notification")
@@ -195,6 +212,7 @@ final class SyncCoordinator: ObservableObject {
         let oldWork = work
         oldWork?.cancel(); work = nil; debounce.cancel(); subscriptions.removeAll()
         let oldTransport = transport
+        let oldBridge = bridge
         oldTransport?.didChange = nil; bridge?.didChange = nil; bridge?.willReceive = nil
         transport = nil; bridge = nil; store = nil; wardrobe = nil; preferences = nil
         needsWork = false; needsAccountCheck = false; localFailure = nil; postponed = false
@@ -204,6 +222,7 @@ final class SyncCoordinator: ObservableObject {
             await previousShutdown?.value
             await oldTransport?.stop()
             await oldWork?.value
+            _ = await oldBridge?.persist()
         }
         shutdown = task
         return task
@@ -229,7 +248,7 @@ final class SyncCoordinator: ObservableObject {
                 // Capture after the disk await so concurrent local edits during startup are included.
                 let snapshot = capture(store: store, wardrobe: wardrobe, preferences: preferences)
                 let bridge = SyncBridge(state: state, snapshot: snapshot, disk: disk, backup: backup) { [weak self] snapshot, provenance in
-                    guard let self, self.isEnabled else { throw CancellationError() }
+                    guard let self, self.current(generation) else { throw CancellationError() }
                     try self.apply(snapshot, provenance: provenance)
                 }
                 self.bridge = bridge
@@ -279,7 +298,7 @@ final class SyncCoordinator: ObservableObject {
         store.didPersist.sink { [weak self] in self?.localDidPersist() }.store(in: &subscriptions)
         wardrobe.didPersist.sink { [weak self] in self?.localDidPersist() }.store(in: &subscriptions)
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
+            .sink { @Sendable [weak self] _ in
                 // Notifications can arrive on a background thread. Never read defaults/stores there.
                 Task { @MainActor [weak self] in self?.preferencesDidChange() }
             }.store(in: &subscriptions)
@@ -289,7 +308,7 @@ final class SyncCoordinator: ObservableObject {
         SyncSnapshot(data: store.data, preferences: preferences.capture(), wardrobe: wardrobe.state, ledger: wardrobe.ledger)
     }
 
-    private func localDidPersist() {
+    private func localDidPersist(scheduleSync: Bool = true) {
         guard isEnabled, !applying, let bridge, let store, let wardrobe, let preferences else { return }
         let snapshot = capture(store: store, wardrobe: wardrobe, preferences: preferences)
         // A store save also captures any preference burst already in progress.
@@ -299,7 +318,8 @@ final class SyncCoordinator: ObservableObject {
             try bridge.localDidSave(snapshot, at: clock.now)
             localFailure = nil
             refreshPublishedState()
-            start()
+            bridge.schedulePersist()
+            if scheduleSync { start() }
         } catch { localFailure = .invalidData; refreshPublishedState() }
     }
 

@@ -63,7 +63,7 @@ struct MonthlyWorkPlan {
     init(daily: [Date: TimeInterval], monthlyGoalHours: Double, dailyGoalHours: Double,
          workdaysPerWeek: Int, now: Date, calendar: Calendar = .current) {
         today = calendar.startOfDay(for: now)
-        month = calendar.dateInterval(of: .month, for: now)!
+        month = (calendar.dateInterval(of: .month, for: now) ?? DateInterval(start: today, duration: 0))
         self.workdaysPerWeek = (1...7).contains(workdaysPerWeek) ? workdaysPerWeek : 0
         calendarDaysRemaining = calendar.dateComponents([.day], from: today, to: month.end).day ?? 1
         estimatedWorkdaysRemaining = self.workdaysPerWeek == 0 ? 0 :
@@ -83,14 +83,15 @@ struct MonthlyWorkPlan {
             let worked = valid[cursor, default: 0]
             total += worked
             points.append(Day(date: cursor, worked: worked, cumulative: total))
-            cursor = calendar.date(byAdding: .day, value: 1, to: cursor)!
+            guard let next = calendar.date(byAdding: .day, value: 1, to: cursor), next > cursor else { break }
+            cursor = next
         }
         days = points
         monthWorked = total
 
         // Exclude today's unfinished day from the pace sample. Include quiet
         // days after the first recorded work so a slowdown lowers the forecast.
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: today)!
+        let weekAgo = (calendar.date(byAdding: .day, value: -7, to: today) ?? today)
         let sampleStart = max(weekAgo, valid.keys.min() ?? today)
         sampleDays = max(0, calendar.dateComponents([.day], from: sampleStart, to: today).day ?? 0)
         let sampleEnd = today

@@ -44,7 +44,7 @@ final class MacAppServices: ObservableObject {
         preferences = Preferences(.standard)
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in MainActor.assumeIsolated { self?.preferencesChanged() } }
+            .sink { @Sendable [weak self] _ in Task { @MainActor in self?.preferencesChanged() } }
             .store(in: &subscriptions)
         let center = NotificationCenter.default
         for name in [NSApplication.didBecomeActiveNotification, NSApplication.didResignActiveNotification,
@@ -53,14 +53,14 @@ final class MacAppServices: ObservableObject {
                      NSWindow.willCloseNotification] {
             center.publisher(for: name)
                 .receive(on: RunLoop.main)
-                .sink { [weak self] _ in MainActor.assumeIsolated { self?.updatePhase() } }
+                .sink { @Sendable [weak self] _ in Task { @MainActor in self?.updatePhase() } }
                 .store(in: &subscriptions)
         }
         updatePhase()
         // Mac uyandiginda ya da uygulama one geldiginde kuyruk hemen tazelensin.
         NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in MainActor.assumeIsolated { self?.tick(force: true) } }
+            .sink { @Sendable [weak self] _ in Task { @MainActor in self?.tick(force: true) } }
             .store(in: &subscriptions)
         tick(force: true)
         ticker = Task { [weak self] in

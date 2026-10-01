@@ -48,7 +48,7 @@ struct ClockinApp: App {
                 // in code pass `Bundle.app`.
                 .environment(\.locale, AppLanguage.locale)
                 .liveActivitySetup()
-                .timerPersistenceAlert()
+                .timerPersistenceAlert(store: store)
                 .environmentObject(store)
                 .environmentObject(exchangeRates)
                 .task(id: rateDates) {
@@ -65,6 +65,9 @@ struct ClockinApp: App {
                         SessionMirror.shared.refresh()
                     }
                     if phase == .active { SyncCoordinator.shared.sceneDidBecomeActive() }
+                    if phase == .background {
+                        appDelegate.flushSyncForBackground()
+                    }
                     SyncCoordinator.shared.setPolling(phase == .active)
                 }
         }

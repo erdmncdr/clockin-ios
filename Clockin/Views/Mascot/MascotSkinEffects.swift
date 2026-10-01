@@ -48,7 +48,7 @@ final class MascotSkinEffects {
 
     /// The robot's current frame, whose pixels the sheen is masked to.
     func mask(_ image: CGImage?) {
-        if (sheenMask.contents as! CGImage?) !== image { sheenMask.contents = image }
+        if (sheenMask.contents as AnyObject?) !== (image as AnyObject?) { sheenMask.contents = image }
     }
 
     func update(_ effects: WardrobeSkinEffects?, moving: Bool) {

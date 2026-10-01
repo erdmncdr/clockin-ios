@@ -25,6 +25,8 @@ struct EarningsPeriod: Equatable {
     let isCurrent: Bool
 
     init(range: EarningsRange, anchor: Date, now: Date, calendar: Calendar = .current) {
+        let now = SessionDuration.isValidDate(now) ? now : Date.distantPast
+        let anchor = SessionDuration.isValidDate(anchor) ? anchor : now
         self.range = range
         self.anchor = min(anchor, now)
         func bounds(_ date: Date) -> DateInterval {
@@ -32,17 +34,17 @@ struct EarningsPeriod: Equatable {
             case .week:
                 return MonthWeek.interval(containing: date, calendar: calendar)
             case .month:
-                return calendar.dateInterval(of: .month, for: date)!
+                return (calendar.dateInterval(of: .month, for: date) ?? DateInterval(start: date, duration: 0))
             case .sixMonths:
                 // Alti aylik sayfalar bugunun ayinda biter; onceki bloklar ust uste binmez.
-                let currentMonth = calendar.dateInterval(of: .month, for: now)!.start
-                let month = calendar.dateInterval(of: .month, for: date)!.start
+                let currentMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
+                let month = (calendar.dateInterval(of: .month, for: date) ?? DateInterval(start: date, duration: 0)).start
                 let distance = max(0, calendar.dateComponents([.month], from: month, to: currentMonth).month ?? 0)
-                let end = calendar.date(byAdding: .month, value: 1 - (distance / 6) * 6, to: currentMonth)!
-                return DateInterval(start: calendar.date(byAdding: .month, value: -6, to: end)!, end: end)
+                let end = (calendar.date(byAdding: .month, value: 1 - (distance / 6) * 6, to: currentMonth) ?? currentMonth)
+                return DateInterval(start: min(end, calendar.date(byAdding: .month, value: -6, to: end) ?? end), end: end)
             case .all:
                 return DateInterval(start: .distantPast,
-                                    end: calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!)
+                                    end: max(.distantPast, calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now))
             }
         }
         interval = bounds(self.anchor)
@@ -63,11 +65,11 @@ struct EarningsPeriod: Equatable {
         let step = direction < 0 ? -1 : 1
         if range == .week {
             let next = step < 0
-                ? calendar.date(byAdding: .day, value: -1, to: interval.start)!
+                ? (calendar.date(byAdding: .day, value: -1, to: interval.start) ?? interval.start)
                 : interval.end
             return Self(range: range, anchor: next, now: now, calendar: calendar)
         }
-        let next = calendar.date(byAdding: .month, value: step * (range == .sixMonths ? 6 : 1), to: anchor)!
+        let next = (calendar.date(byAdding: .month, value: step * (range == .sixMonths ? 6 : 1), to: anchor) ?? anchor)
         return Self(range: range, anchor: next, now: now, calendar: calendar)
     }
 
@@ -77,7 +79,7 @@ struct EarningsPeriod: Equatable {
 
     func title(calendar: Calendar = .current, locale: Locale = AppLanguage.formatLocale) -> String {
         guard range != .all else { return String(localized: "All time", bundle: .app) }
-        let last = calendar.date(byAdding: .day, value: -1, to: interval.end)!
+        let last = (calendar.date(byAdding: .day, value: -1, to: interval.end) ?? interval.start)
         let formatter = DateFormatter()
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
@@ -115,7 +117,9 @@ enum EarningsChartAxis {
         guard maximum.isFinite, maximum > 0 else { return 1 }
         let step = pow(10, floor(log10(maximum))) / 20
         // Yuvarlama sonrasi yuzde 10-15 bosluk kalir.
-        return ceil(maximum * 1.1 / step - 1e-10) * step
+        guard step > 0, step.isFinite else { return maximum }
+        let result = ceil(maximum * 1.1 / step - 1e-10) * step
+        return result.isFinite ? result : maximum
     }
 }
 

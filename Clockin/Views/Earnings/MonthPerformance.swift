@@ -64,16 +64,16 @@ struct MonthPerformance {
             .projection(worked: duration) : nil
         let start = period.interval.start
         let end = period.interval.end
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
-        let visibleEnd = min(end, tomorrow)
+        let tomorrow = (calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now)
+        let visibleEnd = max(start, min(end, tomorrow))
         let elapsedDays = calendar.dateComponents([.day], from: start, to: visibleEnd).day ?? 0
-        let previousStart = calendar.date(byAdding: .month, value: -1, to: start)!
+        let previousStart = (calendar.date(byAdding: .month, value: -1, to: start) ?? start)
         let previousDays = calendar.dateComponents([.day], from: previousStart, to: start).day ?? 0
-        let comparisonEnd = calendar.date(byAdding: .day, value: min(elapsedDays, previousDays), to: previousStart)!
+        let comparisonEnd = max(previousStart, calendar.date(byAdding: .day, value: max(0, min(elapsedDays, previousDays)), to: previousStart) ?? previousStart)
         comparisonInterval = DateInterval(start: previousStart, end: comparisonEnd)
         comparisonDuration = sessions.filter { $0.start >= previousStart && $0.start < comparisonEnd }
             .reduce(0) { $0 + $1.duration }
-        let daily = Dictionary(uniqueKeysWithValues: snapshot.points.map { ($0.day, $0.duration) })
+        let daily = Dictionary(snapshot.points.map { ($0.day, $0.duration) }, uniquingKeysWith: +)
         var values: [MonthRunningPoint] = []
         var total: TimeInterval = 0
         var day = start
@@ -81,12 +81,13 @@ struct MonthPerformance {
             let worked = daily[day, default: 0]
             total += worked
             values.append(MonthRunningPoint(day: day, daily: worked, cumulative: total))
-            day = calendar.date(byAdding: .day, value: 1, to: day)!
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day), next > day else { break }
+            day = next
         }
         cumulative = values
         if let goal {
             target = [MonthTargetPoint(day: start, duration: 0),
-                      MonthTargetPoint(day: calendar.date(byAdding: .day, value: -1, to: end)!, duration: goal.target)]
+                      MonthTargetPoint(day: (calendar.date(byAdding: .day, value: -1, to: end) ?? start), duration: goal.target)]
         } else {
             target = []
         }

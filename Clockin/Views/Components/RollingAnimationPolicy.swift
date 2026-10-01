@@ -16,7 +16,7 @@ final class RollingAnimationPolicy: ObservableObject {
         for name in [Notification.Name.NSProcessInfoPowerStateDidChange,
                      ProcessInfo.thermalStateDidChangeNotification] {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) {
-                [weak self] _ in
+                @Sendable [weak self] _ in
                 Task { @MainActor [weak self] in self?.refresh() }
             })
         }

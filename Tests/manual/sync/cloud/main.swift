@@ -54,4 +54,11 @@ for (code, expected) in [(CKError.Code.serverRecordChanged, SyncSendFailure.serv
                          (.permissionFailure, .other), (.invalidArguments, .other)] {
     check(ClockinCloudAdapter.failure(code) == expected, "CKError maps to offline send policy: \(code.rawValue)")
 }
+let invalidArchives = [Data([0, 1, 2]), try NSKeyedArchiver.archivedData(withRootObject: "wrong root", requiringSecureCoding: true)]
+for fields in invalidArchives {
+    do {
+        _ = try ClockinCloudRecord.encode(records[0], systemFields: fields)
+        check(false, "corrupt system fields should fail")
+    } catch { check(true, "corrupt system fields return an error instead of an unarchiver exception") }
+}
 print("All \(checks) CloudKit codec checks passed without network or entitlements.")

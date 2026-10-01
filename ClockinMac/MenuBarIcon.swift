@@ -14,8 +14,8 @@ enum MenuBarIcon {
 
     /// A template image whose height is `pointSize` (default size 20 × 18 pt).
     @MainActor static func image(_ state: State, pointSize: CGFloat = 18) -> NSImage {
-        precondition(pointSize.isFinite && pointSize > 0)
-        let image = NSImage(size: NSSize(width: pointSize * 20 / 18, height: pointSize), flipped: false) { rect in
+        let pointSize = pointSize.isFinite && pointSize > 0 ? min(pointSize, 256) : 18
+        let image = NSImage(size: NSSize(width: pointSize * 20 / 18, height: pointSize), flipped: false) { @Sendable rect in
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
             context.saveGState()
             defer { context.restoreGState() }

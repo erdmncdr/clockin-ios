@@ -255,18 +255,17 @@ func runChecks() -> Int {
         failures += check(false, "temporary file checks: \(error)")
     }
     // Calisan seansin widget girdileri: ilk dakikalar sik, toplam bir saat.
-    let start = Date(timeIntervalSinceReferenceDate: 800_000_000)
+    let start = today
     let dates = ClockinSnapshot.runningTimelineDates(from: start)
     let offsets = dates.map { $0.timeIntervalSince(start) }
     failures += check(offsets.first == 0, "the first entry is now, so a resume shows its amount at once")
-    failures += check(offsets.prefix(8) == ArraySlice(stride(from: 0.0, to: 120, by: 15)),
-                      "the first two minutes update every fifteen seconds")
-    failures += check(offsets.contains(120) && offsets.contains(570) && !offsets.contains(585),
-                      "until ten minutes, every thirty seconds")
-    failures += check(offsets.last == 3540 && offsets.allSatisfy { $0 < 3600 },
-                      "then every minute, ending inside the hour")
-    failures += check(zip(offsets, offsets.dropFirst()).allSatisfy { $0 < $1 } && offsets.count == 74,
-                      "entries are strictly increasing and 74 in total")
+    failures += check(offsets.prefix(3) == [0, 30, 60], "money updates in the first thirty seconds")
+    failures += check(offsets.last == 3600, "money entries cover the complete hour")
+    failures += check(zip(offsets, offsets.dropFirst()).allSatisfy { $0 < $1 && $1 - $0 <= 120 },
+                      "money never depends on a single frozen entry; maximum scheduled gap is two minutes")
+    failures += check(offsets.count == 33, "33 entries replace 74 archived views")
+    let amounts = dates.map { snapshot.todayEarnings(at: $0) }
+    failures += check(zip(amounts, amounts.dropFirst()).allSatisfy { $0 < $1 }, "money increases at every scheduled entry throughout the hour")
     return failures
 }
 

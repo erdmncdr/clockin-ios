@@ -44,7 +44,7 @@ struct NudgeInput: Sendable {
 struct NudgeHabit: Equatable {
     let expectedWeekdays: Set<Int>
     let typicalStartHour: Double
-    var anchorMinutes: Int { min(14 * 60, max(9 * 60, Int(typicalStartHour * 60) + 90)) }
+    var anchorMinutes: Int { min(14 * 60, max(9 * 60, Int(clampingFinite: min(24, max(0, typicalStartHour)) * 60) + 90)) }
 }
 
 enum NudgePlanner {
@@ -56,7 +56,7 @@ enum NudgePlanner {
     static func habits(_ input: NudgeInput) -> NudgeHabit {
         let calendar = input.calendar
         let today = calendar.startOfDay(for: input.now)
-        let cutoff = calendar.date(byAdding: .day, value: -28, to: today)!
+        let cutoff = calendar.date(byAdding: .day, value: -28, to: today) ?? today
         let days = workedDays(input).filter { $0 >= cutoff && $0 < today }
         guard days.count >= 5 else { return NudgeHabit(expectedWeekdays: Set(2...6), typicalStartHour: 10) }
         var counts: [Int: Int] = [:]
@@ -77,7 +77,7 @@ enum NudgePlanner {
     }
 
     static func plan(_ input: NudgeInput) -> [PlannedNudge] {
-        guard input.enabled else { return [] }
+        guard input.enabled, SessionDuration.isValidDate(input.now) else { return [] }
         let calendar = input.calendar
         let today = calendar.startOfDay(for: input.now)
         let days = workedDays(input)
@@ -105,13 +105,13 @@ enum NudgePlanner {
         if let last = days.filter({ $0 <= today }).max(),
            calendar.dateComponents([.day], from: last, to: today).day ?? 0 >= 3 {
             for offset in [3, 7] {
-                let day = calendar.date(byAdding: .day, value: offset, to: last)!
+                guard let day = calendar.date(byAdding: .day, value: offset, to: last) else { continue }
                 quietDays.insert(day)
                 if !days.contains(day) { add(.goneQuiet, time(on: day, minutes: habit.anchorMinutes, calendar: calendar)) }
             }
         }
         for offset in 0...6 {
-            let day = calendar.date(byAdding: .day, value: offset, to: today)!
+            guard let day = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
             if habit.expectedWeekdays.contains(calendar.component(.weekday, from: day)),
                !days.contains(day), !quietDays.contains(day) {
                 add(.noWorkToday, time(on: day, minutes: habit.anchorMinutes, calendar: calendar))
@@ -154,7 +154,7 @@ enum NudgePlanner {
     }
 
     static func currentMood(_ input: NudgeInput) -> NudgeMood? {
-        guard input.enabled, input.running?.isPaused != false else { return nil }
+        guard input.enabled, SessionDuration.isValidDate(input.now), input.running?.isPaused != false else { return nil }
         let calendar = input.calendar
         let today = calendar.startOfDay(for: input.now)
         let days = workedDays(input)
@@ -169,8 +169,8 @@ enum NudgePlanner {
                 let end = lastEndToday(input), calendar.component(.hour, from: end) < 19,
                 input.now >= end.addingTimeInterval(3600) { kind = .leftEarly }
         else if !days.contains(today) {
-            let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-            let before = calendar.date(byAdding: .day, value: -2, to: today)!
+            let yesterday = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+            let before = calendar.date(byAdding: .day, value: -2, to: today) ?? today
             broken = !days.contains(yesterday) && WorkedDayStreak.length(endingOn: before, days: days, calendar: calendar) >= 3
             if broken { kind = .streakAtRisk }
             else if let last = days.max(), calendar.dateComponents([.day], from: last, to: today).day ?? 0 >= 3 { kind = .goneQuiet }
@@ -186,18 +186,19 @@ enum NudgePlanner {
     }
 
     static func workedDays(_ input: NudgeInput) -> Set<Date> {
-        var days = Set(input.dailyDurations.keys.filter { $0 <= input.now }.map { input.calendar.startOfDay(for: $0) })
+        var days = Set(input.dailyDurations.keys.filter { SessionDuration.isValidDate($0) && $0 <= input.now }.map { input.calendar.startOfDay(for: $0) })
         if let running = input.running, running.start <= input.now { days.insert(input.calendar.startOfDay(for: running.start)) }
         return days
     }
 
     static func streakEndingYesterday(_ input: NudgeInput) -> Int {
-        let yesterday = input.calendar.date(byAdding: .day, value: -1, to: input.calendar.startOfDay(for: input.now))!
+        guard let yesterday = input.calendar.date(byAdding: .day, value: -1, to: input.calendar.startOfDay(for: input.now)) else { return 0 }
         return WorkedDayStreak.length(endingOn: yesterday, days: workedDays(input), calendar: input.calendar)
     }
 
     static func time(on day: Date, minutes: Int, calendar: Calendar) -> Date {
-        calendar.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: day)!
+        let bounded = min(1439, max(0, minutes))
+        return calendar.date(bySettingHour: bounded / 60, minute: bounded % 60, second: 0, of: day) ?? day
     }
 
     private static func remainingTime(_ input: NudgeInput) -> TimeInterval {
@@ -218,7 +219,7 @@ enum NudgePlanner {
     static func make(_ kind: NudgeKind, date: Date, input: NudgeInput, sequence: Int = 0) -> PlannedNudge {
         let day = input.calendar.startOfDay(for: date)
         let components = input.calendar.dateComponents([.year, .month, .day], from: day)
-        let stamp = String(format: "%04d%02d%02d", components.year!, components.month!, components.day!)
+        let stamp = String(format: "%04d%02d%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
         let suffix = sequence == 0 ? "" : ".\(sequence)"
         let copy = NudgeCopy.text(kind: kind, tone: input.tone, day: day, calendar: input.calendar, remaining: remainingTime(input))
         return PlannedNudge(kind: kind, fireDate: date, day: day, identifier: "\(prefix)\(kind.rawValue).\(stamp)\(suffix)",

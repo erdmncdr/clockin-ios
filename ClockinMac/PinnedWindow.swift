@@ -17,7 +17,7 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
             Task { @MainActor in self?.refresh(store: store) }
         }
         preferences = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
+            .sink { @Sendable [weak self] _ in
                 Task { @MainActor in self?.refresh(store: store) }
             }
         refresh(store: store)

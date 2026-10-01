@@ -25,6 +25,8 @@ struct InsightsConversion {
 }
 
 enum InsightsPeriods {
+    // Bos takvim hucreleri arsivin boyundan bagimsiz sinirli kalir.
+    static let maximumBuckets = 5200
     static func weekStart(_ date: Date, calendar: Calendar) -> Date {
         let day = calendar.startOfDay(for: date)
         let offset = (calendar.component(.weekday, from: day) - calendar.firstWeekday + 7) % 7
@@ -36,7 +38,7 @@ enum InsightsPeriods {
         let last = weekStart(today, calendar: calendar)
         let first = range == 0
             ? weekStart(min(daily.keys.min() ?? today, today), calendar: calendar)
-            : calendar.date(byAdding: .weekOfYear, value: -(max(1, range) - 1), to: last) ?? last
+            : calendar.date(byAdding: .weekOfYear, value: -(min(maximumBuckets, max(1, range)) - 1), to: last) ?? last
         return starts(from: first, through: last, component: .weekOfYear, calendar: calendar)
     }
 
@@ -50,23 +52,25 @@ enum InsightsPeriods {
         }
         let today = calendar.startOfDay(for: now)
         let keys = Set(daily.keys).union(earnings.keys)
-        let first = start(min(keys.min() ?? today, today))
+        let first = start(min(keys.filter(SessionDuration.isValidDate).min() ?? today, today))
         var dates: [Date] = []
-        var cursor = first
-        while cursor <= today {
+        var cursor = start(today)
+        // Ayin son parcasi yedi gunden kisa olabilir; siniri sondan kur.
+        while cursor >= first && dates.count < maximumBuckets {
             dates.append(cursor)
-            let next = grouping == .week ? MonthWeek.interval(containing: cursor, calendar: calendar).end
-                : calendar.date(byAdding: component, value: 1, to: cursor)!
-            guard next > cursor else { break }
-            cursor = next
+            let previous = grouping == .week ? start(cursor.addingTimeInterval(-1))
+                : (calendar.date(byAdding: component, value: -1, to: cursor) ?? cursor)
+            guard previous < cursor else { break }
+            cursor = previous
         }
+        dates.reverse()
         var totals: [Date: InsightsPeriod] = [:]
         for date in dates {
             totals[date] = InsightsPeriod(start: date,
                 end: grouping == .week ? MonthWeek.interval(containing: date, calendar: calendar).end
                     : calendar.date(byAdding: component, value: 1, to: date) ?? date)
         }
-        for day in keys {
+        for day in keys where SessionDuration.isValidDate(day) {
             let key = start(day)
             guard totals[key] != nil else { continue }
             totals[key]?.duration += daily[day, default: 0]
@@ -87,8 +91,9 @@ enum InsightsPeriods {
     private static func starts(from first: Date, through last: Date,
                                component: Calendar.Component, calendar: Calendar) -> [Date] {
         var result: [Date] = []
-        var cursor = first
-        while cursor <= last {
+        let floor = calendar.date(byAdding: component, value: -(maximumBuckets - 1), to: last) ?? last
+        var cursor = max(first, floor)
+        while cursor <= last && result.count < maximumBuckets {
             result.append(cursor)
             guard let next = calendar.date(byAdding: component, value: 1, to: cursor), next > cursor else { break }
             cursor = next

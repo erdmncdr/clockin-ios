@@ -29,9 +29,9 @@ enum RollingNumberFont {
     ]
 
     static func resolve(_ font: Font, design: Font.Design, sizeCategory: ContentSizeCategory) -> UIFont {
-        guard let recipe = recipes.first(where: { $0.font == font }) else {
-            preconditionFailure("Add an explicit RollingNumberFont recipe for this font")
-        }
+        // Yeni bir SwiftUI fontu geldigi icin uygulama kapanmamali.
+        let recipe = recipes.first(where: { $0.font == font })
+            ?? Recipe(font: .body, style: .body, size: 17, weight: .regular)
         let uiDesign: UIFontDescriptor.SystemDesign
         switch design {
         case .rounded: uiDesign = .rounded
@@ -107,9 +107,9 @@ enum RollingNumberFont {
     ]
 
     static func resolve(_ font: Font, design: Font.Design, sizeCategory: ContentSizeCategory) -> NSFont {
-        guard let recipe = recipes.first(where: { $0.font == font }) else {
-            preconditionFailure("Add an explicit RollingNumberFont recipe for this font")
-        }
+        // Yeni bir SwiftUI fontu geldigi icin uygulama kapanmamali.
+        let recipe = recipes.first(where: { $0.font == font })
+            ?? Recipe(font: .body, size: 17, weight: .regular)
         return resolve(size: recipe.size, weight: recipe.weight, design: design)
     }
 

@@ -108,7 +108,7 @@ private struct MacDeskModeContent: View {
                     SessionSummaryView(session: session)
                         .frame(minWidth: 440, minHeight: 360)
                 }
-                .timerPersistenceAlert()
+                .timerPersistenceAlert(store: SharedStore.clock)
                 .onExitCommand { DeskModeWindowController.shared.close() }
         }
         .environment(\.palette, palette)

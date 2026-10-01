@@ -4,6 +4,27 @@ import UIKit
 
 final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
     private var cloudAccountObserver: NSObjectProtocol?
+    private var checkpointTask: UIBackgroundTaskIdentifier = .invalid
+    private var checkpointGeneration = UUID()
+
+    func flushSyncForBackground() {
+        guard checkpointTask == .invalid else { return }
+        let generation = UUID()
+        checkpointGeneration = generation
+        checkpointTask = UIApplication.shared.beginBackgroundTask(withName: "Sync checkpoint") { @Sendable [weak self] in
+            Task { @MainActor in self?.endCheckpointTask(generation: generation) }
+        }
+        Task { @MainActor in
+            _ = await SyncCoordinator.shared.flushPersistence()
+            endCheckpointTask(generation: generation)
+        }
+    }
+
+    private func endCheckpointTask(generation: UUID) {
+        guard checkpointTask != .invalid, checkpointGeneration == generation else { return }
+        UIApplication.shared.endBackgroundTask(checkpointTask)
+        checkpointTask = .invalid
+    }
 
     func application(_ application: UIApplication,
                      willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -25,7 +46,7 @@ final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
         #endif
         cloudAccountObserver = NotificationCenter.default.addObserver(
             forName: .CKAccountChanged, object: nil, queue: nil
-        ) { _ in
+        ) { @Sendable _ in
             Task { @MainActor in SyncCoordinator.shared.accountMayHaveChanged() }
         }
         return true

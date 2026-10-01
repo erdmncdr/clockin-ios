@@ -25,7 +25,7 @@ final class KeyboardShortcutController: ObservableObject {
                                           MemoryLayout<EventHotKeyID>.size, nil, &key)
             guard status == noErr, key.signature == 0x434C4B4E else { return OSStatus(eventNotHandledErr) }
             let id = key.id
-            MainActor.assumeIsolated { KeyboardShortcutController.shared.perform(id) }
+            Task { @MainActor in KeyboardShortcutController.shared.perform(id) }
             return noErr
         }, 1, &event, nil, &handler)
         guard result == noErr else { registrationFailed = true; return }

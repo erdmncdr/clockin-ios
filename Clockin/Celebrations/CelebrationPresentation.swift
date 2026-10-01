@@ -129,7 +129,7 @@ final class CelebrationWindowView: NSView {
         guard let window else { return }
         for name in [NSWindow.didChangeOcclusionStateNotification, NSWindow.didBecomeKeyNotification,
                      NSWindow.didEndSheetNotification] {
-            observations.append(NotificationCenter.default.publisher(for: name, object: window).sink { [weak self] _ in
+            observations.append(NotificationCenter.default.publisher(for: name, object: window).sink { @Sendable [weak self] _ in
                 Task { @MainActor [weak self] in
                     guard self?.window != nil else { return }
                     CelebrationCenter.shared.screenAttached()

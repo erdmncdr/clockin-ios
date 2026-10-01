@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/WardrobeBackup.swift
+ Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift Shared/Core/CSVImporter.swift
+ Shared/Core/SessionOverlap.swift Shared/Theme/ClockinThemeChoice.swift Shared/Sync/ClockinSnapshot.swift
+ Shared/Sync/Cloud/CloudSyncCapability.swift
+ Clockin/Views/Earnings/EarningsPeriod.swift Clockin/Views/Earnings/EarningsSnapshot.swift
+ Clockin/Views/Earnings/MonthPerformance.swift Clockin/Views/Goals/GoalProgress.swift
+ Clockin/Views/Insights/InsightsSnapshot.swift Clockin/Views/Insights/InsightsBadges.swift
+ Clockin/Views/Insights/MonthWeek.swift Clockin/Views/Insights/InsightsPeriods.swift
+ Clockin/Audio/ChimeSchedule.swift
+ ClockinMac/MenuBarStatus.swift ClockinMac/MacDurationText.swift
+ Clockin/Celebrations/LevelPrestige.swift)
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+ -module-cache-path /tmp/clockin24-crash-cache "${sources[@]}" Tests/manual/crashaudit/main.swift \
+ -o /tmp/clockin24-crash-tests
+/tmp/clockin24-crash-tests

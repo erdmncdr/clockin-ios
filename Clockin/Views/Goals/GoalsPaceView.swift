@@ -234,7 +234,7 @@ struct GoalsPaceView: View {
     }
 
     private func outlookChart(_ plan: MonthlyWorkPlan) -> some View {
-        let end = Calendar.current.date(byAdding: .day, value: -1, to: plan.month.end)!
+        let end = Calendar.current.date(byAdding: .day, value: -1, to: plan.month.end) ?? plan.month.start
         return Chart {
             ForEach(plan.days) { day in
                 LineMark(x: .value("Day", day.date), y: .value("Hours", day.cumulative / 3600),

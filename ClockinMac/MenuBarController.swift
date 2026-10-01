@@ -54,10 +54,10 @@ final class MenuBarController: NSObject {
         host.changes
             // `objectWillChange` fires before the new value is stored.
             .receive(on: RunLoop.main)
-            .sink { [weak self] in self?.refreshLabel() }
+            .sink { @Sendable [weak self] in Task { @MainActor in self?.refreshLabel() } }
             .store(in: &cancellables)
         let clock = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
+            Task { @MainActor in
                 // Idle, the label never changes; only a session counts.
                 guard let self, self.host?.status().state != .idle || self.lastLabel?.icon != .idle else { return }
                 self.refreshLabel()
@@ -68,10 +68,10 @@ final class MenuBarController: NSObject {
         self.clock = clock
 
         NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.activeSpaceDidChangeNotification)
-            .sink { [weak self] _ in self?.close(animated: false) }
+            .sink { @Sendable [weak self] _ in Task { @MainActor in self?.close(animated: false) } }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
-            .sink { [weak self] _ in self?.close(animated: false) }
+            .sink { @Sendable [weak self] _ in Task { @MainActor in self?.close(animated: false) } }
             .store(in: &cancellables)
     }
 
@@ -174,7 +174,7 @@ final class MenuBarController: NSObject {
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
             panel.animator().alphaValue = 1
             panel.animator().setFrame(frame, display: true)
-        }, completionHandler: { MainActor.assumeIsolated { panel.invalidateShadow() } })
+        }, completionHandler: { @Sendable in Task { @MainActor in panel.invalidateShadow() } })
         statusItem?.button?.highlight(true)
     }
 
@@ -194,7 +194,7 @@ final class MenuBarController: NSObject {
             context.duration = 0.12
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
-        }, completionHandler: { MainActor.assumeIsolated { finish() } })
+        }, completionHandler: { @Sendable in Task { @MainActor in finish() } })
     }
 
     private func makePanel() -> MenuBarPanel {
@@ -270,16 +270,17 @@ final class MenuBarController: NSObject {
         guard monitors.isEmpty else { return }
         let mouseDown: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
         // Clicks in other apps, the desktop or another menu-bar item.
-        if let global = NSEvent.addGlobalMonitorForEvents(matching: mouseDown, handler: { [weak self] _ in
-            MainActor.assumeIsolated { self?.close() }
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: mouseDown, handler: { @Sendable [weak self] _ in
+            Task { @MainActor in self?.close() }
         }) {
             monitors.append(global)
         }
         // Clicks in Clockin's own windows. The item's button toggles by itself,
         // and menus the panel opens sit at the pop-up level.
-        if let local = NSEvent.addLocalMonitorForEvents(matching: mouseDown, handler: { [weak self] event in
-            MainActor.assumeIsolated {
-                guard let self, let window = event.window else { return }
+        if let local = NSEvent.addLocalMonitorForEvents(matching: mouseDown, handler: { @Sendable [weak self] event in
+            let window = event.window
+            Task { @MainActor in
+                guard let self, let window else { return }
                 if window === self.panel || window === self.statusItem?.button?.window { return }
                 if window.level.rawValue >= NSWindow.Level.popUpMenu.rawValue { return }
                 self.close()
@@ -316,7 +317,7 @@ final class MenuBarHostingView: NSHostingView<AnyView> {
         guard !pending else { return }
         pending = true
         DispatchQueue.main.async { [weak self] in
-            MainActor.assumeIsolated {
+            Task { @MainActor in
                 self?.pending = false
                 self?.onSizeChange?()
             }

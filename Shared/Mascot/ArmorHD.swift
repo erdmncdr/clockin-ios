@@ -262,7 +262,7 @@ enum ArmorHD {
   static func geometry(source: CGImage, frame: String) -> ArmorHDGeometry? {
     geometryStore.get(frame) {
       guard let anchors = ArmorHDResources.shared?.anchors[frame] else { return nil }
-      return ArmorHDPixels(source, frame: frame, anchors: anchors).geometry()
+      return ArmorHDPixels(source, frame: frame, anchors: anchors)?.geometry()
     }
   }
   static func render(frame: String, style: ArmorHDStyle = .gold, size: Int) -> CGImage? {
@@ -326,9 +326,10 @@ enum ArmorHD {
     return image
   }
   static func context(_ size: Int) -> CGContext? {
-    CGContext(
+    guard (1...2048).contains(size), let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+    return CGContext(
       data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4,
-      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+      space: space,
       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
     )
   }

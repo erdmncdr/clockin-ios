@@ -8,7 +8,7 @@ struct GoalProgress: Equatable {
 
     /// `hours` sifir, negatif ya da gecersizse hedef yoktur.
     init?(worked: TimeInterval, hours: Double) {
-        guard hours.isFinite, hours > 0 else { return nil }
+        guard hours.isFinite, hours > 0, (hours * 3600).isFinite else { return nil }
         self.worked = max(0, worked.isFinite ? worked : 0)
         self.target = hours * 3600
     }
@@ -55,7 +55,7 @@ struct MonthlyGoalPace {
     init(recentCompleted: TimeInterval, now: Date, calendar: Calendar) {
         dailyAverage = max(0, recentCompleted) / 7
         let today = calendar.startOfDay(for: now)
-        let end = calendar.dateInterval(of: .month, for: now)!.end
+        let end = calendar.dateInterval(of: .month, for: now)?.end ?? today
         daysLeft = calendar.dateComponents([.day], from: today, to: end).day ?? 0
     }
 
@@ -81,7 +81,7 @@ enum GoalPrompt {
                           calendar: Calendar = .current) -> Bool {
         guard !everConfigured, !hasGoal(daily: daily, monthly: monthly), completedSessions > 0 else { return false }
         guard let dismissedAt else { return true }
-        let retry = calendar.date(byAdding: .day, value: 7, to: dismissedAt)!
+        let retry = calendar.date(byAdding: .day, value: 7, to: dismissedAt) ?? dismissedAt
         return now >= retry
     }
 }

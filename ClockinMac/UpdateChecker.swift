@@ -23,6 +23,7 @@ final class UpdateChecker: ObservableObject {
     private var started = false
     private var checkRequested = false
     private var checkAvailability: AnyCancellable?
+    private var observations = Set<AnyCancellable>()
 
     var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
@@ -42,16 +43,18 @@ final class UpdateChecker: ObservableObject {
         )
         reminders.onChange = { [weak self] version in self?.pendingVersion = version }
         checkAvailability = controller.updater.publisher(for: \.canCheckForUpdates)
-            .sink { [weak self] available in
+            .sink { @Sendable [weak self] available in
                 // Sparkle publishes on main. Defer until its state transition
                 // (and any gentle-reminder callback) has finished.
                 guard available else { return }
                 DispatchQueue.main.async { self?.performRequestedCheck() }
             }
         controller.updater.publisher(for: \.automaticallyChecksForUpdates)
-            .assign(to: &$automaticallyChecksForUpdates)
+            .sink { @Sendable [weak self] value in Task { @MainActor in self?.automaticallyChecksForUpdates = value } }
+            .store(in: &observations)
         controller.updater.publisher(for: \.lastUpdateCheckDate)
-            .assign(to: &$lastChecked)
+            .sink { @Sendable [weak self] value in Task { @MainActor in self?.lastChecked = value } }
+            .store(in: &observations)
     }
 
     func start() {
@@ -97,26 +100,27 @@ final class UpdateChecker: ObservableObject {
 /// front; otherwise the update is offered from the menu bar and Settings until
 /// the user opens it.
 @MainActor
-private final class GentleUpdateReminders: NSObject, @preconcurrency SPUStandardUserDriverDelegate {
+private final class GentleUpdateReminders: NSObject, SPUStandardUserDriverDelegate {
     // Sparkle's user driver invokes these callbacks on the main thread.
     var onChange: (@MainActor (String?) -> Void)?
 
-    var supportsGentleScheduledUpdateReminders: Bool { true }
+    nonisolated var supportsGentleScheduledUpdateReminders: Bool { true }
 
-    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+    nonisolated func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
         immediateFocus
     }
 
-    func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
+    nonisolated func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
         guard !handleShowingUpdate, !state.userInitiated else { return }
-        onChange?(update.displayVersionString)
+        let version = update.displayVersionString
+        Task { @MainActor [weak self] in self?.onChange?(version) }
     }
 
-    func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) {
-        onChange?(nil)
+    nonisolated func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) {
+        Task { @MainActor [weak self] in self?.onChange?(nil) }
     }
 
-    func standardUserDriverWillFinishUpdateSession() {
-        onChange?(nil)
+    nonisolated func standardUserDriverWillFinishUpdateSession() {
+        Task { @MainActor [weak self] in self?.onChange?(nil) }
     }
 }

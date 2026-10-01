@@ -10,6 +10,8 @@ import Foundation
     var sends = 0
     var stopped = false
     var afterSend: TestSignal?
+    var stopStarted: TestSignal?
+    var stopRelease: TestSignal?
     var failNextFetch = false
     var nextFetchRecords: [SyncRecord] = []
     var nextSnapshot: SyncSnapshot?
@@ -54,7 +56,7 @@ import Foundation
         afterSend?.signal()
     }
     func accountMayHaveChanged() async { await launch() }
-    func stop() async { stopped = true; status = .off }
+    func stop() async { stopped = true; status = .off; stopStarted?.signal(); await stopRelease?.wait() }
     func deliver(_ snapshot: SyncSnapshot, date: Date) throws {
         try editSender.capture(previous: nil, current: bridge.snapshot, at: date)
         try editSender.capture(previous: bridge.snapshot, current: snapshot, at: date.addingTimeInterval(1))
@@ -524,6 +526,36 @@ import Foundation
         check(importReview.isCurrent(for: reordered.store.data.sessions),
               "theme-only sync preserves the existing import review")
         await reordered.cleanup()
+        let lifecycle = try Fixture(); try await lifecycle.begin()
+        let sendsBeforeFlush = lifecycle.transport!.sends
+        lifecycle.defaults.set("background-local-edit", forKey: "Clockin.Theme")
+        await Task.detached {
+            NotificationCenter.default.post(name: UserDefaults.didChangeNotification, object: nil)
+        }.value
+        await lifecycle.clock.registered(1)
+        check(await lifecycle.coordinator.flushPersistence(), "background flush captures a preference debounce without network work")
+        let onDisk = try await SyncSidecarStore(archiveURL: lifecycle.store.archiveURL).load()
+        check(onDisk?.records["Preference:Clockin.Theme"] == lifecycle.transport!.bridge.state.records["Preference:Clockin.Theme"],
+              "background notification hops safely to main and its preference is durable")
+        check(lifecycle.transport!.sends == sendsBeforeFlush, "persistence flush does not start a transport pass")
+        let lifecycleTransport = lifecycle.transport!
+        let stopping = TestSignal(), releaseStop = TestSignal()
+        lifecycleTransport.stopStarted = stopping; lifecycleTransport.stopRelease = releaseStop
+        await lifecycle.coordinator.prepareForTermination()
+        await stopping.wait()
+        check(lifecycleTransport.stopped, "termination stops the transport after flushing")
+        check(try await SyncSidecarStore(archiveURL: lifecycle.store.archiveURL).load() != nil,
+              "termination returns with durable state even while network shutdown remains suspended")
+        let beforeLateDelivery = lifecycle.store.data
+        var late = lifecycleTransport.bridge.snapshot
+        late.data.hourlyRate += 10
+        var rejectedLateDelivery = false
+        do { try lifecycleTransport.deliver(late, date: lifecycle.clock.now + 100) }
+        catch { rejectedLateDelivery = true }
+        check(rejectedLateDelivery, "a stopped generation rejects a late remote apply")
+        check(lifecycle.store.data == beforeLateDelivery, "late shutdown delivery cannot alter the primary archive")
+        releaseStop.signal()
+        await lifecycle.cleanup()
         print("All \(count) sync app checks passed.")
     }
 }

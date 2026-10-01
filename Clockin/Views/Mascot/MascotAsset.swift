@@ -439,7 +439,7 @@ final class MascotLayerView: MascotLayerViewBase {
     func update(image: CGImage?, frameID: String?, outfit: WardrobeState, feet: Double, moving: Bool, swaying: Bool, angry: Bool, tired: Bool, hop: HopRequest, pop: Int, wiggle: Int, squash: Int, dark: Bool) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        let imageChanged = (robot.contents as! CGImage?) !== image
+        let imageChanged = (robot.contents as AnyObject?) !== (image as AnyObject?)
         if imageChanged { robot.contents = image; skinEffects.mask(image) }
         // HD skin frames are smooth renders; sampling them nearest would jag
         // their edges when the view is smaller or larger than the render.

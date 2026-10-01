@@ -43,12 +43,12 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
         let notifications = NotificationCenter.default
         for name in [AVAudioSession.interruptionNotification, AVAudioSession.mediaServicesWereResetNotification,
                      UIApplication.didEnterBackgroundNotification] {
-            playbackObservers.append(notifications.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
+            playbackObservers.append(notifications.addObserver(forName: name, object: nil, queue: nil) { @Sendable [weak self] _ in
                 Task { @MainActor in self?.stopPlayback() }
             })
         }
         playbackObservers.append(notifications.addObserver(forName: AVAudioSession.routeChangeNotification,
-            object: nil, queue: nil) { [weak self] notification in
+            object: nil, queue: nil) { @Sendable [weak self] notification in
             let reason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
             if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
                 Task { @MainActor in self?.stopPlayback() }
@@ -139,7 +139,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
             let dates = ChimeSchedule.fireDates(now: now, worked: running?.elapsed(at: now) ?? 0,
                 isPaused: running?.isPaused ?? true, enabled: working, intervalMinutes: interval,
                 count: max(0, 64 - otherCount - reserved))
-            let existing = Dictionary(uniqueKeysWithValues: pending.compactMap { request -> (Int, Date)? in
+            let existing = Dictionary(pending.compactMap { request -> (Int, Date)? in
                 guard let slot = identifiers.firstIndex(of: request.identifier) else { return nil }
                 let date = (request.content.userInfo["fireDate"] as? Double).map(Date.init(timeIntervalSinceReferenceDate:))
                 // Sesi degisen bildirim korunamaz: eslesme yalnizca tarihe bakiyordu ve
@@ -147,7 +147,7 @@ final class FocusChimeController: NSObject, ObservableObject, UNUserNotification
                 // tarih hicbir istenen tarihle eslesmez, boylece slot yeniden kurulur.
                 let stale = request.content.userInfo["sound"] as? String != sound.fileName
                 return (slot, stale ? .distantPast : (date ?? .distantPast))
-            })
+            }, uniquingKeysWith: { _, last in last })
             // Dakikalik tamamlama ayni bildirimleri silip eklemez.
             let changes = ChimeSchedule.reconcile(desired: dates, existing: existing)
             if !changes.removed.isEmpty {

@@ -348,7 +348,7 @@ enum MascotMotion {
     /// eased curves closely, and the window server then plays them at the
     /// display's refresh rate without waking the app.
     static func samples<Value>(count: Int, _ value: (Double) -> Value) -> [Value] {
-        precondition(count > 1)
+        let count = min(4096, max(2, count))
         return (0..<count).map { value(Double($0) / Double(count - 1)) }
     }
 

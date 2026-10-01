@@ -6,7 +6,7 @@ private let syncLog = Logger(subsystem: "com.erdmncdr.clockin", category: "sync"
 
 @available(iOS 17.0, macOS 14.0, *)
 enum ClockinCloudRecord {
-    static let containerID = "iCloud.com.erdmncdr.clockin"
+    static let containerID = CloudSyncCapability.containerID
     static let zoneID = CKRecordZone.ID(zoneName: "Clockin", ownerName: CKCurrentUserDefaultName)
     static let maximumPayloadBytes = SyncBounds.envelopeBytes
 
@@ -42,8 +42,9 @@ enum ClockinCloudRecord {
         if let systemFields {
             let decoder = try NSKeyedUnarchiver(forReadingFrom: systemFields)
             decoder.requiresSecureCoding = true
+            decoder.decodingFailurePolicy = .setErrorAndReturn
             defer { decoder.finishDecoding() }
-            guard let restored = CKRecord(coder: decoder), restored.recordID == id(value),
+            guard let restored = CKRecord(coder: decoder), decoder.error == nil, restored.recordID == id(value),
                   restored.recordType == value.kind.rawValue else { throw SyncFailure.invalid("Invalid system fields") }
             record = restored
         } else { record = CKRecord(recordType: value.kind.rawValue, recordID: id(value)) }
@@ -66,7 +67,7 @@ enum ClockinCloudRecord {
 @MainActor
 final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
     private let bridge: SyncBridge
-    private let container: CKContainer
+    private var container: CKContainer?
     private let clock: any SyncClock
     private let retry: SyncWakeup
     private var engine: CKSyncEngine?
@@ -90,7 +91,6 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
 
     init(bridge: SyncBridge, clock: any SyncClock = SystemSyncClock()) {
         self.bridge = bridge; self.clock = clock; retry = SyncWakeup(clock: clock)
-        container = CKContainer(identifier: ClockinCloudRecord.containerID)
     }
 
     // Retryable and idempotent. Repeated callers share the launch already in flight.
@@ -112,8 +112,12 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
 
     private func performLaunch() async {
         let generation = generation
+        guard CloudSyncCapability.isEntitled else { report(.off); return }
         status = .starting
         do {
+            // Kurucu yetki eksikliginde Objective-C exception atar; Swift catch yakalayamaz.
+            let container = container ?? CKContainer(identifier: ClockinCloudRecord.containerID)
+            self.container = container
             let accountStatus = try await container.accountStatus()
             guard isCurrent(generation) else { return }
             switch Self.accountState(accountStatus) {
@@ -188,7 +192,9 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
             guard !stopped, !halted, self.engine === engine else { break }
             if retryAfter.map({ $0 > clock.now }) == true { scheduleRetry(); break }
             retryAfter = nil; retry.cancel()
+            bridge.beginPersistenceBatch()
             await synchronizePass(engine)
+            if !(await bridge.endPersistenceBatch()), isCurrent(generation) { report(.paused(.storage)) }
         } while pass.finishPass()
         pass.cancel()
         syncTask = nil
@@ -257,6 +263,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
         await previous?.cancelOperations()
         await launchTask?.value
         await syncTask?.value
+        _ = await bridge.persist()
         status = .off
     }
 
@@ -399,7 +406,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
                 }
             default: break
             }
-            if !(await bridge.persist()) { passFailed = true; report(.paused(.storage)) }
+            bridge.schedulePersist()
             didChange?()
         } catch {
             // Never checkpoint a cursor past an unapplied primary write.
