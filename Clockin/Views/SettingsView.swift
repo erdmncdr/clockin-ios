@@ -296,15 +296,8 @@ struct SettingsView: View {
     #if os(macOS)
     private var macSettings: some View {
         HStack(spacing: 0) {
-            List(MacSettingsCategory.allCases, selection: $category) { item in
-                Label(LocalizedStringKey(item.rawValue), systemImage: item.symbol)
-                    .tag(item)
-            }
-            .listStyle(.sidebar)
-            .tint(Color(nsColor: .controlAccentColor))
-            .scrollContentBackground(.automatic)
-            .frame(width: 190)
-            .accessibilityLabel("Settings categories")
+            MacSettingsSidebar(selection: $category)
+                .frame(width: 190)
             Divider()
             VStack(alignment: .leading, spacing: 0) {
                 Text(LocalizedStringKey((category ?? .general).rawValue))
