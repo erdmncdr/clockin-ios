@@ -524,6 +524,23 @@ import Foundation
         check(importReview.isCurrent(for: reordered.store.data.sessions),
               "theme-only sync preserves the existing import review")
         await reordered.cleanup()
+
+        // CloudKit hesap onbellegini yazarken UserDefaults bildirimi arka plan
+        // is parcaciginda gelir; 0.2 (43)-(51) burada ana aktor varsayip coktu.
+        let background = try Fixture()
+        try await background.begin()
+        let backgroundRegistrations = background.clock.registrations
+        background.defaults.set("Ocean", forKey: "Clockin.Theme")
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            Thread.detachNewThread {
+                NotificationCenter.default.post(name: UserDefaults.didChangeNotification, object: nil)
+                done.resume()
+            }
+        }
+        await background.clock.registered(backgroundRegistrations + 1)
+        check(background.clock.registrations == backgroundRegistrations + 1,
+              "a defaults change posted on a background thread is observed without an isolation trap")
+        await background.cleanup()
         print("All \(count) sync app checks passed.")
     }
 }

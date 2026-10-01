@@ -16,8 +16,10 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
         changes = store.objectWillChange.sink { [weak self] _ in
             Task { @MainActor in self?.refresh(store: store) }
         }
+        // Defaults bildirimi arka plan is parcaciginda gelebilir; `@Sendable`
+        // olmadan Swift 6 kapanisi ana aktor sayar ve giriste coker.
         preferences = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
+            .sink { @Sendable [weak self] _ in
                 Task { @MainActor in self?.refresh(store: store) }
             }
         refresh(store: store)

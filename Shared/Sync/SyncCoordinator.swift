@@ -279,8 +279,10 @@ final class SyncCoordinator: ObservableObject {
         store.didPersist.sink { [weak self] in self?.localDidPersist() }.store(in: &subscriptions)
         wardrobe.didPersist.sink { [weak self] in self?.localDidPersist() }.store(in: &subscriptions)
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
-                // Notifications can arrive on a background thread. Never read defaults/stores there.
+            .sink { @Sendable [weak self] _ in
+                // Notifications can arrive on a background thread (CloudKit posts one while caching
+                // account info). `@Sendable` keeps this closure off the main actor, so Swift 6 does
+                // not trap on entry; never read defaults/stores here.
                 Task { @MainActor [weak self] in self?.preferencesDidChange() }
             }.store(in: &subscriptions)
     }
