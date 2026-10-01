@@ -20,6 +20,7 @@ struct HistoryView: View {
     @AppStorage("Clockin.HistoryGroupByDay") private var groupByDay = true
     @State private var expandedDays: Set<Date> = []
     @State private var selectedSessionID: UUID?
+    @State private var selectionDelivery = MacDeferredValue<UUID?>()
     #endif
 
     var body: some View {
@@ -46,15 +47,26 @@ struct HistoryView: View {
                         hasAnySessions: !store.sessions.isEmpty, showTRY: $showTRY,
                         onPage: { page($0, period: period) })
                     if let performance = history.performance {
+                        #if os(macOS)
+                        MonthPerformanceView(performance: performance,
+                            interval: period.interval, currencyCode: store.currencyCode, showTRY: converting,
+                            onPage: { page($0, period: period) })
+                        #else
                         MonthPerformanceView(performance: performance,
                             interval: period.interval, currencyCode: store.currencyCode, showTRY: converting)
+                        #endif
                     }
                     if converting && history.hasMissingRates {
                         Text("Some rates are unavailable")
                             .font(.caption).foregroundStyle(.orange)
                     }
                 }
+                #if os(macOS)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                #else
                 .listRowBackground(palette.surface)
+                #endif
                 #if os(macOS)
                 Group {
                     if groupByDay {
@@ -77,6 +89,7 @@ struct HistoryView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                 .accessibilityValue(expandedDays.contains(group.day) ? "Expanded" : "Collapsed")
                             }
                         }
@@ -88,6 +101,7 @@ struct HistoryView: View {
                         }
                     }
                 }
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 .animation(nil, value: period.pageID)
                 #else
                 ForEach(days, id: \.day) { group in
@@ -127,7 +141,15 @@ struct HistoryView: View {
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.sessions.map(\.id))
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: showTRY)
+            #if os(macOS)
+            .listStyle(.plain)
+            .contentMargins(.horizontal, 28, for: .scrollContent)
+            .contentMargins(.top, 16, for: .scrollContent)
+            .macReadableWidth(840)
+            .macTabBarClearance()
+            #else
             .insetGroupedList()
+            #endif
             .scrollContentBackground(.hidden)
             .background(palette.background)
             .navigationTitle("History")
@@ -150,11 +172,11 @@ struct HistoryView: View {
             }
         }
         #if os(macOS)
-        .onChange(of: period.pageID) { _, _ in selectedSessionID = nil }
-        .onChange(of: groupByDay) { _, _ in selectedSessionID = nil }
+        .onChange(of: period.pageID) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
+        .onChange(of: groupByDay) { _, _ in selectionDelivery.submit(nil, to: $selectedSessionID) }
         .onChange(of: store.sessions) { _, sessions in
             if let selectedSessionID, !sessions.contains(where: { $0.id == selectedSessionID }) {
-                self.selectedSessionID = nil
+                selectionDelivery.submit(nil, to: $selectedSessionID)
             }
         }
         #endif
@@ -185,7 +207,7 @@ struct HistoryView: View {
                    conflicts: conflicts.contains(session.id),
                    historyAmount: snapshot.sessionAmounts[session.id], historyShowsTRY: converting)
             .tag(session.id)
-            .listRowBackground(palette.surface)
+            .modifier(MacHistoryRowHover(accent: palette.accent))
             .onTapGesture(count: 2) { sheet = .edit(session) }
             .contextMenu {
                 Button("Edit", systemImage: "pencil") { sheet = .edit(session) }
@@ -198,7 +220,12 @@ struct HistoryView: View {
         HStack(spacing: 8) {
             if range != .all {
                 Button { page(-1, period: period) } label: {
-                    Image(systemName: "chevron.left").frame(width: 44, height: 44)
+                    Image(systemName: "chevron.left")
+                        #if os(macOS)
+                        .frame(width: 16, height: 20)
+                        #else
+                        .frame(width: 44, height: 44)
+                        #endif
                 }
                 .accessibilityLabel("Previous period")
             }
@@ -210,13 +237,22 @@ struct HistoryView: View {
                 .accessibilityAddTraits(.isHeader)
             if range != .all {
                 Button { page(1, period: period) } label: {
-                    Image(systemName: "chevron.right").frame(width: 44, height: 44)
+                    Image(systemName: "chevron.right")
+                        #if os(macOS)
+                        .frame(width: 16, height: 20)
+                        #else
+                        .frame(width: 44, height: 44)
+                        #endif
                 }
                 .disabled(!period.canGoForward)
                 .accessibilityLabel("Next period")
             }
         }
+        #if os(macOS)
+        .buttonStyle(.bordered).controlSize(.small)
+        #else
         .buttonStyle(.borderless)
+        #endif
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: period.pageID)
         // The row's first text is the centred title, and List would start the
         // separator under it, halfway across. Start it at the edge like the rest.

@@ -36,7 +36,9 @@ struct GoalsPaceView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .padding(16)
+                    .macPageColumn()
                 }
+                .macTabBarClearance()
                 .scrollDismissesKeyboard(.interactively)
                 .dismissDecimalKeyboard(isEditing: focusedGoal != nil) { focusedGoal = nil }
                 .onChange(of: focusedGoal) { _, field in
@@ -142,6 +144,9 @@ struct GoalsPaceView: View {
                     ForEach(1...7, id: \.self) { count in Text("\(count) days").tag(count) }
                 }
                 .labelsHidden()
+                #if os(macOS)
+                .pickerStyle(.menu).fixedSize()
+                #endif
                 .accessibilityIdentifier("pace.workdays")
             }
             Text("How many days do you usually work each week?")
@@ -260,6 +265,11 @@ struct GoalsPaceView: View {
         .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
         .frame(height: 190)
         .accessibilityLabel("Monthly progress and projected hours")
+        #if os(macOS)
+        .modifier(MacChartReadout(values: plan.days.map { day in
+            (day.date, "\(day.date.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month())) · \(DurationText.compact(day.cumulative))")
+        }))
+        #endif
     }
 
     private func dailyChart(_ plan: MonthlyWorkPlan) -> some View {
@@ -286,6 +296,11 @@ struct GoalsPaceView: View {
             .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) }
             .frame(height: 140)
             .accessibilityLabel("Daily worked hours compared with your saved daily goal")
+            #if os(macOS)
+            .modifier(MacChartReadout(values: plan.days.map { day in
+                (day.date, "\(day.date.formatted(.dateTime.locale(AppLanguage.formatLocale).day().month())) · \(DurationText.compact(day.worked))")
+            }))
+            #endif
             Text("Bars show actual hours. The dashed line is your saved daily goal. Today is still in progress.")
                 .font(.caption).foregroundStyle(.secondary)
         }

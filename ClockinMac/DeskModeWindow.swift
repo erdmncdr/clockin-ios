@@ -26,7 +26,7 @@ final class DeskModeWindowController: NSWindowController, NSWindowDelegate {
             let host = NSHostingView(rootView: MacDeskModeContent()
                 .environmentObject(SharedStore.clock)
                 .environmentObject(SharedStore.exchangeRates))
-            host.sizingOptions = [.minSize]
+            host.sizingOptions = []
             window.contentView = host
             window.center()
             self.window = window
@@ -106,9 +106,16 @@ private struct MacDeskModeContent: View {
                 .environment(\.clockinContentActive, summary == nil)
                 .sheet(item: $summary) { session in
                     SessionSummaryView(session: session)
-                        .frame(minWidth: 440, minHeight: 360)
+                        .macSheetFrame(width: 480, height: 560)
                 }
                 .timerPersistenceAlert(store: SharedStore.clock)
+                .overlay(alignment: .topTrailing) {
+                    Button("Close Desk Mode", systemImage: "xmark") { DeskModeWindowController.shared.close() }
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.bordered)
+                        .help("Close Desk Mode")
+                        .padding(20)
+                }
                 .onExitCommand { DeskModeWindowController.shared.close() }
         }
         .environment(\.palette, palette)

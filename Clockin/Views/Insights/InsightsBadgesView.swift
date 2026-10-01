@@ -39,7 +39,7 @@ struct InsightsBadgesView: View {
                         Spacer(minLength:0)
                         Image(systemName:"chevron.right").font(.caption.weight(.semibold))
                     }.contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityHint("Opens this mission")
+                }.buttonStyle(.plain).macHoverFeedback().accessibilityHint("Opens this mission")
             }
             LazyVGrid(columns:[GridItem(.adaptive(minimum:90),spacing:8)],spacing:8) {
                 ForEach(items) { badge in
@@ -97,7 +97,7 @@ struct InsightsBadgesView: View {
                 .background(item == tier ? item.tint.opacity(0.09) : .clear,in:RoundedRectangle(cornerRadius:10))
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain).accessibilityLabel("\(item.title), tier \(item.rawValue)")
+            .buttonStyle(.plain).macHoverFeedback().accessibilityLabel("\(item.title), tier \(item.rawValue)")
             .accessibilityAddTraits(item == tier ? .isSelected : [])
             .accessibilityIdentifier("badges.tier.\(item.rawValue)")
         }

@@ -41,7 +41,7 @@ struct RateScheduleView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).macHoverFeedback()
                         .listRowBackground(palette.surface)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button("Delete", systemImage: "trash") { pendingDelete = rule }

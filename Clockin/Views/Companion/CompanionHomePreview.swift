@@ -20,6 +20,9 @@ struct CompanionHomePreview: View {
     @State private var purchased = false
     @State private var visible = false
     @State private var sceneVisible = false
+    #if os(macOS)
+    @State private var visibilityDelivery = MacDeferredValue<Bool>()
+    #endif
 
     init(item: WardrobeItem) {
         self.item = item
@@ -58,7 +61,13 @@ struct CompanionHomePreview: View {
                             .onGeometryChange(for: Bool.self) { proxy in
                                 let frame = proxy.frame(in: .named("itemPreview"))
                                 return frame.maxY > 0 && frame.minY < viewportHeight
-                            } action: { sceneVisible = $0 }
+                            } action: {
+                                #if os(macOS)
+                                visibilityDelivery.submit($0, to: $sceneVisible)
+                                #else
+                                sceneVisible = $0
+                                #endif
+                            }
                         if purchased {
                             Label("Purchased", systemImage: "checkmark.circle.fill")
                                 .font(.title3.bold()).foregroundStyle(palette.accent)
@@ -116,7 +125,14 @@ struct CompanionHomePreview: View {
         }
         .tint(palette.accent).fontDesign(palette.fontDesign).preferredColorScheme(palette.colorScheme)
         .onAppear { visible = true }
+        #if os(macOS)
+        .onDisappear {
+            if visible { visible = false }
+            visibilityDelivery.submit(false, to: $sceneVisible)
+        }
+        #else
         .onDisappear { visible = false; sceneVisible = false }
+        #endif
     }
 
     private var sceneOptions: some View {

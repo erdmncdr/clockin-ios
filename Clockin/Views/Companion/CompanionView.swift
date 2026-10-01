@@ -10,6 +10,9 @@ struct CompanionView: View {
     @State private var roomEditor: RoomEditorSession?
     @State private var visible = false
     @State private var headerVisible = false
+    #if os(macOS)
+    @State private var visibilityDelivery = MacDeferredValue<Bool>()
+    #endif
     @Environment(\.dynamicTypeSize) private var typeSize
     private var columns: [GridItem] {
         [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 150 : 96), spacing: 8)]
@@ -35,8 +38,20 @@ struct CompanionView: View {
                         .onGeometryChange(for: Bool.self) { proxy in
                             let frame = proxy.frame(in: .named("companionScroll"))
                             return frame.maxY > 0 && frame.minY < viewportHeight
-                        } action: { headerVisible = $0 }
-                        .onDisappear { headerVisible = false }
+                        } action: {
+                            #if os(macOS)
+                            visibilityDelivery.submit($0, to: $headerVisible)
+                            #else
+                            headerVisible = $0
+                            #endif
+                        }
+                        .onDisappear {
+                            #if os(macOS)
+                            visibilityDelivery.submit(false, to: $headerVisible)
+                            #else
+                            headerVisible = false
+                            #endif
+                        }
                     if category == nil || category?.isHome == true {
                         Button { roomEditor = RoomEditorSession(state:wardrobe.state) } label: {
                             Label("Edit room",systemImage:"move.3d").frame(maxWidth:.infinity,minHeight:44)
@@ -60,8 +75,13 @@ struct CompanionView: View {
                     CompanionCategoryTabs(selection: $category, accent: palette.accent, surface: palette.surface)
                     Text("\(displayedItems.count) items")
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    #if os(macOS)
+                    Text("Click any item to preview it. Owned and locked items stay together in their category.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                    #else
                     Text("Tap any item to preview it. Owned and locked items stay together in their category.")
                         .font(.footnote).foregroundStyle(.secondary)
+                    #endif
                     ForEach(displayedCategories) { section in
                         let items = displayedItems.filter { $0.category == section }
                         if !items.isEmpty {
@@ -102,7 +122,7 @@ struct CompanionView: View {
                         selected: wardrobe.selected(item), accent: palette.accent, surface: palette.surface
                     ) { WardrobeThumbnail(item: item) }
                 }
-                .buttonStyle(.plain).buttonPressHaptic(false)
+                .buttonStyle(.plain).macHoverFeedback().buttonPressHaptic(false)
                 .accessibilityElement(children: .combine)
                 .accessibilityHint("Preview before choosing")
                 .accessibilityIdentifier("companion.item.\(item.id)")

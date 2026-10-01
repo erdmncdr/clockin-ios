@@ -120,7 +120,11 @@ struct FocusSettingsSection: View {
     private var radioStatus: String {
         if let error = radio.errorMessage { return error }
         if radio.isLoading { return String(localized: "Connecting…", bundle: .app) }
+        #if os(macOS)
+        if radio.state == .failed { return String(localized: "Could not connect. Click play to retry.", bundle: .app) }
+        #else
         if radio.state == .failed { return String(localized: "Could not connect. Tap play to retry.", bundle: .app) }
+        #endif
         if radio.state == .paused { return String(localized: "Paused", bundle: .app) }
         return radio.isPlaying ? String(localized: "Playing", bundle: .app) : String(localized: "Stopped", bundle: .app)
     }

@@ -45,9 +45,15 @@ struct FocusRadioCard: View {
                     }
                 }
                 if radio.state == .failed {
+                    #if os(macOS)
+                    Text("Could not connect. Click play to retry.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    #else
                     Text("Could not connect. Tap play to retry.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    #endif
                 } else if radio.isLoading {
                     Text("Connecting…")
                         .font(.caption)
@@ -74,6 +80,9 @@ struct FocusRadioStationPicker: View {
             }
         }
         .pickerStyle(.menu)
+        #if os(macOS)
+        .fixedSize().controlSize(.regular)
+        #endif
         .buttonPressHaptic(false)
         .accessibilityLabel("Radio station")
     }
@@ -89,14 +98,22 @@ struct FocusRadioButtons: View {
                 if radio.state.requestsPlayback { radio.pause() } else { radio.play() }
             } label: {
                 Image(systemName: radio.state.requestsPlayback ? "pause.fill" : "play.fill")
+                    #if os(macOS)
+                    .frame(width: 16, height: 16)
+                    #else
                     .frame(width: 44, height: 44)
                     .background(palette.accent.opacity(0.15), in: Circle())
+                    #endif
             }
             .accessibilityLabel(radio.state.requestsPlayback ? "Pause radio" : "Play radio")
             if radio.state.showsCard {
                 Button { radio.stop() } label: {
                     Image(systemName: "stop.fill")
+                        #if os(macOS)
+                        .frame(width: 16, height: 16)
+                        #else
                         .frame(width: 44, height: 44)
+                        #endif
                 }
                 .accessibilityLabel("Stop radio")
                 .accessibilityHint("Ends playback; a pinned radio stays on Today")
@@ -104,6 +121,10 @@ struct FocusRadioButtons: View {
         }
         .font(.body.weight(.semibold))
         .foregroundStyle(palette.accent)
+        #if os(macOS)
+        .buttonStyle(.bordered).controlSize(.regular)
+        #else
         .buttonStyle(.pressable)
+        #endif
     }
 }

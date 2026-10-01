@@ -21,7 +21,7 @@ struct MascotCard: View {
                 ClockinMascotStage(state: state).allowsHitTesting(false)
                     .frame(width: 62, height: 62)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.plain).macHoverFeedback()
             .accessibilityLabel("Open Companion")
             Button(action: showInsights) {
                 HStack(spacing: 8) {

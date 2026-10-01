@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+  -module-cache-path /tmp/clockin-macpolish-cache \
+  ClockinMac/MacPeriodScroll.swift ClockinMac/MacChartInspection.swift ClockinMac/MacDeskFraming.swift \
+  Tests/manual/macpolish/main.swift -o /tmp/clockin-macpolish-tests
+/tmp/clockin-macpolish-tests

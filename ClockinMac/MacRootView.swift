@@ -33,12 +33,12 @@ struct MacRootView: View {
     var body: some View {
         detail
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                MacTabBar(selection: $navigation.section)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    .padding(.bottom, 12)
-                    .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottom) {
+                if navigation.section != .settings {
+                    MacTabBar(selection: $navigation.section)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 12)
+                }
             }
         .allowsHitTesting(!showsCelebration && !celebrationFading)
         .accessibilityHidden(showsCelebration || celebrationFading)
@@ -99,9 +99,19 @@ struct MacRootView: View {
         // iPhone formlari gruplu yazildi; Mac'in varsayilan sutun duzeni
         // etiketleri sola tasiyip kesiyordu.
         .formStyle(.grouped)
+        .pickerStyle(.menu)
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
+        .onChange(of: navigation.goalRequest) { _, requested in
+            if requested {
+                progressSection = .goals
+                goalEditorRequest = true
+                navigation.goalRequest = false
+            }
+        }
         .onChange(of: nudges.openToday, initial: true) { _, requested in
             guard requested else { return }
             navigation.open(.today)

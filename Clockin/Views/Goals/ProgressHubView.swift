@@ -23,6 +23,10 @@ struct ProgressHubView: View {
                     }
                 }
                 .pickerStyle(.segmented).labelsHidden()
+                #if os(macOS)
+                .frame(maxWidth: 360)
+                .controlSize(.regular)
+                #endif
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .accessibilityIdentifier("progress.sections")

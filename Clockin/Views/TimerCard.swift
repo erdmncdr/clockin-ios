@@ -106,6 +106,9 @@ struct TimerCard: View {
                     .buttonStyle(DangerActionButtonStyle())
                 }
                 Button("Cancel session", systemImage: "xmark") { confirmCancel = true }
+                    #if os(macOS)
+                    .buttonStyle(.link).controlSize(.small)
+                    #endif
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -121,6 +124,9 @@ struct TimerCard: View {
                 .buttonStyle(PrimaryActionButtonStyle(palette: palette))
                 // Sayaci baslatmayi unutunca gecen sureyi kaybetmemek icin.
                 Button("Start with elapsed time", systemImage: "clock.arrow.circlepath", action: onStartWithElapsed)
+                    #if os(macOS)
+                    .buttonStyle(.link).controlSize(.small)
+                    #endif
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

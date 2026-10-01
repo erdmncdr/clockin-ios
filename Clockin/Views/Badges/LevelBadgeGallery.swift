@@ -7,6 +7,9 @@ struct LevelBadgeGallery: View {
     @Environment(\.palette) private var palette
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var previewVisible = true
+    #if os(macOS)
+    @State private var visibilityDelivery = MacDeferredValue<Bool>()
+    #endif
     @State private var selection: Int
     init(currentLevel: Int, xp: Int) {
         self.currentLevel = currentLevel; self.xp = xp
@@ -26,9 +29,20 @@ struct LevelBadgeGallery: View {
                         .onGeometryChange(for: Bool.self) { proxy in
                             let rect = proxy.frame(in: .named("rankGallery"))
                             return rect.maxY > 0 && rect.minY < viewportHeight
-                        } action: { previewVisible = $0 }
+                        } action: {
+                            #if os(macOS)
+                            visibilityDelivery.submit($0, to: $previewVisible)
+                            #else
+                            previewVisible = $0
+                            #endif
+                        }
+                    #if os(macOS)
+                    Text("Every 75 levels, your badge gains a new design. Click any rank to preview it.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    #else
                     Text("Every 75 levels, your badge gains a new design. Tap any rank to preview it.")
                         .font(.subheadline).foregroundStyle(.secondary)
+                    #endif
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? 260 : 155), spacing: 12)], spacing: 12) {
                         ForEach(LevelPrestige.unlockLevels, id: \.self) { level in rankTile(level) }
                     }
@@ -81,7 +95,7 @@ struct LevelBadgeGallery: View {
             .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(selection == level ? palette.accent : palette.surfaceStroke, lineWidth: selection == level ? 1.5 : 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.plain).macHoverFeedback()
         .accessibilityLabel("\(style.name), level \(level), \(unlocked ? String(localized: "unlocked", bundle: .app) : String(localized: "locked", bundle: .app))")
         .accessibilityHint("Previews this badge; your level stays the same")
         .accessibilityIdentifier("badges.rank.\(level)")

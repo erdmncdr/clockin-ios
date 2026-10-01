@@ -26,8 +26,10 @@ struct BadgesView: View {
                             companionSection(totalHours: stats.totalDuration / 3600)
                         }
                         .padding(16)
+                    .macPageColumn()
                     }
-                    .scrollBounceBehavior(.basedOnSize)
+                    .macTabBarClearance()
+        .scrollBounceBehavior(.basedOnSize)
                 }
             }
             .background(palette.background)

@@ -56,6 +56,14 @@ struct ClockinPalette {
     }
 }
 
+#if os(macOS)
+struct ClockinAccentButtonStyle: PrimitiveButtonStyle {
+    let palette: ClockinPalette
+    func makeBody(configuration: Configuration) -> some View {
+        Button(configuration).buttonStyle(.borderedProminent).tint(palette.accent).controlSize(.small)
+    }
+}
+#else
 struct ClockinAccentButtonStyle: ButtonStyle {
     let palette: ClockinPalette
 
@@ -69,3 +77,5 @@ struct ClockinAccentButtonStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white.opacity(0.2)))
     }
 }
+
+#endif

@@ -5,6 +5,36 @@ import SwiftUI
 // saydamlik kullaniyordu; Daylight temasinda gorunmuyordu, burada paletten
 // geliyor.
 
+#if os(macOS)
+struct PrimaryActionButtonStyle: PrimitiveButtonStyle {
+    let palette: ClockinPalette
+    func makeBody(configuration: Configuration) -> some View {
+        Button(role: configuration.role, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.borderedProminent).tint(palette.accent).controlSize(.large)
+    }
+}
+
+struct SecondaryActionButtonStyle: PrimitiveButtonStyle {
+    let palette: ClockinPalette
+    func makeBody(configuration: Configuration) -> some View {
+        Button(role: configuration.role, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.bordered).controlSize(.large)
+    }
+}
+
+struct DangerActionButtonStyle: PrimitiveButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button(role: .destructive, action: configuration.trigger) {
+            configuration.label.frame(maxWidth: .infinity, minHeight: 28)
+        }
+        .buttonStyle(.borderedProminent).tint(.red).controlSize(.large)
+    }
+}
+#else
 struct PrimaryActionButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let palette: ClockinPalette
@@ -61,6 +91,8 @@ struct DangerActionButtonStyle: ButtonStyle {
     }
 }
 
+#endif
+
 /// Kendi zeminini ciziyor olan dugmeler icin yalnizca basma geri bildirimi:
 /// ust cubuktaki yuvarlak dugmeler, rozet karolari, secilebilir satirlar.
 ///
@@ -73,6 +105,9 @@ struct PressableButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            #if os(macOS)
+            .modifier(MacControlHover())
+            #endif
             .pressHaptic(isPressed: configuration.isPressed)
             .scaleEffect(configuration.isPressed && !reduceMotion ? scale : 1)
             .opacity(configuration.isPressed ? 0.75 : 1)

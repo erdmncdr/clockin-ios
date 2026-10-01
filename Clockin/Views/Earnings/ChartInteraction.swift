@@ -67,16 +67,7 @@ struct ChartInteraction: View {
     var body: some View {
         Color.clear
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0)
-                .onChanged { onTap($0.location) }
-                .onEnded { value in
-                    if pageable, let direction = EarningsSwipe.page(x: value.translation.width, y: value.translation.height) {
-                        onPage(direction)
-                    } else { onTap(value.location) }
-                })
-            .onContinuousHover { phase in
-                if case .active(let location) = phase { onTap(location) }
-            }
+            .onTapGesture { location in onTap(location) }
     }
 }
 #endif

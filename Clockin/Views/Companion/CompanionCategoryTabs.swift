@@ -6,6 +6,16 @@ struct CompanionCategoryTabs: View {
     let surface: Color
 
     var body: some View {
+        #if os(macOS)
+        Picker("Category", selection: $selection) {
+            Text("All").tag(Optional<WardrobeCategory>.none)
+            ForEach(WardrobeCategory.allCases) { category in
+                Label(category.title, systemImage: category.symbol).tag(Optional(category))
+            }
+        }
+        .pickerStyle(.menu).fixedSize()
+        .accessibilityIdentifier("companion.categories")
+        #else
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -20,6 +30,7 @@ struct CompanionCategoryTabs: View {
             }
         }
         .accessibilityIdentifier("companion.categories")
+        #endif
     }
 
     private func tab(_ category: WardrobeCategory?, title: String, symbol: String) -> some View {

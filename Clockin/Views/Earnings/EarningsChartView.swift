@@ -11,6 +11,14 @@ struct EarningsChartView: View {
     @Binding var showTRY: Bool
     let onPage: (Int) -> Void
     @State private var selectedDate: Date?
+    #if os(macOS)
+    @State private var hoveredDate: Date?
+    @State private var hoverDelivery = MacDeferredValue<Date?>()
+    @State private var selectionDelivery = MacDeferredValue<Date?>()
+    #endif
+    private var inspectionDate: Date? {
+        selectedDate
+    }
     @ScaledMetric(relativeTo: .caption) private var axisTopPadding = 10.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -18,7 +26,7 @@ struct EarningsChartView: View {
     private var chartConverting: Bool { converting && snapshot.hasConvertedDays }
     private var displayCode: String { chartConverting ? "TRY" : currencyCode }
     private var selected: EarningsDay? {
-        guard let selectedDate else { return nil }
+        guard let selectedDate = inspectionDate else { return nil }
         return snapshot.points.first { Calendar.current.isDate($0.day, inSameDayAs: selectedDate) }
     }
     private var chartInterval: DateInterval {
@@ -87,6 +95,11 @@ struct EarningsChartView: View {
                 .transition(.opacity)
             }
             .clipped()
+            #if os(macOS)
+            .modifier(MacPeriodNavigation(enabled: range != .all, onPage: onPage))
+            .accessibilityLabel("Earnings chart")
+            .accessibilityHint("Use Left and Right arrow keys to change period.")
+            #endif
             if !snapshot.points.isEmpty {
                 if converting {
                     Text("Uses each calendar day's USD/TRY rate, or the nearest earlier available rate.")
@@ -100,14 +113,19 @@ struct EarningsChartView: View {
                     }
                 } else if let point = selected {
                     detail(point)
-                } else if let selectedDate {
+                } else if let selectedDate = inspectionDate {
                     Text(range == .sixMonths
                         ? "No work in \(selectedDate.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()))."
                         : "No work on \(selectedDate.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))).")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
+                    #if os(macOS)
+                    Text(range == .sixMonths ? "Click a month in the chart to inspect it." : "Click a day in the chart to inspect it.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    #else
                     Text(range == .sixMonths ? "Tap a month in the chart to inspect it." : "Tap a day in the chart to inspect it.")
                         .font(.caption).foregroundStyle(.secondary)
+                    #endif
                 }
                 if range != .month { averages }
                 Text("Overnight sessions count toward their start date. Active work updates every minute.")
@@ -121,9 +139,16 @@ struct EarningsChartView: View {
         .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: showTRY)
         .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: selectedDate)
         .hapticFeedback(.selection, trigger: selectedDate) { _, new in new != nil }
+        #if os(macOS)
+        .onChange(of: snapshot.interval) { _, _ in resetInspection() }
+        .onChange(of: range) { _, _ in resetInspection() }
+        .onChange(of: currencyCode) { _, _ in resetInspection() }
+        .onDisappear { resetInspection() }
+        #else
         .onChange(of: snapshot.interval) { _, _ in selectedDate = nil }
         .onChange(of: range) { _, _ in selectedDate = nil }
         .onChange(of: currencyCode) { _, _ in selectedDate = nil }
+        #endif
     }
 
     /// Donem ortalamalari. Takvim gunune bolunur, cunku soru "gunde ne kadar"
@@ -165,7 +190,7 @@ struct EarningsChartView: View {
     }
 
     private var selectedMonth: EarningsMonthBar? {
-        guard let selectedDate else { return nil }
+        guard let selectedDate = inspectionDate else { return nil }
         return months.first { Calendar.current.isDate($0.day, equalTo: selectedDate, toGranularity: .month) }
     }
 
@@ -229,8 +254,23 @@ struct EarningsChartView: View {
                     let frame = geometry[anchor]
                     ChartInteraction(pageable: range != .all, onTap: { location in
                         guard frame.contains(location) else { return }
+                        #if os(macOS)
+                        guard let date = inspectableDate(proxy.value(atX: location.x - frame.minX, as: Date.self)) else { return }
+                        selectionDelivery.submit(date, to: $selectedDate)
+                        #else
                         selectedDate = proxy.value(atX: location.x - frame.minX, as: Date.self)
+                        #endif
                     }, onPage: onPage)
+                    #if os(macOS)
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let location):
+                            hoverDelivery.submit(frame.contains(location)
+                                ? inspectableDate(proxy.value(atX: location.x - frame.minX, as: Date.self)) : nil, to: $hoveredDate)
+                        case .ended: hoverDelivery.submit(nil, to: $hoveredDate)
+                        }
+                    }
+                    #endif
                     .accessibilityHidden(true)
                 }
             }
@@ -238,7 +278,44 @@ struct EarningsChartView: View {
         .frame(height: 190)
         // Sayfa kirpmasi ust eksen etiketine degmesin.
         .padding(.top, axisTopPadding)
+        #if os(macOS)
+        .overlay(alignment: .topTrailing) {
+            if let hoveredDate {
+                hoverReadout(hoveredDate)
+                    .font(.caption).monospacedDigit()
+                    .padding(8)
+                    .frame(maxWidth: 300, alignment: .leading)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .allowsHitTesting(false)
+            }
+        }
+        #endif
     }
+
+    #if os(macOS)
+    private func resetInspection() {
+        hoverDelivery.submit(nil, to: $hoveredDate)
+        selectionDelivery.submit(nil, to: $selectedDate)
+    }
+
+    // Hover yalniz overlay cizer; List satirinin boyu/isaretci alani sabit kalir.
+    @ViewBuilder
+    private func hoverReadout(_ date: Date) -> some View {
+        if range == .sixMonths, let bar = months.first(where: { Calendar.current.isDate($0.day, equalTo: date, toGranularity: .month) }) {
+            Text("\(bar.day.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year())) · \(DurationText.compact(bar.duration)) · \(money(HistoryAmount(earned: bar.earned, converted: bar.converted)))")
+        } else if let point = snapshot.points.first(where: { Calendar.current.isDate($0.day, inSameDayAs: date) }) {
+            detail(point)
+        } else {
+            Text(range == .sixMonths
+                ? "No work in \(date.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()))."
+                : "No work on \(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: AppLanguage.formatLocale))).")
+        }
+    }
+
+    private func inspectableDate(_ date: Date?) -> Date? {
+        MacChartInspection.date(date, monthly: range == .sixMonths, interval: chartInterval)
+    }
+    #endif
 
     private func detail(_ point: EarningsDay) -> some View {
         VStack(alignment: .leading, spacing: 5) {

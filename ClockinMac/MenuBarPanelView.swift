@@ -213,7 +213,7 @@ struct MenuBarPanelView: View {
                     .buttonStyle(SecondaryActionButtonStyle(palette: theme))
                     .accessibilityLabel(paused ? String(localized: "Resume session", bundle: .app) : String(localized: "Pause session", bundle: .app))
                     Button("Clock out") { change { _ = store.clockOut() } }
-                        .buttonStyle(PrimaryActionButtonStyle(palette: theme))
+                        .buttonStyle(DangerActionButtonStyle())
                         .accessibilityLabel("Clock out and save session")
                 }
                 if confirmingDiscard {

@@ -4,7 +4,19 @@ import SwiftUI
 @MainActor
 final class MacNavigation: ObservableObject {
     static let shared = MacNavigation()
-    @Published var section: MacSection? = .today
+    @Published var section: MacSection? = .today {
+        didSet {
+            if section == .settings, oldValue != .settings { previousSection = oldValue ?? .today }
+        }
+    }
+    private var previousSection: MacSection = .today
+
+    func closeSettings() { section = previousSection }
+    @Published var goalRequest = false
+    func openGoals() {
+        goalRequest = true
+        open(.progress)
+    }
     @Published var sheet: Sheet?
 
     enum Sheet: String, Identifiable {
@@ -67,7 +79,6 @@ struct MacCommands: Commands {
             Button(String(localized: "Today", bundle: .app)) { MacNavigation.shared.open(.today) }.keyboardShortcut("1")
             Button(String(localized: "History", bundle: .app)) { MacNavigation.shared.open(.history) }.keyboardShortcut("2")
             Button(String(localized: "Progress", bundle: .app)) { MacNavigation.shared.open(.progress) }.keyboardShortcut("3")
-            Button(String(localized: "Settings", bundle: .app)) { MacNavigation.shared.open(.settings) }.keyboardShortcut("4")
         }
     }
 }
