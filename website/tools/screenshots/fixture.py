@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Writes the sample work history the website screenshots are taken from.
 
-It only ever touches the Debug build's own folder ("Clockin Debug"), never the
-data of the app you use. Run through website/tools/screenshots/run.
+With no argument it writes to the Mac Debug build's own folder
+("Clockin Debug"), never the data of the app you use. A path argument writes
+somewhere else, for example a simulator's container for the iPhone shots.
+Run through website/tools/screenshots/run.
 """
 import datetime, json, pathlib, random, sys, uuid
 
 REFERENCE = datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc)
-SUPPORT = pathlib.Path.home() / "Library/Application Support/Clockin Debug"
+SUPPORT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path.home() / "Library/Application Support/Clockin Debug"
 RATE = 25.0
 
 

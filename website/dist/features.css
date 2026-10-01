@@ -31,17 +31,26 @@
 .feature-grid h3{font-size:17px;letter-spacing:-.02em;margin:0 0 7px}
 .feature-grid p{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
 
-.iphone{padding-block:78px 0;max-width:680px}
-.iphone p{margin:-18px 0 0;color:var(--muted);font-size:17px;line-height:1.65}
+.iphone{padding-block:84px 0}
+.iphone-copy{max-width:680px}
+.iphone-copy p{margin:-18px 0 0;color:var(--muted);font-size:17px;line-height:1.65}
+.phone-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;margin-top:40px;max-width:900px}
+.phone-shot{margin:0}
+.phone-shot img{width:100%;height:auto;border-radius:22px;box-shadow:0 22px 44px -22px #17223766}
+[data-theme=dark] .phone-shot img{box-shadow:0 22px 44px -20px #00000099}
+.iphone .demo-note{margin-top:22px}
 
 @media(max-width:900px){
   .reach-row{grid-template-columns:1fr;gap:34px}
   .reach-shot img{max-width:300px}
   .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px}
+  .phone-row{gap:16px}
 }
 @media(max-width:560px){
   .reach,.deskmode,.features,.iphone{padding-top:58px}
   .feature-grid{grid-template-columns:1fr;gap:26px}
   .reach h2,.features h2,.deskmode h2,.iphone h2{margin-bottom:26px}
   .app-screen img,.desk-shot img{border-radius:11px}
+  .phone-row{grid-template-columns:1fr;gap:26px;max-width:280px;margin-inline:auto}
+  .phone-shot img{border-radius:18px}
 }

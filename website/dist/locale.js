@@ -1,6 +1,11 @@
 'use strict';
 const CLOCKIN_TRANSLATIONS = {
   "en": {
+    "iphoneCopy": "The iPhone app keeps the same work and the same companion. The Lock Screen Live Activity and the Dynamic Island show the money going up, with pause and clock out right there, and the widgets keep today in view.",
+    "iphoneNote": "The iPhone app is in testing. Screenshots from the app, with sample data.",
+    "altPhoneToday": "Clockin on iPhone: the running timer, the money earned, the focus chime and the focus radio. Sample data.",
+    "altPhoneHistory": "Clockin on iPhone: six months of earnings with averages. Sample data.",
+    "altPhoneProgress": "Clockin on iPhone: the monthly goal, today’s goal and the work plan. Sample data.",
     "tabToday": "Today",
     "tabHistory": "History",
     "tabProgress": "Progress",
@@ -39,7 +44,6 @@ const CLOCKIN_TRANSLATIONS = {
     "featSyncTitle": "Your iPhone and Mac, in step",
     "featSyncCopy": "Work, goals, companion and settings move between your devices through your own iCloud. There is no Clockin account and no server.",
     "iphoneTitle": "And in your pocket.",
-    "iphoneCopy": "The iPhone app keeps the same work and the same companion. The Lock Screen Live Activity and the Dynamic Island show the money going up, with pause and clock out right there, and the widgets keep today in view. It is in testing now.",
     "sourceLink": "Source on GitHub",
     "skip": "Skip to content",
     "explore": "Explore Clockin",
@@ -115,6 +119,11 @@ const CLOCKIN_TRANSLATIONS = {
     "themeLight": "Switch to light mode"
   },
   "tr": {
+    "iphoneCopy": "iPhone uygulaması aynı çalışmayı ve aynı maskotu taşır. Kilit ekranındaki Live Activity ve Dynamic Island paranın artışını gösterir; mola ve mesai bitirme oradadır, widget’lar da bugünü gözönünde tutar.",
+    "iphoneNote": "iPhone uygulaması test aşamasında. Görüntüler uygulamadan, veriler örnektir.",
+    "altPhoneToday": "iPhone’da Clockin: çalışan sayacı, kazanılan parayı, odak zilini ve radyoyu gösteriyor. Veriler örnektir.",
+    "altPhoneHistory": "iPhone’da Clockin: altı aylık kazanç grafiği ve ortalamalar. Veriler örnektir.",
+    "altPhoneProgress": "iPhone’da Clockin: aylık hedef, bugünün hedefi ve çalışma planı. Veriler örnektir.",
     "tabToday": "Bugün",
     "tabHistory": "Geçmiş",
     "tabProgress": "İlerleme",
@@ -153,7 +162,6 @@ const CLOCKIN_TRANSLATIONS = {
     "featSyncTitle": "iPhone’unla Mac’in aynı yerde",
     "featSyncCopy": "Çalışman, hedeflerin, maskotun ve ayarların kendi iCloud hesabın üzerinden cihazların arasında gezer. Clockin hesabı da sunucusu da yok.",
     "iphoneTitle": "Bir de cebinde.",
-    "iphoneCopy": "iPhone uygulaması aynı çalışmayı ve aynı maskotu taşır. Kilit ekranındaki Live Activity ve Dynamic Island paranın artışını gösterir; mola ve mesai bitirme oradadır, widget’lar da bugünü gözönünde tutar. Şu an test aşamasında.",
     "sourceLink": "GitHub’da kaynak kod",
     "skip": "İçeriğe geç",
     "explore": "Uygulamaya göz at",
