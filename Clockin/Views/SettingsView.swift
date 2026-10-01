@@ -227,6 +227,9 @@ struct SettingsView: View {
                     case .privacyPolicy: PrivacyPolicyBrowser()
                     }
                 }
+                // Mac'te boyutsuz sayfa icerigi kadar uzuyor; yuzlerce satirlik
+                // bir puantaj onizlemesi pencereden ve ekrandan tasiyordu.
+                .macSheetFrame()
                 // Sheet ayri bir sunum; renk semasi tercihi yeniden verilmeli.
                 .preferredColorScheme(palette.colorScheme)
             }
