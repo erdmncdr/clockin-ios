@@ -1,0 +1,80 @@
+#!/bin/bash
+# Website screenshots, taken from the real Mac app. Run from the repository root:
+#   bash website/tools/screenshots/run [shot ...]
+#
+# It builds the Debug app, fills the Debug build's own data folder with sample
+# work (never your own data), then launches the app once per shot with the
+# review fixtures (--open-section, --clock-in, --pin, --menu-panel) and
+# captures its window. Settings are passed as launch arguments, so nothing is
+# written to your preferences.
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+DERIVED="build/DerivedData"
+OUT="${CLOCKIN_SHOT_OUTPUT:-website/dist/assets}"
+THEME="${CLOCKIN_SHOT_THEME:-Carbon}"
+APP="$DERIVED/Build/Products/Debug/Clockin.app/Contents/MacOS/Clockin"
+
+echo "==> Building the Debug app"
+xcodebuild -project Clockin.xcodeproj -scheme ClockinMac -configuration Debug \
+    -derivedDataPath "$DERIVED" -destination 'platform=macOS' \
+    -allowProvisioningUpdates DEVELOPMENT_TEAM=LU36PKDPT3 build > /tmp/clockin-shots-build.log 2>&1 \
+    || { tail -25 /tmp/clockin-shots-build.log; echo "Build failed: /tmp/clockin-shots-build.log"; exit 1; }
+[ -x "$APP" ] || { echo "No app at $APP"; exit 1; }
+
+python3 website/tools/screenshots/fixture.py
+swiftc -O website/tools/screenshots/windows.swift -o /tmp/clockin-windows
+mkdir -p "$OUT"
+
+# Preferences for every shot: a fixed theme, goals to show progress, and no
+# extras that would need permission.
+SETTINGS=(-Clockin.Theme "$THEME" -Clockin.GoalDailyHours 8 -Clockin.GoalMonthlyHours 160
+          -Clockin.MascotEnabled -bool YES -Clockin.MinimalMode -bool NO
+          -Clockin.ChimeEnabled -bool NO -Clockin.SyncEnabled -bool NO
+          # The default companion and room, not whatever this Mac has unlocked.
+          -Clockin.WardrobeState "{}"
+          # Six months of history, so the chart is worth showing.
+          -Clockin.HistoryRange 6M -Clockin.HistoryGroupByDay -bool YES
+          -AppleLanguages "(en)" -AppleLocale en_US
+          # A fixed window, so every shot is the same size.
+          "-NSWindow Frame ClockinMainWindow" "160 120 960 720 0 0 1512 949 "
+          -Clockin.PinnedMode Money "-NSWindow Frame ClockinPinnedTimer" "1100 760 320 112 0 0 1512 949 ")
+
+shoot() { # name, which window (0 = biggest, "small" = the panel or pin), wait, app arguments
+    local name="$1" index="$2" wait="$3"; shift 3
+    echo "==> $name"
+    "$APP" "$@" "${SETTINGS[@]}" > /tmp/clockin-shots-app.log 2>&1 &
+    local pid=$!
+    sleep "$wait"
+    local id
+    if [ "$index" = small ]; then
+        id="$(/tmp/clockin-windows "$pid" | tail -1)"
+    else
+        id="$(/tmp/clockin-windows "$pid" | sed -n "$((index + 1))p")"
+    fi
+    if [ -z "$id" ]; then
+        kill "$pid" 2>/dev/null || true
+        echo "   no window for $name"; return 1
+    fi
+    screencapture -x -o -l"$id" "$OUT/$name.png"
+    kill "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+    sleep 1
+}
+
+
+WANTED=("$@")
+wanted() {
+    [ ${#WANTED[@]} -eq 0 ] && return 0
+    local name="$1"
+    for w in "${WANTED[@]}"; do [ "$w" = "$name" ] && return 0; done
+    return 1
+}
+
+wanted shot-today    && shoot shot-today 0 9 --open-section today --clock-in
+wanted shot-history  && shoot shot-history 0 9 --open-section history --clock-in
+wanted shot-progress && shoot shot-progress 0 9 --open-section progress --clock-in
+wanted shot-settings && shoot shot-settings 0 9 --open-section settings --clock-in
+wanted shot-menubar  && shoot shot-menubar small 10 --menu-panel --clock-in
+wanted shot-pinned   && shoot shot-pinned small 10 --pin --clock-in
+wanted shot-desk     && shoot shot-desk 0 15 --desk-mode --clock-in
+echo "Done: $OUT"
