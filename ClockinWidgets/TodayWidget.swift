@@ -57,7 +57,7 @@ struct TodayProvider: TimelineProvider {
             let frame = MascotResources.library?[mood].rest ?? "h01"
             // Ayni ruh halindeki tum girdiler ayni CGImage'i tutar; bos sonuc da onbellekte.
             if attempted.insert(frame).inserted {
-                images[frame] = await WardrobeFrameCache.shared.composite(frame: frame, outfit: outfit, size: 160)
+                images[frame] = await WardrobeFrameCache.shared.composite(frame: frame, outfit: outfit, size: 240)
             }
             result.append(TodayEntry(date: date, snapshot: snapshot, companionImage: images[frame]))
         }
