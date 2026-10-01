@@ -33,7 +33,7 @@ Until 1.1.6 the DMG was served from `dist/downloads/` on Netlify and every relea
 
 Screenshots were captured from a separate app bundle and separate demo JSON. They do not contain the user's work records. The site labels and companion copy switch between English and Turkish; genuine application captures retain the app’s English interface.
 
-Images: 1755 × 3021 PNG exports from the actual app window at 150% interface size, rendered at 3× through AppKit. Each uses a distinct large-image filename to avoid stale low-resolution browser caches. Mobile image width is up to 420 CSS pixels with 20px side margins.
+Images (2026-10-01): Mac windows are captured at 2× by the tool from a 960 × 860 pt window (`shot-*.png` 1920 × 1720, `-small` 1120 wide); the menu bar panel is 640 × 644 and the pinned timer 640 × 224 (opened at its 320 × 112 default, not a size saved on this Mac); desk mode is the full screen with the empty top band cropped (1920 × 906). The `width`/`height` attributes in index.html must match the files, or browsers pick a blurry candidate. iPhone shots come from the iPhone 17 Pro simulator with the fixture data, `-Clockin.Language en -AppleLocale en_US`, status bar at 9:41 and Reduce Motion on (so rolling digits are not caught mid-roll), resized from 1206 × 2622 to 690 × 1500.
 
 Validation: all three image selections checked in the browser at 390px viewport width, native image dimensions confirmed, no horizontal overflow. Desktop image dimensions and overflow checked at 1280px; no browser console errors. JavaScript syntax and local asset references checked.
 

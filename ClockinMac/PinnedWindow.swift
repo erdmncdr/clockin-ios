@@ -10,6 +10,7 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
     private var preferences: AnyCancellable?
     private var lastMode: String?
     private var lastVisible: Bool?
+    private static let minimumSize = NSSize(width: 246, height: 72)
 
     func start(store: ClockStore) {
         guard changes == nil else { return }
@@ -82,7 +83,9 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
         let width = defaults.double(forKey: widthKey)
         let height = defaults.double(forKey: heightKey)
         guard width > 0, height > 0 else { return nil }
-        return NSSize(width: width, height: height)
+        // Eski surumlerin kaydettigi boyut en kucuk pencereden dar olabilir;
+        // o zaman TRY tutari kesiliyordu. Kayit en az panelin alt siniri kadar.
+        return NSSize(width: max(width, Self.minimumSize.width), height: max(height, Self.minimumSize.height))
     }
 
     private func saveCurrentSize() {
@@ -109,7 +112,7 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
         panel.isMovableByWindowBackground = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         panel.hidesOnDeactivate = false
-        panel.minSize = NSSize(width: 246, height: 72)
+        panel.minSize = Self.minimumSize
         panel.maxSize = NSSize(width: 640, height: 500)
         panel.setFrameAutosaveName("ClockinPinnedTimer")
         panel.delegate = self

@@ -9,7 +9,8 @@
 # written to your preferences.
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
-DERIVED="build/DerivedData"
+# .noindex: Spotlight must not list this Debug copy next to the real app.
+DERIVED="${CLOCKIN_SHOT_DERIVED:-build/DerivedData.noindex}"
 OUT="${CLOCKIN_SHOT_OUTPUT:-website/dist/assets}"
 THEME="${CLOCKIN_SHOT_THEME:-Carbon}"
 APP="$DERIVED/Build/Products/Debug/Clockin.app/Contents/MacOS/Clockin"
@@ -36,8 +37,10 @@ SETTINGS=(-Clockin.Theme "$THEME" -Clockin.GoalDailyHours 8 -Clockin.GoalMonthly
           -Clockin.HistoryRange 6M -Clockin.HistoryGroupByDay -bool YES
           -AppleLanguages "(en)" -AppleLocale en_US
           # A fixed window, so every shot is the same size.
-          "-NSWindow Frame ClockinMainWindow" "160 120 960 720 0 0 1512 949 "
-          -Clockin.PinnedMode Money "-NSWindow Frame ClockinPinnedTimer" "1100 760 320 112 0 0 1512 949 ")
+          "-NSWindow Frame ClockinMainWindow" "160 40 960 860 0 0 1512 949 "
+          -Clockin.PinnedMode Money "-NSWindow Frame ClockinPinnedTimer" "1100 760 320 112 0 0 1512 949 "
+          # The size the pinned timer opens at, not one saved on this Mac.
+          -Clockin.PinnedWidth.Money 320 -Clockin.PinnedHeight.Money 112)
 
 shoot() { # name, which window (0 = biggest, "small" = the panel or pin), wait, app arguments
     local name="$1" index="$2" wait="$3"; shift 3
@@ -77,4 +80,7 @@ wanted shot-settings && shoot shot-settings 0 9 --open-section settings --clock-
 wanted shot-menubar  && shoot shot-menubar small 10 --menu-panel --clock-in
 wanted shot-pinned   && shoot shot-pinned small 10 --pin --clock-in
 wanted shot-desk     && shoot shot-desk 0 15 --desk-mode --clock-in
+# Launch Services must forget the Debug copy too.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+    -u "$DERIVED/Build/Products/Debug/Clockin.app" 2>/dev/null || true
 echo "Done: $OUT"

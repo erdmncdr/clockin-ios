@@ -2,7 +2,7 @@
    the iPhone note. Colors come from the site variables, so light and dark both
    work. */
 
-.product-stage{display:block;max-width:1040px}
+.product-stage{display:block;max-width:860px}
 .product-stage .app-screen{display:none;transform:none;opacity:1}
 .product-stage[data-active=today] [data-image=today],
 .product-stage[data-active=history] [data-image=history],
