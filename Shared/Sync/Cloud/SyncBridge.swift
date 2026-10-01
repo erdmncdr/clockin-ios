@@ -127,11 +127,11 @@ final class SyncBridge {
     }
 
     @discardableResult
-    func persist() async -> Bool {
+    func persist(force: Bool = false) async -> Bool {
         scheduledPersistence?.cancel(); scheduledPersistence = nil
         defer { didChange?() }
         let captured = state
-        do { try await disk.save(captured); persistenceError = nil; return captured.revision == state.revision }
+        do { try await disk.save(captured, force: force); persistenceError = nil; return captured.revision == state.revision }
         catch { persistenceError = String(localized: "Sync sidecar could not be saved: \(error.localizedDescription)", bundle: .app); return false }
     }
 

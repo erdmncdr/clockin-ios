@@ -47,7 +47,9 @@ extension MenuBarController.Host {
             changes: Publishers.Merge3(
                 store.objectWillChange.map { _ in () },
                 exchangeRates.objectWillChange.map { _ in () },
-                NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).map { _ in () }
+                // Defaults bildirimi arka planda gelebilir; `map` de ana aktor sayilip
+                // giriste coker, `@Sendable` onu yalitimsiz tutar (25).
+                NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).map { @Sendable _ in () }
             ).eraseToAnyPublisher(),
             content: { close in
                 AnyView(

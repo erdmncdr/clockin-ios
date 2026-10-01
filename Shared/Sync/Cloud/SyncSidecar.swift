@@ -338,8 +338,19 @@ actor SyncSidecarStore {
     private(set) var writeCount = 0
     private(set) var bytesWritten = 0
     private(set) var lastWriteWasOnMainThread: Bool?
+    private var writtenAt: Date?
+    private let now: @Sendable () -> Date
 
-    init(archiveURL: URL) { url = archiveURL.deletingLastPathComponent().appendingPathComponent("sync-state.json") }
+    /// CloudKit her fetch'te yalnizca motor jetonunu (birkac KB) degistirir. Bunun
+    /// icin cok MB'lik dosyayi her dakika yeniden yazmak gereksiz: kayip jeton
+    /// yalnizca degisikliklerin yeniden cekilmesi demek, gonderilecekler `pending`
+    /// ile ayrica ve hemen yazilir. Yalnizca jeton degistiyse en cok bu araliklarla yaz.
+    static let engineOnlyInterval: TimeInterval = 15 * 60
+
+    init(archiveURL: URL, now: @escaping @Sendable () -> Date = { Date() }) {
+        url = archiveURL.deletingLastPathComponent().appendingPathComponent("sync-state.json")
+        self.now = now
+    }
 
     func load() throws -> SyncSidecar? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
@@ -358,12 +369,20 @@ actor SyncSidecarStore {
         // Goc edilen durum ilk flush'ta diske yazilmali.
         writtenState = loaded
         writtenBytes = bytes
+        writtenAt = now()
         return state
     }
 
-    func save(_ state: SyncSidecar) throws {
+    /// `force`: arka plan, kapanis ve kapatma; motor jetonu da hemen yazilir.
+    func save(_ state: SyncSidecar, force: Bool = false) throws {
         if let writtenRevision, state.revision < writtenRevision { return }
         if state == writtenState { return }
+        if !force, let writtenState, let writtenAt, now().timeIntervalSince(writtenAt) < Self.engineOnlyInterval {
+            var unchanged = state
+            unchanged.engineState = writtenState.engineState
+            unchanged.revision = writtenState.revision
+            if unchanged == writtenState { return }
+        }
         let bytes = try SyncCoding.encode(state)
         try state.validateLocalBounds(byteCount: bytes.count)
         if bytes == writtenBytes { writtenState = state; writtenRevision = state.revision; return }
@@ -373,6 +392,7 @@ actor SyncSidecarStore {
         writtenRevision = state.revision
         writtenState = state
         writtenBytes = bytes
+        writtenAt = now()
         writeCount += 1
         bytesWritten += bytes.count
     }

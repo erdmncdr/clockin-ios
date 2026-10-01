@@ -263,7 +263,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
         await previous?.cancelOperations()
         await launchTask?.value
         await syncTask?.value
-        _ = await bridge.persist()
+        _ = await bridge.persist(force: true)
         status = .off
     }
 

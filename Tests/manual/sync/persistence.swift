@@ -1,5 +1,15 @@
 import Foundation
 
+final class TestNow: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: Date
+    init(_ date: Date) { stored = date }
+    var value: Date {
+        get { lock.withLock { stored } }
+        set { lock.withLock { stored = newValue } }
+    }
+}
+
 @main struct PersistenceChecks {
     @MainActor static func main() async throws {
         var checks = 0
@@ -10,8 +20,9 @@ import Foundation
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("sync-writes-\(UUID())")
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("clockin.json")
-        let disk = SyncSidecarStore(archiveURL: url)
         let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let clock = TestNow(now)
+        let disk = SyncSidecarStore(archiveURL: url, now: { clock.value })
         var snapshot = SyncSnapshot(data: ClockinData())
         for i in 0..<1321 {
             let start = now.addingTimeInterval(Double(-i) * 86400)
@@ -36,7 +47,12 @@ import Foundation
         }
         check(await disk.writeCount == 1, "fifty callback checkpoints stay coalesced during a pass")
         check(await bridge.endPersistenceBatch(), "pass flush succeeds")
-        check(await disk.writeCount == 2, "typical fetch pass performs exactly one atomic write")
+        check(await disk.writeCount == 1, "a fetch pass that only moves the engine token defers the large write")
+        clock.value = now.addingTimeInterval(SyncSidecarStore.engineOnlyInterval)
+        check(await bridge.persist(), "deferred engine token flush succeeds")
+        check(await disk.writeCount == 2, "the engine token is written once after the interval")
+        check(try await SyncSidecarStore(archiveURL: url).load()?.engineState == Data("checkpoint-49".utf8),
+              "the written engine token is the latest one")
         let revision = bridge.state.revision
         bridge.beginPersistenceBatch()
         for _ in 0..<50 {
@@ -71,7 +87,12 @@ import Foundation
         if let loaded = try await loadedDisk.load() { try await loadedDisk.save(loaded) }
         check(await loadedDisk.writeCount == 0, "relaunch and quiet poll do not rewrite the loaded bytes")
         bridge.updateEngineState(Data("background".utf8)); bridge.schedulePersist()
-        check(await bridge.persist(), "background or termination barrier flushes a scheduled change immediately")
+        let beforeLifecycle = await disk.writeCount
+        let deferredFlush = await bridge.persist()
+        let afterDeferred = await disk.writeCount
+        check(deferredFlush && afterDeferred == beforeLifecycle,
+              "an ordinary flush inside the interval still defers an engine-token-only change")
+        check(await bridge.persist(force: true), "background or termination barrier flushes a scheduled change immediately")
         check(try await loadedDisk.load()?.engineState == Data("background".utf8), "lifecycle flush is visible after reopen")
         let afterFlush = await disk.writeCount
         try await Task.sleep(for: .milliseconds(300))

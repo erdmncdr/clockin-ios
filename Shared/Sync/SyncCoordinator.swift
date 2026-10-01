@@ -136,7 +136,7 @@ final class SyncCoordinator: ObservableObject {
     @discardableResult
     func flushPersistence() async -> Bool {
         if debounce.deadline != nil { localDidPersist(scheduleSync: false) }
-        return await bridge?.persist() ?? true
+        return await bridge?.persist(force: true) ?? true
     }
 
     func prepareForTermination() async {
@@ -145,7 +145,7 @@ final class SyncCoordinator: ObservableObject {
         let closingBridge = bridge
         _ = turnOff()
         // Ag iptalinin cevabini beklemek cikisi kilitlemesin. Son yerel durum yeterli.
-        _ = await closingBridge?.persist()
+        _ = await closingBridge?.persist(force: true)
     }
 
     @discardableResult
@@ -222,7 +222,7 @@ final class SyncCoordinator: ObservableObject {
             await previousShutdown?.value
             await oldTransport?.stop()
             await oldWork?.value
-            _ = await oldBridge?.persist()
+            _ = await oldBridge?.persist(force: true)
         }
         shutdown = task
         return task

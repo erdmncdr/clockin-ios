@@ -10,17 +10,9 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
     private var refreshTask: Task<Void, Never>?
     private var lastRateDates: [Date]?
     private var cloudAccountObserver: NSObjectProtocol?
-    private var finishingTermination = false
-
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard !finishingTermination else { return .terminateLater }
-        finishingTermination = true
-        Task { @MainActor in
-            await SyncCoordinator.shared.prepareForTermination()
-            sender.reply(toApplicationShouldTerminate: true)
-        }
-        return .terminateLater
-    }
+    // Cikista sync durumunu beklemek icin `.terminateLater` kullanilmaz: cikis bir
+    // ana kuyruk isinden gelirse yanit gorevi hic baslamaz ve uygulama kapanmaz (25).
+    // Yazilmamis son durum zararsiz: acilista arsiv uzlastirilir, jeton yeniden cekilir.
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
