@@ -10,6 +10,17 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
     private var refreshTask: Task<Void, Never>?
     private var lastRateDates: [Date]?
     private var cloudAccountObserver: NSObjectProtocol?
+    private var finishingTermination = false
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !finishingTermination else { return .terminateLater }
+        finishingTermination = true
+        Task { @MainActor in
+            await SyncCoordinator.shared.prepareForTermination()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -34,7 +45,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         sync.setPolling(true)
         cloudAccountObserver = NotificationCenter.default.addObserver(
             forName: .CKAccountChanged, object: nil, queue: nil
-        ) { _ in
+        ) { @Sendable _ in
             Task { @MainActor in SyncCoordinator.shared.accountMayHaveChanged() }
         }
         #if DEBUG
@@ -161,7 +172,7 @@ private struct SettingsSceneRedirect: NSViewRepresentable {
             visibility = nil
             guard let window else { return }
             window.alphaValue = 0
-            visibility = window.observe(\.isVisible, options: [.initial, .new]) { window, _ in
+            visibility = window.observe(\.isVisible, options: [.initial, .new]) { @Sendable window, _ in
                 DispatchQueue.main.async {
                     guard window.isVisible else { return }
                     window.orderOut(nil)

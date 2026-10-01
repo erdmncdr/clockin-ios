@@ -16,7 +16,7 @@ struct LevelPrestige: Equatable {
         [String(localized: "Steel and a spark", bundle: .app), String(localized: "Bronze and an orbiting moon", bundle: .app), String(localized: "Silver and a nebula stone", bundle: .app), String(localized: "Gold and a turning corona", bundle: .app), String(localized: "Platinum and a nova star", bundle: .app), String(localized: "Emerald and aurora light", bundle: .app), String(localized: "Gold crown and ruby", bundle: .app), String(localized: "Star sapphire and constellations", bundle: .app), String(localized: "Prismatic wings and diamond", bundle: .app)][stage]
     }
     var ornamentCount: Int { min(index + 1, 6) }
-    var nextUnlock: Int { (index + 1) * Self.interval }
+    var nextUnlock: Int { index >= Int.max / Self.interval ? Int.max : (index + 1) * Self.interval }
     /// The level opens a new rank. Past the last rank the look stays, so
     /// 675, 750 and on are ordinary levels.
     var isMilestone: Bool { level.isMultiple(of: Self.interval) && index <= 8 }

@@ -2,7 +2,7 @@ import Foundation
 
 enum SyncCore {
     static func importKey(_ session: WorkSession) -> String {
-        "\(Int(session.start.timeIntervalSince1970))|\(Int(session.end.timeIntervalSince1970))|\(Int(session.duration))"
+        "\(Int(clampingFinite: session.start.timeIntervalSince1970))|\(Int(clampingFinite: session.end.timeIntervalSince1970))|\(Int(clampingFinite: session.duration))"
     }
 
     static func purchaseName(_ itemID: String) -> String {

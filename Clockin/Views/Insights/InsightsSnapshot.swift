@@ -58,8 +58,6 @@ struct InsightsSnapshot {
     init(sessions: [WorkSession], running: RunningSession? = nil,
          sessionEarnings: [UUID: Double], runningEarnings: Double = 0,
          now: Date, calendar: Calendar, dailyGoal: Double = 0, monthlyGoal: Double = 0) {
-        precondition(sessions.allSatisfy { sessionEarnings[$0.id] != nil },
-                     "Pass rule-based earnings for every completed session.")
         let today = calendar.startOfDay(for: now)
         let weekStart = calendar.date(byAdding: .day, value: -6, to: today) ?? today
         let previousStart = calendar.date(byAdding: .day, value: -13, to: today) ?? today
@@ -72,9 +70,9 @@ struct InsightsSnapshot {
         let priorCutoff = calendar.date(byAdding: .day, value: -59, to: today) ?? today
 
         // Tum kayitlarin kazanci ve rekorlari satir basina degil, bir kez hesaplanir.
-        for session in sessions {
+        for session in sessions where session.hasValidDuration {
             let day = calendar.startOfDay(for: session.start)
-            dailyEarnings[day, default: 0] += sessionEarnings[session.id]!
+            dailyEarnings[day, default: 0] += sessionEarnings[session.id] ?? session.earnings
             daily[day, default: 0] += session.duration
             let weekday = calendar.component(.weekday, from: session.start)
             let hour = calendar.component(.hour, from: session.start)
@@ -141,7 +139,7 @@ struct InsightsSnapshot {
         }
         currentStreak = WorkedDayStreak.length(endingOn: cursor, days: Set(daily.keys), calendar: calendar)
         // Mac ile ayni yuvarlama ve biriken seri bonuslari korunur.
-        baseXP = Int(totalDuration / 3600 * 100)
+        baseXP = Int(clampingFinite: min(Double(Int.max / 2), max(0, totalDuration / 3600 * 100)))
         for (threshold, bonus) in [(3, 100), (7, 250), (14, 500), (30, 1_000), (60, 2_000)] {
             if longestStreak >= threshold { streakXP += bonus }
         }
@@ -181,7 +179,7 @@ struct InsightsGoalEstimate: Equatable {
                      monthDuration: TimeInterval, recentCompleted: TimeInterval,
                      running: RunningSession?, now: Date, calendar: Calendar) -> Self {
         var estimate = InsightsGoalEstimate()
-        if dailyGoal > 0 {
+        if dailyGoal.isFinite, dailyGoal > 0, (dailyGoal * 3600).isFinite {
             let remaining = dailyGoal * 3600 - todayDuration
             if remaining <= 0 {
                 estimate.daily = .reached
@@ -191,7 +189,7 @@ struct InsightsGoalEstimate: Equatable {
                 estimate.daily = .startNow(now.addingTimeInterval(remaining))
             }
         }
-        if monthlyGoal > 0 {
+        if monthlyGoal.isFinite, monthlyGoal > 0, (monthlyGoal * 3600).isFinite {
             let remaining = monthlyGoal * 3600 - monthDuration
             let pace = MonthlyGoalPace(recentCompleted: recentCompleted, now: now, calendar: calendar)
             let average = pace.dailyAverage
@@ -200,7 +198,7 @@ struct InsightsGoalEstimate: Equatable {
             } else if average <= 0 {
                 estimate.monthly = .unavailable
             } else {
-                let days = Int(ceil(remaining / average))
+                let days = Int(clampingFinite: ceil(remaining / average))
                 estimate.monthly = .workDays(days, fitsInMonth: days <= pace.daysLeft)
             }
         }

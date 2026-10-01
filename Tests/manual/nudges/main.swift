@@ -221,4 +221,14 @@ for offset in -28 ... -1 {
 let dstPlan = NudgePlanner.plan(dstInput).filter { $0.kind == .noWorkToday }
 check(dstPlan.count == 7 && dstPlan.allSatisfy { dst.component(.hour, from: $0.fireDate) == 11 && dst.component(.minute, from: $0.fireDate) == 30 }, "injected timezone preserves anchor across daylight saving")
 check(dstPlan[1].fireDate.timeIntervalSince(dstPlan[0].fireDate) == 23 * hour, "calendar-day planning avoids fixed twenty-four-hour drift")
+for hour in [Double.nan, .infinity, -.infinity, 1e300] {
+    let minutes = NudgeHabit(expectedWeekdays: [], typicalStartHour: hour).anchorMinutes
+    check((540...840).contains(minutes), "nonfinite and huge habit hours cannot trap")
+}
+var invalidNow = dstInput
+invalidNow.now = Date(timeIntervalSinceReferenceDate: .nan)
+check(NudgePlanner.plan(invalidNow).isEmpty && NudgePlanner.currentMood(invalidNow) == nil, "invalid clock date cannot enter calendar planning")
+for minutes in [Int.min, Int.max] {
+    check(dst.isDate(NudgePlanner.time(on: dstNow, minutes: minutes, calendar: dst), inSameDayAs: dstNow), "extreme nudge minute is bounded to its day")
+}
 print("\(checks) nudge checks passed")

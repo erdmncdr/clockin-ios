@@ -622,4 +622,21 @@ async let cachedFirst = cache.image("synthetic", colorway: "classic")
 async let cachedSecond = cache.image("synthetic", colorway: "classic")
 let cachedPair = await (cachedFirst, cachedSecond)
 check(cachedPair.0 !== classicBase && cachedPair.0 != nil && cachedPair.0 === cachedPair.1, "concurrent frame requests share cached image off main thread")
+let widgetImage = await cache.composite(frame: "synthetic", outfit: WardrobeState(), size: 160)
+var sameImage = true
+for _ in 0..<33 {
+    let image = await cache.composite(frame: "synthetic", outfit: WardrobeState(), size: 160)
+    sameImage = sameImage && image === widgetImage
+}
+check(widgetImage != nil && sameImage, "33 widget entries share one composited CGImage for the same mood")
+for index in 0..<8 {
+    _ = await cache.composite(frame: "budget-\(index)", outfit: WardrobeState(), size: 1024)
+    let retainedBytes = await cache.retainedImageBytes
+    check(retainedBytes <= 4 * 1024 * 1024, "widget image cache stays within four MiB after frame \(index)")
+}
+check(MascotMotion.samples(count: 0) { $0 } == [0, 1], "empty motion sample request degrades to endpoints")
+check(MascotMotion.samples(count: Int.max) { $0 }.count == 4096, "huge motion sample request stays bounded")
+for size in [Int.min, -1, 0, 2049, Int.max] {
+    check(ArmorHD.context(size) == nil, "invalid raster size \(size) is rejected before allocation")
+}
 print("\(checks) wardrobe checks passed including real art integration and cache")

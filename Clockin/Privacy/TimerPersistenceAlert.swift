@@ -1,7 +1,7 @@
 import SwiftUI
 
 private struct TimerPersistenceAlert: ViewModifier {
-    @EnvironmentObject private var store: ClockStore
+    @ObservedObject var store: ClockStore
 
     func body(content: Content) -> some View {
         content.alert("Could not save timer", isPresented: Binding(
@@ -16,5 +16,5 @@ private struct TimerPersistenceAlert: ViewModifier {
 }
 
 extension View {
-    func timerPersistenceAlert() -> some View { modifier(TimerPersistenceAlert()) }
+    func timerPersistenceAlert(store: ClockStore) -> some View { modifier(TimerPersistenceAlert(store: store)) }
 }

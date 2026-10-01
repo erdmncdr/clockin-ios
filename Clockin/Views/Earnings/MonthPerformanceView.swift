@@ -48,7 +48,7 @@ struct MonthPerformanceView: View {
 
     private var comparison: String {
         let previous = performance.comparisonInterval
-        let last = Calendar.current.date(byAdding: .day, value: -1, to: previous.end)!
+        let last = Calendar.current.date(byAdding: .day, value: -1, to: previous.end) ?? previous.start
         let sign = performance.difference >= 0 ? "+" : "-"
         return String(localized: "\(sign)\(DurationText.compact(abs(performance.difference))) vs \(previous.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day())) to \(last.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().year()))", bundle: .app)
     }

@@ -46,6 +46,14 @@ extension ClockinSnapshot {
         companionAccessoryID = try container.decodeIfPresent(String.self, forKey: .companionAccessoryID)
         // Eski dosyalarda tema yok; kullanicinin widget verisi kaybolmasin.
         theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon
+        guard SessionDuration.isValidDate(day), SessionDuration.isValid(completedToday),
+              earnedToday.isFinite, hourlyRate.isFinite, hourlyRate >= 0,
+              running?.hasValidDuration() ?? true,
+              companionLastWorkedDay.map(SessionDuration.isValidDate) ?? true,
+              companionProudUntil.map(SessionDuration.isValidDate) ?? true else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath,
+                                                   debugDescription: "Invalid widget snapshot values"))
+        }
     }
 
     /// `ClockStore` ile ayni kural: calisan seans yalnizca bugun basladiysa
@@ -74,19 +82,11 @@ extension ClockinSnapshot {
 
     /// Calisan seans icin widget girdilerinin zamanlari, bir saatlik.
     ///
-    /// Sure metni kendisi sayar, tutar sayamaz; her girdi o anin tutarini
-    /// yazar. Dakikada bir girdi, devam ettirmeden ya da clock in'den sonra
-    /// tutari tam bir dakika donuk birakiyordu ve widget bozuk gorunuyordu.
-    /// Bu yuzden ilk iki dakika bes saniyede bir, onuncu dakikaya kadar on
-    /// bes saniyede bir, sonra dakikada bir. Girdiler onceden uretildigi icin
-    /// sistemin yenileme butcesinden dusmez; saat dolunca bir kez yenilenir.
+    /// Sureyi sistem sayar; para her girdide yeniden hesaplanir. Ilk degisim
+    /// 30 saniyede, sonra en gec iki dakikada gelir. Tek girdiye dusurmek
+    /// parayi dondurur; 74 girdiyi arsivlemek ise widget butcesini asiyordu.
     static func runningTimelineDates(from now: Date) -> [Date] {
-        var offsets: [TimeInterval] = []
-        // Her girdi widget'i yeniden cizdirir; bes saniyelik adimlar sayac
-        // calistikca telefonu isitiyordu. Kurus hassasiyeti icin bu yeterli.
-        offsets += stride(from: 0, to: 120, by: 15).map { $0 }
-        offsets += stride(from: 120, to: 600, by: 30).map { $0 }
-        offsets += stride(from: 600, to: 3600, by: 60).map { $0 }
+        let offsets: [TimeInterval] = [0, 30, 60] + Array(stride(from: 120.0, through: 3600, by: 120))
         return offsets.map { now.addingTimeInterval($0) }
     }
 

@@ -138,7 +138,8 @@ enum PastedTextImporter {
               let hoursRange = Range(match.range(at: 1), in: cleaned),
               let minutesRange = Range(match.range(at: 2), in: cleaned),
               let hours = Int(cleaned[hoursRange]), let minutes = Int(cleaned[minutesRange]) else { return nil }
-        return TimeInterval(hours * 3600 + minutes * 60)
+        let duration = Double(hours) * 3600 + Double(minutes) * 60
+        return SessionDuration.isValid(duration) ? duration : nil
     }
 
     private static func makeSession(day: Date, startText: String, endText: String,
@@ -218,7 +219,8 @@ enum PastedTextImporter {
         if let range {
             let startYear = calendar.component(.year, from: range.lowerBound)
             let endYear = calendar.component(.year, from: range.upperBound)
-            for year in startYear...endYear {
+            // Bazi takvimlerde cag degisince yil sayisi geriye gider.
+            for year in startYear...max(startYear, min(endYear, startYear + 100)) {
                 if let candidate = calendar.date(from: DateComponents(year: year, month: month, day: day)),
                    candidate >= calendar.startOfDay(for: range.lowerBound),
                    candidate <= calendar.startOfDay(for: range.upperBound) { return candidate }

@@ -20,6 +20,32 @@ final class SyncBridge {
     private let apply: Apply
     private let backup: Backup
     private var applyingRemote = false
+    private var persistenceBatchDepth = 0
+    private var scheduledPersistence: Task<Void, Never>?
+
+    deinit { scheduledPersistence?.cancel() }
+
+    // Callback patlamalari tek flush olur; gonderim sinirlari persist() kullanir.
+    func beginPersistenceBatch() {
+        persistenceBatchDepth += 1
+        scheduledPersistence?.cancel(); scheduledPersistence = nil
+    }
+
+    @discardableResult
+    func endPersistenceBatch() async -> Bool {
+        persistenceBatchDepth = max(0, persistenceBatchDepth - 1)
+        return persistenceBatchDepth > 0 ? true : await persist()
+    }
+
+    func schedulePersist() {
+        guard persistenceBatchDepth == 0, scheduledPersistence == nil else { return }
+        scheduledPersistence = Task { [weak self] in
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            guard let self else { return }
+            self.scheduledPersistence = nil
+            _ = await self.persist()
+        }
+    }
 
     init(state: SyncSidecar, snapshot: SyncSnapshot, disk: SyncSidecarStore,
          backup: Backup? = nil, apply: @escaping Apply) {
@@ -69,7 +95,8 @@ final class SyncBridge {
     func markFetchComplete(_ complete: Bool) { fetchComplete = complete; didChange?() }
 
     func allowInitialUploadIfSafe() {
-        guard fetchComplete, !state.firstMergeCompleted, !state.needsFirstMergeReview else { return }
+        guard fetchComplete, !state.firstMergeCompleted, !state.needsFirstMergeReview,
+              !state.initialUploadAllowed else { return }
         state.initialUploadAllowed = true
         state.touch()
     }
@@ -101,25 +128,37 @@ final class SyncBridge {
 
     @discardableResult
     func persist() async -> Bool {
+        scheduledPersistence?.cancel(); scheduledPersistence = nil
+        defer { didChange?() }
         let captured = state
         do { try await disk.save(captured); persistenceError = nil; return captured.revision == state.revision }
         catch { persistenceError = String(localized: "Sync sidecar could not be saved: \(error.localizedDescription)", bundle: .app); return false }
     }
 
     func updateEngineState(_ data: Data) {
-        state.engineState = data.count <= SyncBounds.engineBytes ? data : nil
-        if state.engineState == nil { report(String(localized: "Sync checkpoint exceeded its limit. Changes will be fetched again.", bundle: .app)) }
+        let bounded = data.count <= SyncBounds.engineBytes ? data : nil
+        if bounded == nil { report(String(localized: "Sync checkpoint exceeded its limit. Changes will be fetched again.", bundle: .app)) }
+        guard state.engineState != bounded else { return }
+        state.engineState = bounded
         state.touch()
     }
     func setAccount(_ id: String) throws {
         guard id.utf8.count <= 1024 else { throw SyncFailure.invalid("Invalid account identity") }
+        guard state.accountID != id else { return }
         state.accountID = id; state.touch()
     }
     @discardableResult
     func bindEnvironment(_ environment: String) -> Bool { state.bindEnvironment(environment) }
     func resetTransport() { state.resetTransport() }
-    func rememberSystemFields(_ fields: Data, for key: String) { state.rememberSystemFields(fields, for: key); state.touch() }
-    func clearSystemFields(for key: String) { state.systemFields[key] = nil; state.touch() }
+    func rememberSystemFields(_ fields: Data, for key: String) {
+        let old = state.systemFields[key]
+        state.rememberSystemFields(fields, for: key)
+        if old != state.systemFields[key] { state.touch() }
+    }
+    func clearSystemFields(for key: String) {
+        guard state.systemFields.removeValue(forKey: key) != nil else { return }
+        state.touch()
+    }
     func acknowledge(_ record: SyncRecord, fields: Data) { state.acknowledge(record, systemFields: fields) }
     func quarantine(_ entry: SyncQuarantine) { state.addQuarantine([entry]); state.touch() }
     func removeQuarantine(at index: Int) { state.removeQuarantine(at: index) }

@@ -68,18 +68,18 @@ final class NudgeController: ObservableObject {
             if mood != nextMood { mood = nextMood }
             errorMessage = nil
             let plan = NudgePlanner.plan(input)
-            let desired = Dictionary(uniqueKeysWithValues: plan.map { ($0.identifier, $0) })
+            let desired = Dictionary(plan.map { ($0.identifier, $0) }, uniquingKeysWith: { _, last in last })
             let ours = pending.filter { $0.identifier.hasPrefix(NudgePlanner.prefix) }
             let removed = ours.filter { desired[$0.identifier] == nil }.map(\.identifier)
             if !removed.isEmpty { center.removePendingNotificationRequests(withIdentifiers: removed) }
             // Gecmis teslimler silinse bile gunluk sinir tekrar acilmaz.
-            let cutoff = input.calendar.date(byAdding: .day, value: -8, to: input.now)!
+            let cutoff = (input.calendar.date(byAdding: .day, value: -8, to: input.now) ?? input.now)
             state.scheduled.removeAll {
                 $0.fireDate < cutoff || ($0.fireDate > input.now && desired[$0.identifier] == nil)
             }
             persist()
 
-            let existing = Dictionary(uniqueKeysWithValues: ours.map { ($0.identifier, $0) })
+            let existing = Dictionary(ours.map { ($0.identifier, $0) }, uniquingKeysWith: { _, last in last })
             let newCount = plan.filter { existing[$0.identifier] == nil }.count
             let reminderReserve = pending.contains { $0.identifier == LongSessionReminderNotification.identifier } ? 0 : 1
             let shortage = max(0, pending.count - removed.count + newCount + reminderReserve - 64)

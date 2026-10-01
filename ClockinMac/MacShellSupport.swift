@@ -45,7 +45,7 @@ struct MacMainContent: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
 
     var body: some View {
-        MacLocalizedContent { MacRootView().timerPersistenceAlert() }
+        MacLocalizedContent { MacRootView().timerPersistenceAlert(store: store) }
             .onChange(of: themeRaw) { _, _ in SessionMirror.shared.refresh() }
     }
 }

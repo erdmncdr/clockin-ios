@@ -18,12 +18,12 @@ struct ClockinTimerControl: ControlWidget {
             kind: "com.erdmncdr.clockin.clockInOut",
             provider: ClockinControlProvider()
         ) { state in
-            ControlWidgetToggle("Clockin", isOn: state.isOn, action: SetClockedInIntent()) { isOn in
+            ControlWidgetToggle(LocalizedStringResource(String.LocalizationValue("Clockin"), bundle: .atURL(Bundle.main.bundleURL)), isOn: state.isOn, action: SetClockedInIntent()) { isOn in
                 Label(state.valueLabel(isOn: isOn), systemImage: isOn ? "timer" : "clock")
             }
         }
-        .displayName("Clock In / Clock Out")
-        .description("Start the timer or clock out and save your session. Paused sessions stay on.")
+        .displayName(LocalizedStringResource(String.LocalizationValue("Clock In / Clock Out"), bundle: .atURL(Bundle.main.bundleURL)))
+        .description(LocalizedStringResource(String.LocalizationValue("Start the timer or clock out and save your session. Paused sessions stay on."), bundle: .atURL(Bundle.main.bundleURL)))
     }
 }
 
@@ -38,7 +38,7 @@ struct ClockinPauseControl: ControlWidget {
                 Label(state.pauseTitle, systemImage: state.pauseSymbol)
             }
         }
-        .displayName("Pause / Resume")
-        .description("Pause or resume your Clockin session. Does nothing when no session is running.")
+        .displayName(LocalizedStringResource(String.LocalizationValue("Pause / Resume"), bundle: .atURL(Bundle.main.bundleURL)))
+        .description(LocalizedStringResource(String.LocalizationValue("Pause or resume your Clockin session. Does nothing when no session is running."), bundle: .atURL(Bundle.main.bundleURL)))
     }
 }

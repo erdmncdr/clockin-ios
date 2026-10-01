@@ -28,7 +28,7 @@ final class FocusRadioController: ObservableObject {
         #if os(iOS)
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification,
-            object: nil, queue: nil) { [weak self] notification in
+            object: nil, queue: nil) { @Sendable [weak self] notification in
             let kind = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
             Task { @MainActor in
                 guard let self else { return }
@@ -45,7 +45,7 @@ final class FocusRadioController: ObservableObject {
             }
         })
         observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification,
-            object: nil, queue: nil) { [weak self] notification in
+            object: nil, queue: nil) { @Sendable [weak self] notification in
             let reason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
             Task { @MainActor in
                 // Kulaklik cikinca hoparlorden beklenmedik yayin baslamasin.
@@ -53,7 +53,7 @@ final class FocusRadioController: ObservableObject {
             }
         })
         observers.append(center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification,
-            object: nil, queue: nil) { [weak self] _ in
+            object: nil, queue: nil) { @Sendable [weak self] _ in
             Task { @MainActor in
                 self?.stop()
                 self?.isInterrupted = false
@@ -159,7 +159,7 @@ final class FocusRadioController: ObservableObject {
         itemObservation?.invalidate()
         let id = ObjectIdentifier(item)
         // Duraklatilmis akisin hatasi da temizlenir; yeni yoklama dongusu yok.
-        itemObservation = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
+        itemObservation = item.observe(\.status, options: [.initial, .new]) { @Sendable [weak self] item, _ in
             guard item.status == .failed else { return }
             Task { @MainActor in
                 guard let self, let current = self.player?.currentItem,
@@ -229,7 +229,7 @@ final class FocusRadioController: ObservableObject {
     private func addCommand(_ command: MPRemoteCommand, session: UUID,
                             action: @escaping @MainActor @Sendable (FocusRadioController) -> Void) {
         command.isEnabled = true
-        let target = command.addTarget { [weak self] _ in
+        let target = command.addTarget { @Sendable [weak self] _ in
             Task { @MainActor in
                 // Stop oncesi kuyruga giren komut yeni bir yayin baslatmasin.
                 guard let self, self.commandSession == session else { return }

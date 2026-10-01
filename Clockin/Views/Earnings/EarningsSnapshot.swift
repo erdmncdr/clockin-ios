@@ -35,9 +35,9 @@ struct EarningsSnapshot {
          activeEarnings: Double, rate: (Date) -> Double?) {
         let interval = period?.interval ?? range.interval(at: now, calendar: calendar)
         self.interval = interval
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
+        let tomorrow = (calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now)
         func included(_ date: Date) -> Bool { date >= interval.start && date < min(interval.end, tomorrow) }
-        self.sessions = sessions.filter { included($0.start) }
+        self.sessions = sessions.filter { $0.hasValidDuration && included($0.start) }
         var days: [Date: EarningsDay] = [:]
         var amounts: [UUID: Double] = [:]
         for session in self.sessions {
@@ -71,12 +71,12 @@ struct EarningsSnapshot {
         earned = points.reduce(0) { $0 + $1.earned }
         converted = points.allSatisfy { $0.rate != nil }
             ? points.reduce(0) { $0 + ($1.converted ?? 0) } : nil
-        let rates = Dictionary(uniqueKeysWithValues: points.map { ($0.day, $0.rate) })
-        sessionAmounts = Dictionary(uniqueKeysWithValues: self.sessions.map { session in
+        let rates = Dictionary(points.map { ($0.day, $0.rate) }, uniquingKeysWith: { _, last in last })
+        sessionAmounts = Dictionary(self.sessions.map { session in
             let value = amounts[session.id, default: 0]
             let rate = rates[calendar.startOfDay(for: session.start)] ?? nil
             return (session.id, HistoryAmount(earned: value, converted: rate.map { value * $0 }))
-        })
+        }, uniquingKeysWith: { _, last in last })
     }
 }
 
@@ -92,7 +92,7 @@ extension EarningsSnapshot {
     func monthlyBars(calendar: Calendar = .current) -> [EarningsMonthBar] {
         var months: [Date: EarningsMonthBar] = [:]
         for point in points {
-            let month = calendar.dateInterval(of: .month, for: point.day)!.start
+            let month = calendar.dateInterval(of: .month, for: point.day)?.start ?? point.day
             var bar = months[month] ?? EarningsMonthBar(day: month)
             bar.duration += point.duration
             bar.earned += point.earned
@@ -148,7 +148,7 @@ struct HistoryPage {
         var groups: [Date: HistoryDayGroup] = [:]
         for session in snapshot.sessions {
             let day = calendar.startOfDay(for: session.start)
-            let amount = snapshot.sessionAmounts[session.id]!
+            let amount = snapshot.sessionAmounts[session.id] ?? HistoryAmount(earned: earnings(session), converted: nil)
             groups[day, default: HistoryDayGroup(day: day)].sessions.append(session)
             groups[day]!.duration += session.duration
             let previous = groups[day]!.money

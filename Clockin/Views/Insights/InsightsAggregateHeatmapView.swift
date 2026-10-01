@@ -70,7 +70,7 @@ struct InsightsAggregateHeatmapView: View {
 
     private func title(_ period: InsightsPeriod) -> String {
         if grouping == .month { return period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.wide).year()) }
-        let last = Calendar.current.date(byAdding: .day, value: -1, to: period.end)!
+        let last = Calendar.current.date(byAdding: .day, value: -1, to: period.end) ?? period.start
         return "\(period.start.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day())) – \(last.formatted(.dateTime.locale(AppLanguage.formatLocale).month(.abbreviated).day().year()))"
     }
 

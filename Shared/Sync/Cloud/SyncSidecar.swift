@@ -1,6 +1,6 @@
 import Foundation
 
-struct SyncSidecar: Codable, Sendable {
+struct SyncSidecar: Codable, Equatable, Sendable {
     var schema = 2
     var deviceID: String
     var sequence: UInt64 = 0
@@ -29,7 +29,7 @@ struct SyncSidecar: Codable, Sendable {
 
     init(deviceID: String = UUID().uuidString) { self.deviceID = deviceID }
 
-    mutating func touch() { revision += 1 }
+    mutating func touch() { revision = revision == .max ? .max : revision + 1 }
 
     mutating func queue(_ changes: [SyncRecord]) {
         for record in changes { records[record.key] = record.pruned() }
@@ -41,6 +41,7 @@ struct SyncSidecar: Codable, Sendable {
         guard SessionDuration.isValidDate(date) else { throw SyncFailure.invalid("Invalid local clock") }
         let last = records.values.map(\.maximumStamp.modifiedAt).max() ?? .distantPast
         let stampDate = date > last ? date : Date(timeIntervalSinceReferenceDate: last.timeIntervalSinceReferenceDate.nextUp)
+        guard sequence < .max else { throw SyncFailure.invalid("Sync sequence exhausted") }
         let stamp = SyncStamp(modifiedAt: stampDate, modifiedBy: deviceID, sequence: sequence + 1)
         var issues: [SyncLocalIssue] = []
         let changes = try SyncCore.diff(previous: previous, current: current, known: records, stamp: stamp,
@@ -73,6 +74,9 @@ struct SyncSidecar: Codable, Sendable {
 
     mutating func receive(_ incoming: [SyncRecord], snapshot: SyncSnapshot,
                           onReject: (([String]) -> Void)? = nil) throws -> SyncMerge? {
+        guard !incoming.isEmpty else { onReject?([]); return nil }
+        let before = self
+        defer { if self != before { touch() } }
         if !firstMergeCompleted {
             let merged = try SyncCore.merge(local: staged, incoming: incoming, onto: snapshot)
             onReject?(merged.quarantine.map(\.recordKey))
@@ -82,7 +86,6 @@ struct SyncSidecar: Codable, Sendable {
             }) { hasForeignStaged = true }
             for record in incoming where records[record.key] == record { pending.removeAll { $0 == record.key } }
             addQuarantine(merged.quarantine)
-            touch()
             return nil
         }
         var merge = try SyncCore.merge(local: records, incoming: incoming, onto: snapshot, deviceID: deviceID)
@@ -95,7 +98,6 @@ struct SyncSidecar: Codable, Sendable {
         for record in incoming where records[record.key] == record { pending.removeAll { $0 == record.key } }
         pending = Set(pending + merge.resend.map(\.key)).subtracting(localIssues.map(\.recordKey)).sorted()
         addQuarantine(merge.quarantine)
-        touch()
         merge.recoveries = recoveryInbox; merge.notices = activeNotices
         return merge
     }
@@ -123,9 +125,10 @@ struct SyncSidecar: Codable, Sendable {
     }
 
     mutating func acknowledge(_ record: SyncRecord, systemFields fields: Data) {
+        let before = self
         rememberSystemFields(fields, for: record.key)
         if records[record.key] == record { pending.removeAll { $0 == record.key } }
-        touch()
+        if self != before { touch() }
     }
 
     /// The user approved "entries recorded on both devices are kept once" in the preview.
@@ -268,7 +271,8 @@ struct SyncSidecar: Codable, Sendable {
 
     func validateLocalBounds(byteCount: Int) throws {
         let known = Set(records.keys).union(staged.keys)
-        guard SyncBounds.identifier(deviceID), (accountID?.utf8.count ?? 0) <= 1024,
+        guard revision < UInt64.max, sequence < UInt64.max,
+              SyncBounds.identifier(deviceID), (accountID?.utf8.count ?? 0) <= 1024,
               (firstBackupPath?.utf8.count ?? 0) <= 1024,
               recoveryInbox.count <= SyncBounds.recoveryCount,
               SyncBounds.size(recoveryInbox) <= SyncBounds.recoveryBytes,
@@ -329,12 +333,19 @@ struct SyncBackupReceipt: Sendable {
 actor SyncSidecarStore {
     let url: URL
     private var writtenRevision: UInt64?
+    private var writtenState: SyncSidecar?
+    private var writtenBytes: Data?
+    private(set) var writeCount = 0
+    private(set) var bytesWritten = 0
+    private(set) var lastWriteWasOnMainThread: Bool?
 
     init(archiveURL: URL) { url = archiveURL.deletingLastPathComponent().appendingPathComponent("sync-state.json") }
 
     func load() throws -> SyncSidecar? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        var state = try SyncCoding.decode(SyncSidecar.self, Data(contentsOf: url))
+        let bytes = try Data(contentsOf: url)
+        var state = try SyncCoding.decode(SyncSidecar.self, bytes)
+        let loaded = state
         state.retireDevicePreferences()
         guard state.schema == 2 else { throw SyncFailure.unsupportedVersion }
         guard SyncBounds.identifier(state.deviceID) else { throw SyncFailure.invalid("Missing device identity") }
@@ -344,16 +355,26 @@ actor SyncSidecarStore {
         }
         try state.validateLocalBounds(byteCount: SyncBounds.size(state))
         writtenRevision = state.revision
+        // Goc edilen durum ilk flush'ta diske yazilmali.
+        writtenState = loaded
+        writtenBytes = bytes
         return state
     }
 
     func save(_ state: SyncSidecar) throws {
         if let writtenRevision, state.revision < writtenRevision { return }
+        if state == writtenState { return }
         let bytes = try SyncCoding.encode(state)
         try state.validateLocalBounds(byteCount: bytes.count)
+        if bytes == writtenBytes { writtenState = state; writtenRevision = state.revision; return }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try bytes.write(to: url, options: .atomic)
+        lastWriteWasOnMainThread = Thread.isMainThread
         writtenRevision = state.revision
+        writtenState = state
+        writtenBytes = bytes
+        writeCount += 1
+        bytesWritten += bytes.count
     }
 
     func backup(archiveURL: URL, revision: UInt64) throws -> SyncBackupReceipt {

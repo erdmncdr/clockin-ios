@@ -23,10 +23,7 @@ struct TodayProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<TodayEntry>) -> Void) {
         let now = Date.now
         let snapshot = ClockinSnapshot.load() ?? .empty
-        // Sure metni kendisi sayar, tutar sayamaz. Sayac islerken tutar tek bir
-        // girdide donup kaliyordu: kilit ekraninda saat ilerlerken para duruyor,
-        // hatta gunun toplami oturumun altinda kaliyordu. Bir saatlik girdiyi
-        // pesin uretiyoruz; ilk dakikalar sik, sonrasi dakikada bir.
+        // Sure sistemde sayilir; para icin bir saatlik seyrek girdiler gerekir.
         func datesWithPrideExpiry(_ dates: [Date]) -> [Date] {
             guard let expiry = snapshot.companionProudUntil, expiry > now else { return dates }
             return Array(Set(dates + [expiry])).sorted()
@@ -35,26 +32,36 @@ struct TodayProvider: TimelineProvider {
             let next = now.addingTimeInterval(15 * 60)
             let dates = datesWithPrideExpiry([now])
             Task {
-                var entries: [TodayEntry] = []
-                for date in dates { entries.append(await entry(date: date, snapshot: snapshot)) }
-                completion(Timeline(entries: entries, policy: .after(next)))
+                completion(Timeline(entries: await entries(dates: dates, snapshot: snapshot), policy: .after(next)))
             }
             return
         }
         let dates = datesWithPrideExpiry(ClockinSnapshot.runningTimelineDates(from: now))
         Task {
-            var entries: [TodayEntry] = []
-            for date in dates { entries.append(await entry(date: date, snapshot: snapshot)) }
-            completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(60 * 60))))
+            completion(Timeline(entries: await entries(dates: dates, snapshot: snapshot),
+                                policy: .after(now.addingTimeInterval(60 * 60))))
         }
     }
 
     private func entry(date: Date, snapshot: ClockinSnapshot) async -> TodayEntry {
-        let mood = snapshot.companionState(at: date).mood
-        let frame = MascotResources.library?[mood].rest ?? "h01"
-        let image = await WardrobeFrameCache.shared.composite(frame: frame,
-            outfit: WardrobeState.decode(snapshot.wardrobeJSON), size: 240)
-        return TodayEntry(date: date, snapshot: snapshot, companionImage: image)
+        await entries(dates: [date], snapshot: snapshot).first ?? TodayEntry(date: date, snapshot: snapshot)
+    }
+
+    private func entries(dates: [Date], snapshot: ClockinSnapshot) async -> [TodayEntry] {
+        let outfit = WardrobeState.decode(snapshot.wardrobeJSON)
+        var images: [String: CGImage] = [:]
+        var attempted = Set<String>()
+        var result: [TodayEntry] = []
+        for date in dates {
+            let mood = snapshot.companionState(at: date).mood
+            let frame = MascotResources.library?[mood].rest ?? "h01"
+            // Ayni ruh halindeki tum girdiler ayni CGImage'i tutar; bos sonuc da onbellekte.
+            if attempted.insert(frame).inserted {
+                images[frame] = await WardrobeFrameCache.shared.composite(frame: frame, outfit: outfit, size: 160)
+            }
+            result.append(TodayEntry(date: date, snapshot: snapshot, companionImage: images[frame]))
+        }
+        return result
     }
 }
 

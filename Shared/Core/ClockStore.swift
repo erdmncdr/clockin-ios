@@ -1025,7 +1025,7 @@ final class ClockStore: ObservableObject {
 
     func monthDuration(at date: Date = .now) -> TimeInterval {
         validateCalendarCaches()
-        let month = calendar.dateInterval(of: .month, for: date)!
+        guard SessionDuration.isValidDate(date), let month = calendar.dateInterval(of: .month, for: date) else { return 0 }
         if cachedMonthDuration?.month != month.start {
             let completed = dailyDurations.reduce(0) { total, entry in
                 total + (entry.key >= month.start && entry.key < month.end ? entry.value : 0)
@@ -1056,7 +1056,7 @@ final class ClockStore: ObservableObject {
     func allEarnings(at date: Date = .now) -> Double { totalEarnings + currentEarnings(at: date) }
 
     private static func deduplicationKey(_ session: WorkSession) -> String {
-        "\(Int(session.start.timeIntervalSince1970))|\(Int(session.end.timeIntervalSince1970))|\(Int(session.duration))"
+        "\(Int(clampingFinite: session.start.timeIntervalSince1970))|\(Int(clampingFinite: session.end.timeIntervalSince1970))|\(Int(clampingFinite: session.duration))"
     }
 
     /// Yazimin tutup tutmadigini doner.

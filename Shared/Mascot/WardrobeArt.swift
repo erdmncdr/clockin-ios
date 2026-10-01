@@ -206,6 +206,30 @@ actor WardrobeFrameCache {
     private let decode: @Sendable (String, Bool) -> CGImage?
     private let hdCache: ArmorHDCache
     private var sources: [String: CGImage] = [:]
+    #if WIDGET_EXTENSION
+    private let byteLimit = 4 * 1024 * 1024
+    #else
+    private let byteLimit = 32 * 1024 * 1024
+    #endif
+
+    var retainedImageBytes: Int {
+        (Array(frames.values) + Array(stills.values) + Array(sources.values))
+            .reduce(0) { $0 + $1.bytesPerRow * $1.height }
+    }
+
+    // Gorunumun tuttugu kareler yasamaya devam eder; eski kiyafetlerin cache'i buyumez.
+    private func trimImages(keepingFrame: String? = nil, keepingStill: String? = nil) {
+        if retainedImageBytes > byteLimit {
+            let frame = keepingFrame.flatMap { frames[$0] }
+            let still = keepingStill.flatMap { stills[$0] }
+            frames.removeAll(); stills.removeAll(); sources.removeAll()
+            if let key = keepingStill, let still, still.bytesPerRow * still.height <= byteLimit {
+                stills[key] = still
+            } else if let key = keepingFrame, let frame, frame.bytesPerRow * frame.height <= byteLimit {
+                frames[key] = frame
+            }
+        }
+    }
 
     init(hdCache: ArmorHDCache = .application, decode: @escaping @Sendable (String, Bool) -> CGImage? = { id, fixedPose in
         if fixedPose {
@@ -219,11 +243,14 @@ actor WardrobeFrameCache {
     }) { self.decode = decode; self.hdCache = hdCache }
 
     func composite(frame: String, outfit: WardrobeState, size: Int) -> CGImage? {
+        var retainedKey: String?
+        defer { trimImages(keepingStill: retainedKey) }
         guard size > 0, size <= 2048 else { return nil }
         if WardrobeSkins.isHD(outfit) {
             guard let robot = image(frame, outfit: outfit, fixedPose: frame.hasPrefix("pose")) else { return nil }
             if size == ArmorHD.frameSize { return robot }
             let key = "hd/\(size)/\(frame)/\(outfit.look)"
+            retainedKey = key
             if let image = stills[key] { return image }
             guard let context = ArmorHD.context(size) else { return nil }
             context.interpolationQuality = .high
@@ -234,6 +261,7 @@ actor WardrobeFrameCache {
             return result
         }
         let key = "\(size)/\(frame)/\(outfit.look)/" + outfit.equipped.sorted { $0.key < $1.key }.map { $0.key + "=" + $0.value }.joined(separator: ";")
+        retainedKey = key
         if let image = stills[key] { return image }
         guard let robot = image(frame, outfit: outfit, fixedPose: frame.hasPrefix("pose")) else { return nil }
         let ids = Array(outfit.equipped.values)
@@ -252,10 +280,13 @@ actor WardrobeFrameCache {
     }
 
     func image(_ id: String, colorway: String, fixedPose: Bool = false, hidingAntenna: Bool = false) -> CGImage? {
+        var retainedKey: String?
+        defer { trimImages(keepingFrame: retainedKey) }
         if let style = WardrobeSkins.all[colorway]?.hdStyle {
             // Canonical key ignores garment/antenna flags. The actor has no suspension
             // points, so concurrent requests share one render per frame and style.
             let key = "hd/\(colorway)/\(id)/\(ArmorHD.frameSize)"
+            retainedKey = key
             if let image = frames[key] { return image }
             let sourceKey = (fixedPose ? "pose/" : "frame/") + id
             guard let source = sources[sourceKey] ?? decode(id, fixedPose) else { return nil }
@@ -272,6 +303,7 @@ actor WardrobeFrameCache {
             return rendered
         }
         let key = (fixedPose ? "pose/" : "frame/") + colorway + "/" + id + "/" + String(hidingAntenna)
+        retainedKey = key
         if let image = frames[key] { return image }
         guard let source = decode(id, fixedPose) else { return nil }
         let complete: CGImage
