@@ -29,7 +29,7 @@ mkdir -p "$OUT"
 # extras that would need permission.
 SETTINGS=(-Clockin.Theme "$THEME" -Clockin.GoalDailyHours 8 -Clockin.GoalMonthlyHours 160
           -Clockin.MascotEnabled -bool YES -Clockin.MinimalMode -bool NO
-          -Clockin.ChimeEnabled -bool NO -Clockin.SyncEnabled -bool NO
+          -Clockin.ChimeEnabled -bool NO -Clockin.CloudSyncEnabled -bool NO
           # The default companion and room, not whatever this Mac has unlocked.
           -Clockin.WardrobeState "{}"
           # Six months of history, so the chart is worth showing.

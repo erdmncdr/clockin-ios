@@ -1,7 +1,7 @@
 'use strict';
 // Downloads use native same-origin links in index.html, independent of JavaScript.
 
-const captions = {timer:'captionTimer',history:'captionHistory',progress:'captionProgress'};
+const captions = {today:'captionToday',history:'captionHistory',progress:'captionProgress',settings:'captionSettings'};
 const stage = document.querySelector('#product-stage');
 const picker = document.querySelector('.screen-picker');
 const pill = picker.querySelector('.picker-pill');

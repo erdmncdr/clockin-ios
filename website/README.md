@@ -14,6 +14,17 @@ Production URL: https://getclockin.netlify.app/. Netlify project ID: `406e1766-2
 
 Deployment validation: all 24 public files returned HTTP 200 anonymously; JavaScript, CSS and PNG bytes matched the local originals. The live page rendered and English/Turkish switching worked without browser console errors.
 
+## Screenshots
+
+`dist/assets/shot-*.png` come from the real Mac app, taken by
+`bash website/tools/screenshots/run` from the repository root. It builds the
+Debug app, fills the Debug build's own data folder with sample work, launches
+it once per shot with the review fixtures (`--open-section`, `--clock-in`,
+`--pin`, `--menu-panel`, `--desk-mode`) and captures the window itself. Your
+own work history and preferences are never touched or shown. Retake them
+whenever a screen changes; the page sections are Today, History, Progress,
+Settings, the menu bar panel, the pinned timer and desk mode.
+
 Downloads link to the fixed GitHub asset https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg (attachment, `application/octet-stream`), which `scripts/publish-mac.sh` replaces with every Mac release. The site itself hosts no installer and has no `_headers` file, so a Mac release does not deploy the site; Netlify bills every deploy and every byte it serves. Deploy only for site changes, with `python3 scripts/publish-mac-release.py website` from the repository. Do not use GitHub's shared latest-release URL because the repository also ships iPhone builds. In-app updates still come through the signed `macos-updates/appcast.xml` feed. The footer links to the public MIT-licensed source repository.
 
 Until 1.1.6 the DMG was served from `dist/downloads/` on Netlify and every release redeployed the site.

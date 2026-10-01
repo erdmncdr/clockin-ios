@@ -1,0 +1,47 @@
+/* The screenshot stage, the two small windows, desk mode, the feature list and
+   the iPhone note. Colors come from the site variables, so light and dark both
+   work. */
+
+.product-stage{display:block;max-width:1040px}
+.product-stage .app-screen{display:none;transform:none;opacity:1}
+.product-stage[data-active=today] [data-image=today],
+.product-stage[data-active=history] [data-image=history],
+.product-stage[data-active=progress] [data-image=progress],
+.product-stage[data-active=settings] [data-image=settings]{display:block}
+.app-screen img{width:100%;height:auto;border-radius:14px;box-shadow:0 26px 50px -24px #17223766}
+[data-theme=dark] .app-screen img{box-shadow:0 26px 50px -22px #00000099}
+
+.reach{padding-block:74px 0}
+.reach h2,.features h2,.deskmode h2,.iphone h2{font-size:clamp(1.9rem,3.4vw,2.6rem);letter-spacing:-.04em;margin:0 0 34px}
+.reach-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;align-items:end}
+.reach-shot{margin:0}
+.reach-shot img{width:100%;max-width:330px;height:auto;display:block}
+.reach-shot figcaption{margin-top:18px;max-width:380px}
+.reach-shot strong{display:block;font-size:17px;letter-spacing:-.02em;margin-bottom:5px}
+.reach-shot span{color:var(--muted);font-size:15px;line-height:1.55}
+
+.deskmode{padding-block:78px 0;text-align:center}
+.desk-copy p{color:var(--muted);font-size:17px;line-height:1.6;max-width:540px;margin:-18px auto 30px}
+.desk-shot{margin:0 auto}
+.desk-shot img{width:100%;height:auto;border-radius:16px;box-shadow:0 30px 60px -28px #17223777}
+[data-theme=dark] .desk-shot img{box-shadow:0 30px 60px -26px #000000aa}
+
+.features{padding-block:84px 0}
+.feature-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 40px}
+.feature-grid h3{font-size:17px;letter-spacing:-.02em;margin:0 0 7px}
+.feature-grid p{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
+
+.iphone{padding-block:78px 0;max-width:680px}
+.iphone p{margin:-18px 0 0;color:var(--muted);font-size:17px;line-height:1.65}
+
+@media(max-width:900px){
+  .reach-row{grid-template-columns:1fr;gap:34px}
+  .reach-shot img{max-width:300px}
+  .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px}
+}
+@media(max-width:560px){
+  .reach,.deskmode,.features,.iphone{padding-top:58px}
+  .feature-grid{grid-template-columns:1fr;gap:26px}
+  .reach h2,.features h2,.deskmode h2,.iphone h2{margin-bottom:26px}
+  .app-screen img,.desk-shot img{border-radius:11px}
+}
