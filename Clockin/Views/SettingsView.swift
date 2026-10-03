@@ -274,19 +274,48 @@ struct SettingsView: View {
                 Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
             }
         }
-        Picker("Font", selection: $fontRaw.hapticSelection($selectionFeedback)) {
-            ForEach(ClockinFontChoice.allCases) { font in
-                Text(LocalizedStringKey(font.rawValue))
-                    .font(.system(.body, design: font.design))
-                    .tag(font.rawValue)
+        // Picker stilleri satir yazi tipini siliyordu; secenekler kendi
+        // tasarimlariyla gorunsun diye satirlar elle ciziliyor.
+        #if os(macOS)
+        LabeledContent("Font") {
+            HStack(spacing: 6) {
+                ForEach(ClockinFontChoice.allCases) { font in
+                    fontChip(font)
+                }
             }
         }
-        #if os(macOS)
-        .pickerStyle(.radioGroup)
         #else
-        .pickerStyle(.navigationLink)
+        NavigationLink {
+            FontChoiceList(selection: $fontRaw.hapticSelection($selectionFeedback))
+        } label: {
+            LabeledContent("Font") {
+                Text(LocalizedStringKey(ClockinFontChoice.selected(fontRaw).rawValue))
+                    .font(.system(.body, design: ClockinFontChoice.selected(fontRaw).design))
+                    .fontDesign(ClockinFontChoice.selected(fontRaw).design)
+            }
+        }
         #endif
     }
+
+    #if os(macOS)
+    private func fontChip(_ font: ClockinFontChoice) -> some View {
+        let isSelected = ClockinFontChoice.selected(fontRaw) == font
+        return Button { fontRaw = font.rawValue } label: {
+            Text(LocalizedStringKey(font.rawValue))
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular, design: font.design))
+                // Kokteki .fontDesign(...) acik tasarimi eziyordu; en yakin olan kazanir.
+                .fontDesign(font.design)
+                .foregroundStyle(isSelected ? palette.accent : Color.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(isSelected ? palette.accent.opacity(0.16) : palette.surface, in: Capsule())
+                .overlay { Capsule().strokeBorder(isSelected ? palette.accent.opacity(0.7) : palette.surfaceStroke) }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+    #endif
 
     private var languageThemeSection: some View {
         Section {
@@ -764,3 +793,40 @@ extension Double {
         String(format: "%.2f", self).replacingOccurrences(of: ".", with: AppLanguage.formatLocale.decimalSeparator ?? ".")
     }
 }
+
+#if os(iOS)
+/// Yazi tipi secimi: her satir kendi tasarimiyla, isaret temanin vurgusuyla.
+private struct FontChoiceList: View {
+    @Binding var selection: String
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        List {
+            ForEach(ClockinFontChoice.allCases) { font in
+                Button { selection = font.rawValue } label: {
+                    HStack {
+                        Text(LocalizedStringKey(font.rawValue))
+                            .font(.system(.body, design: font.design))
+                            .fontDesign(font.design)
+                            .foregroundStyle(Color.primary)
+                        Spacer()
+                        if ClockinFontChoice.selected(selection) == font {
+                            Image(systemName: "checkmark")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(palette.accent)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityAddTraits(ClockinFontChoice.selected(selection) == font ? [.isSelected] : [])
+                .listRowBackground(palette.surface)
+            }
+        }
+        .insetGroupedList()
+        .scrollContentBackground(.hidden)
+        .background(palette.background)
+        .navigationTitle("Font")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+#endif
