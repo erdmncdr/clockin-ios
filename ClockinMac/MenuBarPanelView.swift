@@ -21,6 +21,7 @@ struct MenuBarPanelView: View {
     @EnvironmentObject private var updates: UpdateChecker
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.MinimalMode") private var minimalMode = false
@@ -30,7 +31,7 @@ struct MenuBarPanelView: View {
     @State private var now = Date()
     @State private var confirmingDiscard = false
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private var theme: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var theme: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
     private var paused: Bool { store.running?.isPaused == true }
 
     var body: some View {

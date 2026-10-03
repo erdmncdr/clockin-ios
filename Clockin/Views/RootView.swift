@@ -8,6 +8,7 @@ enum AppTab: Hashable {
 
 struct RootView: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @EnvironmentObject private var store: ClockStore
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -39,7 +40,7 @@ struct RootView: View {
         celebrations.event.map { !$0.isReaction } ?? false
     }
 
-    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
 
     /// iPhone'da yatay tutulunca dikey boyut sinifi kucuk olur.
     private var showsDeskMode: Bool { deskModeEnabled && verticalSizeClass == .compact && !deskSuppressed }

@@ -16,6 +16,7 @@ struct ClockinSnapshot: Codable, Equatable, Sendable {
     var hourlyRate: Double
     var currencyCode: String
     var theme: ClockinThemeChoice = .carbon
+    var font: ClockinFontChoice = .system
     var isAngry = false
     var companionFriendly = false
     var companionLastWorkedDay: Date?
@@ -46,6 +47,7 @@ extension ClockinSnapshot {
         companionAccessoryID = try container.decodeIfPresent(String.self, forKey: .companionAccessoryID)
         // Eski dosyalarda tema yok; kullanicinin widget verisi kaybolmasin.
         theme = try container.decodeIfPresent(ClockinThemeChoice.self, forKey: .theme) ?? .carbon
+        font = try container.decodeIfPresent(ClockinFontChoice.self, forKey: .font) ?? .system
         guard SessionDuration.isValidDate(day), SessionDuration.isValid(completedToday),
               earnedToday.isFinite, hourlyRate.isFinite, hourlyRate >= 0,
               running?.hasValidDuration() ?? true,

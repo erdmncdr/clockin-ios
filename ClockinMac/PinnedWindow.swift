@@ -143,11 +143,12 @@ struct PinnedTimerView: View {
     @EnvironmentObject private var radio: FocusRadioController
     @AppStorage("Clockin.PinnedMode") private var mode = "Money"
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var now = Date()
-    private var theme: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var theme: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
 
     var body: some View {
         Group {

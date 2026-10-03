@@ -97,8 +97,9 @@ private final class DeskWindow: NSWindow {
 
 private struct MacDeskModeContent: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @State private var summary: WorkSession?
-    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
 
     var body: some View {
         MacLocalizedContent {
@@ -123,6 +124,7 @@ private struct MacDeskModeContent: View {
         .tint(palette.accent)
         .fontDesign(palette.fontDesign)
         .preferredColorScheme(palette.colorScheme)
+        .onChange(of: fontRaw) { _, _ in SessionMirror.shared.refresh() }
         .onChange(of: themeRaw) { _, _ in SessionMirror.shared.refresh() }
     }
 }

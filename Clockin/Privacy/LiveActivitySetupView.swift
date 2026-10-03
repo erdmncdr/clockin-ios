@@ -32,13 +32,14 @@ struct LiveActivitySetupView: View {
     @AppStorage(LiveActivityPrivacy.setupSeenKey) private var seen = false
     @AppStorage(LiveActivityPrivacy.consentKey) private var enabled = false
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @State private var step = 0
     @State private var activitiesAllowed = false
     @State private var frequentAllowed = false
     @State private var settingsUnavailable = false
     @State private var showingPolicy = false
 
-    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
     private var titles: [String] { [String(localized: "Keep earnings in view", bundle: .app), String(localized: "Check your iPhone settings", bundle: .app), String(localized: "Check the connection", bundle: .app)] }
 
     var body: some View {

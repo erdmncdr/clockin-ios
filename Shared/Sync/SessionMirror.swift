@@ -111,6 +111,7 @@ final class SessionMirror {
         guard let store else { return nil }
         let theme = ClockinThemeChoice.selected(UserDefaults.standard.string(forKey: "Clockin.Theme") ?? "Carbon")
         var snapshot = ClockinSnapshot(store: store, theme: theme)
+        snapshot.font = .selected(UserDefaults.standard.string(forKey: ClockinFontChoice.preferenceKey))
         snapshot.isAngry = angry && store.running?.isPaused != false
         snapshot.companionFriendly = UserDefaults.standard.string(forKey: NudgePlanner.toneKey) == NudgeTone.friendly.rawValue
         snapshot.companionLastWorkedDay = CelebrationCenter.shared.lastWorkedDay
@@ -164,7 +165,7 @@ final class SessionMirror {
         let state = ClockinActivityAttributes.ContentState(
             running: running, hourlyRate: hourlyRate, earned: earned,
             usdTryRate: currencyCode == "USD" ? SharedStore.exchangeRates.latestRate : nil,
-            theme: theme
+            theme: theme, font: .selected(UserDefaults.standard.string(forKey: ClockinFontChoice.preferenceKey))
         )
         lastState = state
         enqueueActivityOperation { [weak self] in

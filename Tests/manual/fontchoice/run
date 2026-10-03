@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+  -module-cache-path /tmp/clockin29-font-cache \
+  Shared/Core/AppLanguage.swift Shared/Core/Models.swift \
+  Shared/Theme/ClockinThemeChoice.swift Shared/Theme/Themes.swift \
+  Shared/Sync/AppGroup.swift Shared/Sync/ClockinSnapshot.swift Shared/Sync/ClockinActivityState.swift \
+  Clockin/Views/Components/RollingNumber.swift Clockin/Views/Components/RollingNumberFont.swift \
+  Tests/manual/fontchoice/main.swift -o /tmp/clockin29-font-tests
+/tmp/clockin29-font-tests

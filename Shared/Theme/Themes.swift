@@ -4,24 +4,41 @@ extension ClockinThemeChoice {
     var palette: ClockinPalette {
         switch self {
         case .carbon:
-            ClockinPalette(background: Color(red: 0.055, green: 0.065, blue: 0.08), accent: Color(red: 0.35, green: 0.95, blue: 0.58), secondary: .cyan, fontDesign: .rounded)
+            ClockinPalette(background: Color(red: 0.055, green: 0.065, blue: 0.08), accent: Color(red: 0.35, green: 0.95, blue: 0.58), secondary: .cyan)
         case .neonOrange:
-            ClockinPalette(background: Color(red: 0.075, green: 0.045, blue: 0.025), accent: Color(red: 1.0, green: 0.43, blue: 0.08), secondary: Color(red: 1.0, green: 0.78, blue: 0.16), fontDesign: .monospaced)
+            ClockinPalette(background: Color(red: 0.075, green: 0.045, blue: 0.025), accent: Color(red: 1.0, green: 0.43, blue: 0.08), secondary: Color(red: 1.0, green: 0.78, blue: 0.16))
         case .electricBlue:
-            ClockinPalette(background: Color(red: 0.025, green: 0.055, blue: 0.105), accent: Color(red: 0.15, green: 0.68, blue: 1.0), secondary: Color(red: 0.26, green: 0.94, blue: 1.0), fontDesign: .default)
+            ClockinPalette(background: Color(red: 0.025, green: 0.055, blue: 0.105), accent: Color(red: 0.15, green: 0.68, blue: 1.0), secondary: Color(red: 0.26, green: 0.94, blue: 1.0))
         case .synthwave:
-            ClockinPalette(background: Color(red: 0.075, green: 0.025, blue: 0.105), accent: Color(red: 1.0, green: 0.24, blue: 0.72), secondary: Color(red: 0.2, green: 0.95, blue: 1.0), fontDesign: .serif)
+            ClockinPalette(background: Color(red: 0.075, green: 0.025, blue: 0.105), accent: Color(red: 1.0, green: 0.24, blue: 0.72), secondary: Color(red: 0.2, green: 0.95, blue: 1.0))
         case .dataDense:
-            ClockinPalette(background: Color(red: 0.015, green: 0.02, blue: 0.018), accent: Color(red: 0.72, green: 1.0, blue: 0.18), secondary: Color(red: 0.72, green: 0.78, blue: 0.74), fontDesign: .monospaced)
+            ClockinPalette(background: Color(red: 0.015, green: 0.02, blue: 0.018), accent: Color(red: 0.72, green: 1.0, blue: 0.18), secondary: Color(red: 0.72, green: 0.78, blue: 0.74))
         case .aurora:
-            ClockinPalette(background: Color(red: 0.025, green: 0.075, blue: 0.08), accent: Color(red: 0.28, green: 1.0, blue: 0.82), secondary: Color(red: 0.42, green: 0.78, blue: 1.0), fontDesign: .rounded)
+            ClockinPalette(background: Color(red: 0.025, green: 0.075, blue: 0.08), accent: Color(red: 0.28, green: 1.0, blue: 0.82), secondary: Color(red: 0.42, green: 0.78, blue: 1.0))
         case .terminalAmber:
-            ClockinPalette(background: Color(red: 0.055, green: 0.045, blue: 0.018), accent: Color(red: 1.0, green: 0.78, blue: 0.2), secondary: Color(red: 1.0, green: 0.47, blue: 0.16), fontDesign: .monospaced)
+            ClockinPalette(background: Color(red: 0.055, green: 0.045, blue: 0.018), accent: Color(red: 1.0, green: 0.78, blue: 0.2), secondary: Color(red: 1.0, green: 0.47, blue: 0.16))
         case .daylight:
-            ClockinPalette(background: Color(red: 0.94, green: 0.955, blue: 0.98), accent: Color(red: 0.12, green: 0.34, blue: 0.78), secondary: Color(red: 0.38, green: 0.25, blue: 0.7), fontDesign: .rounded, actionForeground: .white, colorScheme: .light)
+            ClockinPalette(background: Color(red: 0.94, green: 0.955, blue: 0.98), accent: Color(red: 0.12, green: 0.34, blue: 0.78), secondary: Color(red: 0.38, green: 0.25, blue: 0.7), actionForeground: .white, colorScheme: .light)
         }
     }
 
+    func palette(font: ClockinFontChoice) -> ClockinPalette {
+        let colors = palette
+        return ClockinPalette(background: colors.background, accent: colors.accent,
+                              secondary: colors.secondary, fontDesign: font.design,
+                              actionForeground: colors.actionForeground, colorScheme: colors.colorScheme)
+    }
+}
+
+extension ClockinFontChoice {
+    var design: Font.Design {
+        switch self {
+        case .system: .default
+        case .rounded: .rounded
+        case .serif: .serif
+        case .monospaced: .monospaced
+        }
+    }
 }
 
 struct ClockinPalette {
@@ -45,7 +62,7 @@ struct ClockinPalette {
     var surface: Color { colorScheme == .light ? .black.opacity(0.055) : .white.opacity(0.045) }
     var surfaceStroke: Color { colorScheme == .light ? .black.opacity(0.12) : .white.opacity(0.07) }
 
-    init(background: Color, accent: Color, secondary: Color, fontDesign: Font.Design,
+    init(background: Color, accent: Color, secondary: Color, fontDesign: Font.Design = .default,
          actionForeground: Color = .black, colorScheme: ColorScheme = .dark) {
         self.background = background
         self.accent = accent

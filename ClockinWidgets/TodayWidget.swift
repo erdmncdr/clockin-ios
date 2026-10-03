@@ -78,7 +78,8 @@ struct TodayWidget: Widget {
         StaticConfiguration(kind: "TodayWidget", provider: TodayProvider()) { entry in
             TodayWidgetView(entry: entry)
                 .environment(\.locale, AppLanguage.locale)
-                .environment(\.palette, entry.snapshot.theme.palette)
+                .fontDesign(entry.snapshot.font.design)
+                .environment(\.palette, entry.snapshot.theme.palette(font: entry.snapshot.font))
                 // Girdiler arasi rakam gecisi bulanik animasyonla cizilip
                 // islemci harciyordu; degerler dogrudan degissin.
                 .contentTransition(.identity)
@@ -437,7 +438,7 @@ private enum TodayWidgetPreview {
 }
 #Preview("Ready · 321 x 152 · largest text", traits: .fixedLayout(width: 321, height: 152)) {
     TodayWidgetView(previewFamily: .systemMedium, entry: TodayWidgetPreview.entry())
-        .environment(\.palette, TodayWidgetPreview.entry().snapshot.theme.palette)
+        .environment(\.palette, TodayWidgetPreview.entry().snapshot.theme.palette(font: TodayWidgetPreview.entry().snapshot.font))
         .dynamicTypeSize(.accessibility5)
         .padding(16)
 }
