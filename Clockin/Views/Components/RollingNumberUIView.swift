@@ -36,8 +36,7 @@ final class RollingNumberUIView: UIView {
     override var intrinsicContentSize: CGSize { naturalSize }
 
     func fittingSize(width: CGFloat?) -> CGSize {
-        guard let width, width.isFinite else { return naturalSize }
-        return CGSize(width: min(naturalSize.width, max(0, width)), height: naturalSize.height)
+        textLayout.fittingSize(width: width, minimum: minimumScaleFactor)
     }
 
     func update(sample: RollingNumberSample, font: UIFont, color: UIColor, layout: RollingNumberLayout,
@@ -233,8 +232,7 @@ final class RollingNumberUIView: NSView {
     override var intrinsicContentSize: CGSize { naturalSize }
 
     func fittingSize(width: CGFloat?) -> CGSize {
-        guard let width, width.isFinite else { return naturalSize }
-        return CGSize(width: min(naturalSize.width, max(0, width)), height: naturalSize.height)
+        textLayout.fittingSize(width: width, minimum: minimumScaleFactor)
     }
 
     func update(sample: RollingNumberSample, font: NSFont, color: NSColor, layout: RollingNumberLayout,

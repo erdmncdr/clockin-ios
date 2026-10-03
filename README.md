@@ -85,6 +85,7 @@ wardrobe-art also checks their cached 80 px output.
 
 ```bash
 Tests/manual/fontchoice/run # theme-independent fonts, rolling resolution and backward-compatible widget/activity payloads
+Tests/manual/rollingtext/run # Turkish/English glyph rendering, font designs, narrow proposals and iOS renderer typecheck
 Tests/manual/sync/run # includes bounded-history algebra, recovery limits and five-year simulation
 Tests/manual/sync/run persistence # buyuk pass, sessiz poll, kapanis ve hatali yazma sayilari
 Tests/manual/sync/run capability # yedi yetkisiz acilis; container veya ag islemi yok
@@ -152,6 +153,12 @@ all combinations of the motion/power/thermal/visibility policy, and the UIKit re
 update lifecycle, interruption, restyling, detachment, intrinsic sizing and baseline
 alignment. Device CPU and
 visual checks for the rolling digits are described in `PERFORMANCE.md`.
+The rollingtext check additionally paints native Mac glyphs for Turkish/English
+strings across four designs and 9-120 pt sizes, checks narrow bounds and scale
+floors, and exercises SwiftUI leading/trailing reservation sizing. Its hosting
+fixture uses the same explicit State-wrapper alias as the SDK check, with test
+theme/visibility boundaries. The iOS renderer is SDK-typechecked; this is not an
+iPhone runtime or Dynamic Type screenshot test.
 
 USD accounts can select TRY in History to change all money values on that page.
 The choice is saved as `Clockin.HistoryShowsTRY` (USD by default). Each session
