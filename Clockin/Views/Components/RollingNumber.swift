@@ -71,6 +71,15 @@ struct RollingNumberLayout {
         CGSize(width: ceil(widths.reduce(0, +)), height: widths.isEmpty ? 0 : ceil(lineHeight))
     }
 
+    func fittingSize(width: CGFloat?, minimum: CGFloat) -> CGSize {
+        guard let width, width.isFinite else { return naturalSize }
+        // Never promise bounds narrower than the renderer can draw. Returning
+        // the scale floor also lets ViewThatFits choose its stacked alternative.
+        let floor = ceil(naturalSize.width * min(1, max(0, minimum)))
+        return CGSize(width: max(floor, min(naturalSize.width, max(0, width))),
+                      height: naturalSize.height)
+    }
+
     func scale(width: CGFloat, minimum: CGFloat) -> CGFloat {
         guard naturalSize.width > 0 else { return 1 }
         return max(minimum, min(1, width / naturalSize.width))

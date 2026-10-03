@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+sources=(Clockin/Views/Components/RollingNumber.swift
+ Clockin/Views/Components/RollingNumberFont.swift
+ Clockin/Views/Components/RollingNumberUIView.swift)
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+ -module-cache-path /tmp/clockin30-cache "${sources[@]}" \
+ Tests/manual/rollingtext/main.swift -o /tmp/clockin30-rollingtext
+/tmp/clockin30-rollingtext
+work=$(mktemp -d /tmp/clockin30-host.XXXXXX)
+trap 'rm -rf "$work"' EXIT
+# Restricted hosts cannot launch the SDK 27 State macro's nested sandbox.
+sed 's/@State /@RollingTestState /g' Clockin/Views/Components/RollingNumberText.swift > "$work/RollingNumberText.swift"
+swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors -parse-as-library \
+ -module-cache-path /tmp/clockin30-cache "${sources[@]}" \
+ Clockin/Views/Components/RollingAnimationPolicy.swift "$work/RollingNumberText.swift" \
+ Tests/manual/rollingtext/hosting.swift -o "$work/hosting"
+"$work/hosting"
+xcrun --sdk iphonesimulator swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+ -module-cache-path /tmp/clockin30-cache -target arm64-apple-ios17.0-simulator \
+ -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" -typecheck "${sources[@]}"
+echo 'PASS iOS rolling renderer SDK check'

@@ -86,7 +86,7 @@ private struct MomentumMilestoneLabels: View, Equatable {
     let currencyCode: String
 
     var body: some View {
-        // Yerlesim yalnizca hedef degisince olculur; saniyelik metin ust katmandadir.
+        // Reserve a stable countdown width; stack when both labels cannot fit.
         ViewThatFits(in: .horizontal) {
             HStack {
                 targetLabel
@@ -114,16 +114,19 @@ private struct MomentumRemainingLabel: View {
     let alignment: Alignment
 
     var body: some View {
-        Text("\(min(10, target).money(code: currencyCode)) to go")
-            .hidden()
-            .overlay(alignment: alignment) {
-                ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
-                    let remaining = max(0, target - store.currentEarnings(at: now))
-                    RollingNumberText(String(localized: "\(remaining.money(code: currencyCode)) to go", bundle: .app),
-                                      value: remaining, font: .caption.weight(.semibold))
-                }
+        // SwiftUI Text and our separate glyph cells do not have identical font
+        // metrics (notably Mac caption). Both children must participate in sizing:
+        // the live value may also grow beyond the usual ten-unit reservation.
+        ZStack(alignment: alignment) {
+            RollingNumberText(String(localized: "\(min(10, target).money(code: currencyCode)) to go", bundle: .app),
+                              value: 0, font: .caption.weight(.semibold))
+                .hidden()
+                .accessibilityHidden(true)
+            ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in
+                let remaining = max(0, target - store.currentEarnings(at: now))
+                RollingNumberText(String(localized: "\(remaining.money(code: currencyCode)) to go", bundle: .app),
+                                  value: remaining, font: .caption.weight(.semibold))
             }
-            .font(.caption.weight(.semibold))
-            .monospacedDigit()
+        }
     }
 }
