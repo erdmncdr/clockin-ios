@@ -5819,6 +5819,22 @@
         }
       }
     },
+    "Font": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazı tipi"
+          }
+        }
+      }
+    },
     "Fortnight fire": {
       "localizations": {
         "tr": {
@@ -8119,6 +8135,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Monokl"
+          }
+        }
+      }
+    },
+    "Monospaced": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monospaced"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eş aralıklı"
           }
         }
       }
@@ -11261,6 +11293,22 @@
         }
       }
     },
+    "Rounded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounded"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yuvarlak"
+          }
+        }
+      }
+    },
     "Running timer": {
       "localizations": {
         "tr": {
@@ -11477,6 +11525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seri"
+          }
+        }
+      }
+    },
+    "Serif": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serif"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serif"
           }
         }
       }
@@ -12689,6 +12753,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Synthwave"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem"
           }
         }
       }

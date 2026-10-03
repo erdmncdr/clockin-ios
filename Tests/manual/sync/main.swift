@@ -32,6 +32,20 @@ func merge(_ records: [SyncRecord], onto state: SyncSnapshot = blank()) throws -
 }
 func bytes(_ snapshot: SyncSnapshot) throws -> Data { try SyncCoding.encode(SyncCore.payloads(snapshot)) }
 
+// Font stays local: the shipped allowlist rejects unknown preference records.
+check(SyncPreferences.types["Clockin.Font"] == nil
+      && SyncPreferences.deviceKeys.contains("Clockin.Font"), "font is explicitly device-local")
+check(!SyncPreferences.accepts("Clockin.Font", .string("Serif")), "font is not accepted for sync")
+var fontOnly = blank()
+fontOnly.preferences["Clockin.Font"] = .string("Serif")
+try check(SyncCore.diff(previous: blank(), current: fontOnly, known: [:], stamp: stamp("a", 99)).isEmpty,
+          "font-only edit never authors a sync record")
+let unknownFont = try record(.preference, "Clockin.Font", SyncPreference.string("Serif"))
+let rejectedFont = try merge([unknownFont])
+check(rejectedFont.quarantine.count == 1 && rejectedFont.records[unknownFont.key] == nil
+      && rejectedFont.snapshot.preferences["Clockin.Font"] == nil && rejectedFont.resend.isEmpty,
+      "unknown preference is quarantined, not silently ignored: unsafe for old clients")
+
 var original = blank()
 original.data.sessions = [session(1)]
 original.data.rateRules = [.init(id: uuid(2), effectiveFrom: date(0), hourlyRate: 25)]

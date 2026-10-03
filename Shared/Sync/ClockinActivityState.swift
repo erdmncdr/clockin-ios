@@ -15,11 +15,13 @@ struct ClockinActivityState: Codable, Hashable, Sendable {
     var usdTryRate: Double?
     var note: String
     var theme: ClockinThemeChoice = .carbon
+    var font: ClockinFontChoice = .system
 }
 
 extension ClockinActivityState {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        font = try container.decodeIfPresent(ClockinFontChoice.self, forKey: .font) ?? .system
         remoteTick = try container.decodeIfPresent(Bool.self, forKey: .remoteTick) ?? false
         if remoteTick {
             timerStart = .distantPast
@@ -44,7 +46,7 @@ extension ClockinActivityState {
     }
 
     init(running: RunningSession, hourlyRate: Double, earned: Double, usdTryRate: Double? = nil,
-         theme: ClockinThemeChoice = .carbon, updatedAt: Date = .now) {
+         theme: ClockinThemeChoice = .carbon, font: ClockinFontChoice = .system, updatedAt: Date = .now) {
         if let resumedAt = running.resumedAt {
             timerStart = resumedAt.addingTimeInterval(-running.accumulated)
             pausedAt = nil
@@ -55,11 +57,18 @@ extension ClockinActivityState {
             pausedAt = running.start.addingTimeInterval(running.accumulated)
         }
         self.theme = theme
+        self.font = font
         self.hourlyRate = hourlyRate
         earnedAtUpdate = earned
         self.updatedAt = updatedAt
         self.usdTryRate = usdTryRate
         note = running.note
+    }
+
+    /// Ticks use immutable localState. The device snapshot keeps typography current
+    /// without replacing the activity or sending this preference to the relay.
+    func displayFont(localFont: ClockinFontChoice?) -> ClockinFontChoice {
+        localFont ?? font
     }
 
     var isPaused: Bool { pausedAt != nil }
@@ -68,6 +77,7 @@ extension ClockinActivityState {
     /// Those changes require replacement (and thus invalidate its push token).
     /// In the background SessionMirror retains the old card until foreground;
     /// mixing new content with this activity's old localState would regress on a tick.
+    // Font is presentation only; changing it must reuse the existing activity.
     func hasSameCalculation(as other: Self) -> Bool {
         timerStart == other.timerStart && pausedAt == other.pausedAt
             && hourlyRate == other.hourlyRate && usdTryRate == other.usdTryRate

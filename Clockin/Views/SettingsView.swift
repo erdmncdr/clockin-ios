@@ -20,6 +20,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @AppStorage("Clockin.MascotEnabled") private var mascotEnabled = true
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
     @AppStorage(WardrobeState.deskKey) private var showHome = true
@@ -243,6 +244,7 @@ struct SettingsView: View {
     private var appearanceSection: some View {
         Section {
             #if os(iOS)
+            themeFontPickers
             Toggle("Haptics", isOn: $hapticsEnabled.hapticSelection($selectionFeedback))
             #endif
             Toggle("Level-up sound", isOn: $levelUpSoundEnabled.hapticSelection($selectionFeedback))
@@ -265,13 +267,32 @@ struct SettingsView: View {
         }
     }
 
+    @ViewBuilder
+    private var themeFontPickers: some View {
+        Picker("Theme", selection: $themeRaw.hapticSelection($selectionFeedback)) {
+            ForEach(ClockinThemeChoice.allCases) { theme in
+                Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
+            }
+        }
+        Picker("Font", selection: $fontRaw.hapticSelection($selectionFeedback)) {
+            ForEach(ClockinFontChoice.allCases) { font in
+                Text(LocalizedStringKey(font.rawValue))
+                    .font(.system(.body, design: font.design))
+                    .tag(font.rawValue)
+            }
+        }
+        #if os(macOS)
+        .pickerStyle(.radioGroup)
+        #else
+        .pickerStyle(.navigationLink)
+        #endif
+    }
+
     private var languageThemeSection: some View {
         Section {
-            Picker("Theme", selection: $themeRaw.hapticSelection($selectionFeedback)) {
-                ForEach(ClockinThemeChoice.allCases) { theme in
-                    Text(LocalizedStringKey(theme.rawValue)).tag(theme.rawValue)
-                }
-            }
+            #if os(macOS)
+            themeFontPickers
+            #endif
             Picker("Language", selection: languageSelection) {
                 Text("Automatic").tag(AppLanguage.automatic)
                 ForEach([AppLanguage.turkish, .english]) { language in

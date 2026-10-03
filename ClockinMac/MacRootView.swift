@@ -9,6 +9,7 @@ enum MacSection: Hashable {
 
 struct MacRootView: View {
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @AppStorage("Clockin.GoalDailyHours") private var dailyGoalHours = 0.0
     @AppStorage("Clockin.GoalMonthlyHours") private var monthlyGoalHours = 0.0
     @EnvironmentObject private var store: ClockStore
@@ -24,7 +25,7 @@ struct MacRootView: View {
     @State private var shareBlocker = UUID()
     @State private var celebrationFading = false
 
-    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette }
+    private var palette: ClockinPalette { ClockinThemeChoice.selected(themeRaw).palette(font: .selected(fontRaw)) }
 
     private var showsCelebration: Bool {
         celebrations.event.map { !$0.isReaction } ?? false

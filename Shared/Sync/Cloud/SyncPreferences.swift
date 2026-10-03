@@ -56,6 +56,8 @@ enum SyncPreferences {
         // App language is per device, as on Apple platforms: a Turkish Mac and
         // an English iPhone must not switch each other.
         "Clockin.Language",
+        // Older clients quarantine unknown preference records; keep font local.
+        "Clockin.Font",
         "Clockin.CloudSyncEnabled",
         "AppleLanguages",
         "Clockin.GoalPromptDismissedAt",

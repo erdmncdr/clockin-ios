@@ -84,6 +84,7 @@ The skin and armour suites cover all fourteen HD skins across 66 frames and fixe
 wardrobe-art also checks their cached 80 px output.
 
 ```bash
+Tests/manual/fontchoice/run # theme-independent fonts, rolling resolution and backward-compatible widget/activity payloads
 Tests/manual/sync/run # includes bounded-history algebra, recovery limits and five-year simulation
 Tests/manual/sync/run persistence # buyuk pass, sessiz poll, kapanis ve hatali yazma sayilari
 Tests/manual/sync/run capability # yedi yetkisiz acilis; container veya ag islemi yok

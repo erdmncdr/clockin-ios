@@ -171,6 +171,22 @@ final class FakeActivity: Sendable {
   await mirror.finish()
   check(World.state.withLock { $0.requests == 0 && $0.activities.isEmpty },
    "queued running work cannot revive an idle timer")
+  let savedFont = UserDefaults.standard.object(forKey: ClockinFontChoice.preferenceKey)
+  defer {
+   if let savedFont { UserDefaults.standard.set(savedFont, forKey: ClockinFontChoice.preferenceKey) }
+   else { UserDefaults.standard.removeObject(forKey: ClockinFontChoice.preferenceKey) }
+  }
+  for remote in [false, true] {
+   let existing = card("font-card", "EUR", remote: remote)
+   reset([existing]); LiveActivityPrivacy.enabled = remote
+   for font in ClockinFontChoice.allCases {
+    UserDefaults.standard.set(font.rawValue, forKey: ClockinFontChoice.preferenceKey)
+    refresh(mirror); await mirror.finish()
+    check(World.state.withLock { $0.requests == 0 && $0.ends == 0 && $0.activities.map(\.id) == [existing.id] }
+      && existing.content.state.font == font,
+      "font \(font.rawValue) updates existing activity, remote=\(remote), with no replacement")
+   }
+  }
   print("All \(count) Live Activity lifecycle checks passed.")
  }
 }

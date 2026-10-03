@@ -43,9 +43,11 @@ struct MacMainContent: View {
     @EnvironmentObject private var store: ClockStore
     @EnvironmentObject private var exchangeRates: ExchangeRateStore
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
 
     var body: some View {
         MacLocalizedContent { MacRootView().timerPersistenceAlert(store: store) }
+            .onChange(of: fontRaw) { _, _ in SessionMirror.shared.refresh() }
             .onChange(of: themeRaw) { _, _ in SessionMirror.shared.refresh() }
     }
 }

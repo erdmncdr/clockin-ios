@@ -7,16 +7,17 @@ struct ClockinLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ClockinActivityAttributes.self) { context in
             let state = context.attributes.displayState(context.state)
-            let palette = state.theme.palette
+            let palette = state.theme.palette(font: state.displayFont(localFont: ClockinSnapshot.load()?.font))
             LockScreenActivityView(state: state, currencyCode: context.attributes.currencyCode)
                 .environment(\.locale, AppLanguage.locale)
                 .environment(\.palette, palette)
                 .environment(\.colorScheme, palette.colorScheme)
+                .fontDesign(palette.fontDesign)
                 .activityBackgroundTint(palette.background)
                 .activitySystemActionForegroundColor(palette.accent)
         } dynamicIsland: { context in
             let state = context.attributes.displayState(context.state)
-            let palette = state.theme.palette.dynamicIslandPalette
+            let palette = state.theme.palette(font: state.displayFont(localFont: ClockinSnapshot.load()?.font)).dynamicIslandPalette
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -32,6 +33,7 @@ struct ClockinLiveActivity: Widget {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .fontDesign(palette.fontDesign)
                     .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
@@ -39,6 +41,7 @@ struct ClockinLiveActivity: Widget {
                         .font(.title3.weight(.semibold))
                         .monospacedDigit()
                         .multilineTextAlignment(.trailing)
+                        .fontDesign(palette.fontDesign)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
@@ -51,6 +54,7 @@ struct ClockinLiveActivity: Widget {
                             .environment(\.palette, palette)
                             .environment(\.colorScheme, .dark)
                     }
+                    .fontDesign(palette.fontDesign)
                 }
             } compactLeading: {
                 // Sure solda, kisa olan tutar sagda: sag taraf genisledikce durum
@@ -62,6 +66,7 @@ struct ClockinLiveActivity: Widget {
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
+                    .fontDesign(palette.fontDesign)
                     .frame(width: 50, alignment: .leading)
             } compactTrailing: {
                 // Tam sayiya asagi yuvarlanir: $1,61 "$2" yaziyordu, kazanilandan
@@ -71,6 +76,7 @@ struct ClockinLiveActivity: Widget {
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
                     .foregroundStyle(state.isPaused ? palette.secondary : palette.accent)
+                    .fontDesign(palette.fontDesign)
                     .frame(width: 32, alignment: .trailing)
             } minimal: {
                 Image(systemName: "timer")

@@ -4,6 +4,7 @@ import SwiftUI
 struct ClockinApp: App {
     @UIApplicationDelegateAdaptor(ClockinAppDelegate.self) private var appDelegate
     @AppStorage("Clockin.Theme") private var themeRaw = ClockinThemeChoice.carbon.rawValue
+    @AppStorage(ClockinFontChoice.preferenceKey) private var fontRaw = ClockinFontChoice.system.rawValue
     @Environment(\.scenePhase) private var scenePhase
     @State private var languages = LanguageSwitch.shared
 
@@ -57,6 +58,7 @@ struct ClockinApp: App {
                           exchangeRates.latestRate != nil else { return }
                     SessionMirror.shared.refresh()
                 }
+                .onChange(of: fontRaw) { _, _ in SessionMirror.shared.refresh() }
                 .onChange(of: themeRaw) { _, _ in
                     SessionMirror.shared.refresh()
                 }
