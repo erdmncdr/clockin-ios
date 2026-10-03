@@ -10,8 +10,18 @@ the download buttons point at a fixed GitHub asset
 
 The Netlify personal access token is read at run time from the login Keychain
 (service `clockin-netlify`, see docs/mac-releases.md) and never printed.
+
+The same Netlify site also serves the Live Activity relay (functions `admin`,
+`live-activity`, the minute schedule `live-activity-tick`) and the privacy page
+at /privacy/, both deployed from clockin-main's scripts/deploy-live-activity.py.
+A plain zip of dist/ replaced them on 2026-10-01 and stopped Dynamic Island
+updates for two days. This tool therefore deploys by file digests and carries
+the published functions (by their bundle digests and routes, without rebuilding)
+and the privacy page into every website deploy: first as a draft that is
+checked, then for production. It refuses to deploy if the relay looks different
+from what it expects, rather than dropping it.
 """
-import io, json, os, pathlib, subprocess, sys, time, urllib.error, urllib.parse, urllib.request, zipfile
+import hashlib, json, os, pathlib, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 
 SITE = os.environ.get('NETLIFY_SITE', 'getclockin.netlify.app')
 KEYCHAIN_SERVICE = 'clockin-netlify'
@@ -62,7 +72,12 @@ def anonymous(url):
         return response.read()
 
 
-def archive():
+RELAY_FUNCTIONS = {'admin', 'live-activity', 'live-activity-tick'}
+RELAY_SCHEDULES = [{'name': 'live-activity-tick', 'cron': '* * * * *'}]
+RELAY_FILES = {'/privacy/index.html'}
+
+
+def website_files():
     index = DIST / 'index.html'
     if not index.exists():
         fail(f'{DIST} has no index.html.')
@@ -71,36 +86,114 @@ def archive():
     stray = sorted(path.name for path in DIST.rglob('*.dmg'))
     if stray:
         fail(f'dist still contains {", ".join(stray)}; the installer is served from GitHub.')
-    buffer = io.BytesIO()
-    files = 0
-    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipped:
-        for path in sorted(DIST.rglob('*')):
-            if path.is_file() and path.name != '.DS_Store':
-                zipped.write(path, path.relative_to(DIST).as_posix())
-                files += 1
-    return buffer.getvalue(), files
+    files, blobs = {}, {}
+    for path in sorted(DIST.rglob('*')):
+        if path.is_file() and path.name != '.DS_Store':
+            data = path.read_bytes()
+            sha = hashlib.sha1(data).hexdigest()
+            name = '/' + path.relative_to(DIST).as_posix()
+            if name in RELAY_FILES:
+                fail(f'dist must not contain {name}; it belongs to the relay deploy.')
+            files[name] = sha
+            blobs[sha] = (name, data)
+    return files, blobs
 
 
-def main():
-    data, files = archive()
-    print(f'{files} files, {len(data) / 1024:.0f} KB zipped')
-    if '--dry-run' in sys.argv:
-        print('Dry run: nothing was deployed.')
-        return
-    bearer = token()
-    print(f'Deploying to {SITE}')
+def relay(bearer, site):
+    """The published relay functions and privacy page, to carry into the new deploy."""
+    published = site.get('published_deploy') or {}
+    functions = published.get('available_functions') or []
+    names = {f.get('n') for f in functions}
+    if names != RELAY_FUNCTIONS:
+        fail(f'The live deploy has functions {sorted(names)}, expected {sorted(RELAY_FUNCTIONS)}. '
+             'Restore the relay with clockin-main/scripts/deploy-live-activity.py first.')
+    schedules = published.get('function_schedules') or []
+    if schedules != RELAY_SCHEDULES:
+        fail(f'Unexpected function schedules {schedules}; not deploying.')
+    hashes, config = {}, {}
+    for f in functions:
+        if not f.get('d') or 'bd' not in f:
+            fail(f'Function {f.get("n")} has no bundle digest; not deploying.')
+        hashes[f['n']] = f['d']
+        entry = {'build_data': f['bd']}
+        if f.get('p') is not None:
+            entry['priority'] = f['p']
+        if f.get('ro'):
+            entry['routes'] = [{'pattern': r.get('p'), 'literal': r.get('l'), 'expression': r.get('e'),
+                                'methods': r.get('m') or [], 'prefer_static': bool(r.get('ps'))}
+                               for r in f['ro']]
+        if f.get('tr'):
+            entry['traffic_rules'] = f['tr']
+        config[f['n']] = entry
+    live_files = api('GET', f'https://api.netlify.com/api/v1/deploys/{published["id"]}/files', bearer)
+    kept = {f['path']: f['sha'] for f in live_files if f['path'] in RELAY_FILES}
+    if set(kept) != RELAY_FILES:
+        fail(f'The live deploy lacks {sorted(RELAY_FILES - set(kept))}; restore the relay first.')
+    return published['id'], hashes, config, schedules, kept
+
+
+def create(bearer, files, blobs, hashes, config, schedules, draft):
     deploy = api('POST', f'https://api.netlify.com/api/v1/sites/{SITE}/deploys', bearer,
-                 data=data, content_type='application/zip')
+                 data=json.dumps({'files': files, 'functions': hashes, 'functions_config': config,
+                                  'function_schedules': schedules, 'draft': draft, 'async': False}).encode(),
+                 content_type='application/json')
+    if deploy.get('required_functions'):
+        fail('Netlify asked to upload function bundles it should already have; nothing was published. '
+             'Use clockin-main/scripts/deploy-live-activity.py.')
+    for sha in deploy.get('required') or []:
+        if sha not in blobs:
+            fail('Netlify asked for a file that is not part of the website; nothing was published.')
+        name, data = blobs[sha]
+        api('PUT', f'https://api.netlify.com/api/v1/deploys/{deploy["id"]}/files/{urllib.parse.quote(name.lstrip("/"), safe="/")}',
+            bearer, data=data, content_type='application/octet-stream')
     deadline = time.time() + 600
     while deploy.get('state') != 'ready':
         if deploy.get('state') == 'error' or time.time() > deadline:
             fail(f'The deploy did not finish: {deploy.get("error_message") or deploy.get("state")}')
         time.sleep(4)
         deploy = api('GET', f'https://api.netlify.com/api/v1/deploys/{deploy["id"]}', bearer)
-    page = anonymous(f'https://{SITE}/')
+    got = {f.get('n') for f in deploy.get('available_functions') or []}
+    if got != RELAY_FUNCTIONS or (deploy.get('function_schedules') or []) != RELAY_SCHEDULES:
+        fail(f'Deploy {deploy["id"]} came out with functions {sorted(got)}; it was not published.' if draft else
+             f'Production deploy {deploy["id"]} lost the relay; restore the previous deploy now.')
+    return deploy
+
+
+def check(url, production):
+    page = anonymous(url + '/')
     if DOWNLOAD_URL.encode() not in page:
-        fail('The live page does not link to the GitHub download.')
-    print(f'Live: https://{SITE}')
+        fail(f'{url} does not link to the GitHub download.')
+    if b'clockin-privacy-protocol' not in anonymous(url + '/privacy/'):
+        fail(f'{url}/privacy/ is not the privacy policy.')
+    health = json.loads(anonymous(url + '/api/v1/live-activity'))
+    if health.get('service') != 'clockin-live-activity' or health.get('intervalSeconds') != 60:
+        fail(f'{url} relay health is wrong: {health}')
+    if production and not health.get('pushConfigured'):
+        fail('Production relay has no APNs configuration; restore the previous deploy now.')
+
+
+def main():
+    files, blobs = website_files()
+    print(f'{len(files)} website files')
+    bearer = token()
+    site = api('GET', f'https://api.netlify.com/api/v1/sites/{SITE}', bearer)
+    previous, hashes, config, schedules, kept = relay(bearer, site)
+    print(f'Relay to carry: {sorted(hashes)}, {schedules[0]["cron"]}, {sorted(kept)}')
+    files.update(kept)
+    if '--dry-run' in sys.argv:
+        print('Dry run: nothing was deployed.')
+        return
+    print(f'Draft deploy to {SITE}')
+    draft = create(bearer, files, blobs, hashes, config, schedules, draft=True)
+    check(draft['deploy_ssl_url'], production=False)
+    print(f'Draft verified: {draft["deploy_ssl_url"]}')
+    print(f'Publishing (previous production deploy: {previous})')
+    live = create(bearer, files, blobs, hashes, config, schedules, draft=False)
+    site = api('GET', f'https://api.netlify.com/api/v1/sites/{SITE}', bearer)
+    if site['published_deploy']['id'] != live['id']:
+        fail('Netlify did not publish the new deploy.')
+    check(f'https://{SITE}', production=True)
+    print(f'Live: https://{SITE} (relay and privacy page carried over)')
 
 
 if __name__ == '__main__':
