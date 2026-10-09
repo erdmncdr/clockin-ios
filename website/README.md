@@ -1,59 +1,75 @@
-# Clockin download website
+# Clockin product website
 
-Static English/Turkish product page, with the existing app icon, mascot and genuine macOS UI captures populated with synthetic demo data. Native application source and private operational notes are not included in this website.
+Static HTML/CSS/JavaScript in `dist/`. No build step, package install or runtime dependency. English/Turkish copy lives in `locale.js`; `preferences.js` applies the existing local language and OS/saved appearance preferences.
 
-Serve `dist/` with a static HTTP server. No install or build step is needed.
+Production: https://getclockin.netlify.app/. This redesign is local and **has not been deployed**. See [DESIGN.md](DESIGN.md) for the visual direction and [redesign result](../docs/codex/31-website-redesign-result.md) for review notes.
 
-## Hosting
+## Preview and checks
 
-Netlify is the active hosting destination. `netlify.toml` sets the publish directory to `dist`; leave the build command empty. For a manual deployment, upload only the `dist/` folder (or a ZIP of its contents with `index.html` at the archive root). Future manual updates must target the same Netlify project's Deploys page. Git-based automatic deployment is not configured yet.
+From the repository root:
 
-The existing Sites deployment remains live; its configuration is retained in `.openai/hosting.json`. Publish future website changes to Netlify, not to Sites by default.
+```sh
+python3 -m http.server 8310 --bind 127.0.0.1 --directory website/dist
+python3 website/tools/verify.py
+```
 
-Production URL: https://getclockin.netlify.app/. Netlify project ID: `406e1766-2c8b-4b61-99a1-f4736b8c512a`, team `erdmncdr`. Initial published deploy: `6aa7fd4d8b185570c5388b7c` (2026-09-14). Deploy updates through https://app.netlify.com/projects/getclockin/deploys. The user selected `getclockin` after Netlify reported `clockin` and `clockinapp` unavailable. The separate existing `erdoderdo` project was not modified.
+Open `http://127.0.0.1:8310`. If the environment cannot bind a local port, open `website/dist/index.html` directly, or make the offline review harness:
 
-Deployment validation: all 24 public files returned HTTP 200 anonymously; JavaScript, CSS and PNG bytes matched the local originals. The live page rendered and English/Turkish switching worked without browser console errors.
+```sh
+python3 website/tools/review.py
+```
 
-## Screenshots
+Open `/tmp/clockin-review.html`. Its iframe has an exact 1440×900, 1024×800 or 375×812 viewport; the outer page scales it to fit the screen. It inlines the current site CSS/JS and loads the unchanged local images. The review buttons select sections, language and theme. “Run browser checks” exercises overflow in both languages/themes, real-screen selections, the sample timers and companion navigation; its visible JSON lists pass/fail results. To test reduced motion, enable the browser's `prefers-reduced-motion: reduce` emulation (or the OS setting) and run again. Re-run `review.py` and reload after changing site files. The harness stays outside `dist/`.
 
-`dist/assets/shot-*.png` come from the real Mac app, taken by
-`bash website/tools/screenshots/run` from the repository root. It builds the
-Debug app, fills the Debug build's own data folder with sample work, launches
-it once per shot with the review fixtures (`--open-section`, `--clock-in`,
-`--pin`, `--menu-panel`, `--desk-mode`) and captures the window itself. Your
-own work history and preferences are never touched or shown. Retake them
-whenever a screen changes; the page sections are Today, History, Progress,
-Settings, the menu bar panel, the pinned timer and desk mode.
+`verify.py` checks local links, EN/TR parity, image aspect ratios, sprite frames, generated-asset checksums, JavaScript syntax, exact download/beta URLs and absence of `dist/privacy/`. It reports uncompressed payload estimates, not measured network transfer or a Lighthouse score. It needs Python 3 and an existing Node executable for syntax checks.
 
-Downloads link to the fixed GitHub asset https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg (attachment, `application/octet-stream`), which `scripts/publish-mac.sh` replaces with every Mac release. The site itself hosts no installer and has no `_headers` file, so a Mac release does not deploy the site; Netlify bills every deploy and every byte it serves. Deploy only for site changes, with `python3 website/tools/deploy` (try `--dry-run` first). The same Netlify site serves the Live Activity relay and /privacy/; the tool carries both into every deploy and refuses to deploy if they look wrong. Never upload a bare zip of dist/: that removed the relay on 2026-10-01. Do not use GitHub's shared latest-release URL because the repository also ships iPhone builds. In-app updates still come through the signed `macos-updates/appcast.xml` feed. The footer links to the public MIT-licensed source repository.
+## Assets and offline generation
 
-Until 1.1.6 the DMG was served from `dist/downloads/` on Netlify and every release redeployed the site.
+- **Mac captures:** `dist/assets/shot-*.png`, with original and `-small` responsive candidates. Today, History, Progress and Settings are 1920×1720; small versions are 1120 wide. Menu bar: 640×632; pinned timer: 640×224; desk: 1920×1205. These files were preserved unchanged.
+- **iPhone captures:** `phone-today.png`, `phone-history.png`, `phone-progress.png`, 690×1500. Original app captures with synthetic data, unchanged. Their English UI remains part of the capture in either site language.
+- **Existing sprite clips:** `assets/companion/clips.json` is the source manifest; `clips.js` is its generated classic-script equivalent so file previews also work without a fetch/CORS requirement. `sprite.js` retains AVIF detection, PNG fallback, decoded-frame caching, original clips and compositor hops/sway.
+- **New gallery PNGs:** `assets/gallery/`, generated from the app's source by `tools/gallery/main.swift` and the standard-library Python compile runner. No image-generation service or new dependency is used.
 
-2026-09-15 download fix: direct Netlify download returned HTTP 200 without redirects, attachment headers and the correct SHA-256. Clicking the live hero link in desktop Chrome completed a 12.1 MB download while keeping the website open. The download hover greeting remained functional; the refreshed live page reported no console errors. This check does not cover every embedded mobile browser.
+```sh
+python3 website/tools/gallery/render.py
+```
 
-Screenshots were captured from a separate app bundle and separate demo JSON. They do not contain the user's work records. The site labels and companion copy switch between English and Turkish; genuine application captures retain the app’s English interface.
+Requires macOS, Xcode's Swift compiler and system frameworks. The runner compiles Swift 6 into a temporary directory; it does not build/launch the app or read user preferences/data. It copies the drawing portion of `WardrobeArt.swift` verbatim, excluding the runtime cache actor, and compiles the shared wardrobe/geometry/home/HD armor code and the actual prestige badge art. A tiny `Bundle.app` shim uses the tool's bundle, so it does not access the app's shared defaults.
 
-Images (2026-10-01): Mac windows are captured at 2× by the tool from a 960 × 860 pt window (`shot-*.png` 1920 × 1720, `-small` 1120 wide); the menu bar panel is 640 × 632 and the pinned timer 640 × 224 (opened at its 320 × 112 default, not a size saved on this Mac); desk mode is the full screen (1920 × 1205; since 2.0.8 the room fills it). The `width`/`height` attributes in index.html must match the files, or browsers pick a blurry candidate. iPhone shots come from the iPhone 17 Pro simulator with the fixture data, `-Clockin.Language en -AppleLocale en_US`, status bar at 9:41 and Reduce Motion on (so rolling digits are not caught mid-roll), resized from 1206 × 2622 to 690 × 1500.
+Generated gallery:
 
-Validation: all three image selections checked in the browser at 390px viewport width, native image dimensions confirmed, no horizontal overflow. Desktop image dimensions and overflow checked at 1280px; no browser console errors. JavaScript syntax and local asset references checked.
+| Files | Source and method |
+| --- | --- |
+| `outfit-base`, `outfit-1…3`, `layer-cap`, `layer-round-glasses`, `layer-scarf` | `Frames/h01.png`, `Wardrobe/*.png`, `mascot-anchors.json`, `wardrobe-sprites.json`; `WardrobeArt.overlays/composite` and antenna removal. 628×628. Layers use the exact final canvas, allowing transform-only assembly. |
+| `room-cozy`, `room-night`, `room-studio` | `Home/home-items.json`, original room/furniture PNGs, `HomeSceneLayout.furnitureRect` and companion placement. 1080×720. Each has seven furniture/decor items. |
+| `armor-0…3` | `ArmorHD`, `ArmorHDParts`, `ArmorHDPixels`; Paladin materials for ranks 0/3/5/8. 700×700. |
+| `rank-0…3` | `LevelPrestige`, `PrestigeForge`, `RankMaterial`, `ForgedCrown`, `LevelPrestigeViews`, `RankSignatures` with fixed time; SwiftUI `ImageRenderer`. 630×288. Badge levels 1/225/375/600. |
+| `a01/02/06/07/08/10/11`, `z01/02/06/07/08/10/11` | App angry/sleepy frames; 314×314. `clips.json` derives their events from hello, as the app does. |
 
+`assets/gallery/manifest.json` records source/output SHA-256 hashes and output byte counts; it extends provenance alongside the unchanged legacy `assets/image-manifest.json`. `outfit-1/2` are reproducible inspection artifacts; scroll playback uses the base/layers, and reduced motion uses `outfit-3`. New exports use PNG: an ImageIO AVIF probe failed to finalize in this sandbox. Existing AVIFs remain in use. Below-the-fold images are lazy and have explicit dimensions; no imagery is served by third parties.
 
-## Interactive workday
+The historical screenshot tool is `bash website/tools/screenshots/run`; inspect its checkout/build assumptions before retaking screenshots. It uses an isolated demo app and sample data. This redesign does not retake screenshots or touch the user's app data.
 
-The hero uses the original Clockin mascot frames and written greetings. “Birlikte bakalım” opens a scroll-driven three-scene demo: focus, break and daily results. Scene navigation also works by keyboard. This illustrative web demo is labeled separately from the genuine app screenshot gallery below it.
+## Behavior
 
-`journey.js` derives the scene and panel perspective from the page's native scroll position. No wheel interception or third-party animation runtime. The sample timer starts only after the visitor presses its button, uses monotonic elapsed time, and pauses when entering the break or results scene. Every scene entry resets its example: focus starts at zero, break starts paused at one hour, and results show the fixed sample day. Resuming advances the current scene’s timer until the next scene change. Timer colors and the mascot follow the running/paused state in either scene. Its sample hourly rate is explicit; the final daily summary is independently labeled sample data. Nothing is recorded or sent to a service.
+`journey.js` preserves the focus/break/results interactive workday and resets each scene's example on entry. `gallery.js` coordinates nearby section entrances, scroll-pinned companion chapters and the foreground-only iPhone example. CSS view timelines handle entrances where supported; IntersectionObserver/rAF provides the fallback. No scroll hijacking, animation package, animated blur or external fonts.
 
-The OS reduced-motion preference disables sprite playback, perspective changes and scene transitions. Motion toggle buttons are not shown. Sprite and timer repaint intervals stop off-screen or in a hidden tab. A running sample timer retains elapsed time without background repaints.
+Reduced motion stops decorative playback, displays the complete companion gallery in normal reading order, and leaves explicit sample-timer interaction available. Viewports below 650 px high also unpin the companion so content does not become clipped. `sprite.js` cancels active sway/hops immediately when stopped and removes settled timeout abort listeners.
 
-Validation: actual browser interaction at 1280×850, 390×844 and 320×667. Scroll and scene navigation, timer start/pause/resume and frozen paused value, all three real screenshot selections and the download dialog checked. No horizontal overflow or console errors; all screenshots remain 1755px wide. Reduced-motion CSS and preference listener reviewed; OS preference emulation was not available in this browser.
+The Live Activity and Dynamic Island are **labelled HTML illustrations**, not captures or connections to the app. The illustration starts at 1h24m / TRY 420 at TRY 300/hour; pause freezes it; clock-out ends only the example; try-again restarts it. No session is saved or sent anywhere. Control Center availability is stated as iOS 18+; the iPhone beta requires iOS 17+.
 
-## Language and appearance
+## Deployment — owner only
 
-English is the default language, independent of browser locale. EN/TR changes all page copy, dynamic messages, metadata and accessibility labels. An explicit language choice is saved locally. Light/dark appearance initially follows the OS; the header toggle saves an explicit override. Storage failures do not prevent the site from working. Appearance is applied before the first paint. Currency remains TRY in both languages; only formatting changes, not values.
+Do not deploy for this task. Netlify bills every deploy. The owner reviews and runs:
 
-Play/pause controls use consistent inline SVG strokes. No movement-toggle buttons are reintroduced.
+```sh
+python3 website/tools/deploy --dry-run
+python3 website/tools/deploy
+```
 
-Validation for language/theme update: desktop 1280×850 and phone 320×667, both themes, English/Turkish and persistence after reload; focus start/pause, one-hour break reset and resume with green/amber colors and matching mascot. Sample earnings, scene navigation, localized image selector and download dialog checked.
+`--dry-run` reads/authenticates the live site; it is not an offline validation command. The tool carries the existing Live Activity relay/functions/schedule and `/privacy/` into the deployment and verifies them. **Never upload bare `dist/`, a dist ZIP, or use another deployment mechanism. Never create a `privacy/` folder in dist.** The old README's manual-upload advice is superseded.
 
-Scene reset validation: forward/backward scroll and scene navigation restore timer, button, mascot and floating note together. Staying within the same scene does not reset a running timer.
+All Mac download actions must point to:
+`https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg`
+
+The fixed release asset is updated by the Mac release flow without redeploying the site. Never switch to GitHub's shared `latest` asset, since that repository also ships iPhone builds. The public iPhone beta is labelled and links to `https://testflight.apple.com/join/tr6kSDMN`. Footer/source links retain the public MIT repository.

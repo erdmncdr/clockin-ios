@@ -44,13 +44,14 @@ const ClockinSprite = (() => {
     probe.onerror = () => resolve(false);
     probe.src = 'data:image/avif;base64,AAAAGGZ0eXBhdmlmAAAAAGF2aWZtaWYxAAAB4W1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAHBpY3QAAAAAAAAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAADnBpdG0AAAAAAAEAAAA4aWluZgAAAAAAAgAAABVpbmZlAgAAAAABAABhdjAxAAAAABVpbmZlAgAAAQACAABhdjAxAAAAABppcmVmAAAAAAAAAA5hdXhsAAIAAQABAAABBGlwcnAAAADZaXBjbwAAABNjb2xybmNseAACAAIABoAAAAAMY2xsaQDLAEAAAAAUaXNwZQAAAAAAAAACAAAAAgAAAChjbGFwAAAAAQAAAAEAAAABAAAAAf/AAAAAgAAA/8AAAACAAAAAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAI2lwbWEAAAAAAAAAAgABB4ECAwaJhIUAAgYDB4iKhIUAAAAsaWxvYwAAAABEAAACAAEAAAABAAACCQAAACAAAgAAAAEAAAIpAAAAJQAAAAFtZGF0AAAAAAAAAFUSAAoMAAAAAAZ//AgQEDQgMg4QAb4ASSSSIAEI4JuUVRIACggAAAAABn/8FTIXEAGOACCKCtLvWK23+kWAjE7E5r/wSp4=';
   });
-  const manifest = fetch('assets/companion/clips.json').then(r => r.ok ? r.json() : null).catch(() => null);
+  const manifest = Promise.resolve(window.ClockinClips || null);
 
   const ease = {out: 'cubic-bezier(.22,1,.36,1)', inOut: 'cubic-bezier(.65,0,.35,1)'};
   const random = (min, max) => min + Math.random() * (max - min);
   const wait = (ms, signal) => new Promise(resolve => {
-    const id = setTimeout(resolve, ms);
-    signal.addEventListener('abort', () => { clearTimeout(id); resolve(); }, {once: true});
+    const finish = () => { clearTimeout(id); signal.removeEventListener('abort', finish); resolve(); };
+    const id = setTimeout(finish, ms);
+    signal.addEventListener('abort', finish, {once: true});
   });
 
   // Which drawn events each mood may play, and how often. `hop` is not a clip:
@@ -61,7 +62,9 @@ const ClockinSprite = (() => {
     coffee: {steam: 3, blink: 2, antennaDip: 1.5, action: 2.5, actionAntennaDip: 1},
     working: {keyPress: 4, antennaDipTyping: 1.5, blink: 2, blinkAntennaDip: 1, antennaDip: 1}
   };
-  const standing = {hello: true, celebrate: true};
+  weights.angry = {...weights.hello, hop: 0};
+  weights.tired = {blink: 3, antennaDip: 1, glow: 1};
+  const standing = {hello: true, celebrate: true, angry: true, tired: true};
   function pick(options, last) {
     const entries = Object.entries(options).filter(([name]) => name !== last);
     let roll = Math.random() * entries.reduce((sum, [, w]) => sum + w, 0);
@@ -111,7 +114,7 @@ const ClockinSprite = (() => {
       if (image.parentElement?.tagName === 'PICTURE') image.parentElement.querySelectorAll('source').forEach(el => el.remove());
       const set = clips?.[name];
       const folder = set ? `assets/companion/${set.folder}/` : null;
-      const url = id => folder + id + (useAvif ? (small ? '-314.avif' : '.avif') : '.png');
+      const url = id => folder + id + (useAvif && set.format !== 'png' ? (small ? '-314.avif' : '.avif') : '.png');
       const fallback = (sequences[name] || sequences.hello).map(step => ({src: useAvif ? step.src.replace(/\.png$/, small ? '-314.avif' : '.avif') : step.src, ms: step.ms}));
 
       let current = '';
@@ -174,12 +177,9 @@ const ClockinSprite = (() => {
 
     const stop = () => {
       controller.abort();
-      if (swayAnimation && sway) {
-        // Ease back to rest from wherever the sway is, instead of snapping.
-        const from = getComputedStyle(sway).transform;
-        swayAnimation.cancel();
-        if (from && from !== 'none') sway.animate([{transform: from}, {transform: 'none'}], {duration: 520, easing: ease.out});
-      }
+      swayAnimation?.cancel();
+      // Stop a hop immediately on reduced motion, visibility or mood changes.
+      for (const part of [body, shadow]) part?.getAnimations().forEach(animation => animation.cancel());
     };
     stop.react = () => reactHop();
     return stop;
