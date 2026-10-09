@@ -82,3 +82,10 @@ Only the owner runs `website/tools/deploy` after review. It carries the Live Act
 Mac: `https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg`
 
 iPhone beta: `https://testflight.apple.com/join/tr6kSDMN`
+
+## Deployed
+
+2026-10-09 from 7b6d8d5 with `website/tools/deploy`: production deploy
+`6ac9404d26fa2ee5ac6c4e2a` (previous: `6abcd212a1f80c626ec40ede`). Live page matches
+`dist/index.html` apart from Netlify's injected comment; relay health reports
+protocol 2, `pushConfigured: true`; `/privacy/` returns 200.
