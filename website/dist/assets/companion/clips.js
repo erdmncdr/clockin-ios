@@ -1,4 +1,5 @@
-{
+// Generated from clips.json by website/tools/gallery/render.py.
+window.ClockinClips = {
   "hello": {
     "folder": "hello-loop",
     "rest": "h01",
@@ -953,4 +954,4 @@
       ]
     }
   }
-}
+};

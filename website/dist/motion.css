@@ -1,97 +1,12 @@
-/* Motion and rendering.
-   Transitions animate transform and opacity only, so they run on the compositor
-   instead of repainting; one easing family keeps them feeling of a piece.
-   Everything here stops under prefers-reduced-motion (style.css). */
-:root{--ease-out:cubic-bezier(.22,1,.36,1);--ease-in-out:cubic-bezier(.65,0,.35,1)}
-
-/* One orchestrated entrance: the hero, once, on load. */
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.hero-copy>*{animation:rise .8s var(--ease-out) backwards}
-.hero-copy>:nth-child(2){animation-delay:.07s}
-.hero-copy>:nth-child(3){animation-delay:.14s}
-.hero-copy>:nth-child(4){animation-delay:.2s}
-.hero-art.companion{animation:rise 1s .12s var(--ease-out) backwards}
-
-h1,h2{text-wrap:balance}
-button,a{touch-action:manipulation}
-/* A brightness filter on hover repainted every hovered button. */
-button:hover{filter:none}
-.demo-action{transition:background .6s var(--ease-out),opacity .2s}
-.demo-action:hover{opacity:.9}
-
-/* Scene backgrounds. Animating the sticky panel's background colour repainted
-   the whole viewport for most of a second on every scene change; three stacked
-   layers now cross-fade instead. */
-.journey{--bg-work:#182238;--bg-break:#eadfd1;--bg-reward:#dce8e3}
-[data-theme=dark] .journey{--bg-work:#101a2b;--bg-break:#2c2520;--bg-reward:#192c27}
-.journey-sticky{background:transparent;transition:color .7s var(--ease-out);contain:paint}
-.journey-backdrop{position:absolute;inset:0;z-index:-2;pointer-events:none}
-.journey-backdrop i{position:absolute;inset:0;opacity:0;transition:opacity .9s var(--ease-out);will-change:opacity}
-.journey-backdrop i:nth-child(1){background:var(--bg-work)}
-.journey-backdrop i:nth-child(2){background:var(--bg-break)}
-.journey-backdrop i:nth-child(3){background:var(--bg-reward)}
-.journey[data-scene=work] .journey-backdrop i:nth-child(1),
-.journey[data-scene=break] .journey-backdrop i:nth-child(2),
-.journey[data-scene=reward] .journey-backdrop i:nth-child(3){opacity:1}
-
-.journey-copy.scene-enter h2{animation:scene-copy .7s var(--ease-out) backwards}
-.journey-copy.scene-enter>p{animation:scene-copy .7s .06s var(--ease-out) backwards}
-.journey-copy.scene-enter .journey-speech{animation:scene-copy .7s .12s var(--ease-out) backwards}
-
-/* Timer and summary share one cell and cross-fade. */
-.demo-window{display:grid;grid-template-columns:100%;grid-template-rows:auto 1fr;align-content:start}
-.demo-timer,.demo-summary{grid-row:2;grid-column:1;transition:opacity .45s var(--ease-out),transform .6s var(--ease-out)}
-.demo-window[data-view=summary] .demo-timer,
-.demo-window:not([data-view=summary]) .demo-summary{opacity:0;transform:translateY(10px) scale(.985);pointer-events:none}
-/* The chart draws each time the summary appears, not once while it is hidden. */
-.demo-summary .chart-line,.demo-summary .chart-area{animation:none}
-.demo-window[data-view=summary] .chart-line{animation:draw-chart 1.1s .15s var(--ease-out) backwards}
-.demo-window[data-view=summary] .chart-area{animation:chart-fill .9s .2s var(--ease-out) backwards}
-
-/* Screen tabs: one pill slides between them. */
-.screen-picker{position:relative;isolation:isolate;width:max-content;max-width:100%}
-.picker-pill{position:absolute;left:0;top:0;height:100%;width:0;border-radius:28px;background:#fff;box-shadow:0 2px 7px #17223709;z-index:-1;transition:transform .55s var(--ease-out),width .55s var(--ease-out)}
-.picker-pill.no-motion{transition:none}
-.screen-picker button[aria-pressed=true],[data-theme=dark] .screen-picker button[aria-pressed=true]{background:transparent;box-shadow:none}
-[data-theme=dark] .picker-pill{background:#303b4d;box-shadow:none}
-.app-screen{transition:transform .7s var(--ease-out),opacity .7s var(--ease-out)}
-
-/* Theme switch: the new appearance grows out of the toggle. */
-::view-transition-old(root),::view-transition-new(root){animation-duration:.28s;animation-timing-function:var(--ease-out)}
-html.theme-transition::view-transition-old(root){animation:none}
-html.theme-transition::view-transition-new(root){animation:theme-reveal .75s var(--ease-in-out) both}
-@keyframes theme-reveal{from{clip-path:circle(0 at var(--vt-x,50%) var(--vt-y,0))}to{clip-path:circle(var(--vt-r,150vmax) at var(--vt-x,50%) var(--vt-y,0))}}
-
-@media(prefers-reduced-motion:reduce){
-  .hero-copy>*,.hero-art.companion{animation:none}
-  .journey-backdrop i,.demo-timer,.demo-summary,.picker-pill,.app-screen{transition:none}
-  ::view-transition-old(root),::view-transition-new(root){animation:none}
+/* The only animated properties are transform and opacity. Scroll stays native. */
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes gallery-arrive{from{opacity:.15;transform:translateY(55px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:no-preference){
+.hero-copy>*{animation:rise .8s var(--ease) backwards}.hero-copy>:nth-child(2){animation-delay:.08s}.hero-copy>:nth-child(3){animation-delay:.16s}.hero-art{animation:rise 1s .15s var(--ease) backwards}
+@supports(animation-timeline:view()){
+.reveal{animation:gallery-arrive linear both;animation-timeline:view();animation-range:entry 0% entry 85%}
 }
-.motion-paused .journey-backdrop i{transition:none}
-
-/* Responsive images: <picture> only chooses the file; the <img> inside keeps
-   its layout rules. */
-picture{display:contents}
-
-/* Mascot rig: lean (pointer) > sway (idle) > body (hops, squash and stretch)
-   > img (breathing). Each layer is its own compositor transform. --feet is
-   where the drawing touches the ground, so squash pivots there. */
-.mascot-rig,.mascot-sway,.mascot-body{display:block;position:relative}
-.mascot-rig,.mascot-sway,.mascot-body{transform-origin:50% var(--feet,88%);will-change:transform}
-.companion{--feet:89%}
-.companion[data-mood=celebrate]{--feet:82%}
-.companion[data-mood=working]{--feet:86%}
-.companion[data-mood=coffee]{--feet:88%}
-.mascot-shadow{position:absolute;left:31%;width:38%;top:calc(var(--feet) - 2%);height:4%;border-radius:50%;background:radial-gradient(closest-side,rgb(23 34 55/.24),rgb(23 34 55/0));transform-origin:50% 50%;will-change:transform,opacity;pointer-events:none;transition:top .4s var(--ease-out)}
-[data-theme=dark] .mascot-shadow{background:radial-gradient(closest-side,rgb(0 0 0/.55),rgb(0 0 0/0))}
-.journey-speech .mascot-body{flex:none;--feet:86%}
-/* The engine's sway and hops replace the one-off greeting wiggle. */
-.companion[data-mood=hello] .mascot-character{animation:none}
-@media(prefers-reduced-motion:reduce){.mascot-shadow{transition:none}}
-
-/* The speech bubble sits in the flow above the mascot instead of floating over
-   it. Floating, it covered the head at rest in some poses and on every hop.
-   The gap leaves room for the tallest pose (celebrate) at the top of a hop. */
-.companion,.hero-art.companion{padding-top:0}
-.companion .speech-bubble{position:relative;top:auto;margin-bottom:14px}
-.companion .mascot-character{margin-top:0}
+}
+.journey{--bg-work:#121820;--bg-break:#22201e;--bg-reward:#12201c;--scene-ink:#f5f6f8}.journey[data-scene=break],.journey[data-scene=reward]{--scene-ink:#f5f6f8}.journey-sticky{background:transparent;transition:none;isolation:isolate}.journey-backdrop{position:absolute;inset:0;z-index:-2;pointer-events:none}.journey-backdrop i{position:absolute;inset:0;opacity:0;transition:opacity .7s var(--ease)}.journey-backdrop i:nth-child(1){background:var(--bg-work)}.journey-backdrop i:nth-child(2){background:var(--bg-break)}.journey-backdrop i:nth-child(3){background:var(--bg-reward)}.journey[data-scene=work] .journey-backdrop i:nth-child(1),.journey[data-scene=break] .journey-backdrop i:nth-child(2),.journey[data-scene=reward] .journey-backdrop i:nth-child(3){opacity:1}.journey-orbit{opacity:.035}.demo-window{display:grid;grid-template-columns:100%;grid-template-rows:auto 1fr;align-content:start;border-radius:28px;box-shadow:none;transition:none}.demo-timer,.demo-summary{grid-row:2;grid-column:1;transition:opacity .4s var(--ease),transform .5s var(--ease)}.demo-window[data-view=summary] .demo-timer,.demo-window:not([data-view=summary]) .demo-summary{opacity:0;transform:translateY(10px);pointer-events:none}.demo-action,.timer-face .timer-track{transition:none}.demo-action span{font-size:13px}.control-icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.demo-summary .chart-line,.demo-summary .chart-area{animation:none}.demo-window[data-view=summary] .chart-area{animation:chart-fill .8s var(--ease) both}.journey-copy.scene-enter h2,.journey-copy.scene-enter>p,.journey-copy.scene-enter .journey-speech{animation-name:rise}.journey{height:270svh;min-height:1850px}.journey-bottom button{opacity:1;color:#bfc3cc}.journey-bottom button[aria-current]{color:#fff}.journey-bottom button>span{opacity:1}.day-moment{opacity:1;color:#bfc3cc}.journey-copy>p{opacity:1;color:#bec4cf}.journey-progress>span{background:#c0c5cd}.demo-window{will-change:auto}.timer-track{stroke-dashoffset:0!important}
+@media(max-width:650px){.journey{min-height:1850px}.journey-sticky{min-height:650px}.journey-copy h2{font-size:37px}.journey-copy>p{font-size:13px}.journey-bottom button>span:last-child{font-size:10px}.demo-action span{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.hero-copy>*,.hero-art,.reveal{animation:none}.journey-backdrop i,.demo-timer,.demo-summary{transition:none}.demo-window{transform:none!important}.journey-orbit{display:none}}
