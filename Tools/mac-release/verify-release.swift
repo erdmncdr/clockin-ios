@@ -63,7 +63,7 @@ func verify() throws {
         try require(item.elements(forLocalName: "version", uri: namespace).first?.stringValue == build, "Feed build does not match app")
         try require(item.elements(forLocalName: "shortVersionString", uri: namespace).first?.stringValue == version, "Feed version does not match app")
         try require(item.elements(forLocalName: "minimumSystemVersion", uri: namespace).first?.stringValue == "14.0", "Expected macOS 14.0 minimum")
-        let expectedURL = "https://github.com/ismailakdag/clockin/releases/download/macos-v\(version)/Clockin-\(version)-\(build).dmg"
+        let expectedURL = "https://github.com/erdmncdr/clockin-macos/releases/download/macos-v\(version)/Clockin-\(version)-\(build).dmg"
         try require(urlString == expectedURL, "Unexpected release archive URL")
         let name = downloadURL.lastPathComponent
         try require(!name.isEmpty && name != "." && name != ".." && !name.contains("/"), "Invalid archive name")

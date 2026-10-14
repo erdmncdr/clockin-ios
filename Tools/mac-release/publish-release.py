@@ -24,9 +24,10 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 TOOLS = ROOT / 'Tools/mac-release'
 OUTPUT = ROOT / 'build/mac-release'
-REPO = 'ismailakdag/clockin'
-# The app's source lives here; ismailakdag/clockin only hosts the DMG and the
-# Sparkle feed that existing Mac users already follow.
+REPO = 'erdmncdr/clockin-macos'
+# The app's source lives in SOURCE_REPO; erdmncdr/clockin-macos only hosts the
+# DMGs and the Sparkle feed. Until 2.0.9 that was ismailakdag/clockin, which
+# went private in October 2026.
 SOURCE_REPO = 'erdmncdr/clockin-ios'
 API = f'https://api.github.com/repos/{REPO}'
 BASE = f'https://github.com/{REPO}/releases/download'
@@ -265,7 +266,7 @@ def main(argv=None):
             'Require a clean checkout at the recorded source commit and unchanged release notes.',
             'Verify app metadata, universal slices, Developer ID signatures, app/DMG stapling and Gatekeeper.',
             'Check SHA256SUMS and the signed feed/archive with the shipped public key.',
-            'Read Git credential in memory; check push permission for ismailakdag/clockin.',
+            'Read Git credential in memory; check push permission for erdmncdr/clockin-macos.',
             'Require the exact build source commit in the destination repository and matching existing version tag.',
             'Back up the anonymous live feed and Clockin.dmg under build/mac-release; require a higher build (or identical retry).',
             f'Create draft macos-v{args.version} with make_latest=false; upload versioned DMG and SHA256SUMS.',

@@ -25,7 +25,7 @@ import hashlib, json, os, pathlib, subprocess, sys, time, urllib.error, urllib.p
 
 SITE = os.environ.get('NETLIFY_SITE', 'getclockin.netlify.app')
 KEYCHAIN_SERVICE = 'clockin-netlify'
-DOWNLOAD_URL = 'https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg'
+DOWNLOAD_URL = 'https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg'
 DIST = pathlib.Path(__file__).resolve().parent.parent / 'dist'
 
 

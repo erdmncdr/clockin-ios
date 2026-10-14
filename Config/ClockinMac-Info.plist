@@ -13,7 +13,7 @@
 	<key>SUEnableSystemProfiling</key>
 	<false/>
 	<key>SUFeedURL</key>
-	<string>https://github.com/ismailakdag/clockin/releases/download/macos-updates/appcast.xml</string>
+	<string>https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>vsxEtDN88GYSuw5+GGeCk3eEvZxlDEalz1icmMBCvh8=</string>
 	<key>SURequireSignedFeed</key>

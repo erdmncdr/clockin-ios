@@ -65,7 +65,7 @@ document.querySelector('#test').onclick=async()=>{
  click('[data-world="3"]');await delay(150);click('[data-rank-select="3"]');await delay(150);check('eternal selected',d.querySelector('[data-rank="3"]').classList.contains('is-active'));
  }else{check('reduced/short mode exposes all chapters',[...d.querySelectorAll('.world-panel')].every(p=>!p.inert&&v.getComputedStyle(p).opacity==='1'));}
  check('no runtime errors',v.reviewErrors.length===0);
- check('correct Mac download',[...d.querySelectorAll('[data-download]')].every(a=>a.href==='https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg'));
+ check('correct Mac download',[...d.querySelectorAll('[data-download]')].every(a=>a.href==='https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg'));
  check('public beta linked',d.querySelectorAll('a[href="https://testflight.apple.com/join/tr6kSDMN"]').length===3);
  check('loaded images decode',[...d.images].filter(i=>i.complete).every(i=>i.naturalWidth>0));
  v.scrollTo({top:before.y,behavior:'instant'});

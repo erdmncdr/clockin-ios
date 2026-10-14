@@ -48,7 +48,7 @@ run cp "$NOTES" "$PREPARING/Clockin-$VERSION-$BUILD.md"
 step 'Sign only via Sparkle’s existing Keychain account; no private-key file or export.'
 run "$SPARKLE_BIN/sign_update" --account "$BUNDLE_ID" "$PREPARING/$DMG_NAME"
 run "$SPARKLE_BIN/generate_appcast" --account "$BUNDLE_ID" --maximum-deltas 0 \
-    --download-url-prefix "https://github.com/ismailakdag/clockin/releases/download/macos-v$VERSION/" \
+    --download-url-prefix "https://github.com/erdmncdr/clockin-macos/releases/download/macos-v$VERSION/" \
     --embed-release-notes -o "$PREPARING/appcast.xml" "$PREPARING"
 run swift "$TOOLS_DIR/verify-release.swift" "$PREPARING/appcast.xml" "$APP/Contents/Info.plist"
 run "$TOOLS_DIR/test-release-verification.sh" "$PREPARING" "$APP/Contents/Info.plist"

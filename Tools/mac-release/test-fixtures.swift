@@ -18,7 +18,7 @@ let cases = ["valid", "same-length-feed", "missing-signature", "wrong-key", "arc
 for test in cases {
     let directory = root.appendingPathComponent(test)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    let url = "\(test == "http" ? "http" : "https")://github.com/ismailakdag/clockin/releases/download/macos-v\(test == "wrong-url" ? "9.9.9" : "2.0.0")/\(archiveName)"
+    let url = "\(test == "http" ? "http" : "https")://github.com/erdmncdr/clockin-macos/releases/download/macos-v\(test == "wrong-url" ? "9.9.9" : "2.0.0")/\(archiveName)"
     let xml = """
     <?xml version="1.0" encoding="utf-8"?>
     <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><item>

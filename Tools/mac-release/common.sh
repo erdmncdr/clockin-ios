@@ -7,7 +7,7 @@ OUTPUT_ROOT="$ROOT/build/mac-release"
 TEAM=LU36PKDPT3
 IDENTITY='Developer ID Application'
 BUNDLE_ID=com.ismailakdag.clockin
-FEED_URL=https://github.com/ismailakdag/clockin/releases/download/macos-updates/appcast.xml
+FEED_URL=https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/appcast.xml
 PUBLIC_KEY='vsxEtDN88GYSuw5+GGeCk3eEvZxlDEalz1icmMBCvh8='
 DRY_RUN=0
 YES=0
