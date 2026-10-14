@@ -70,6 +70,6 @@ python3 website/tools/deploy
 `--dry-run` reads/authenticates the live site; it is not an offline validation command. The tool carries the existing Live Activity relay/functions/schedule and `/privacy/` into the deployment and verifies them. **Never upload bare `dist/`, a dist ZIP, or use another deployment mechanism. Never create a `privacy/` folder in dist.** The old README's manual-upload advice is superseded.
 
 All Mac download actions must point to:
-`https://github.com/ismailakdag/clockin/releases/download/macos-updates/Clockin.dmg`
+`https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg`
 
 The fixed release asset is updated by the Mac release flow without redeploying the site. Never switch to GitHub's shared `latest` asset, since that repository also ships iPhone builds. The public iPhone beta is labelled and links to `https://testflight.apple.com/join/tr6kSDMN`. Footer/source links retain the public MIT repository.

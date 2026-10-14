@@ -2,9 +2,18 @@
 
 The new app is the native `ClockinMac` target in `Clockin.xcodeproj`. Shipping
 identity stays `com.ismailakdag.clockin`, Developer ID team `LU36PKDPT3`, macOS
-14+, Apple Silicon and Intel. Installed 1.1.6 copies continue using
-`https://github.com/ismailakdag/clockin/releases/download/macos-updates/appcast.xml`.
-Never change that URL to `releases/latest` or replace the existing Sparkle key.
+14+, Apple Silicon and Intel. Downloads and the signed feed live in the public
+[`erdmncdr/clockin-macos`](https://github.com/erdmncdr/clockin-macos): 2.0.10 and
+later read
+`https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/appcast.xml`,
+and the website links to the fixed `macos-updates/Clockin.dmg` there. Never
+replace the existing Sparkle key.
+
+Until 2.0.9 everything was published in `ismailakdag/clockin`. That repository
+went private in October 2026, so its feed and downloads return 404: copies on
+2.0.9 or earlier cannot update themselves and need one manual install of 2.0.10
+or later. 2.0.9 was copied into the new repository (`macos-v2.0.9`) and 2.0.10
+(21) was the first release made there.
 
 ## Before the first 2.0 release
 
@@ -16,12 +25,10 @@ licenses. Review the draft `docs/release-notes-mac-2.0.0.md` against the final U
 `PARITY.md` still describes several differences from before this port.
 
 The publisher preserves the old guarantee that `macos-vVERSION` identifies the
-actual build source. **The exact source commit must already exist in
-`ismailakdag/clockin`.** This is a deliberate prerequisite when publishing from
-a different source repository: pushing only to the new app's repository is not
-enough. Agree on source distribution and arrange the destination commit before
-building. The script refuses to silently tag unrelated old Mac code. It will
-not mirror or push source on your behalf.
+actual build source: the exact source commit must already be pushed to
+`erdmncdr/clockin-ios`, and the release body names it. The version tag itself
+lives in `erdmncdr/clockin-macos`, which holds no source. The script never
+pushes code.
 
 In Xcode, make sure a shared **ClockinMac** scheme exists, includes only the Mac
 app for Archive, and uses Release for Archive. This checkout currently contains
@@ -61,7 +68,7 @@ not accessed or revalidated while implementing this pipeline:
   Sparkle's tools read Keychain directly with `--account`; these scripts have no
   private-key-file/export option.
 - Git's stored GitHub HTTPS credential, with release write access to
-  `ismailakdag/clockin`. Python asks Git's credential helper in memory and sends
+  `erdmncdr/clockin-macos`. Python asks Git's credential helper in memory and sends
   the token only to GitHub API/upload hosts, never to anonymous downloads. No
   Netlify token or website deployment is needed.
 
