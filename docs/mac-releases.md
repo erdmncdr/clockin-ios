@@ -141,8 +141,11 @@ creation, so the installed app retains its ticket offline.
 
 `package.sh` requires the verified, stapled app, finds exactly one matching
 `generate_appcast`/`sign_update` pair in this build's resolved artifacts, and
-creates an HFS+ UDZO DMG with Clockin, an Applications shortcut and license
-notices. It signs, notarizes and staples the DMG **before** Sparkle signs its
+creates an HFS+ UDZO DMG with `dmgbuild` (pinned 1.6.5, installed on first use
+into `build/mac-release/dmg-venv`). Its Finder window shows Clockin, an arrow and
+the Applications shortcut on the background from
+`Tools/mac-release/dmg/make-background.swift`; the license notices ship inside
+but hidden. Layout: `Tools/mac-release/dmg/dmg-settings.py`. It signs, notarizes and staples the DMG **before** Sparkle signs its
 bytes. It generates one full update with embedded release notes and no deltas,
 then checks the feed and archive against the exported app's public key and runs
 tamper tests. The Swift verifier also binds the item to the app's version/build,

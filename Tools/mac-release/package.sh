@@ -30,12 +30,19 @@ fi
 run "$TOOLS_DIR/verify-app.sh" "$APP" "$VERSION" "$BUILD"
 run xcrun stapler validate "$APP"
 run spctl -a -vv --type execute "$APP"
-step 'Create a compressed HFS+ installer with the app, Applications shortcut and current license/attribution.'
+step 'Create a compressed HFS+ installer: Clockin, an arrow and the Applications shortcut, with the license/attribution hidden inside.'
+# dmgbuild writes the Finder window layout (.DS_Store and background); it runs
+# from a pinned virtual environment under build/, created on first use.
+DMG_VENV="$OUTPUT_ROOT/dmg-venv"
+if [[ "$DRY_RUN" == 0 && ! -x "$DMG_VENV/bin/dmgbuild" ]]; then
+    python3 -m venv "$DMG_VENV"
+    "$DMG_VENV/bin/pip" install --quiet --disable-pip-version-check 'dmgbuild==1.6.5'
+fi
 run ditto "$APP" "$STAGING/Clockin.app"
 run cp "$ROOT/LICENSE" "$STAGING/LICENSE.txt"
 run cp "$ROOT/NOTICE.md" "$STAGING/NOTICE.md"
-run ln -s /Applications "$STAGING/Applications"
-run hdiutil create -volname Clockin -srcfolder "$STAGING" -format UDZO -fs HFS+ "$PREPARING/$DMG_NAME"
+run "$DMG_VENV/bin/dmgbuild" -s "$TOOLS_DIR/dmg/dmg-settings.py" -D "staging=$STAGING" \
+    -D "background=$TOOLS_DIR/dmg/background.tiff" Clockin "$PREPARING/$DMG_NAME"
 run hdiutil verify "$PREPARING/$DMG_NAME"
 run codesign --sign "$IDENTITY" --timestamp "$PREPARING/$DMG_NAME"
 run codesign --verify --strict "$PREPARING/$DMG_NAME"
