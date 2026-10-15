@@ -14,6 +14,9 @@ DERIVED="${CLOCKIN_SHOT_DERIVED:-build/DerivedData.noindex}"
 OUT="${CLOCKIN_SHOT_OUTPUT:-website/dist/assets}"
 THEME="${CLOCKIN_SHOT_THEME:-Carbon}"
 APP="$DERIVED/Build/Products/Debug/Clockin.app/Contents/MacOS/Clockin"
+# The Debug app is only needed for the shots; left behind, macOS lists it as
+# another Clockin in Launchpad and Spotlight.
+trap 'rm -rf "$DERIVED/Build/Products/Debug/Clockin.app"' EXIT
 
 echo "==> Building the Debug app"
 xcodebuild -project Clockin.xcodeproj -scheme ClockinMac -configuration Debug \
