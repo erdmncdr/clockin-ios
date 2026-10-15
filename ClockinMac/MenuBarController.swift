@@ -81,9 +81,10 @@ final class MenuBarController: NSObject {
         guard let host, let button = statusItem?.button else { return }
         let status = host.status()
         let icon = Self.iconState(status.state)
-        // Only the icon, like the system's own items; minimal mode adds the
-        // live figures while clocked in.
-        let title = host.minimalMode() ? status.text : nil
+        // While clocked in the live figures follow the icon unless Settings >
+        // Menu bar > Show details is off (the host then returns no text).
+        // Minimal mode only decides whether the window and the pin show.
+        let title = status.text
         let spoken = switch status.state {
         case .idle: String(localized: "Not clocked in", bundle: .app)
         case .running: String(localized: "Clocked in", bundle: .app)
@@ -94,9 +95,8 @@ final class MenuBarController: NSObject {
         lastLabel = (icon, title)
         button.image = MenuBarIcon.image(icon)
         if let title {
-            let font = host.minimalMode()
-                ? NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
-                : Self.roundedFont(size: 12, weight: .semibold)
+            // Tabular digits, so the item does not change width every second.
+            let font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
             // The leading space is the gap between the icon and the text.
             button.attributedTitle = NSAttributedString(string: " " + title, attributes: [.font: font, .baselineOffset: 0.5])
         } else {
@@ -110,12 +110,6 @@ final class MenuBarController: NSObject {
         case .running: .running
         case .paused: .paused
         }
-    }
-
-    private static func roundedFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
-        let base = NSFont.systemFont(ofSize: size, weight: weight)
-        guard let descriptor = base.fontDescriptor.withDesign(.rounded) else { return base }
-        return NSFont(descriptor: descriptor, size: size) ?? base
     }
 
     // MARK: Clicks
