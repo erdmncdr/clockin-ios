@@ -181,6 +181,8 @@ def local_release(version):
     require(current == commit and not status.strip(), 'Publish from the clean source commit used for the archive.')
     require(notes.read_bytes() == (ROOT / f'docs/release-notes-mac-{version}.md').read_bytes(), 'Release notes changed since packaging.')
     subprocess.run([str(TOOLS / 'verify-app.sh'), str(app), version, build], check=True)
+    # Releases packaged since 2.0.12 also carry the zipped app the website links to.
+    archive = dmg.with_suffix('.zip')
     if archive.is_file():
         with tempfile.TemporaryDirectory(prefix='verify-zip-', dir=OUTPUT) as directory:
             subprocess.run(['ditto', '-x', '-k', str(archive), directory], check=True)
@@ -194,8 +196,6 @@ def local_release(version):
             command += ['--context', 'context:primary-signature']
         subprocess.run(command + [str(path)], check=True)
     subprocess.run(['codesign', '--verify', '--strict', str(dmg)], check=True)
-    # Releases packaged since 2.0.12 also carry the zipped app the website links to.
-    archive = dmg.with_suffix('.zip')
     names = (dmg.name, archive.name, 'appcast.xml') if archive.is_file() else (dmg.name, 'appcast.xml')
     expected = ''.join(f'{digest((release / name).read_bytes())}  {name}\n' for name in names)
     require((release / 'SHA256SUMS').read_text() == expected, 'SHA256SUMS does not match the prepared files.')
