@@ -101,6 +101,7 @@ class PublisherTests(unittest.TestCase):
             root = Path(temp)
             dmg = root / 'Clockin-2.0.0-11.dmg'
             dmg.write_bytes(b'dmg')
+            dmg.with_suffix('.zip').write_bytes(b'zip')
             notes = root / 'notes.md'
             notes.write_text('Notes')
             (root / 'appcast.xml').write_bytes(b'new-feed')
@@ -143,6 +144,8 @@ class PublisherTests(unittest.TestCase):
             self.assertLess(order.index(('anonymous-check', f'{publisher.BASE}/macos-v2.0.0/{dmg.name}')),
                             order.index(('replace', 'Clockin.dmg')))
             self.assertLess(order.index(('replace', 'Clockin.dmg')), order.index(('replace', 'appcast.xml')))
+            self.assertLess(order.index(('replace', 'Clockin.zip')), order.index(('replace', 'appcast.xml')))
+            self.assertIn(('anonymous-check', f'{publisher.BASE}/macos-v2.0.0/Clockin-2.0.0-11.zip'), order)
             mutations = [event[2]['body'] for event in events if 'body' in event[2]]
             self.assertTrue(mutations)
             self.assertTrue(all(body['make_latest'] == 'false' for body in mutations))

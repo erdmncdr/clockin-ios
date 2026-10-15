@@ -6,7 +6,7 @@
 Netlify bills credits for every deploy and for every byte it serves, so the
 site is deployed only when its content changes. Mac releases do not deploy it:
 the download buttons point at a fixed GitHub asset
-(macos-updates/Clockin.dmg) that the release replaces.
+(macos-updates/Clockin.zip) that the release replaces.
 
 The Netlify personal access token is read at run time from the login Keychain
 (service `clockin-netlify`, see docs/mac-releases.md) and never printed.
@@ -25,7 +25,7 @@ import hashlib, json, os, pathlib, subprocess, sys, time, urllib.error, urllib.p
 
 SITE = os.environ.get('NETLIFY_SITE', 'getclockin.netlify.app')
 KEYCHAIN_SERVICE = 'clockin-netlify'
-DOWNLOAD_URL = 'https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg'
+DOWNLOAD_URL = 'https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.zip'
 DIST = pathlib.Path(__file__).resolve().parent.parent / 'dist'
 
 
@@ -83,7 +83,7 @@ def website_files():
         fail(f'{DIST} has no index.html.')
     if DOWNLOAD_URL not in index.read_text():
         fail(f'index.html does not link to {DOWNLOAD_URL}.')
-    stray = sorted(path.name for path in DIST.rglob('*.dmg'))
+    stray = sorted(path.name for pattern in ('*.dmg', '*.zip') for path in DIST.rglob(pattern))
     if stray:
         fail(f'dist still contains {", ".join(stray)}; the installer is served from GitHub.')
     files, blobs = {}, {}

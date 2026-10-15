@@ -181,6 +181,12 @@ def local_release(version):
     require(current == commit and not status.strip(), 'Publish from the clean source commit used for the archive.')
     require(notes.read_bytes() == (ROOT / f'docs/release-notes-mac-{version}.md').read_bytes(), 'Release notes changed since packaging.')
     subprocess.run([str(TOOLS / 'verify-app.sh'), str(app), version, build], check=True)
+    if archive.is_file():
+        with tempfile.TemporaryDirectory(prefix='verify-zip-', dir=OUTPUT) as directory:
+            subprocess.run(['ditto', '-x', '-k', str(archive), directory], check=True)
+            unpacked = Path(directory) / 'Clockin.app'
+            subprocess.run(['xcrun', 'stapler', 'validate', str(unpacked)], check=True)
+            subprocess.run(['spctl', '-a', '-vv', '--type', 'execute', str(unpacked)], check=True)
     for path, kind in ((app, 'execute'), (dmg, 'open')):
         subprocess.run(['xcrun', 'stapler', 'validate', str(path)], check=True)
         command = ['spctl', '-a', '-vv', '--type', kind]
@@ -188,8 +194,10 @@ def local_release(version):
             command += ['--context', 'context:primary-signature']
         subprocess.run(command + [str(path)], check=True)
     subprocess.run(['codesign', '--verify', '--strict', str(dmg)], check=True)
-    expected = ''.join(f'{digest((release / name).read_bytes())}  {name}\n'
-                       for name in (dmg.name, 'appcast.xml'))
+    # Releases packaged since 2.0.12 also carry the zipped app the website links to.
+    archive = dmg.with_suffix('.zip')
+    names = (dmg.name, archive.name, 'appcast.xml') if archive.is_file() else (dmg.name, 'appcast.xml')
+    expected = ''.join(f'{digest((release / name).read_bytes())}  {name}\n' for name in names)
     require((release / 'SHA256SUMS').read_text() == expected, 'SHA256SUMS does not match the prepared files.')
     verify_feed((release / 'appcast.xml').read_bytes(), dmg, info)
     with info.open('rb') as stream:
@@ -200,6 +208,7 @@ def local_release(version):
 
 def publish(version):
     release_dir, build, dmg, notes, commit, info = local_release(version)
+    archive = dmg.with_suffix('.zip')
     token = github_token()
     repo = api('GET', API, token)[1]
     require(repo.get('permissions', {}).get('push'), 'GitHub credential cannot publish to ' + REPO)
@@ -230,8 +239,9 @@ def publish(version):
             'body': notes.read_text().strip() + '\n\nRequires macOS 14 or later; Apple Silicon and Intel. Open the DMG and drag Clockin into Applications. The app and DMG are Developer ID signed and notarized.'
                     + f'\n\nSource: {SOURCE_REPO}@{commit}.',
             'draft': True, 'prerelease': False, 'make_latest': 'false'})[1]
-        for path in (dmg, release_dir / 'SHA256SUMS'):
-            upload(token, version_release, path.name, path.read_bytes(), 'application/octet-stream')
+        for path in (dmg, archive, release_dir / 'SHA256SUMS'):
+            if path.is_file():
+                upload(token, version_release, path.name, path.read_bytes(), 'application/octet-stream')
         api('PATCH', f'{API}/releases/{version_release["id"]}', token,
             body={'draft': False, 'make_latest': 'false'})
     else:
@@ -245,6 +255,10 @@ def publish(version):
     stable = api('GET', f'{API}/releases/tags/macos-updates', token)[1]
     require(not stable['draft'] and not stable['prerelease'], 'Stable release must be public and not a prerelease.')
     api('PATCH', f'{API}/releases/{stable["id"]}', token, body={'make_latest': 'false'})
+    if archive.is_file():
+        zipped = check_public(f'{BASE}/{tag}/{archive.name}', archive.read_bytes())
+        print('Replacing and anonymously checking the fixed Clockin.zip the website links to.', flush=True)
+        replace_verified(token, 'Clockin.zip', zipped, 'application/zip')
     print('Replacing and anonymously checking the fixed Clockin.dmg download.', flush=True)
     replace_verified(token, 'Clockin.dmg', downloaded, 'application/octet-stream')
     print('Publishing the signed feed last; then checking public bytes and signatures.', flush=True)

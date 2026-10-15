@@ -59,9 +59,13 @@ run "$SPARKLE_BIN/generate_appcast" --account "$BUNDLE_ID" --maximum-deltas 0 \
     --embed-release-notes -o "$PREPARING/appcast.xml" "$PREPARING"
 run swift "$TOOLS_DIR/verify-release.swift" "$PREPARING/appcast.xml" "$APP/Contents/Info.plist"
 run "$TOOLS_DIR/test-release-verification.sh" "$PREPARING" "$APP/Contents/Info.plist"
+# After the feed exists, so generate_appcast never sees a second archive.
+step 'Zip the stapled app for the website: Safari unpacks it and Clockin offers to move itself to Applications.'
+ZIP_NAME="Clockin-$VERSION-$BUILD.zip"
+run ditto -c -k --sequesterRsrc --keepParent "$APP" "$PREPARING/$ZIP_NAME"
 step 'Write SHA256SUMS and provenance, then atomically mark the release ready.'
 if [[ "$DRY_RUN" == 0 ]]; then
-    (cd "$PREPARING" && shasum -a 256 "$DMG_NAME" appcast.xml > SHA256SUMS)
+    (cd "$PREPARING" && shasum -a 256 "$DMG_NAME" "$ZIP_NAME" appcast.xml > SHA256SUMS)
     cp "$WORK/source-commit.txt" "$WORK/source-status.txt" "$PREPARING/"
     touch "$PREPARING/ready"
     mv "$PREPARING" "$RELEASE"

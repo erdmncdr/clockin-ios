@@ -6,7 +6,10 @@ identity stays `com.ismailakdag.clockin`, Developer ID team `LU36PKDPT3`, macOS
 [`erdmncdr/clockin-macos`](https://github.com/erdmncdr/clockin-macos): 2.0.10 and
 later read
 `https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/appcast.xml`,
-and the website links to the fixed `macos-updates/Clockin.dmg` there. Never
+and the website links to the fixed `macos-updates/Clockin.zip` there: the
+stapled app, zipped. Safari unpacks it into Downloads and Clockin offers to move
+itself to Applications, so nobody sees a disk-image window. The DMG stays for
+Sparkle updates and as `macos-updates/Clockin.dmg` for anyone who wants it. Never
 replace the existing Sparkle key.
 
 Until 2.0.9 everything was published in `ismailakdag/clockin`. That repository

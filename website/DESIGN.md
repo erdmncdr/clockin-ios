@@ -44,4 +44,4 @@ Language and light/dark preferences retain the existing storage behavior. Theme 
 
 ## Distribution boundaries
 
-The Mac URL stays exactly `https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg`. iPhone uses `https://testflight.apple.com/join/tr6kSDMN`. `/privacy/` is supplied by the relay-aware deploy tool; never create `dist/privacy/`. Only the owner deploys using `website/tools/deploy`. Do not use a bare dist ZIP, direct Netlify upload or Sites deployment.
+The Mac URL stays exactly `https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.zip`. iPhone uses `https://testflight.apple.com/join/tr6kSDMN`. `/privacy/` is supplied by the relay-aware deploy tool; never create `dist/privacy/`. Only the owner deploys using `website/tools/deploy`. Do not use a bare dist ZIP, direct Netlify upload or Sites deployment.

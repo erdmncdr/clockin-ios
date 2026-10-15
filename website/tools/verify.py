@@ -24,7 +24,7 @@ for tag,a in nodes:
  if tag=='img': assert 'alt' in a and 'width' in a and 'height' in a,a
 for ref in refs: assert (DIST/ref).is_file(),ref
 assert not (DIST/'privacy').exists(), 'Privacy belongs to deploy relay'
-D='https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.dmg'
+D='https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/Clockin.zip'
 assert all(a.get('href')==D for _,a in nodes if 'data-download' in a)
 assert sum(a.get('href')=='https://testflight.apple.com/join/tr6kSDMN' for _,a in nodes)==3
 clips=json.loads((DIST/'assets/companion/clips.json').read_text())
