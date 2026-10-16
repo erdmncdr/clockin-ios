@@ -12,6 +12,17 @@
 	<true/>
 	<key>SUEnableSystemProfiling</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.ismailakdag.clockin.commands</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>clockin</string>
+			</array>
+		</dict>
+	</array>
 	<key>SUFeedURL</key>
 	<string>https://github.com/erdmncdr/clockin-macos/releases/download/macos-updates/appcast.xml</string>
 	<key>SUPublicEDKey</key>

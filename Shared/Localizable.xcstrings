@@ -999,6 +999,16 @@
         }
       }
     },
+    "1. In Chrome, open chrome://extensions and turn on Developer mode at the top right.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Chrome’da chrome://extensions sayfasını açın ve sağ üstteki Geliştirici modu’nu açın."
+          }
+        }
+      }
+    },
     "10 coins/hour, 25/goal day, 50/work badge, 100/level. Saved work only; minutes round down. Edits recalculate coins. Purchased items stay yours.": {
       "localizations": {
         "tr": {
@@ -1179,6 +1189,16 @@
         }
       }
     },
+    "2. Click Load unpacked, press ⌘⇧G, paste with ⌘V and click Select.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Paketlenmemiş öğe yükle’ye tıklayın, ⌘⇧G’ye basın, ⌘V ile yapıştırın ve Seç’e tıklayın."
+          }
+        }
+      }
+    },
     "200 sessions": {
       "localizations": {
         "tr": {
@@ -1259,6 +1279,16 @@
         }
       }
     },
+    "3. Open your work site, click the Clockin extension and choose Pick buttons. Click the button that starts work, then the one that ends it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. İş sitenizi açın, Clockin eklentisine tıklayıp Butonları seç’i seçin. Önce mesaiyi başlatan, sonra bitiren butona tıklayın."
+          }
+        }
+      }
+    },
     "30 8-hour days": {
       "localizations": {
         "tr": {
@@ -1325,6 +1355,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "4 hafta"
+          }
+        }
+      }
+    },
+    "4. The first time, Chrome asks to open Clockin. Tick Always allow and click Open.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. İlk seferde Chrome, Clockin’in açılmasını sorar. Her zaman izin ver’i işaretleyip Aç’a tıklayın."
           }
         }
       }
@@ -3491,6 +3531,16 @@
         }
       }
     },
+    "Clockin can start and stop by itself when you press your work site’s Clock in and Clock out buttons in Chrome.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome’da iş sitenizin Clock in ve Clock out butonlarına bastığınızda Clockin kendiliğinden başlayıp durabilir."
+          }
+        }
+      }
+    },
     "Clockin can't be copied to %@: %@": {
       "localizations": {
         "tr": {
@@ -3903,6 +3953,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopyalanan satırlar sayfadaki onaylı toplamla eşleşiyor."
+          }
+        }
+      }
+    },
+    "Copy chrome://extensions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "chrome://extensions adresini kopyala"
           }
         }
       }
@@ -4765,6 +4825,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitti"
+          }
+        }
+      }
+    },
+    "Done. The folder is open in Finder and its location is copied.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır. Klasör Finder’da açıldı ve konumu kopyalandı."
           }
         }
       }
@@ -10197,6 +10267,26 @@
         }
       }
     },
+    "Prepare the Chrome extension": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome eklentisini hazırla"
+          }
+        }
+      }
+    },
+    "Prepare the extension again": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklentiyi yeniden hazırla"
+          }
+        }
+      }
+    },
     "Press Command-comma (⌘,) or click the gear on Today, then choose Data & import > Import timecards. Choose a CSV file or paste a task block or timecards page and select Review. CSV needs Start Time and End Time columns with ISO 8601 dates. Pasted text needs English dates, a status, source, and 24-hour times; include the date range and years when available. Check dates, duration and any Approved total warning. Review New, Matched corrections and Duplicate skipped entries. Deselect any rows you want to leave out. Only selected rows are imported; matched entries are corrected and duplicates are skipped.": {
       "localizations": {
         "en": {
@@ -12323,6 +12413,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Birlikte yeniden başlayalım"
+          }
+        }
+      }
+    },
+    "Start from Chrome": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome’dan başlat"
           }
         }
       }

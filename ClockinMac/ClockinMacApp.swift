@@ -14,6 +14,12 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
     // ana kuyruk isinden gelirse yanit gorevi hic baslamaz ve uygulama kapanmaz (25).
     // Yazilmamis son durum zararsiz: acilista arsiv uzlastirilir, jeton yeniden cekilir.
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Before launch finishes, so a clockin:// link that launched the app
+        // is handled here too.
+        ExternalClockCommandReceiver.shared.install()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         if MoveToApplications.offerIfNeeded() {
@@ -25,6 +31,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         // Minimal modda yeniden acilis sabit pencereyi geri getirmesin.
         if minimal { store.setPinned(false) }
         UpdateChecker.shared.start()
+        ChromeExtensionInstaller.refreshIfInstalled()
         MenuBarController.shared.start(.clockin())
         PinnedWindowController.shared.start(store: store)
         KeyboardShortcutController.shared.start(store: store)

@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>Work 2</title>
+<body style="font:16px sans-serif;padding:40px">
+<p>Status: <span id="status">idle</span></p>
+<div class="actions"><button class="btn">Clock in</button> <button class="btn">Clock out</button></div>
+<script>
+  window.__commands = [];
+  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  const [a, b] = document.querySelectorAll('button');
+  a.onclick = () => document.getElementById('status').textContent = 'working';
+  b.onclick = () => document.getElementById('status').textContent = 'idle';
+</script>

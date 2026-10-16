@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>Work</title>
+<body style="font:16px sans-serif;padding:40px">
+<p>Status: <span id="status">idle</span></p>
+<button id="toggle" class="btn primary">Clock in</button>
+<script>
+  window.__commands = [];
+  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  const b = document.getElementById('toggle');
+  b.addEventListener('click', () => {
+    const working = b.textContent === 'Clock out';
+    // Like many sites, the label changes after the click has been handled.
+    setTimeout(() => { b.textContent = working ? 'Clock in' : 'Clock out'; document.getElementById('status').textContent = working ? 'idle' : 'working'; }, 50);
+  });
+</script>

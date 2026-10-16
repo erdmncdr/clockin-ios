@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Clockin",
+  "version": "1.0",
+  "description": "Starts and stops Clockin when you press your work site's Clock in and Clock out buttons.",
+  "action": { "default_popup": "popup.html", "default_icon": "icon128.png" },
+  "icons": { "128": "icon128.png" },
+  "permissions": ["storage", "scripting", "activeTab"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "background": { "service_worker": "background.js" }
+}

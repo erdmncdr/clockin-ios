@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct MacSettingsSection: View {
@@ -14,6 +15,8 @@ struct MacSettingsSection: View {
     @AppStorage("Clockin.MinimalShowGoal") private var showGoal = false
     @AppStorage(WardrobeState.deskKey) private var showHome = true
     @AppStorage("Clockin.PinnedMode") private var pinnedMode = "Money"
+    @State private var chromePrepared = false
+    @State private var chromeError: String?
 
     var body: some View {
         switch category {
@@ -62,6 +65,37 @@ struct MacSettingsSection: View {
                     Text("A global shortcut could not be registered. Check for conflicts with other apps.")
                         .foregroundStyle(.secondary)
                 }
+            }
+            Section {
+                Text("Clockin can start and stop by itself when you press your work site’s Clock in and Clock out buttons in Chrome.")
+                Button(ChromeExtensionInstaller.isInstalled || chromePrepared ? "Prepare the extension again" : "Prepare the Chrome extension") {
+                    do {
+                        try ChromeExtensionInstaller.prepare()
+                        chromePrepared = true
+                        chromeError = nil
+                    } catch {
+                        chromeError = error.localizedDescription
+                    }
+                }
+                if chromePrepared {
+                    Text("Done. The folder is open in Finder and its location is copied.")
+                        .foregroundStyle(.secondary)
+                }
+                if let chromeError { Text(chromeError).foregroundStyle(.red) }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("1. In Chrome, open chrome://extensions and turn on Developer mode at the top right.")
+                    Text("2. Click Load unpacked, press ⌘⇧G, paste with ⌘V and click Select.")
+                    Text("3. Open your work site, click the Clockin extension and choose Pick buttons. Click the button that starts work, then the one that ends it.")
+                    Text("4. The first time, Chrome asks to open Clockin. Tick Always allow and click Open.")
+                }
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                Button("Copy chrome://extensions") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString("chrome://extensions", forType: .string)
+                }
+            } header: {
+                Text("Start from Chrome")
             }
         case .notifications:
             Section {

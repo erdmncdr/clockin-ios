@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; width: 300px; font: 13px -apple-system, BlinkMacSystemFont, sans-serif; color: #1f2329; }
+  main { padding: 14px; display: grid; gap: 10px; }
+  h1 { margin: 0; font-size: 15px; }
+  p { margin: 0; color: #5d6470; line-height: 1.45; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; }
+  dt { color: #5d6470; }
+  dd { margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  button { font: 600 13px -apple-system, BlinkMacSystemFont, sans-serif; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; }
+  .primary { background: #f78a18; color: #fff; }
+  .secondary { background: #eef0f3; color: #1f2329; }
+  .error { color: #b42318; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1c1f24; color: #eef0f3; }
+    p, dt { color: #a5afbe; }
+    .secondary { background: #2b3038; color: #eef0f3; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Clockin</h1>
+  <p id="intro"></p>
+  <dl id="setup" hidden>
+    <dt id="siteLabel"></dt><dd id="site"></dd>
+    <dt id="startLabel"></dt><dd id="start"></dd>
+    <dt id="stopLabel"></dt><dd id="stop"></dd>
+  </dl>
+  <p id="error" class="error" hidden></p>
+  <button id="pick" class="primary"></button>
+  <button id="reset" class="secondary" hidden></button>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+#!/bin/bash
+# The Clockin Chrome extension in real Chrome, headless, with a throwaway
+# profile: picking the buttons, the watcher's registration, and the
+# clockin:// links for a one-button (toggle) site and a two-button site.
+# Needs Google Chrome and Node. Run from the repository root:
+#   bash Tests/manual/chromeextension/run
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
+work="$(mktemp -d "${TMPDIR:-/tmp}/clockin-chrome-ext.XXXXXX")"
+trap 'kill "${server:-0}" 2>/dev/null || true; rm -rf "$work"' EXIT
+cp -R ClockinMac/ChromeExtension "$work/ext"
+# Test copy only: host access without Chrome's permission prompt, and an icon.
+python3 - "$work/ext/manifest.json" <<'PY'
+import json, sys
+path = sys.argv[1]
+manifest = json.load(open(path))
+manifest['host_permissions'] = ['http://localhost/*']
+json.dump(manifest, open(path, 'w'), indent=2)
+PY
+sips -s format png -z 128 128 website/dist/assets/clockin-icon.png --out "$work/ext/icon128.png" >/dev/null
+# A second copy that announces commands without opening clockin:// links.
+cp -R "$work/ext" "$work/ext-logic"
+sed -i '' "s#window.location.href = 'clockin://' + action;#/* checks: no link */#" "$work/ext-logic/watch.js"
+grep -q "no link" "$work/ext-logic/watch.js"
+port=$((20000 + RANDOM % 20000))
+python3 -m http.server "$port" --bind 127.0.0.1 --directory Tests/manual/chromeextension/site >/dev/null 2>&1 &
+server=$!
+sleep 1
+node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/toggle.html" toggle logic
+node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/two.html" two logic
+node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle link
+echo "Chrome extension checks passed"
