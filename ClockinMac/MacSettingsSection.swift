@@ -10,7 +10,7 @@ struct MacSettingsSection: View {
     @AppStorage("Clockin.MinimalShowHours") private var showHours = true
     @AppStorage("Clockin.MinimalShowSeconds") private var showSeconds = false
     @AppStorage("Clockin.MinimalShowEarnings") private var showEarnings = true
-    @AppStorage("Clockin.MinimalShowTRY") private var showTRY = true
+    @AppStorage("Clockin.MinimalShowTRY") private var showTRY = false
     @AppStorage("Clockin.MinimalShowGoal") private var showGoal = false
     @AppStorage(WardrobeState.deskKey) private var showHome = true
     @AppStorage("Clockin.PinnedMode") private var pinnedMode = "Money"
@@ -18,7 +18,7 @@ struct MacSettingsSection: View {
     var body: some View {
         switch category {
         case .menuBar:
-            Section("Menu bar") {
+            Section {
                 Toggle("Show details in the menu bar", isOn: $showMenuBarDetails)
                 Toggle("Minimal menu bar mode", isOn: Binding(
                     get: { minimalMode },
@@ -32,6 +32,10 @@ struct MacSettingsSection: View {
                     Toggle("Show goal progress", isOn: $showGoal)
                 }
                 .disabled(!showMenuBarDetails)
+            } header: {
+                Text("Menu bar")
+            } footer: {
+                Text("If the Clockin icon or timer doesn’t show up, the menu bar is full: macOS hides items that don’t fit beside the camera notch or the open app’s menus. Hold ⌘ and drag other icons out of the menu bar, or turn off details you don’t need.")
             }
             Section("Pinned timer") {
                 Toggle("Pin timer", isOn: Binding(get: { store.pinVisible }, set: { store.setPinned($0) }))

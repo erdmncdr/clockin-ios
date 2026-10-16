@@ -64,6 +64,7 @@ struct DashboardView: View {
             ScrollView {
                 VStack(spacing: 14) {
                     #if os(macOS)
+                    MenuBarHiddenCard(store: store)
                     MacLiveActivityTipCard()
                     #endif
                     ActiveTimeline(interval: store.running?.isPaused == false ? 1 : 60) { now in

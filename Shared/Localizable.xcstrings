@@ -3551,6 +3551,16 @@
         }
       }
     },
+    "Clockin is hidden in the menu bar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin menü çubuğunda gizlenmiş"
+          }
+        }
+      }
+    },
     "Clockin is running from %@. In %@ it can install updates and there is only one copy on this Mac. Clockin will move itself there and reopen.": {
       "localizations": {
         "tr": {
@@ -6519,6 +6529,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kızgın değilim. Sadece hayal kırıklığına uğradım."
+          }
+        }
+      }
+    },
+    "If the Clockin icon or timer doesn’t show up, the menu bar is full: macOS hides items that don’t fit beside the camera notch or the open app’s menus. Hold ⌘ and drag other icons out of the menu bar, or turn off details you don’t need.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin simgesi ya da sayacı görünmüyorsa menü çubuğu dolu demektir: macOS, kamera çentiğinin ya da açık uygulamanın menülerinin yanına sığmayan öğeleri gizler. ⌘ tuşunu basılı tutup başka simgeleri menü çubuğundan dışarı sürükleyin ya da gerekmeyen ayrıntıları kapatın."
           }
         }
       }
@@ -11947,6 +11967,16 @@
         }
       }
     },
+    "Show pinned timer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabit sayacı göster"
+          }
+        }
+      }
+    },
     "Show seconds": {
       "localizations": {
         "tr": {
@@ -13049,6 +13079,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kayıt düzenleyici, saatlerin kayıtlı başka bir kayıtla çakıştığında uyarır. Geçmiş de çakışmaları işaretler. Arka arkaya kayıtlara izin verilir; buna bir kaydın bittiği ve sonrakinin aynı dakikada başladığı saniyelik geçişler de dahildir. Kopya ya da birbirinin içindeki kayıtlar yine işaretlenir. Yine de kaydedebilirsin, ama iki kayıt da toplamlarına sayılır. Toplamların fazla görünüyorsa saatlerini gözden geçir."
+          }
+        }
+      }
+    },
+    "The menu bar is full, so macOS is hiding Clockin’s icon and timer. Hold ⌘ and drag other icons out of the menu bar to make room, or keep the timer on screen with the pinned timer.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu dolu olduğu için macOS, Clockin’in simgesini ve sayacını gizliyor. Yer açmak için ⌘ tuşunu basılı tutup başka simgeleri menü çubuğundan dışarı sürükleyin ya da sayacı sabitlenmiş sayaçla ekranda tutun."
           }
         }
       }

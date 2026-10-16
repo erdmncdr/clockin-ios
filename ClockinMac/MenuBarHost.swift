@@ -38,7 +38,9 @@ extension MenuBarController.Host {
                         hours: flag("Clockin.MinimalShowHours", true),
                         seconds: flag("Clockin.MinimalShowSeconds", false),
                         earnings: flag("Clockin.MinimalShowEarnings", true),
-                        tryEquivalent: flag("Clockin.MinimalShowTRY", true),
+                        // Off unless chosen: a shorter item is less likely to be hidden
+                        // when the menu bar is full.
+                        tryEquivalent: flag("Clockin.MinimalShowTRY", false),
                         goal: flag("Clockin.MinimalShowGoal", false)
                     )
                 )

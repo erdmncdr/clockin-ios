@@ -58,8 +58,10 @@ final class MenuBarController: NSObject {
             .store(in: &cancellables)
         let clock = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
+                guard let self else { return }
+                MenuBarVisibility.shared.update(itemWindow: self.statusItem?.button?.window)
                 // Idle, the label never changes; only a session counts.
-                guard let self, self.host?.status().state != .idle || self.lastLabel?.icon != .idle else { return }
+                guard self.host?.status().state != .idle || self.lastLabel?.icon != .idle else { return }
                 self.refreshLabel()
             }
         }

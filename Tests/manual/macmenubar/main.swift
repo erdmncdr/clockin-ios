@@ -3,7 +3,7 @@
 // off, it is the icon alone. Runs the real MenuBarController in a throwaway
 // accessory process, which briefly adds an icon to the menu bar.
 //
-// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
+// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift ClockinMac/MenuBarVisibility.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
 import AppKit
 import Combine
 import SwiftUI
@@ -58,5 +58,13 @@ model.minimal = false; update()
 check(button.title.isEmpty, "details off outside minimal mode: the icon alone")
 model.details = true; model.running = false; update()
 check(button.title.isEmpty, "clocking out removes the text")
+// A real item that fits is on screen; one too wide for any menu bar is moved
+// off-screen by macOS, which is how a full menu bar hides Clockin.
+check(MenuBarVisibility.isOnScreen(button.window), "the Clockin item is on screen")
+let tooWide = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+tooWide.button?.title = String(repeating: "W", count: 260)
+spin(1)
+check(!MenuBarVisibility.isOnScreen(tooWide.button?.window), "an item that cannot fit is reported hidden")
+NSStatusBar.system.removeStatusItem(tooWide)
 print("\(passed) Mac menu bar checks passed")
 exit(0)
