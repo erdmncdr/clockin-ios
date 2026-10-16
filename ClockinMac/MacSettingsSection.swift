@@ -75,7 +75,7 @@ struct MacSettingsSection: View {
                 ))
                 .disabled(!updates.isReady)
                 if let version = updates.pendingVersion { Text("Clockin \(version) is available") }
-                Button("Check for Updates…") { updates.checkForUpdates() }.disabled(!updates.isReady)
+                Button("Check for Updates…") { updates.checkForUpdates() }.disabled(!updates.isReady || updates.isChecking)
                 if let date = updates.lastChecked {
                     LabeledContent("Last checked", value: date.formatted(
                         Date.FormatStyle(date: .abbreviated, time: .shortened, locale: AppLanguage.formatLocale)))

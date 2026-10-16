@@ -107,7 +107,11 @@ enum ApplicationMover {
         }
         let translocated = environment.translocatedOriginal(bundle).map(resolved)
         let original = translocated ?? bundle
-        if isDevelopmentPath(original) || (translocated != nil && environment.isDevelopmentBuild(original)) {
+        // The translocated mirror is the same signed code and was checked above.
+        // The original usually sits in Downloads, which macOS keeps private:
+        // reading its signature there can fail and used to make a downloaded
+        // copy look like a development build, so it never offered to move.
+        if isDevelopmentPath(original) {
             return location(.development, original: original)
         }
         if environment.applicationsDirectories.contains(where: {

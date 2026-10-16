@@ -17,6 +17,9 @@ final class UpdateChecker: ObservableObject {
     @Published private(set) var automaticallyChecksForUpdates = false
     @Published private(set) var lastChecked: Date?
     @Published private(set) var startupError: String?
+    /// True from a user-requested check until Sparkle's session ends, which is
+    /// after its result (for example "You're up to date") is dismissed.
+    @Published private(set) var isChecking = false
 
     private let controller: SPUStandardUpdaterController
     private let reminders = GentleUpdateReminders()
@@ -47,7 +50,10 @@ final class UpdateChecker: ObservableObject {
                 // Sparkle publishes on main. Defer until its state transition
                 // (and any gentle-reminder callback) has finished.
                 guard available else { return }
-                DispatchQueue.main.async { self?.performRequestedCheck() }
+                DispatchQueue.main.async {
+                    self?.isChecking = false
+                    self?.performRequestedCheck()
+                }
             }
         controller.updater.publisher(for: \.automaticallyChecksForUpdates)
             .sink { @Sendable [weak self] value in Task { @MainActor in self?.automaticallyChecksForUpdates = value } }
@@ -77,6 +83,13 @@ final class UpdateChecker: ObservableObject {
     /// to the front.
     func checkForUpdates() {
         guard started else { return }
+        // Repeated clicks used to queue another check behind the open
+        // "You're up to date" alert, so dismissing it brought up the next one
+        // and the app seemed stuck. While a check is on, bring it forward.
+        guard !isChecking else {
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
         checkRequested = true
         // Let the menu or panel close before Sparkle presents its window.
         DispatchQueue.main.async { [self] in
@@ -91,6 +104,10 @@ final class UpdateChecker: ObservableObject {
         checkRequested = false
         // Sparkle activates the app when presenting/focusing its own window.
         controller.checkForUpdates(nil)
+        // Sparkle clears canCheckForUpdates synchronously when it starts a
+        // session. When it only brings an open update forward nothing starts,
+        // and a stuck flag would swallow every later click.
+        isChecking = !controller.updater.canCheckForUpdates
     }
 }
 

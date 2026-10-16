@@ -79,18 +79,21 @@ enum MoveToApplications {
     static func move(_ location: ApplicationLocation, into destination: URL,
                      fileManager: FileManager = .default) throws -> URL {
         let existing = destination.appendingPathComponent(location.originalURL.lastPathComponent)
+        // A translocated app is copied from macOS's read-only mirror of itself:
+        // the same files, readable without access to Downloads.
+        let source = location.kind == .translocated ? location.bundleURL : location.originalURL
         if FileManager.default.fileExists(atPath: existing.path),
-           ApplicationMover.bundleIdentifier(of: existing) != ApplicationMover.bundleIdentifier(of: location.originalURL) {
+           ApplicationMover.bundleIdentifier(of: existing) != ApplicationMover.bundleIdentifier(of: source) {
             throw ApplicationMoverError.differentApplication(existing)
         }
         let installed: URL
-        if let existingBuild = buildNumber(of: existing), let ownBuild = buildNumber(of: location.originalURL),
+        if let existingBuild = buildNumber(of: existing), let ownBuild = buildNumber(of: source),
            existingBuild >= ownBuild {
             // Applications'taki kopya ayni ya da daha yeni: eski bir DMG'den
             // acilan surum, Sparkle'in guncelledigi uygulamanin yerine gecmesin.
             installed = existing
         } else {
-            installed = try ApplicationMover.install(location.originalURL, into: destination, fileManager: fileManager)
+            installed = try ApplicationMover.install(source, into: destination, fileManager: fileManager)
         }
         if location.kind != .readOnlyVolume,
            installed.standardizedFileURL.resolvingSymlinksInPath() != location.originalURL.standardizedFileURL.resolvingSymlinksInPath() {
