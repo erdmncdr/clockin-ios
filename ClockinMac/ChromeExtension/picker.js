@@ -1,49 +1,52 @@
 'use strict';
-// Injected once from the popup. The person clicks the button that starts work,
-// then the one that ends it (or says it is the same button). Clicks are caught
-// here, so the site does not react to them.
-(() => {
+// Injected from the popup, and again after a reload while picking. The person
+// clicks the button that starts work, then the one that ends it. The clicks go
+// through to the site, so after Clock in the site can show its Clock out button
+// (or reload the page); the first pick is kept until the second one is made.
+(async () => {
   if (window.__clockinPicker) return;
   window.__clockinPicker = true;
 
   const tr = (navigator.language || '').toLowerCase().startsWith('tr');
   const T = tr ? {
-    start: 'Clockin: mesaiyi BAŞLATAN butona tıklayın.',
-    stop: 'Şimdi mesaiyi BİTİREN butona tıklayın.',
-    same: 'Aynı buton',
+    start: 'Clockin 1/2: mesaiyi BAŞLATAN butona tıklayın. Sitede mesainiz başlar.',
+    stop: 'Clockin 2/2: şimdi mesaiyi BİTİREN butona tıklayın.',
     cancel: 'Vazgeç',
     done: 'Hazır. Bu butonlara bastığınızda Clockin başlar ve biter.',
   } : {
-    start: 'Clockin: click the button that STARTS work.',
-    stop: 'Now click the button that ENDS work.',
-    same: 'Same button',
+    start: 'Clockin 1/2: click the button that STARTS work. Your shift starts on the site.',
+    stop: 'Clockin 2/2: now click the button that ENDS work.',
     cancel: 'Cancel',
     done: 'Done. Clockin now starts and stops with these buttons.',
   };
   const CLICKABLE = 'button, a, [role="button"], input[type="button"], input[type="submit"]';
+
+  // Picking runs only after "Pick buttons" on this site, for ten minutes at most.
+  const { picking, pending } = await chrome.storage.local.get(['picking', 'pending']);
+  if (!picking || picking.origin !== location.origin) { window.__clockinPicker = false; return; }
+  if (Date.now() - picking.at > 10 * 60 * 1000) {
+    chrome.runtime.sendMessage({ type: 'cancel-pick' });
+    window.__clockinPicker = false;
+    return;
+  }
+  let start = pending && pending.origin === location.origin ? pending.start : null;
 
   const bar = document.createElement('div');
   bar.setAttribute('style', 'all:initial;position:fixed;z-index:2147483647;top:12px;left:50%;transform:translateX(-50%);' +
     'display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;background:#111827;color:#fff;' +
     'font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35)');
   const message = document.createElement('span');
-  const sameButton = document.createElement('button');
   const cancelButton = document.createElement('button');
-  for (const button of [sameButton, cancelButton]) {
-    button.setAttribute('style', 'all:initial;cursor:pointer;padding:6px 10px;border-radius:8px;background:#374151;color:#fff;' +
-      'font:600 13px -apple-system,BlinkMacSystemFont,sans-serif');
-  }
-  sameButton.textContent = T.same;
-  sameButton.style.display = 'none';
+  cancelButton.setAttribute('style', 'all:initial;cursor:pointer;padding:6px 10px;border-radius:8px;background:#374151;color:#fff;' +
+    'font:600 13px -apple-system,BlinkMacSystemFont,sans-serif');
   cancelButton.textContent = T.cancel;
-  bar.append(message, sameButton, cancelButton);
+  bar.append(message, cancelButton);
   const outline = document.createElement('div');
   outline.setAttribute('style', 'all:initial;position:fixed;z-index:2147483646;pointer-events:none;border:3px solid #f78a18;' +
     'border-radius:6px;display:none');
   document.documentElement.append(outline, bar);
-  message.textContent = T.start;
+  message.textContent = start ? T.stop : T.start;
 
-  const picks = [];
   const label = (el) => (el.innerText || el.value || el.getAttribute('aria-label') || '').trim().replace(/\s+/g, ' ').slice(0, 80);
   const target = (event) => {
     const el = event.target instanceof Element ? event.target : null;
@@ -71,16 +74,7 @@
     return 'body > ' + parts.join(' > ');
   }
 
-  function describe(el) {
-    return { selector: selectorFor(el), text: label(el), tag: el.tagName.toLowerCase() };
-  }
-
-  function block(event) {
-    if (bar.contains(event.target)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-  }
+  const describe = (el) => ({ selector: selectorFor(el), text: label(el), tag: el.tagName.toLowerCase() });
 
   function move(event) {
     const el = target(event);
@@ -92,49 +86,44 @@
     });
   }
 
+  // Read before the site handles the click (it may relabel or replace the
+  // button, or reload the page); the click itself is left alone.
   function click(event) {
     const el = target(event);
     if (!el) return;
-    block(event);
-    picks.push(describe(el));
-    if (picks.length === 1) {
+    if (!start) {
+      start = describe(el);
+      // Written straight away: the site may reload the page right after this click.
+      chrome.storage.local.set({ pending: { origin: location.origin, start } });
       message.textContent = T.stop;
-      sameButton.style.display = '';
     } else {
-      finish(false);
+      const end = describe(el);
+      const setup = { origin: location.origin, start, stop: end, same: end.selector === start.selector };
+      stop();
+      cancelButton.remove();
+      message.textContent = T.done;
+      chrome.runtime.sendMessage({ type: 'save', setup });
+      setTimeout(() => bar.remove(), 3500);
     }
   }
 
-  const events = ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend'];
   function stop() {
     document.removeEventListener('mousemove', move, true);
     document.removeEventListener('click', click, true);
-    for (const name of events) document.removeEventListener(name, block, true);
     document.removeEventListener('keydown', key, true);
     outline.remove();
-    window.__clockinPicker = false;
   }
 
-  function finish(same) {
-    const start = picks[0];
-    const end = same ? start : picks[1];
-    const setup = { origin: location.origin, start, stop: end, same: same || end.selector === start.selector };
+  function cancel() {
     stop();
-    sameButton.remove();
-    cancelButton.remove();
-    message.textContent = T.done;
-    chrome.runtime.sendMessage({ type: 'save', setup });
-    setTimeout(() => bar.remove(), 3500);
+    bar.remove();
+    chrome.runtime.sendMessage({ type: 'cancel-pick' });
   }
 
-  function key(event) {
-    if (event.key === 'Escape') { stop(); bar.remove(); }
-  }
+  function key(event) { if (event.key === 'Escape') cancel(); }
 
-  sameButton.addEventListener('click', () => { if (picks.length === 1) finish(true); });
-  cancelButton.addEventListener('click', () => { stop(); bar.remove(); });
+  cancelButton.addEventListener('click', cancel);
   document.addEventListener('mousemove', move, true);
   document.addEventListener('click', click, true);
-  for (const name of events) document.addEventListener(name, block, true);
   document.addEventListener('keydown', key, true);
 })();

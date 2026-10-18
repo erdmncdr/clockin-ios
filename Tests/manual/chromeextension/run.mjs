@@ -52,20 +52,27 @@ try {
     }
   };
 
-  // Pick: the start button, then "Same button" in Clockin's bar.
+  // Pick: the start button, then the end button. Both clicks reach the site,
+  // which may relabel the button, show another one or reload the page.
+  await evalSW(`new Promise(r => chrome.runtime.onMessage.hasListeners() ? r() : r()).then(() => chrome.storage.local.set({ picking: { origin: ${JSON.stringify(new URL(pageURL).origin)}, at: Date.now() } })).then(() => chrome.scripting.registerContentScripts([{ id: 'clockin-picker', matches: [${JSON.stringify(new URL(pageURL).origin + '/*')}], js: ['picker.js'], runAt: 'document_idle' }]))`);
   const injected = await evalSW(`chrome.tabs.query({}).then(tabs => { const t = tabs.find(t => (t.url || '').startsWith(${JSON.stringify(pageURL)})); return t ? chrome.scripting.executeScript({target: {tabId: t.id}, files: ['picker.js']}).then(() => 'injected', e => 'error: ' + e.message) : 'no tab: ' + JSON.stringify(tabs.map(t => t.url)); })`);
   check(injected === 'injected', 'the picker is injected: ' + injected);
   await sleep(500);
-  await clickAt(mode === 'toggle' ? `document.getElementById('toggle')` : `document.querySelectorAll('button')[0]`);
-  await sleep(300);
-  check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the picking click does not reach the site');
-  if (mode === 'toggle') await clickAt(`[...document.querySelectorAll('button')].find(b => /Same button|Aynı buton/.test(b.textContent))`);
-  else await clickAt(`[...document.querySelectorAll('button')].find(b => b.textContent === 'Clock out')`);
-  await sleep(800);
-  const setup = await evalSW(`chrome.storage.local.get('setup').then(r => r.setup)`);
-  check(setup && setup.start.text === 'Clock in' && (mode === 'toggle' ? setup.same : !setup.same && setup.stop.text === 'Clock out'), 'the pick is saved: ' + JSON.stringify(setup));
-  const registered = await evalSW(`chrome.scripting.getRegisteredContentScripts().then(s => s.map(x => x.matches.join()))`);
-  check(registered.length === 1 && registered[0] === new URL(pageURL).origin + '/*', 'the watcher is registered for that site only: ' + registered);
+  const startButton = mode === 'toggle' ? `document.getElementById('toggle')` : `document.querySelectorAll('button')[0]`;
+  await clickAt(startButton);
+  await sleep(mode === 'reload' ? 1800 : 400);
+  check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the start pick reaches the site, so it can show Clock out');
+  check(await evalPage(`[...document.querySelectorAll('span')].some(s => /2\\/2/.test(s.textContent))`), 'the picker asks for the end button' + (mode === 'reload' ? ' after the reload' : ''));
+  const endButton = mode === 'two' ? `document.querySelectorAll('button')[1]` : startButton;
+  await clickAt(endButton);
+  await sleep(mode === 'reload' ? 1800 : 800);
+  check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the end pick reaches the site too');
+  const setup = await evalSW(`chrome.storage.local.get(['setup', 'pending']).then(r => ({ ...r.setup, pendingLeft: !!r.pending }))`);
+  check(setup && setup.start?.text === 'Clock in' && setup.stop?.text === 'Clock out' && (mode === 'reload' || setup.same === (mode === 'toggle')) && !setup.pendingLeft,
+        'the pick is saved: ' + JSON.stringify(setup));
+  const registered = await evalSW(`chrome.scripting.getRegisteredContentScripts().then(s => s.map(x => x.id + ' ' + x.matches.join()))`);
+  check(registered.length === 1 && registered[0] === 'clockin-watch ' + new URL(pageURL).origin + '/*', 'only the watcher stays registered, for that site only: ' + registered);
+  if (mode === 'reload') { console.log(results.join('\n')); chrome.kill(); process.exit(results.some((r) => r.startsWith('FAILED')) ? 1 : 0); }
 
   // Reload so the registered watcher runs, then press the buttons.
   await send('Page.reload', {}, page);

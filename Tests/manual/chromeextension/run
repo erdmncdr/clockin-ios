@@ -28,5 +28,6 @@ server=$!
 sleep 1
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/toggle.html" toggle logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/two.html" two logic
+node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/reload.html" reload logic
 node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle link
 echo "Chrome extension checks passed"

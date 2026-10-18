@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Work (reloads)</title>
+<body style="font:16px sans-serif;padding:40px">
+<p>Status: <span id="status"></span></p>
+<div id="actions"></div>
+<script>
+  // Like sites that reload after Clock in and show a different Clock out button.
+  window.__commands = [];
+  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  const working = new URLSearchParams(location.search).has('working');
+  document.getElementById('status').textContent = working ? 'working' : 'idle';
+  const button = document.createElement('button');
+  button.className = working ? 'end-shift' : 'start-shift';
+  button.textContent = working ? 'Clock out' : 'Clock in';
+  button.onclick = () => { location.href = working ? 'reload.html' : 'reload.html?working=1'; };
+  document.getElementById('actions').append(button);
+</script>
