@@ -12077,6 +12077,16 @@
         }
       }
     },
+    "Show while clocked in": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesai sırasında göster"
+          }
+        }
+      }
+    },
     "Shows daily details below the grid": {
       "localizations": {
         "tr": {

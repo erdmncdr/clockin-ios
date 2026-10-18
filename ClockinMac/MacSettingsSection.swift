@@ -15,6 +15,7 @@ struct MacSettingsSection: View {
     @AppStorage("Clockin.MinimalShowGoal") private var showGoal = false
     @AppStorage(WardrobeState.deskKey) private var showHome = true
     @AppStorage("Clockin.PinnedMode") private var pinnedMode = "Money"
+    @AppStorage(PinnedTimerVisibility.whileClockedInKey) private var pinWhileClockedIn = false
     @State private var chromePrepared = false
     @State private var chromeError: String?
 
@@ -42,6 +43,7 @@ struct MacSettingsSection: View {
             }
             Section("Pinned timer") {
                 Toggle("Pin timer", isOn: Binding(get: { store.pinVisible }, set: { store.setPinned($0) }))
+                Toggle("Show while clocked in", isOn: $pinWhileClockedIn)
                 Picker("Layout", selection: $pinnedMode) {
                     Text("Money").tag("Money")
                     Text("Compact").tag("Compact")

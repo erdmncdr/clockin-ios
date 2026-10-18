@@ -31,6 +31,12 @@ let grown = PinnedFrame.resized(NSRect(x: 100, y: 500, width: 300, height: 100),
                                 minimum: minimum, maximum: NSSize(width: 640, height: 500))
 check(grown == NSRect(x: 100, y: 470, width: 340, height: 130), "the corner drag keeps the top-left corner: \(grown)")
 
+// When it shows.
+check(PinnedTimerVisibility.shows(pinned: true, whileClockedIn: false, clockedIn: false), "a pinned timer always shows")
+check(!PinnedTimerVisibility.shows(pinned: false, whileClockedIn: false, clockedIn: true), "unpinned, it stays hidden by default")
+check(PinnedTimerVisibility.shows(pinned: false, whileClockedIn: true, clockedIn: true), "with Show while clocked in, a session shows it")
+check(!PinnedTimerVisibility.shows(pinned: false, whileClockedIn: true, clockedIn: false), "and clocking out hides it again")
+
 // A borderless panel like the app's.
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)

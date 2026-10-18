@@ -34,7 +34,10 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
     private func refresh(store: ClockStore) {
         let mode = UserDefaults.standard.string(forKey: "Clockin.PinnedMode") ?? "Money"
         // Independent of minimal mode: both can be on at once.
-        let visible = store.pinVisible
+        let visible = PinnedTimerVisibility.shows(
+            pinned: store.pinVisible,
+            whileClockedIn: UserDefaults.standard.bool(forKey: PinnedTimerVisibility.whileClockedInKey),
+            clockedIn: store.running != nil)
         if visible != lastVisible {
             update(isVisible: visible, store: store)
             lastVisible = visible

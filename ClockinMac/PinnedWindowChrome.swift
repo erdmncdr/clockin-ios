@@ -1,6 +1,16 @@
 import AppKit
 import SwiftUI
 
+/// When the pinned timer is on screen: pinned by hand, or (with "Show while
+/// clocked in") for as long as a session runs, paused included.
+enum PinnedTimerVisibility {
+    static let whileClockedInKey = "Clockin.PinWhileClockedIn"
+
+    static func shows(pinned: Bool, whileClockedIn: Bool, clockedIn: Bool) -> Bool {
+        pinned || (whileClockedIn && clockedIn)
+    }
+}
+
 /// The pinned timer is a borderless panel: no title bar to drag and no edges
 /// AppKit resizes reliably. These pieces give it both, and keep it on screen.
 enum PinnedFrame {

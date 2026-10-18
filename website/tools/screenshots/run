@@ -32,8 +32,8 @@ mkdir -p "$OUT"
 # Preferences for every shot: a fixed theme, goals to show progress, and no
 # extras that would need permission.
 SETTINGS=(-Clockin.Theme "$THEME" -Clockin.GoalDailyHours 8 -Clockin.GoalMonthlyHours 160
-          -Clockin.MascotEnabled -bool YES -Clockin.MinimalMode -bool NO
-          -Clockin.ChimeEnabled -bool NO -Clockin.CloudSyncEnabled -bool NO
+          -Clockin.MascotEnabled YES -Clockin.MinimalMode NO
+          -Clockin.ChimeEnabled NO -Clockin.CloudSyncEnabled NO
           # The default companion and room, not whatever this Mac has unlocked.
           -Clockin.WardrobeState "{}"
           # Six months of history, so the chart is worth showing.
