@@ -42,7 +42,6 @@ struct MacSettingsSection: View {
             }
             Section("Pinned timer") {
                 Toggle("Pin timer", isOn: Binding(get: { store.pinVisible }, set: { store.setPinned($0) }))
-                    .disabled(minimalMode)
                 Picker("Layout", selection: $pinnedMode) {
                     Text("Money").tag("Money")
                     Text("Compact").tag("Compact")

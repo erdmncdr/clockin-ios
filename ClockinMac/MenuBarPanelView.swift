@@ -279,16 +279,12 @@ struct MenuBarPanelView: View {
         let defaults = UserDefaults.standard
         guard defaults.bool(forKey: "Clockin.MinimalMode") != on else { return }
         defaults.set(on, forKey: "Clockin.MinimalMode")
+        // Minimal mode is about the window only: the pinned timer stays as it is.
         if on {
-            defaults.set(store.pinVisible, forKey: "Clockin.PinVisibleBeforeMinimal")
             NSApp.setActivationPolicy(.accessory)
-            store.setPinned(false)
             MainWindowController.shared.hide()
         } else {
-            let restore = defaults.object(forKey: "Clockin.PinVisibleBeforeMinimal") as? Bool ?? true
-            defaults.removeObject(forKey: "Clockin.PinVisibleBeforeMinimal")
             MainWindowController.shared.show(store: store, exchangeRates: SharedStore.exchangeRates)
-            store.setPinned(restore)
         }
     }
 }

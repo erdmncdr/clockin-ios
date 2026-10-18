@@ -8,6 +8,7 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
     private var panel: NSPanel?
     private var changes: AnyCancellable?
     private var preferences: AnyCancellable?
+    private var screens: AnyCancellable?
     private var lastMode: String?
     private var lastVisible: Bool?
     private static let minimumSize = NSSize(width: 246, height: 72)
@@ -23,12 +24,17 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
             .sink { @Sendable [weak self] _ in
                 Task { @MainActor in self?.refresh(store: store) }
             }
+        screens = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+            .sink { @Sendable [weak self] _ in
+                Task { @MainActor in self?.panel.map { self?.fitOnScreen($0) } }
+            }
         refresh(store: store)
     }
 
     private func refresh(store: ClockStore) {
         let mode = UserDefaults.standard.string(forKey: "Clockin.PinnedMode") ?? "Money"
-        let visible = store.pinVisible && !UserDefaults.standard.bool(forKey: "Clockin.MinimalMode")
+        // Independent of minimal mode: both can be on at once.
+        let visible = store.pinVisible
         if visible != lastVisible {
             update(isVisible: visible, store: store)
             lastVisible = visible
@@ -40,6 +46,7 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
     func update(isVisible: Bool, store: ClockStore) {
         if isVisible {
             if panel == nil { panel = makePanel(store: store) }
+            if let panel { fitOnScreen(panel) }
             panel?.orderFrontRegardless()
         } else {
             panel?.orderOut(nil)
@@ -52,11 +59,22 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
         var frame = panel.frame
         frame.origin.y += frame.height - size.height
         frame.size = size
+        let screen = panel.screen ?? NSScreen.main
+        if let screen { frame = PinnedFrame.fitted(frame, in: screen.visibleFrame, minimum: Self.minimumSize) }
         panel.setFrame(frame, display: true, animate: true)
     }
 
+    /// Back inside the screen, so no part is out of reach.
+    private func fitOnScreen(_ panel: NSPanel) {
+        guard let screen = panel.screen ?? NSScreen.main else { return }
+        let fitted = PinnedFrame.fitted(panel.frame, in: screen.visibleFrame, minimum: Self.minimumSize)
+        guard fitted != panel.frame else { return }
+        panel.setFrame(fitted, display: true)
+        panel.saveFrame(usingName: "ClockinPinnedTimer")
+    }
+
     func windowDidEndLiveResize(_ notification: Notification) {
-        saveCurrentSize()
+        saveSize()
     }
 
     func windowDidMove(_ notification: Notification) {
@@ -88,7 +106,8 @@ final class PinnedWindowController: NSObject, NSWindowDelegate {
         return NSSize(width: max(width, Self.minimumSize.width), height: max(height, Self.minimumSize.height))
     }
 
-    private func saveCurrentSize() {
+    /// Remembers the size for the current layout; also called by the grip.
+    func saveSize() {
         guard let panel else { return }
         let mode = UserDefaults.standard.string(forKey: "Clockin.PinnedMode") ?? "Money"
         UserDefaults.standard.set(panel.frame.width, forKey: "Clockin.PinnedWidth.\(mode)")
@@ -155,11 +174,16 @@ struct PinnedTimerView: View {
             if mode == "Compact" { compactContent } else if mode == "Goal" { goalContent } else if mode == "All" { allContent } else if mode == "Total" { totalContent } else { moneyContent }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Drag any empty part to move the panel.
+        .background(PinnedWindowDragArea())
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(theme.surfaceStroke))
         .overlay(alignment: .bottomTrailing) {
+            // Drag the corner to resize.
             Image(systemName: "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 7)).foregroundStyle(.white.opacity(0.2)).padding(6)
+                .font(.system(size: 8)).foregroundStyle(.secondary.opacity(0.7)).padding(6)
+                .overlay { PinnedResizeGrip(onEnd: { PinnedWindowController.shared.saveSize() }).frame(width: 22, height: 22) }
+                .accessibilityLabel("Resize")
         }
         .preferredColorScheme(theme.colorScheme)
         .fontDesign(theme.fontDesign)

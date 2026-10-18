@@ -28,8 +28,6 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         }
         let store = SharedStore.clock
         let minimal = UserDefaults.standard.bool(forKey: "Clockin.MinimalMode")
-        // Minimal modda yeniden acilis sabit pencereyi geri getirmesin.
-        if minimal { store.setPinned(false) }
         UpdateChecker.shared.start()
         ChromeExtensionInstaller.refreshIfInstalled()
         MenuBarController.shared.start(.clockin())
