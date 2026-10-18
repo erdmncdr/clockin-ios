@@ -5,6 +5,7 @@ const T = tr ? {
   ready: 'Bu butonlara bastığınızda Clockin başlar ve biter.',
   site: 'Site', start: 'Başlat', stop: 'Bitir',
   pick: 'Butonları seç', repick: 'Butonları yeniden seç', reset: 'Kaldır',
+  last: 'Son algılanan', in: 'Clock in', out: 'Clock out',
   notWeb: 'Önce iş sitenizin sekmesini açın.',
   denied: 'Clockin bu siteye erişemezse butonları göremez. Tekrar deneyip izin verin.',
 } : {
@@ -12,6 +13,7 @@ const T = tr ? {
   ready: 'Clockin starts and stops when you press these buttons.',
   site: 'Site', start: 'Start', stop: 'End',
   pick: 'Pick buttons', repick: 'Pick buttons again', reset: 'Remove',
+  last: 'Last detected', in: 'Clock in', out: 'Clock out',
   notWeb: 'Open your work site’s tab first.',
   denied: 'Clockin can’t see the buttons without access to this site. Try again and allow it.',
 };
@@ -21,7 +23,13 @@ let tab = null;
 function showError(text) { $('error').textContent = text; $('error').hidden = false; }
 
 async function render() {
-  const { setup } = await chrome.storage.local.get('setup');
+  const { setup, lastEvent } = await chrome.storage.local.get(['setup', 'lastEvent']);
+  if (setup && lastEvent) {
+    // Shows whether the last press reached the extension at all.
+    const time = new Date(lastEvent.at).toLocaleString(tr ? 'tr-TR' : undefined, { dateStyle: 'short', timeStyle: 'short' });
+    $('last').textContent = `${T.last}: ${lastEvent.action === 'clock-in' ? T.in : T.out} · ${time}`;
+    $('last').hidden = false;
+  }
   $('siteLabel').textContent = T.site;
   $('startLabel').textContent = T.start;
   $('stopLabel').textContent = T.stop;

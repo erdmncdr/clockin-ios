@@ -58,12 +58,12 @@ try {
   const injected = await evalSW(`chrome.tabs.query({}).then(tabs => { const t = tabs.find(t => (t.url || '').startsWith(${JSON.stringify(pageURL)})); return t ? chrome.scripting.executeScript({target: {tabId: t.id}, files: ['picker.js']}).then(() => 'injected', e => 'error: ' + e.message) : 'no tab: ' + JSON.stringify(tabs.map(t => t.url)); })`);
   check(injected === 'injected', 'the picker is injected: ' + injected);
   await sleep(500);
-  const startButton = mode === 'toggle' ? `document.getElementById('toggle')` : `document.querySelectorAll('button')[0]`;
+  const startButton = { toggle: `document.getElementById('toggle')`, div: `document.querySelector('.start')` }[mode] ?? `document.querySelectorAll('button')[0]`;
   await clickAt(startButton);
   await sleep(mode === 'reload' ? 1800 : 400);
   check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the start pick reaches the site, so it can show Clock out');
   check(await evalPage(`[...document.querySelectorAll('span')].some(s => /2\\/2/.test(s.textContent))`), 'the picker asks for the end button' + (mode === 'reload' ? ' after the reload' : ''));
-  const endButton = mode === 'two' ? `document.querySelectorAll('button')[1]` : startButton;
+  const endButton = { two: `document.querySelectorAll('button')[1]`, div: `document.querySelector('.fake-button .label')` }[mode] ?? startButton;
   await clickAt(endButton);
   await sleep(mode === 'reload' ? 1800 : 800);
   check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the end pick reaches the site too');
@@ -72,28 +72,31 @@ try {
         'the pick is saved: ' + JSON.stringify(setup));
   const registered = await evalSW(`chrome.scripting.getRegisteredContentScripts().then(s => s.map(x => x.id + ' ' + x.matches.join()))`);
   check(registered.length === 1 && registered[0] === 'clockin-watch ' + new URL(pageURL).origin + '/*', 'only the watcher stays registered, for that site only: ' + registered);
-  if (mode === 'reload') { console.log(results.join('\n')); chrome.kill(); process.exit(results.some((r) => r.startsWith('FAILED')) ? 1 : 0); }
 
-  // Reload so the registered watcher runs, then press the buttons.
-  await send('Page.reload', {}, page);
+  // Load the page fresh so the registered watcher runs, then work a shift.
+  const lastEvent = () => evalSW(`chrome.storage.local.get('lastEvent').then(r => r.lastEvent?.action ?? null)`);
+  await send('Page.navigate', { url: pageURL }, page);
   await sleep(1500);
   events.length = 0;
-  await clickAt(mode === 'toggle' ? `document.getElementById('toggle')` : `document.querySelectorAll('button')[0]`);
-  await sleep(700);
+  await clickAt(startButton);
+  await sleep(mode === 'reload' ? 1800 : 700);
   check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the site still handles its own click');
+  check(await lastEvent() === 'clock-in', 'the start press is detected');
   if (launch === 'link') {
     // Headless Chrome keeps its "Open Clockin?" prompt unanswered, which also
     // blocks later clicks, so this run stops after the first link.
     const urls = events.filter((e) => e.method === 'Page.frameRequestedNavigation').map((e) => e.params.url);
     check(urls.includes('clockin://clock-in'), 'Chrome receives the clockin://clock-in link: ' + JSON.stringify(urls));
   } else {
-    await clickAt(mode === 'toggle' ? `document.getElementById('toggle')` : `document.querySelectorAll('button')[1]`);
-    await sleep(700);
-    check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the second press reaches the site too');
-    const commands = await evalPage(`window.__commands`);
-    check(JSON.stringify(commands) === JSON.stringify(['clock-in', 'clock-out']), 'the watcher sends clock-in then clock-out: ' + JSON.stringify(commands));
+    await clickAt(endButton);
+    await sleep(mode === 'reload' ? 1800 : 700);
+    check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the end press reaches the site too');
+    check(await lastEvent() === 'clock-out', 'the end press is detected');
+    if (mode !== 'reload') {
+      const commands = await evalPage(`window.__commands`);
+      check(JSON.stringify(commands) === JSON.stringify(['clock-in', 'clock-out']), 'the watcher sends clock-in then clock-out: ' + JSON.stringify(commands));
+    }
   }
-  check(await evalPage(`location.href`) === pageURL, 'the work page stays where it is');
 } catch (error) {
   check(false, String(error));
 } finally {

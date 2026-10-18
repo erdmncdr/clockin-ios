@@ -20,7 +20,7 @@ PY
 sips -s format png -z 128 128 website/dist/assets/clockin-icon.png --out "$work/ext/icon128.png" >/dev/null
 # A second copy that announces commands without opening clockin:// links.
 cp -R "$work/ext" "$work/ext-logic"
-sed -i '' "s#window.location.href = 'clockin://' + action;#/* checks: no link */#" "$work/ext-logic/watch.js"
+sed -i '' "s#frame.src = 'clockin://' + action;#/* checks: no link */#" "$work/ext-logic/watch.js"
 grep -q "no link" "$work/ext-logic/watch.js"
 port=$((20000 + RANDOM % 20000))
 python3 -m http.server "$port" --bind 127.0.0.1 --directory Tests/manual/chromeextension/site >/dev/null 2>&1 &
@@ -29,5 +29,7 @@ sleep 1
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/toggle.html" toggle logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/two.html" two logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/reload.html" reload logic
+node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/div.html" div logic
 node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle link
+node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/reload.html" reload link
 echo "Chrome extension checks passed"

@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>Work (div buttons)</title>
+<body style="font:16px sans-serif;padding:40px">
+<p>Status: <span id="status">idle</span></p>
+<div class="bar">
+  <button class="start">Clock in</button>
+  <div class="fake-button" onclick="document.getElementById('status').textContent = 'idle'"><span class="label">Clock out</span></div>
+</div>
+<script>
+  window.__commands = [];
+  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.querySelector('.start').onclick = () => document.getElementById('status').textContent = 'working';
+</script>
