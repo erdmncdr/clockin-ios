@@ -31,5 +31,13 @@ node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$p
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/reload.html" reload logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/div.html" div logic
 node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle link
-node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/reload.html" reload link
+# The native path needs a Debug build; it runs against the Debug app's own data.
+debug_app="build/DerivedData/Build/Products/Debug/Clockin.app"
+if [ -x "$debug_app/Contents/MacOS/Clockin" ]; then
+    node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle native "$PWD/$debug_app/Contents/MacOS/Clockin"
+    # The host launched the Debug app to deliver the presses.
+    pkill -f "$PWD/$debug_app/Contents/MacOS/Clockin" || true
+else
+    echo "skipped the native messaging run: build the Debug app first"
+fi
 echo "Chrome extension checks passed"

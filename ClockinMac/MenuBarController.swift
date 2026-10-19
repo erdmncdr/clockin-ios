@@ -42,14 +42,7 @@ final class MenuBarController: NSObject {
     func start(_ host: Host) {
         guard statusItem == nil else { return }
         self.host = host
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.target = self
-        item.button?.action = #selector(statusItemClicked(_:))
-        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        item.button?.imagePosition = .imageLeading
-        item.button?.setAccessibilityLabel(String(localized: "Clockin", bundle: .app))
-        statusItem = item
-        refreshLabel()
+        makeItem()
 
         host.changes
             // `objectWillChange` fires before the new value is stored.
@@ -75,6 +68,58 @@ final class MenuBarController: NSObject {
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { @Sendable [weak self] _ in Task { @MainActor in self?.close(animated: false) } }
             .store(in: &cancellables)
+    }
+
+    /// The name macOS keeps this item's position and visibility under. A new
+    /// name in 2.0.20: positions saved before by menu bar managers (or a drag
+    /// out of the bar) could keep the old item hidden even with room to spare.
+    static let autosaveName = "ClockinStatusItem"
+
+    private func makeItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.autosaveName = Self.autosaveName
+        item.isVisible = true
+        item.button?.target = self
+        item.button?.action = #selector(statusItemClicked(_:))
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        item.button?.imagePosition = .imageLeading
+        item.button?.setAccessibilityLabel(String(localized: "Clockin", bundle: .app))
+        statusItem = item
+        lastLabel = nil
+        refreshLabel()
+    }
+
+    /// Forgets where macOS placed the item and adds it again at the default
+    /// place, next to the other app items.
+    func resetItemPosition() {
+        close(animated: false)
+        if let statusItem { NSStatusBar.system.removeStatusItem(statusItem) }
+        statusItem = nil
+        let defaults = UserDefaults.standard
+        for prefix in ["NSStatusItem Preferred Position", "NSStatusItem Visible", "NSStatusItem VisibleCC"] {
+            defaults.removeObject(forKey: "\(prefix) \(Self.autosaveName)")
+            defaults.removeObject(forKey: "\(prefix) Item-0")
+        }
+        makeItem()
+    }
+
+    /// What macOS reports about the item, to paste into a bug report.
+    func diagnostics() -> String {
+        let window = statusItem?.button?.window
+        let screen = window?.screen ?? NSScreen.main
+        let saved = UserDefaults.standard.dictionaryRepresentation().keys
+            .filter { $0.hasPrefix("NSStatusItem") }.sorted()
+            .map { "\($0) = \(UserDefaults.standard.object(forKey: $0) ?? "")" }
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        return [
+            "Clockin \(version) (\(build)), macOS \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "item: exists=\(statusItem != nil) visible=\(statusItem?.isVisible ?? false) autosave=\(statusItem?.autosaveName ?? "-")",
+            "item window: frame=\(window.map { NSStringFromRect($0.frame) } ?? "none") onScreen=\(MenuBarVisibility.isOnScreen(window))",
+            "screen: frame=\(screen.map { NSStringFromRect($0.frame) } ?? "none") notchInset=\(screen?.safeAreaInsets.top ?? 0) screens=\(NSScreen.screens.count)",
+            "menu bar visible=\(NSMenu.menuBarVisible()) title=\(statusItem?.button?.title ?? "")",
+            "saved: " + (saved.isEmpty ? "none" : saved.joined(separator: "; ")),
+        ].joined(separator: "\n")
     }
 
     // MARK: Label

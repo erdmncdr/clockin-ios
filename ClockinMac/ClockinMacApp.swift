@@ -142,6 +142,8 @@ struct ClockinMacApp: App {
     @NSApplicationDelegateAdaptor(ClockinMacAppDelegate.self) private var appDelegate
 
     init() {
+        // Started by Chrome for the extension: answer it and exit, no app UI.
+        if ChromeNativeHost.isHostLaunch() { ChromeNativeHost.run() }
         // 1.1.6'dan gelen tercihler, onlari okuyan her seyden once cevrilir.
         MacLegacyMigration.migrate(in: .standard)
         #if DEBUG

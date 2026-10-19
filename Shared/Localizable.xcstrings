@@ -3937,6 +3937,16 @@
         }
       }
     },
+    "Copied": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
     "Copied rows are partial, totals do not match.": {
       "localizations": {
         "tr": {
@@ -3967,12 +3977,32 @@
         }
       }
     },
+    "Copy details": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntıları kopyala"
+          }
+        }
+      }
+    },
     "Copy image": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Resmi kopyala"
+          }
+        }
+      }
+    },
+    "Copy menu bar details": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu ayrıntılarını kopyala"
           }
         }
       }
@@ -8029,6 +8059,16 @@
         }
       }
     },
+    "Menu Bar settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü Çubuğu ayarları"
+          }
+        }
+      }
+    },
     "Menu bar": {
       "localizations": {
         "tr": {
@@ -11089,6 +11129,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Raporlar tamamlanan oturumları kullanır. Saat başı kazanca süren çalışma da dahildir. En iyi gün ve başlangıç saati toplam süreye göre belirlenir; eşitlikte haftanın ilk günü ya da en erken saat seçilir. Eğilim, bugün dahil son 30 takvim gününü ondan önceki 30 günle karşılaştırır."
+          }
+        }
+      }
+    },
+    "Reset menu bar position": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğu konumunu sıfırla"
+          }
+        }
+      }
+    },
+    "Reset position": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konumu sıfırla"
           }
         }
       }
@@ -15734,6 +15794,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "kilitli"
+          }
+        }
+      }
+    },
+    "macOS is not showing Clockin’s icon and timer, usually because the menu bar is full or Clockin is turned off in Menu Bar settings. Reset its position, check that Clockin is allowed in Menu Bar settings, or keep the timer on screen with the pinned timer. If it stays hidden, copy the details and send them to us.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS, Clockin’in simgesini ve sayacını göstermiyor; genellikle menü çubuğu dolu olduğu ya da Clockin, Menü Çubuğu ayarlarında kapalı olduğu için. Konumunu sıfırlayın, Menü Çubuğu ayarlarında Clockin’e izin verildiğine bakın ya da sayacı sabitlenmiş sayaçla ekranda tutun. Yine görünmezse ayrıntıları kopyalayıp bize gönderin."
           }
         }
       }

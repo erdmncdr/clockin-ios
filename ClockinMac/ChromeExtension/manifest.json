@@ -1,11 +1,27 @@
 {
   "manifest_version": 3,
   "name": "Clockin",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Starts and stops Clockin when you press your work site's Clock in and Clock out buttons.",
-  "action": { "default_popup": "popup.html", "default_icon": "icon128.png" },
-  "icons": { "128": "icon128.png" },
-  "permissions": ["storage", "scripting", "activeTab"],
-  "optional_host_permissions": ["https://*/*", "http://*/*"],
-  "background": { "service_worker": "background.js" }
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon128.png"
+  },
+  "icons": {
+    "128": "icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "nativeMessaging"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtjUr6CATapDZYt7gIpK1R7n7IcJtNOgpDmBBrYHUL0lK5RMe40fUSt+7e5Y/bt83BvhdfGglDsL8ZF0H4m1D83Z7V0hjOyvpcOqxXSJqtr9eIRiOxOgjDHMBDHOFF7MIpRKTGKF3gk34ZXl75mRTT7DJ/Vqw6fSyy2jvPQXUD2scAd2RiRtXdPE1GwcEqkqIZsJIGgpbrX336RygSKxBK0nqY+Xw/fwdSAYXrj7MvdjwofuSEU4mjEbxQKSzJv/d8cuaflHqMpIAbD2yn8dZYgK6ChzvzSWt0lhMGEPjUk1U5rr8hX6Oox8vPyr+J+jFuan0YRdBouLft3yBkoGhMwIDAQAB"
 }

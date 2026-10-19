@@ -10,8 +10,15 @@ enum ChromeExtensionInstaller {
     static let files = ["manifest.json", "background.js", "watch.js", "picker.js", "popup.html", "popup.js"]
 
     static var folder: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Clockin", isDirectory: true)
+        // A Debug build keeps its own copy, so it never replaces the extension
+        // people use or points Chrome at itself.
+        #if DEBUG
+        let app = "Clockin Debug"
+        #else
+        let app = "Clockin"
+        #endif
+        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(app, isDirectory: true)
             .appendingPathComponent("Chrome Extension", isDirectory: true)
     }
 
@@ -53,6 +60,12 @@ enum ChromeExtensionInstaller {
             try manager.copyItem(at: source, to: target)
         }
         try icon().write(to: folder.appendingPathComponent("icon128.png"))
+        #if DEBUG
+        // Only on request: the browsers' host folders are shared with the real app.
+        if ProcessInfo.processInfo.arguments.contains("--native-host") { ChromeNativeHost.writeManifests() }
+        #else
+        ChromeNativeHost.writeManifests()
+        #endif
     }
 
     /// The app icon at 128 px, for Chrome's toolbar and extensions page.

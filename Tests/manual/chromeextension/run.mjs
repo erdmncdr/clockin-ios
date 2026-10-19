@@ -1,13 +1,23 @@
 // Loads the Clockin Chrome extension into a throwaway Chrome profile over the DevTools pipe,
 // picks the test page's button, then presses it and records what the watcher does.
 import { spawn } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// launch: 'logic' (the extension copy does not open links) or 'link'.
-const [extPath, pageURL, mode = 'toggle', launch = 'logic'] = process.argv.slice(2);
+// launch: 'logic' (the extension copy does not open links), 'link', or
+// 'native' (a host manifest in the throwaway profile points at hostPath).
+const [extPath, pageURL, mode = 'toggle', launch = 'logic', hostPath] = process.argv.slice(2);
 const profile = mkdtempSync(join(tmpdir(), 'clockin-chrome-'));
+if (launch === 'native') {
+  // Chrome reads user-level hosts from the profile it runs with, so the real
+  // browser's host files are never touched.
+  mkdirSync(join(profile, 'NativeMessagingHosts'), { recursive: true });
+  writeFileSync(join(profile, 'NativeMessagingHosts', 'com.erdmncdr.clockin.json'), JSON.stringify({
+    name: 'com.erdmncdr.clockin', description: 'Clockin (checks)', path: hostPath, type: 'stdio',
+    allowed_origins: ['chrome-extension://iaikoicampaamoakicipdacniaaonkpc/'],
+  }));
+}
 const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
   '--headless=new', '--remote-debugging-pipe', '--enable-unsafe-extension-debugging',
   `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', 'about:blank',
@@ -82,7 +92,29 @@ try {
   await sleep(mode === 'reload' ? 1800 : 700);
   check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the site still handles its own click');
   check(await lastEvent() === 'clock-in', 'the start press is detected');
-  if (launch === 'link') {
+  if (launch === 'logic' && mode !== 'reload') {
+    await evalSW(`chrome.storage.local.remove('lastEvent')`);
+    // The page clicks its own end button, then its start button again, from
+    // script; the shift is back where it was and neither click may count.
+    await evalPage(`(${endButton}).click()`);
+    await sleep(200);
+    await evalPage(`(${startButton}).click()`);
+    await sleep(500);
+    check(await lastEvent() === null, 'clicks made by the page itself do not count');
+    check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the page is back to working');
+  }
+  if (launch === 'native') {
+    const confirmed = () => evalSW(`chrome.storage.local.get('lastEvent').then(r => r.lastEvent)`);
+    await sleep(2500);
+    const first = await confirmed();
+    check(first?.action === 'clock-in' && first.ok && first.confirmed, 'Clockin confirms the clock in: ' + JSON.stringify(first));
+    check(await evalPage(`[...document.querySelectorAll('div')].some(d => d.textContent.includes('Clockin ✓ Clock in'))`), 'the page shows that it counted');
+    await sleep(3200);
+    await clickAt(endButton);
+    await sleep(3000);
+    const second = await confirmed();
+    check(second?.action === 'clock-out' && second.ok && second.confirmed, 'Clockin confirms the clock out: ' + JSON.stringify(second));
+  } else if (launch === 'link') {
     // Headless Chrome keeps its "Open Clockin?" prompt unanswered, which also
     // blocks later clicks, so this run stops after the first link.
     const urls = events.filter((e) => e.method === 'Page.frameRequestedNavigation').map((e) => e.params.url);

@@ -36,6 +36,13 @@ struct MacSettingsSection: View {
                     Toggle("Show goal progress", isOn: $showGoal)
                 }
                 .disabled(!showMenuBarDetails)
+                HStack {
+                    Button("Reset menu bar position") { MenuBarController.shared.resetItemPosition() }
+                    Button("Copy menu bar details") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(MenuBarController.shared.diagnostics(), forType: .string)
+                    }
+                }
             } header: {
                 Text("Menu bar")
             } footer: {
