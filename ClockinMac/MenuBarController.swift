@@ -118,8 +118,16 @@ final class MenuBarController: NSObject {
             "item window: frame=\(window.map { NSStringFromRect($0.frame) } ?? "none") onScreen=\(MenuBarVisibility.isOnScreen(window))",
             "screen: frame=\(screen.map { NSStringFromRect($0.frame) } ?? "none") notchInset=\(screen?.safeAreaInsets.top ?? 0) screens=\(NSScreen.screens.count)",
             "menu bar visible=\(NSMenu.menuBarVisible()) title=\(statusItem?.button?.title ?? "")",
+            "app: \(Self.locationSummary())",
             "saved: " + (saved.isEmpty ? "none" : saved.joined(separator: "; ")),
         ].joined(separator: "\n")
+    }
+
+    /// Where this copy runs from: a copy left in Downloads runs translocated
+    /// from a new place each launch, and macOS may not keep its menu bar item.
+    private static func locationSummary() -> String {
+        let location = ApplicationMover.locate(Bundle.main.bundleURL)
+        return "\(location.kind) \(location.originalURL.path(percentEncoded: false))"
     }
 
     // MARK: Label

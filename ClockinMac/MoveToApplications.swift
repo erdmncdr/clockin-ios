@@ -21,9 +21,10 @@ enum MoveToApplications {
         #else
         let location = ApplicationMover.locate(Bundle.main.bundleURL)
         guard location.shouldOfferMove else { return false }
-        // DMG'den calisan kopya icin "bir daha sorma" sunulmaz: orada kalmak
-        // hicbir zaman dogru secim degil.
-        let canSuppress = location.kind != .readOnlyVolume
+        // DMG'den ya da Indirilenler'den (translocated) calisan kopya icin
+        // "bir daha sorma" sunulmaz ve eskiden verilmis cevap sayilmaz: orada
+        // kalan kopya guncellenemez ve her acilista baska bir yerden calisir.
+        let canSuppress = location.kind == .elsewhere && !isDownload(location.originalURL)
         if canSuppress, UserDefaults.standard.bool(forKey: suppressionKey) { return false }
 
         let destination: URL
@@ -34,7 +35,6 @@ enum MoveToApplications {
             return false
         }
 
-        NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = String(localized: "Move Clockin to your Applications folder?", bundle: .app)
         alert.informativeText = explanation(for: location, destination: destination)
@@ -44,7 +44,7 @@ enum MoveToApplications {
             alert.showsSuppressionButton = true
             alert.suppressionButton?.title = String(localized: "Don't ask again", bundle: .app)
         }
-        let response = alert.runModal()
+        let response = runInFront(alert)
         if canSuppress, alert.suppressionButton?.state == .on {
             UserDefaults.standard.set(true, forKey: suppressionKey)
         }
@@ -61,6 +61,13 @@ enum MoveToApplications {
             return false
         }
         #endif
+    }
+
+    /// Downloads and Desktop: where a downloaded copy lands, unzipped by a
+    /// tool that leaves no quarantine (so macOS does not translocate it).
+    static func isDownload(_ app: URL, home: URL = FileManager.default.homeDirectoryForCurrentUser) -> Bool {
+        let folder = app.standardizedFileURL.deletingLastPathComponent().pathComponents
+        return ["Downloads", "Desktop"].contains { folder.starts(with: home.appendingPathComponent($0).standardizedFileURL.pathComponents) }
     }
 
     static func explanation(for location: ApplicationLocation, destination: URL) -> String {
@@ -135,13 +142,28 @@ enum MoveToApplications {
     if [ -n "$3" ]; then /usr/bin/hdiutil detach -quiet "$3" || true; fi
     """
 
-    private static func showFailure(_ error: Error) {
+    /// Clockin has no Dock icon, and macOS may leave a fresh launch behind
+    /// Finder: the question then sat unseen behind other windows while the
+    /// launch waited for it, so not even the menu bar item appeared. For the
+    /// question Clockin shows in the Dock, comes to the front and keeps the
+    /// alert above other windows.
+    private static func runInFront(_ alert: NSAlert) -> NSApplication.ModalResponse {
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        alert.window.level = .floating
+        alert.window.center()
+        alert.window.orderFrontRegardless()
+        let response = alert.runModal()
+        NSApp.setActivationPolicy(.accessory)
+        return response
+    }
+
+    private static func showFailure(_ error: Error) {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = String(localized: "Clockin couldn't move itself to Applications", bundle: .app)
         alert.informativeText = String(localized: "\(error.localizedDescription)\n\nYou can drag Clockin into the Applications folder in Finder instead.", bundle: .app)
         alert.addButton(withTitle: String(localized: "OK", bundle: .app))
-        alert.runModal()
+        _ = runInFront(alert)
     }
 }

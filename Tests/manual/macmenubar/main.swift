@@ -3,7 +3,7 @@
 // off, it is the icon alone. Runs the real MenuBarController in a throwaway
 // accessory process, which briefly adds an icon to the menu bar.
 //
-// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift ClockinMac/MenuBarVisibility.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
+// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift ClockinMac/MenuBarVisibility.swift ClockinMac/ApplicationMover.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
 import AppKit
 import Combine
 import SwiftUI

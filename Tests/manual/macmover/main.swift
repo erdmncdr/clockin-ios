@@ -79,4 +79,20 @@ check(ApplicationMover.locate(elsewhere, environment: development).kind == .deve
 check(ApplicationMover.locate(applications.appendingPathComponent("Clockin.app"), environment: plainEnvironment).kind == .installed,
       "the copy in Applications is installed")
 
+// A translocated copy is a download even when its signature looks like a
+// local build's: reading it from a private folder can fail.
+let unreadable = ApplicationMover.Environment(
+    applicationsDirectories: [applications],
+    translocatedOriginal: { $0.standardizedFileURL == translocated.standardizedFileURL ? original : nil },
+    isReadOnlyVolume: { _ in false }, volumeURL: { _ in nil }, isDevelopmentBuild: { _ in true })
+check(ApplicationMover.locate(translocated, environment: unreadable).kind == .translocated,
+      "a translocated copy offers to move whatever its signature check says")
+
+// Downloads and Desktop never get "Don't ask again"; a folder of your own does.
+let home = root.appendingPathComponent("home", isDirectory: true)
+check(MoveToApplications.isDownload(home.appendingPathComponent("Downloads/Clockin.app"), home: home), "Downloads counts as a download")
+check(MoveToApplications.isDownload(home.appendingPathComponent("Downloads/Clockin 2/Clockin.app"), home: home), "a folder inside Downloads does too")
+check(MoveToApplications.isDownload(home.appendingPathComponent("Desktop/Clockin.app"), home: home), "Desktop counts as a download")
+check(!MoveToApplications.isDownload(home.appendingPathComponent("Tools/Clockin.app"), home: home), "a folder of your own does not")
+
 print("\(passed) Mac mover checks passed")

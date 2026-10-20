@@ -68,13 +68,16 @@ enum ApplicationMover {
             volumeURL: { (try? $0.resourceValues(forKeys: [.volumeURLKey]))?.volume },
             isDevelopmentBuild: { url in
                 if isDevelopmentPath(url) { return true }
+                // Only a readable signature without a team counts as a local
+                // build. An unreadable one is a download in a private folder
+                // (Downloads, unzipped without quarantine), never a build.
                 var code: SecStaticCode?
                 guard SecStaticCodeCreateWithPath(url as CFURL, [], &code) == errSecSuccess,
-                      let code else { return true }
+                      let code else { return false }
                 var information: CFDictionary?
                 guard SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation),
                                                    &information) == errSecSuccess,
-                      let information else { return true }
+                      let information else { return false }
                 return (information as NSDictionary)[kSecCodeInfoTeamIdentifier] == nil
             }
         )
@@ -102,15 +105,18 @@ enum ApplicationMover {
             return ApplicationLocation(kind: kind, bundleURL: bundle, originalURL: original,
                                        volumeURL: kind == .readOnlyVolume ? environment.volumeURL(original) : nil)
         }
-        if isDevelopmentPath(bundle) || environment.isDevelopmentBuild(bundle) {
+        if isDevelopmentPath(bundle) {
             return location(.development)
         }
         let translocated = environment.translocatedOriginal(bundle).map(resolved)
+        // Only a downloaded copy is translocated, so its signature is not
+        // checked at all: reading it can fail (the original usually sits in
+        // Downloads, which macOS keeps private) and that used to make the
+        // download look like a development build that never offers to move.
+        if translocated == nil, environment.isDevelopmentBuild(bundle) {
+            return location(.development)
+        }
         let original = translocated ?? bundle
-        // The translocated mirror is the same signed code and was checked above.
-        // The original usually sits in Downloads, which macOS keeps private:
-        // reading its signature there can fail and used to make a downloaded
-        // copy look like a development build, so it never offered to move.
         if isDevelopmentPath(original) {
             return location(.development, original: original)
         }
