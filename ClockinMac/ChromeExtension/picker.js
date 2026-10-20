@@ -9,13 +9,13 @@
 
   const tr = (navigator.language || '').toLowerCase().startsWith('tr');
   const T = tr ? {
-    start: 'Clockin 1/2: mesaiyi BAŞLATAN butona tıklayın. Sitede mesainiz başlar.',
-    stop: 'Clockin 2/2: şimdi mesaiyi BİTİREN butona tıklayın.',
+    start: 'Clockin 1/2: mesaiyi başlatan butona tıklayın',
+    stop: 'Clockin 2/2: mesaiyi bitiren butona tıklayın',
     cancel: 'Vazgeç',
     done: 'Hazır. Bu butonlara bastığınızda Clockin başlar ve biter.',
   } : {
-    start: 'Clockin 1/2: click the button that STARTS work. Your shift starts on the site.',
-    stop: 'Clockin 2/2: now click the button that ENDS work.',
+    start: 'Clockin 1/2: click the button that starts work',
+    stop: 'Clockin 2/2: click the button that ends work',
     cancel: 'Cancel',
     done: 'Done. Clockin now starts and stops with these buttons.',
   };
@@ -32,13 +32,15 @@
   let start = pending && pending.origin === location.origin ? pending.start : null;
 
   const bar = document.createElement('div');
-  bar.setAttribute('style', 'all:initial;position:fixed;z-index:2147483647;top:12px;left:50%;transform:translateX(-50%);' +
-    'display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;background:#111827;color:#fff;' +
-    'font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35)');
+  // Small and in a bottom corner, so it never sits on the buttons; it hops to
+  // the other corner when the pointer comes near.
+  bar.setAttribute('style', 'all:initial;position:fixed;z-index:2147483647;bottom:14px;right:14px;max-width:300px;' +
+    'display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(17,24,39,.92);color:#fff;' +
+    'font:600 12px/1.35 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.3)');
   const message = document.createElement('span');
   const cancelButton = document.createElement('button');
-  cancelButton.setAttribute('style', 'all:initial;cursor:pointer;padding:6px 10px;border-radius:8px;background:#374151;color:#fff;' +
-    'font:600 13px -apple-system,BlinkMacSystemFont,sans-serif');
+  cancelButton.setAttribute('style', 'all:initial;cursor:pointer;padding:4px 8px;border-radius:7px;background:#374151;color:#fff;' +
+    'font:600 12px -apple-system,BlinkMacSystemFont,sans-serif;flex-shrink:0');
   cancelButton.textContent = T.cancel;
   bar.append(message, cancelButton);
   const outline = document.createElement('div');
@@ -74,10 +76,34 @@
     return 'body > ' + parts.join(' > ');
   }
 
-  const describe = (el) => ({ selector: selectorFor(el), text: label(el), tag: el.tagName.toLowerCase() });
+  // Several traits, so the button is still recognised after the site rebuilds
+  // or shifts the page (a banner above it changes its position).
+  const describe = (el) => ({
+    selector: selectorFor(el),
+    text: label(el),
+    tag: el.tagName.toLowerCase(),
+    id: el.id || null,
+    testid: el.getAttribute('data-testid') || el.getAttribute('data-test') || el.getAttribute('data-qa') || null,
+    aria: el.getAttribute('aria-label') || null,
+    classes: [...el.classList].filter((name) => !/^(hover|active|focus|selected|disabled|is-|ng-|css-)/i.test(name)).slice(0, 6),
+  });
+
+  // Only when a button you point at is under the bar, so reaching for the
+  // bar's own Cancel never sends it away.
+  let corner = 'right';
+  function dodge(el) {
+    if (!el) return;
+    const a = bar.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    if (b.right < a.left - 8 || b.left > a.right + 8 || b.bottom < a.top - 8 || b.top > a.bottom + 8) return;
+    corner = corner === 'right' ? 'left' : 'right';
+    bar.style.right = corner === 'right' ? '14px' : 'auto';
+    bar.style.left = corner === 'left' ? '14px' : 'auto';
+  }
 
   function move(event) {
     const el = target(event);
+    if (el && el.closest(CLICKABLE)) dodge(el);
     if (!el) { outline.style.display = 'none'; return; }
     const rect = el.getBoundingClientRect();
     Object.assign(outline.style, {

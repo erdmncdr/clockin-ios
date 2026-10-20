@@ -68,12 +68,22 @@ try {
   const injected = await evalSW(`chrome.tabs.query({}).then(tabs => { const t = tabs.find(t => (t.url || '').startsWith(${JSON.stringify(pageURL)})); return t ? chrome.scripting.executeScript({target: {tabId: t.id}, files: ['picker.js']}).then(() => 'injected', e => 'error: ' + e.message) : 'no tab: ' + JSON.stringify(tabs.map(t => t.url)); })`);
   check(injected === 'injected', 'the picker is injected: ' + injected);
   await sleep(500);
-  const startButton = { toggle: `document.getElementById('toggle')`, div: `document.querySelector('.start')` }[mode] ?? `document.querySelectorAll('button')[0]`;
+  const byText = (text) => `[...document.querySelectorAll('.actions button')].find(b => b.textContent === ${JSON.stringify(text)})`;
+  const startButton = { toggle: `document.getElementById('toggle')`, div: `document.querySelector('.start')`, shift: byText('Clock in') }[mode]
+    ?? `document.querySelectorAll('button')[0]`;
+  // The picker's bar stays small and off the button being picked.
+  const bar = await evalPage(`(() => {
+    const bar = [...document.querySelectorAll('div')].find(d => d.style.zIndex === '2147483647');
+    const a = bar.getBoundingClientRect(), b = (${startButton}).getBoundingClientRect();
+    return { height: a.height, width: a.width, overlaps: !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom) };
+  })()`);
+  check(bar.height <= 60 && bar.width <= 320 && !bar.overlaps, 'the picker bar is small and clear of the button: ' + JSON.stringify(bar));
   await clickAt(startButton);
   await sleep(mode === 'reload' ? 1800 : 400);
   check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the start pick reaches the site, so it can show Clock out');
   check(await evalPage(`[...document.querySelectorAll('span')].some(s => /2\\/2/.test(s.textContent))`), 'the picker asks for the end button' + (mode === 'reload' ? ' after the reload' : ''));
-  const endButton = { two: `document.querySelectorAll('button')[1]`, div: `document.querySelector('.fake-button .label')` }[mode] ?? startButton;
+  const endButton = { two: `document.querySelectorAll('button')[1]`, div: `document.querySelector('.fake-button .label')`, shift: byText('Clock out') }[mode]
+    ?? startButton;
   await clickAt(endButton);
   await sleep(mode === 'reload' ? 1800 : 800);
   check(await evalPage(`document.getElementById('status').textContent`) === 'idle', 'the end pick reaches the site too');
@@ -84,14 +94,18 @@ try {
   check(registered.length === 1 && registered[0] === 'clockin-watch ' + new URL(pageURL).origin + '/*', 'only the watcher stays registered, for that site only: ' + registered);
 
   // Load the page fresh so the registered watcher runs, then work a shift.
+  // The shift page then has an extra button in front of the picked ones.
   const lastEvent = () => evalSW(`chrome.storage.local.get('lastEvent').then(r => r.lastEvent?.action ?? null)`);
-  await send('Page.navigate', { url: pageURL }, page);
+  await send('Page.navigate', { url: mode === 'shift' ? pageURL + '?notice' : pageURL }, page);
   await sleep(1500);
   events.length = 0;
   await clickAt(startButton);
   await sleep(mode === 'reload' ? 1800 : 700);
   check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the site still handles its own click');
-  check(await lastEvent() === 'clock-in', 'the start press is detected');
+  // Over native messaging the event is stored once Clockin answers.
+  let started = await lastEvent();
+  for (let i = 0; started !== 'clock-in' && i < 40; i++) { await sleep(100); started = await lastEvent(); }
+  check(started === 'clock-in', 'the start press is detected');
   if (launch === 'logic' && mode !== 'reload') {
     await evalSW(`chrome.storage.local.remove('lastEvent')`);
     // The page clicks its own end button, then its start button again, from
@@ -102,6 +116,15 @@ try {
     await sleep(500);
     check(await lastEvent() === null, 'clicks made by the page itself do not count');
     check(await evalPage(`document.getElementById('status').textContent`) === 'working', 'the page is back to working');
+  }
+  if (mode === 'shift') {
+    // "Clock out" in the history table is not the button.
+    await evalSW(`chrome.storage.local.remove(['lastEvent', 'lastMiss'])`);
+    await clickAt(`document.getElementById('decoy')`);
+    await sleep(500);
+    check(await lastEvent() === null, 'the Clock out text in the history does not count');
+    const miss = await evalSW(`chrome.storage.local.get('lastMiss').then(r => r.lastMiss ?? null)`);
+    check(miss?.action === 'clock-out' && miss.tag === 'td', 'it is kept as a press that did not count: ' + JSON.stringify(miss));
   }
   if (launch === 'native') {
     const confirmed = () => evalSW(`chrome.storage.local.get('lastEvent').then(r => r.lastEvent)`);

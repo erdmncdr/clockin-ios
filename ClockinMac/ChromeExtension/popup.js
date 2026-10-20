@@ -6,6 +6,7 @@ const T = tr ? {
   site: 'Site', start: 'Başlat', stop: 'Bitir',
   pick: 'Butonları seç', repick: 'Butonları yeniden seç', reset: 'Kaldır',
   last: 'Son algılanan', in: 'Clock in', out: 'Clock out',
+  miss: (label, time) => `Sayılmayan tıklama: “${label}” · ${time}. Site butonu değiştirmiş olabilir; butonları yeniden seçin.`,
   notWeb: 'Önce iş sitenizin sekmesini açın.',
   denied: 'Clockin bu siteye erişemezse butonları göremez. Tekrar deneyip izin verin.',
 } : {
@@ -14,6 +15,7 @@ const T = tr ? {
   site: 'Site', start: 'Start', stop: 'End',
   pick: 'Pick buttons', repick: 'Pick buttons again', reset: 'Remove',
   last: 'Last detected', in: 'Clock in', out: 'Clock out',
+  miss: (label, time) => `Press not counted: “${label}” · ${time}. The site may have changed the button; pick the buttons again.`,
   notWeb: 'Open your work site’s tab first.',
   denied: 'Clockin can’t see the buttons without access to this site. Try again and allow it.',
 };
@@ -23,12 +25,17 @@ let tab = null;
 function showError(text) { $('error').textContent = text; $('error').hidden = false; }
 
 async function render() {
-  const { setup, lastEvent } = await chrome.storage.local.get(['setup', 'lastEvent']);
+  const { setup, lastEvent, lastMiss } = await chrome.storage.local.get(['setup', 'lastEvent', 'lastMiss']);
+  const when = (at) => new Date(at).toLocaleString(tr ? 'tr-TR' : undefined, { dateStyle: 'short', timeStyle: 'short' });
   if (setup && lastEvent) {
     // Shows whether the last press reached the extension at all.
-    const time = new Date(lastEvent.at).toLocaleString(tr ? 'tr-TR' : undefined, { dateStyle: 'short', timeStyle: 'short' });
-    $('last').textContent = `${T.last}: ${lastEvent.action === 'clock-in' ? T.in : T.out} · ${time}`;
+    $('last').textContent = `${T.last}: ${lastEvent.action === 'clock-in' ? T.in : T.out} · ${when(lastEvent.at)}`;
     $('last').hidden = false;
+  }
+  // Only while it is the newest thing that happened.
+  if (setup && lastMiss && (!lastEvent || lastMiss.at > lastEvent.at)) {
+    $('miss').textContent = T.miss(lastMiss.text, when(lastMiss.at));
+    $('miss').hidden = false;
   }
   $('siteLabel').textContent = T.site;
   $('startLabel').textContent = T.start;

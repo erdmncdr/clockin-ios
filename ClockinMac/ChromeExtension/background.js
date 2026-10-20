@@ -42,6 +42,9 @@ async function command({ action }) {
 
 const handlers = {
   command,
+  async miss({ miss }) {
+    await chrome.storage.local.set({ lastMiss: miss });
+  },
   // Registered before the first click, so a reload right after it brings the
   // picker back for the second button.
   async 'start-pick'({ origin }) {
@@ -51,6 +54,7 @@ const handlers = {
   },
   async save({ setup }) {
     await chrome.storage.local.set({ setup });
+    await chrome.storage.local.remove('lastMiss');
     await chrome.storage.local.remove(['picking', 'pending']);
     await unregister(PICKER);
     await registerFor(WATCHER, setup.origin, 'watch.js');
@@ -60,7 +64,7 @@ const handlers = {
     await unregister(PICKER);
   },
   async reset() {
-    await chrome.storage.local.remove(['setup', 'picking', 'pending', 'lastEvent']);
+    await chrome.storage.local.remove(['setup', 'picking', 'pending', 'lastEvent', 'lastMiss']);
     await unregister(PICKER);
     await unregister(WATCHER);
   },

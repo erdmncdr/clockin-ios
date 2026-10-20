@@ -30,6 +30,7 @@ node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$p
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/two.html" two logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/reload.html" reload logic
 node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/div.html" div logic
+node Tests/manual/chromeextension/run.mjs "$work/ext-logic" "http://localhost:$port/shift.html" shift logic
 node Tests/manual/chromeextension/run.mjs "$work/ext" "http://localhost:$port/toggle.html" toggle link
 # The native path needs a Debug build; it runs against the Debug app's own data.
 debug_app="build/DerivedData/Build/Products/Debug/Clockin.app"

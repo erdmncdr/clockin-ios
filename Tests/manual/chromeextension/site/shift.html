@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>Work shift</title>
+<body style="font:16px sans-serif;padding:40px">
+<p>Status: <span id="status">idle</span></p>
+<div class="actions"></div>
+<h3>History</h3>
+<table><tr><td class="kind">Clock in</td><td>09:00</td></tr><tr><td class="kind" id="decoy">Clock out</td><td>17:30</td></tr></table>
+<script>
+  // Two buttons that look alike. With ?notice the site puts an announcement
+  // button in front of them, so each one's position moves by one.
+  window.__commands = [];
+  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  const actions = document.querySelector('.actions');
+  const make = (text, onclick) => {
+    const button = document.createElement('button');
+    button.className = 'btn btn-primary';
+    button.textContent = text;
+    button.onclick = onclick;
+    actions.append(button, ' ');
+  };
+  if (location.search.includes('notice')) make('Got it', () => {});
+  make('Clock in', () => document.getElementById('status').textContent = 'working');
+  make('Clock out', () => document.getElementById('status').textContent = 'idle');
+</script>

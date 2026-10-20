@@ -14,9 +14,11 @@
   .primary { background: #f78a18; color: #fff; }
   .secondary { background: #eef0f3; color: #1f2329; }
   .error { color: #b42318; }
+  .warning { color: #b54708; }
   @media (prefers-color-scheme: dark) {
     body { background: #1c1f24; color: #eef0f3; }
     p, dt { color: #a5afbe; }
+    .warning { color: #f5a54a; }
     .secondary { background: #2b3038; color: #eef0f3; }
   }
 </style>
@@ -31,6 +33,7 @@
     <dt id="stopLabel"></dt><dd id="stop"></dd>
   </dl>
   <p id="last" hidden></p>
+  <p id="miss" class="warning" hidden></p>
   <p id="error" class="error" hidden></p>
   <button id="pick" class="primary"></button>
   <button id="reset" class="secondary" hidden></button>

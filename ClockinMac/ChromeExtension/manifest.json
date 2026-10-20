@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clockin",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Starts and stops Clockin when you press your work site's Clock in and Clock out buttons.",
   "action": {
     "default_popup": "popup.html",
