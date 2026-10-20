@@ -18,6 +18,8 @@ struct MacSettingsSection: View {
     @AppStorage(PinnedTimerVisibility.whileClockedInKey) private var pinWhileClockedIn = false
     @State private var chromePrepared = false
     @State private var chromeError: String?
+    @State private var testingMenuBar = false
+    @State private var menuBarTest: MenuBarProbe.TestResult? = MenuBarProbe.lastTest
 
     var body: some View {
         switch category {
@@ -36,7 +38,16 @@ struct MacSettingsSection: View {
                     Toggle("Show goal progress", isOn: $showGoal)
                 }
                 .disabled(!showMenuBarDetails)
+                if let menuBarTest { MenuBarTestResultText(result: menuBarTest) }
                 HStack {
+                    Button(testingMenuBar ? "Testing…" : "Test menu bar") {
+                        testingMenuBar = true
+                        MenuBarController.shared.testPlacement { outcome in
+                            menuBarTest = outcome
+                            testingMenuBar = false
+                        }
+                    }
+                    .disabled(testingMenuBar)
                     Button("Reset menu bar position") { MenuBarController.shared.resetItemPosition() }
                     Button("Copy menu bar details") {
                         NSPasteboard.general.clearContents()
@@ -46,7 +57,7 @@ struct MacSettingsSection: View {
             } header: {
                 Text("Menu bar")
             } footer: {
-                Text("If the Clockin icon or timer doesn’t show up, the menu bar is full: macOS hides items that don’t fit beside the camera notch or the open app’s menus. Hold ⌘ and drag other icons out of the menu bar, or turn off details you don’t need.")
+                Text("If the Clockin icon or timer doesn’t show up, macOS isn’t placing it in the menu bar. That happens when the bar has no room left beside the camera notch or the open app’s menus, or when macOS doesn’t allow Clockin there. Test menu bar tells the two apart.")
             }
             Section("Pinned timer") {
                 Toggle("Pin timer", isOn: Binding(get: { store.pinVisible }, set: { store.setPinned($0) }))

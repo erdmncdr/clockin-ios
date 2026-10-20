@@ -3,7 +3,7 @@
 // off, it is the icon alone. Runs the real MenuBarController in a throwaway
 // accessory process, which briefly adds an icon to the menu bar.
 //
-// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift ClockinMac/MenuBarVisibility.swift ClockinMac/ApplicationMover.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
+// swiftc -swift-version 6 Shared/Core/Models.swift Shared/Core/AppLanguage.swift ClockinMac/MacDurationText.swift ClockinMac/MenuBarController.swift ClockinMac/MenuBarStatus.swift ClockinMac/MenuBarIcon.swift ClockinMac/MenuBarVisibility.swift ClockinMac/ApplicationMover.swift ClockinMac/MenuBarProbe.swift Tests/manual/macmenubar/main.swift -o /tmp/clockin-macmenubar && /tmp/clockin-macmenubar
 import AppKit
 import Combine
 import SwiftUI
@@ -65,6 +65,22 @@ let tooWide = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLen
 tooWide.button?.title = String(repeating: "W", count: 260)
 spin(1)
 check(!MenuBarVisibility.isOnScreen(tooWide.button?.window), "an item that cannot fit is reported hidden")
+check(MenuBarProbe.isPlaced(button.window) && !MenuBarProbe.isPlaced(tooWide.button?.window), "the probe tells a placed item from a hidden one")
+check(MenuBarProbe.snapshot(tooWide, label: "too wide").state == "laid out, no room", "an item with no room was laid out by the bar")
+print("an item with no room: " + MenuBarProbe.snapshot(tooWide, label: "too wide").line)
 NSStatusBar.system.removeStatusItem(tooWide)
+// The test's verdict: Clockin's own item decides first, then the test items.
+let now = Date()
+check(MenuBarProbe.TestResult(plain: true, named: true, main: true, at: now).verdict == .shown, "verdict: shown")
+check(MenuBarProbe.TestResult(plain: true, named: false, main: false, at: now).verdict == .itemOnly, "verdict: only Clockin's item")
+check(MenuBarProbe.TestResult(plain: false, named: false, main: false, at: now, testItemsLaidOut: true).verdict == .noRoom, "verdict: no room")
+check(MenuBarProbe.TestResult(plain: false, named: false, main: false, at: now).verdict == .notAllowed, "verdict: not taken in at all")
+// The two ways an item is hidden: laid out with no room, or never taken in.
+let noRoom = MenuBarProbe.snapshot(nil, label: "x")
+check(noRoom.state == "missing", "no item is missing")
+var laidOut = noRoom; laidOut.exists = true; laidOut.frame = NSRect(x: 0, y: -33, width: 3272, height: 33)
+check(laidOut.state == "laid out, no room", "an item with the bar's height was laid out")
+var never = laidOut; never.frame = NSRect(x: 0, y: -22, width: 36, height: 22)
+check(never.state == "never laid out", "the friend's frame was never laid out")
 print("\(passed) Mac menu bar checks passed")
 exit(0)

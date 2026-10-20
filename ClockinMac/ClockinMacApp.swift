@@ -31,6 +31,9 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         UpdateChecker.shared.start()
         ChromeExtensionInstaller.refreshIfInstalled()
         MenuBarController.shared.start(.clockin())
+        #if DEBUG
+        MenuBarProbe.runFixtureIfRequested()
+        #endif
         PinnedWindowController.shared.start(store: store)
         KeyboardShortcutController.shared.start(store: store)
         MacAppServices.shared.start(store: store)

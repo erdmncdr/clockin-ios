@@ -36,6 +36,9 @@ final class MenuBarController: NSObject {
     /// Bumped on every open and close so a finished close animation cannot
     /// hide a panel that was reopened meanwhile.
     private var generation = 0
+    /// What macOS did with the item after launch, a reset and a test; for
+    /// Copy details.
+    private(set) var history: [MenuBarProbe.Snapshot] = []
 
     var isOpen: Bool { panel?.isVisible == true && panel?.alphaValue ?? 0 > 0 }
 
@@ -43,6 +46,7 @@ final class MenuBarController: NSObject {
         guard statusItem == nil else { return }
         self.host = host
         makeItem()
+        for delay in [1.0, 5.0, 30.0] { record("launch +\(Int(delay))s", after: delay) }
 
         host.changes
             // `objectWillChange` fires before the new value is stored.
@@ -74,10 +78,14 @@ final class MenuBarController: NSObject {
     /// name in 2.0.20: positions saved before by menu bar managers (or a drag
     /// out of the bar) could keep the old item hidden even with room to spare.
     static let autosaveName = "ClockinStatusItem"
+    /// Set when the menu bar test found that a new item without a saved name
+    /// shows but Clockin's own does not: the item then goes without one.
+    static let plainItemKey = "Clockin.MenuBarPlainItem"
+    static var usesPlainItem: Bool { UserDefaults.standard.bool(forKey: plainItemKey) }
 
     private func makeItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.autosaveName = Self.autosaveName
+        if !Self.usesPlainItem { item.autosaveName = Self.autosaveName }
         item.isVisible = true
         item.button?.target = self
         item.button?.action = #selector(statusItemClicked(_:))
@@ -92,15 +100,45 @@ final class MenuBarController: NSObject {
     /// Forgets where macOS placed the item and adds it again at the default
     /// place, next to the other app items.
     func resetItemPosition() {
+        record("before reset")
+        recreateItem()
+        record("after reset +2s", after: 2)
+    }
+
+    private func recreateItem() {
         close(animated: false)
         if let statusItem { NSStatusBar.system.removeStatusItem(statusItem) }
         statusItem = nil
-        let defaults = UserDefaults.standard
-        for prefix in ["NSStatusItem Preferred Position", "NSStatusItem Visible", "NSStatusItem VisibleCC"] {
-            defaults.removeObject(forKey: "\(prefix) \(Self.autosaveName)")
-            defaults.removeObject(forKey: "\(prefix) Item-0")
-        }
+        MenuBarProbe.forgetSavedState(for: Self.autosaveName)
+        MenuBarProbe.forgetSavedState(for: "Item-0")
         makeItem()
+    }
+
+    /// Adds two test items for a few seconds (see MenuBarProbe). When they
+    /// show and Clockin's own item does not, the item is made again the way
+    /// the plain test item was.
+    func testPlacement(completion: @escaping @MainActor (MenuBarProbe.TestResult) -> Void) {
+        record("before test")
+        MenuBarProbe.runTest(main: { [weak self] in self?.statusItem }) { [weak self] result in
+            guard let self else { return }
+            self.history.append(contentsOf: result.snapshots)
+            if result.verdict == .itemOnly, result.plain, !Self.usesPlainItem {
+                UserDefaults.standard.set(true, forKey: Self.plainItemKey)
+                self.recreateItem()
+                self.record("plain item +2s", after: 2)
+            }
+            completion(result)
+        }
+    }
+
+    private func record(_ label: String, after delay: Double = 0) {
+        let take = { @MainActor [weak self] in
+            guard let self else { return }
+            self.history.append(MenuBarProbe.snapshot(self.statusItem, label: label))
+            if self.history.count > 12 { self.history.removeFirst(self.history.count - 12) }
+        }
+        guard delay > 0 else { return take() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated { take() } }
     }
 
     /// What macOS reports about the item, to paste into a bug report.
@@ -120,7 +158,12 @@ final class MenuBarController: NSObject {
             "menu bar visible=\(NSMenu.menuBarVisible()) title=\(statusItem?.button?.title ?? "")",
             "app: \(Self.locationSummary())",
             "saved: " + (saved.isEmpty ? "none" : saved.joined(separator: "; ")),
-        ].joined(separator: "\n")
+            "plain item=\(Self.usesPlainItem) bar thickness=\(NSStatusBar.system.thickness)",
+            "test: " + (MenuBarProbe.lastTest.map { "plain=\($0.plain) named=\($0.named) main=\($0.main) -> \($0.verdict)" } ?? "not run"),
+            "other running copies: \(MenuBarProbe.runningCopies())",
+            "registered copies: \(MenuBarProbe.registeredCopies())",
+            MenuBarProbe.snapshot(statusItem, label: "now").line,
+        ].joined(separator: "\n") + history.map { "\n" + $0.line }.joined()
     }
 
     /// Where this copy runs from: a copy left in Downloads runs translocated

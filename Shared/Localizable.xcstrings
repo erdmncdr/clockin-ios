@@ -2789,6 +2789,26 @@
         }
       }
     },
+    "Clockin’s icon is in the menu bar now.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin’in simgesi artık menü çubuğunda."
+          }
+        }
+      }
+    },
+    "Clockin’s icon isn’t showing in the menu bar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin’in simgesi menü çubuğunda görünmüyor"
+          }
+        }
+      }
+    },
     "COMPANION": {
       "localizations": {
         "tr": {
@@ -6633,6 +6653,16 @@
         }
       }
     },
+    "If the Clockin icon or timer doesn’t show up, macOS isn’t placing it in the menu bar. That happens when the bar has no room left beside the camera notch or the open app’s menus, or when macOS doesn’t allow Clockin there. Test menu bar tells the two apart.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin simgesi ya da sayacı görünmüyorsa macOS onu menü çubuğuna yerleştirmiyor demektir. Bu, kamera çentiğinin ya da açık uygulamanın menülerinin yanında yer kalmadığında veya macOS Clockin’e orada izin vermediğinde olur. “Menü çubuğunu test et” bu ikisini ayırır."
+          }
+        }
+      }
+    },
     "If the Clockin icon or timer doesn’t show up, the menu bar is full: macOS hides items that don’t fit beside the camera notch or the open app’s menus. Hold ⌘ and drag other icons out of the menu bar, or turn off details you don’t need.": {
       "localizations": {
         "tr": {
@@ -7935,6 +7965,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "A %lld%%"
+          }
+        }
+      }
+    },
+    "macOS didn’t take any of Clockin’s icons into the menu bar, not even the test icons. A full menu bar looks different, so this is decided by macOS for the whole app, not by Clockin’s settings. Check that Clockin is allowed in System Settings > Menu Bar. If Clockin isn’t listed there, restart the Mac and test again; if nothing changes, copy the details and send them to us.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS, Clockin’in hiçbir simgesini, deneme simgelerini bile menü çubuğuna almadı. Dolu bir menü çubuğu farklı görünür; bu durum Clockin’in ayarlarıyla değil, macOS tarafından tüm uygulama için belirleniyor. Sistem Ayarları > Menü Çubuğu’nda Clockin’e izin verildiğini kontrol edin. Clockin orada listelenmiyorsa Mac’i yeniden başlatıp tekrar test edin; bir şey değişmezse ayrıntıları kopyalayıp bize gönderin."
+          }
+        }
+      }
+    },
+    "macOS hasn’t placed Clockin’s icon in the menu bar. The reason differs from Mac to Mac, so test it first: Clockin briefly adds two test icons and checks whether macOS shows them. The pinned timer keeps the timer on screen meanwhile.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS, Clockin’in simgesini menü çubuğuna yerleştirmedi. Nedeni Mac’ten Mac’e değişir; önce test edin: Clockin kısa süreliğine iki deneme simgesi ekler ve macOS’un bunları gösterip göstermediğine bakar. Bu arada sabit sayaç süreyi ekranda tutar."
           }
         }
       }
@@ -12969,6 +13019,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sistem"
+          }
+        }
+      }
+    },
+    "Test menu bar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunu test et"
+          }
+        }
+      }
+    },
+    "Testing…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test ediliyor…"
+          }
+        }
+      }
+    },
+    "The menu bar has no room left: macOS took the test icons in but kept them off the bar too. Remove some icons (hold ⌘ and drag them out) or use the pinned timer.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü çubuğunda yer kalmamış: macOS deneme simgelerini aldı ama onları da çubukta gösteremedi. Bazı simgeleri kaldırın (⌘ tuşunu basılı tutup dışarı sürükleyin) ya da sabit sayacı kullanın."
+          }
+        }
+      }
+    },
+    "The test icons appeared but Clockin’s own did not, so Clockin made its icon again the same way as a test icon. If it still doesn’t show, copy the details and send them to us.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deneme simgeleri göründü ama Clockin’inki görünmedi; Clockin simgesini bir deneme simgesiyle aynı şekilde yeniden oluşturdu. Hâlâ görünmüyorsa ayrıntıları kopyalayıp bize gönderin."
           }
         }
       }
