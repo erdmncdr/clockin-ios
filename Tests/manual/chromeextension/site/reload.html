@@ -5,7 +5,7 @@
 <script>
   // Like sites that reload after Clock in and show a different Clock out button.
   window.__commands = [];
-  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.addEventListener('pulse:command', (e) => window.__commands.push(e.detail));
   const working = new URLSearchParams(location.search).has('working');
   document.getElementById('status').textContent = working ? 'working' : 'idle';
   const button = document.createElement('button');

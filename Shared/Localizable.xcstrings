@@ -1279,12 +1279,12 @@
         }
       }
     },
-    "3. Open your work site, click the Clockin extension and choose Pick buttons. Click the button that starts work, then the one that ends it.": {
+    "3. Open your work site, click the Pulse extension and choose Pick buttons. Click the button that starts work, then the one that ends it.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "3. İş sitenizi açın, Clockin eklentisine tıklayıp Butonları seç’i seçin. Önce mesaiyi başlatan, sonra bitiren butona tıklayın."
+            "value": "3. İş sitenizi açın, Pulse eklentisine tıklayıp Butonları seç’i seçin. Önce mesaiyi başlatan, sonra bitiren butona tıklayın."
           }
         }
       }
@@ -1355,16 +1355,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "4 hafta"
-          }
-        }
-      }
-    },
-    "4. The first time, Chrome asks to open Clockin. Tick Always allow and click Open.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "4. İlk seferde Chrome, Clockin’in açılmasını sorar. Her zaman izin ver’i işaretleyip Aç’a tıklayın."
           }
         }
       }

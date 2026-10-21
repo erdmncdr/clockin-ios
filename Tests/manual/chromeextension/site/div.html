@@ -7,6 +7,6 @@
 </div>
 <script>
   window.__commands = [];
-  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.addEventListener('pulse:command', (e) => window.__commands.push(e.detail));
   document.querySelector('.start').onclick = () => document.getElementById('status').textContent = 'working';
 </script>

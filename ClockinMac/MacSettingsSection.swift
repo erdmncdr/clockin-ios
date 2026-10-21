@@ -104,8 +104,7 @@ struct MacSettingsSection: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("1. In Chrome, open chrome://extensions and turn on Developer mode at the top right.")
                     Text("2. Click Load unpacked, press ⌘⇧G, paste with ⌘V and click Select.")
-                    Text("3. Open your work site, click the Clockin extension and choose Pick buttons. Click the button that starts work, then the one that ends it.")
-                    Text("4. The first time, Chrome asks to open Clockin. Tick Always allow and click Open.")
+                    Text("3. Open your work site, click the Pulse extension and choose Pick buttons. Click the button that starts work, then the one that ends it.")
                 }
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)

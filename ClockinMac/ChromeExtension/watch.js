@@ -107,13 +107,13 @@
     if (last.action === action && now - last.at < 3000) return;
     last = { action, at: now };
     // Also announced on the page, which lets the extension's checks see it.
-    document.dispatchEvent(new CustomEvent('clockin:command', { detail: action }));
+    document.dispatchEvent(new CustomEvent('pulse:command', { detail: action }));
     const label = action === 'clock-in' ? 'Clock in' : 'Clock out';
     chrome.runtime.sendMessage({ type: 'command', action }).then((result) => {
-      if (result?.ok && result.confirmed) toast(`Clockin ✓ ${label}`, true);
-      else if (result?.ok) toast(tr ? `Clockin: ${label} gönderildi, onay gelmedi` : `Clockin: ${label} sent, not confirmed`, false);
+      if (result?.ok && result.confirmed) toast(`Pulse ✓ ${label}`, true);
+      else if (result?.ok) toast(tr ? `Pulse: ${label} gönderildi, onay gelmedi` : `Pulse: ${label} sent, not confirmed`, false);
       else if (result?.native === false) openLink(action);
-      else toast(tr ? `Clockin: ${label} iletilemedi` : `Clockin: ${label} did not reach Clockin`, false);
+      else toast(tr ? `Pulse: ${label} iletilemedi` : `Pulse: ${label} was not delivered`, false);
     }, () => openLink(action));
   }
 

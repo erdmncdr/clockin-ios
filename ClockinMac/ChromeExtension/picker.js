@@ -9,15 +9,15 @@
 
   const tr = (navigator.language || '').toLowerCase().startsWith('tr');
   const T = tr ? {
-    start: 'Clockin 1/2: mesaiyi başlatan butona tıklayın',
-    stop: 'Clockin 2/2: mesaiyi bitiren butona tıklayın',
+    start: 'Pulse 1/2: mesaiyi başlatan butona tıklayın',
+    stop: 'Pulse 2/2: mesaiyi bitiren butona tıklayın',
     cancel: 'Vazgeç',
-    done: 'Hazır. Bu butonlara bastığınızda Clockin başlar ve biter.',
+    done: 'Hazır. Bu butonlar artık izleniyor.',
   } : {
-    start: 'Clockin 1/2: click the button that starts work',
-    stop: 'Clockin 2/2: click the button that ends work',
+    start: 'Pulse 1/2: click the button that starts work',
+    stop: 'Pulse 2/2: click the button that ends work',
     cancel: 'Cancel',
-    done: 'Done. Clockin now starts and stops with these buttons.',
+    done: 'Done. These buttons are now watched.',
   };
   const CLICKABLE = 'button, a, [role="button"], input[type="button"], input[type="submit"]';
 

@@ -17,7 +17,9 @@ manifest = json.load(open(path))
 manifest['host_permissions'] = ['http://localhost/*']
 json.dump(manifest, open(path, 'w'), indent=2)
 PY
-sips -s format png -z 128 128 website/dist/assets/clockin-icon.png --out "$work/ext/icon128.png" >/dev/null
+for size in 16 32 48 128; do
+    sips -s format png -z $size $size website/dist/assets/clockin-icon.png --out "$work/ext/icon$size.png" >/dev/null
+done
 # A second copy that announces commands without opening clockin:// links.
 cp -R "$work/ext" "$work/ext-logic"
 sed -i '' "s#frame.src = 'clockin://' + action;#/* checks: no link */#" "$work/ext-logic/watch.js"

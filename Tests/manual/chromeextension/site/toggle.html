@@ -4,7 +4,7 @@
 <button id="toggle" class="btn primary">Clock in</button>
 <script>
   window.__commands = [];
-  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.addEventListener('pulse:command', (e) => window.__commands.push(e.detail));
   const b = document.getElementById('toggle');
   b.addEventListener('click', () => {
     const working = b.textContent === 'Clock out';

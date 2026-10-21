@@ -4,7 +4,7 @@
 <div class="actions"><button class="btn">Clock in</button> <button class="btn">Clock out</button></div>
 <script>
   window.__commands = [];
-  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.addEventListener('pulse:command', (e) => window.__commands.push(e.detail));
   const [a, b] = document.querySelectorAll('button');
   a.onclick = () => document.getElementById('status').textContent = 'working';
   b.onclick = () => document.getElementById('status').textContent = 'idle';

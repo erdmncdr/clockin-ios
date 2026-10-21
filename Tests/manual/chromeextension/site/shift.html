@@ -8,7 +8,7 @@
   // Two buttons that look alike. With ?notice the site puts an announcement
   // button in front of them, so each one's position moves by one.
   window.__commands = [];
-  document.addEventListener('clockin:command', (e) => window.__commands.push(e.detail));
+  document.addEventListener('pulse:command', (e) => window.__commands.push(e.detail));
   const actions = document.querySelector('.actions');
   const make = (text, onclick) => {
     const button = document.createElement('button');

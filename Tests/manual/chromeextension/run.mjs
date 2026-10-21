@@ -131,7 +131,7 @@ try {
     await sleep(2500);
     const first = await confirmed();
     check(first?.action === 'clock-in' && first.ok && first.confirmed, 'Clockin confirms the clock in: ' + JSON.stringify(first));
-    check(await evalPage(`[...document.querySelectorAll('div')].some(d => d.textContent.includes('Clockin ✓ Clock in'))`), 'the page shows that it counted');
+    check(await evalPage(`[...document.querySelectorAll('div')].some(d => d.textContent.includes('Pulse ✓ Clock in'))`), 'the page shows that it counted');
     await sleep(3200);
     await clickAt(endButton);
     await sleep(3000);
