@@ -5779,6 +5779,16 @@
         }
       }
     },
+    "Format": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biçim"
+          }
+        }
+      }
+    },
     "FROM TODAY": {
       "localizations": {
         "tr": {
@@ -7355,6 +7365,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "SON 3 OTURUM"
+          }
+        }
+      }
+    },
+    "Level up image preview": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seviye atlama görseli önizlemesi"
           }
         }
       }
@@ -10297,6 +10317,16 @@
         }
       }
     },
+    "Post": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönderi"
+          }
+        }
+      }
+    },
     "Poster": {
       "localizations": {
         "tr": {
@@ -11559,6 +11589,36 @@
         }
       }
     },
+    "Share image": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görseli paylaş"
+          }
+        }
+      }
+    },
+    "Share level up": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seviye atlamayı paylaş"
+          }
+        }
+      }
+    },
+    "Show hours of focus": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak saatlerini göster"
+          }
+        }
+      }
+    },
     "SKIP": {
       "localizations": {
         "tr": {
@@ -12763,6 +12823,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çalışan oturumu durdurur ve geçmişe kaydeder."
+          }
+        }
+      }
+    },
+    "Story": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hikâye"
           }
         }
       }

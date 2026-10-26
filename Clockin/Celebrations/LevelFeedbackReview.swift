@@ -60,7 +60,7 @@ struct LevelFeedbackReview: View {
                 }
                 .background(ReviewWindowProbe(center: center))
                 .overlay {
-                    CelebrationOverlay(center: center, share: { result = "Share callback"; center.dismiss() }, openBadges: {}, openCompanion: {})
+                    CelebrationOverlay(center: center, share: { _ in result = "Share callback"; center.dismiss() }, openBadges: {}, openCompanion: {})
                 }
                 .task {
                     if mode == "banners" { center.previewBannersForReview(); return }

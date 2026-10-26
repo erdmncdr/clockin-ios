@@ -21,7 +21,7 @@ struct MacRootView: View {
     @State private var progressSection: ProgressSection = .goals
     @State private var goalEditorRequest = false
     @State private var showCompanion = false
-    @State private var celebrationShare: StatsShareSnapshot?
+    @State private var celebrationShare: LevelShareSnapshot?
     @State private var shareBlocker = UUID()
     @State private var celebrationFading = false
 
@@ -53,10 +53,10 @@ struct MacRootView: View {
             }
         }
         .overlay(alignment: .top) {
-            CelebrationOverlay(center: celebrations, share: {
+            CelebrationOverlay(center: celebrations, share: { snapshot in
                 celebrations.dismiss()
                 celebrations.setBlocked(shareBlocker, true)
-                celebrationShare = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
+                celebrationShare = snapshot
             }, openBadges: {
                 progressSection = .badges
                 navigation.section = .progress
@@ -69,9 +69,9 @@ struct MacRootView: View {
         .sheet(item: $celebrationShare, onDismiss: {
             celebrations.setBlocked(shareBlocker, false, waitForDismissal: false)
         }) { snapshot in
-            ShareStatsView(snapshot: snapshot)
+            ShareLevelView(snapshot: snapshot)
                 .preferredColorScheme(palette.colorScheme)
-                .macSheetFrame()
+                .macSheetFrame(width: 520, height: 760)
         }
         .sheet(item: $navigation.sheet) { destination in
             Group {
@@ -91,6 +91,11 @@ struct MacRootView: View {
         // Review fixture: `--sync-section` shows the iCloud settings section on its own.
         .sheet(isPresented: .constant(ProcessInfo.processInfo.arguments.contains("--sync-section"))) {
             Form { SyncSettingsSection() }.formStyle(.grouped).frame(width: 480, height: 360)
+        }
+        // Review fixture: `--level-share-sheet` opens the level-up share sheet for level 75.
+        .onAppear {
+            guard ProcessInfo.processInfo.arguments.contains("--level-share-sheet") else { return }
+            celebrationShare = LevelShareSnapshot(level: 75, hours: 370, xp: 37_180, streak: 9, date: .now, companion: true)
         }
         #endif
         .background(CelebrationWindowProbe())

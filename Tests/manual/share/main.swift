@@ -1,4 +1,4 @@
-// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-share-module-cache Shared/Core/AppLanguage.swift Clockin/Views/Share/ShareStatsFields.swift Tests/manual/share/main.swift -o /tmp/clockin-share-checks && /tmp/clockin-share-checks
+// swiftc -swift-version 6 -strict-concurrency=complete -module-cache-path /tmp/clockin-share-module-cache Shared/Core/AppLanguage.swift Clockin/Views/Share/ShareStatsFields.swift Clockin/Views/Share/LevelShareLayout.swift Tests/manual/share/main.swift -o /tmp/clockin-share-checks && /tmp/clockin-share-checks
 import Foundation
 
 var checks = 0
@@ -42,3 +42,16 @@ for privacy in StatsSharePrivacy.allCases {
 }
 check(rows(.overview, .publicStats) == rows(.overview, .publicStats), "Repeated selection is deterministic")
 print("\(checks) share checks passed")
+
+// The level-up picture: a story or a post, rendered at 3x.
+check(LevelShareFormat.story.size.width == 360 && LevelShareFormat.story.size.height == 640 && LevelShareFormat.post.size.width == 360 && LevelShareFormat.post.size.height == 450,
+      "story is 9:16 and post is 4:5")
+check(LevelShareLayout.showsCompanion(.story, enabled: true) && !LevelShareLayout.showsCompanion(.post, enabled: true)
+      && !LevelShareLayout.showsCompanion(.story, enabled: false), "the companion stands only on the story, when enabled")
+check(LevelShareLayout.stageHeight(.story, companion: true) == 396 && LevelShareLayout.stageHeight(.story, companion: false) == 300
+      && LevelShareLayout.stageHeight(.post, companion: true) == 300, "the stage keeps the card's heights")
+check(!LevelShareLayout.showsStreak(1) && LevelShareLayout.showsStreak(2), "a streak shows from two days")
+let taken = LevelShareSnapshot(level: 75, hours: 370, xp: 37_180, streak: 9, date: .now, companion: true)
+check(taken.level == 75 && taken.hours == 370 && taken != LevelShareSnapshot(level: 75, hours: 370, xp: 37_180, streak: 9, date: taken.date, companion: true),
+      "each press takes its own snapshot")
+print("\(checks) share checks passed (level card)")

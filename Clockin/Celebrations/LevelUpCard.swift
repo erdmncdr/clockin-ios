@@ -314,8 +314,8 @@ struct LevelUpCard: View {
 }
 
 /// A banner rule: a line that fades in from the outside and ends in a small
-/// diamond beside the title.
-private struct LevelUpRule: View {
+/// diamond beside the title. Shared with the picture of the card.
+struct LevelUpRule: View {
     let style: LevelPrestige
     let leading: Bool
     var body: some View {
@@ -336,7 +336,7 @@ private struct LevelUpRule: View {
 }
 
 /// The dark reward panel with a thin rank-coloured edge, lit from the top.
-private struct LevelUpPanel: View {
+struct LevelUpPanel: View {
     let style: LevelPrestige
     let glow: Double
     var body: some View {
@@ -353,7 +353,7 @@ private struct LevelUpPanel: View {
 
 /// Deep space behind the level-up, lit in the rank's colour from where the
 /// crest hangs.
-private struct LevelUpBackdrop: View, Equatable {
+struct LevelUpBackdrop: View, Equatable {
     let stage: Int
     var body: some View {
         Canvas { context, size in

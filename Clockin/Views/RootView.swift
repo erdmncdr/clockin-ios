@@ -30,7 +30,7 @@ struct RootView: View {
     @State private var showCompanion = false
     @State private var tab: AppTab = .today
     @State private var deskSummary: WorkSession?
-    @State private var celebrationShare: StatsShareSnapshot?
+    @State private var celebrationShare: LevelShareSnapshot?
     @State private var shareBlocker = UUID()
     @State private var deskSuppressed = false
     @State private var celebrationFading = false
@@ -122,10 +122,10 @@ struct RootView: View {
             }
         }
         .overlay(alignment: .top) {
-            CelebrationOverlay(center: celebrations, share: {
+            CelebrationOverlay(center: celebrations, share: { snapshot in
                 celebrations.dismiss()
                 celebrations.setBlocked(shareBlocker, true)
-                celebrationShare = StatsShareSnapshot(store: store, dailyGoal: dailyGoalHours, monthlyGoal: monthlyGoalHours)
+                celebrationShare = snapshot
             }, openBadges: {
                 deskSuppressed = true
                 progressSection = .badges
@@ -152,7 +152,7 @@ struct RootView: View {
         .sheet(item: $celebrationShare, onDismiss: {
             celebrations.setBlocked(shareBlocker, false, waitForDismissal: false)
         }) { snapshot in
-            ShareStatsView(snapshot: snapshot)
+            ShareLevelView(snapshot: snapshot)
                 .preferredColorScheme(palette.colorScheme)
         }
         .celebrationBlocked(by: deskSummary != nil)

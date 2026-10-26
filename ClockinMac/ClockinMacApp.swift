@@ -33,6 +33,7 @@ final class ClockinMacAppDelegate: NSObject, NSApplicationDelegate {
         MenuBarController.shared.start(.clockin())
         #if DEBUG
         MenuBarProbe.runFixtureIfRequested()
+        LevelShareRenderFixture.runIfRequested()
         #endif
         PinnedWindowController.shared.start(store: store)
         KeyboardShortcutController.shared.start(store: store)

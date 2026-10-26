@@ -165,9 +165,24 @@ and set aside in favour of this one.
 | Celestial | Silver over midnight, seven long points | A constellation drawing itself round the crest |
 | Eternal | White gold, seven long points | Iridescent wings unfolding behind the crest |
 
+## Sharing it
+
+Share milestone on the card shares the card itself, as a picture
+(`Clockin/Views/Share/LevelShareCard.swift`, `ShareLevelView.swift`,
+`LevelShareLayout.swift`): the stage on its final frame with the crest and
+the companion, the banner, the hours of focus, the rank panel, a streak of two
+days or more, the date and a Clockin mark, on the rank's backdrop. Two
+formats, rendered at 3x: a story (1080 × 1920) and a post (1080 × 1350, where
+the stage is the shorter one without the companion). Hours of focus can be
+left off. The sheet shows the picture large, then the format, the hours
+switch, Share image and Copy image. Stats from Insights still share the
+three-page stats rewind.
+
 ## Reviewing it
 
-The debug build has a preview: launch with `--level-effects-preview`, add
+The Mac debug build renders the shared pictures with `--level-share-render DIR`
+(levels 12, 75 and 450, both formats) and opens the share sheet with
+`--level-share-sheet`. The debug build has a preview: launch with `--level-effects-preview`, add
 `--preview-level N` for a level, `--preview-time S` to hold every part of the
 card at one moment, `--preview-clean` to hide the controls, and
 `--preview-no-companion`, `--preview-large-text` or `--preview-still` for the

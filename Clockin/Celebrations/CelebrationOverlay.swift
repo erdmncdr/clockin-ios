@@ -7,7 +7,8 @@ struct CelebrationOverlay: View {
     @ObservedObject private var animationPolicy = RollingAnimationPolicy.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("Clockin.MascotEnabled") private var companionEnabled = true
-    let share: () -> Void
+    /// With what the card showed, for the picture to share.
+    let share: (LevelShareSnapshot) -> Void
     let openBadges: () -> Void
     let openCompanion: () -> Void
 
@@ -30,8 +31,12 @@ struct CelebrationOverlay: View {
                 Group {
                     switch event {
                     case .levelUp(let level, let hours):
-                        LevelUpCard(level: level, hours: hours, xp: center.snapshot?.level == level ? (center.snapshot?.xp ?? 0) : 0, moving: policy.motion, companionEnabled: policy.companion,
-                                    dismiss: { center.dismiss() }, share: share)
+                        let xp = center.snapshot?.level == level ? (center.snapshot?.xp ?? 0) : 0
+                        LevelUpCard(level: level, hours: hours, xp: xp, moving: policy.motion, companionEnabled: policy.companion,
+                                    dismiss: { center.dismiss() }, share: {
+                                        share(LevelShareSnapshot(level: level, hours: hours, xp: xp, streak: center.snapshot?.currentStreak ?? 0,
+                                                                 date: .now, companion: policy.companion))
+                                    })
                     case .badge(let badge):
                         banner(title: badge.title, icon: badge.icon)
                     case .accessory(let accessory):
