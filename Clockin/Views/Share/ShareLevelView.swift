@@ -3,6 +3,7 @@ import CoreTransferable
 import UniformTypeIdentifiers
 #if canImport(UIKit)
 import UIKit
+import Photos
 #else
 import AppKit
 #endif
@@ -28,6 +29,7 @@ struct ShareLevelView: View {
     @State private var png: LevelPNG?
     @State private var preview: Image?
     @State private var status: String?
+    @State private var isSaving = false
     @State private var selectionFeedback = HapticSignal()
 
     var body: some View {
@@ -53,19 +55,20 @@ struct ShareLevelView: View {
                         ShareLink(item: png, preview: SharePreview(String(localized: "Level \(snapshot.level)", bundle: .app), image: preview)) {
                             Label("Share image", systemImage: "square.and.arrow.up")
                         }.buttonStyle(PrimaryActionButtonStyle(palette: palette))
-                        Button {
-                            #if canImport(UIKit)
-                            UIPasteboard.general.setData(png.data, forPasteboardType: UTType.png.identifier)
-                            #else
-                            NSPasteboard.general.clearContents()
-                            guard NSPasteboard.general.setData(png.data, forType: .png) else {
-                                status = String(localized: "Could not copy image. Please try again.", bundle: .app)
-                                return
-                            }
-                            #endif
-                            status = String(localized: "PNG copied to clipboard.", bundle: .app)
-                        } label: { Label("Copy image", systemImage: "doc.on.doc") }
-                        .buttonStyle(.bordered)
+                        #if canImport(UIKit)
+                        // Stories go out from Photos on the iPhone, so saving
+                        // there sits beside copying.
+                        // Side by side while both labels fit in one line;
+                        // stacked in Turkish at large text.
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 10) { saveButton(png.data); copyButton(png.data) }
+                            VStack(spacing: 10) { saveButton(png.data); copyButton(png.data) }
+                        }
+                        .buttonStyle(.bordered).controlSize(.large)
+                        #else
+                        Button(action: { copy(png.data) }) { Label("Copy image", systemImage: "doc.on.doc") }
+                            .buttonStyle(.bordered)
+                        #endif
                     } else {
                         Button("Retry image rendering", action: render)
                     }
@@ -87,6 +90,68 @@ struct ShareLevelView: View {
         .onChange(of: showsHours) { render() }
         .transaction { if reduceMotion { $0.animation = nil } }
     }
+
+    private func copy(_ data: Data) {
+        #if canImport(UIKit)
+        UIPasteboard.general.setData(data, forPasteboardType: UTType.png.identifier)
+        #else
+        NSPasteboard.general.clearContents()
+        guard NSPasteboard.general.setData(data, forType: .png) else {
+            status = String(localized: "Could not copy image. Please try again.", bundle: .app)
+            return
+        }
+        #endif
+        status = String(localized: "PNG copied to clipboard.", bundle: .app)
+        selectionFeedback.send(.entrySaved)
+    }
+
+    #if canImport(UIKit)
+    private func saveButton(_ data: Data) -> some View {
+        Button {
+            Task { await save(data) }
+        } label: {
+            Label("Save to Photos", systemImage: "photo.badge.arrow.down")
+                .lineLimit(1).fixedSize(horizontal: true, vertical: false).frame(maxWidth: .infinity)
+        }
+        .disabled(isSaving)
+    }
+
+    private func copyButton(_ data: Data) -> some View {
+        Button(action: { copy(data) }) {
+            Label("Copy image", systemImage: "doc.on.doc")
+                .lineLimit(1).fixedSize(horizontal: true, vertical: false).frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Adds the picture to the photo library with add-only access, which
+    /// asks once and never shows the library. One save at a time, so a
+    /// second tap while the question is up does not add a second copy.
+    private func save(_ data: Data) async {
+        guard !isSaving else { return }
+        isSaving = true
+        defer { isSaving = false }
+        status = nil
+        let access = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard access == .authorized || access == .limited else {
+            status = access == .restricted
+                ? String(localized: "Photos access is restricted on this iPhone, so the picture can’t be saved. Share or copy it instead.", bundle: .app)
+                : String(localized: "Clockin can’t add to Photos. Allow it in Settings > Privacy & Security > Photos.", bundle: .app)
+            selectionFeedback.send(.validationFailed)
+            return
+        }
+        do {
+            try await PHPhotoLibrary.shared().performChanges { @Sendable in
+                let request = PHAssetCreationRequest.forAsset()
+                request.addResource(with: .photo, data: data, options: nil)
+            }
+            status = String(localized: "Saved to Photos.", bundle: .app)
+            selectionFeedback.send(.entrySaved)
+        } catch {
+            status = String(localized: "Could not save to Photos. Please try again.", bundle: .app)
+            selectionFeedback.send(.validationFailed)
+        }
+    }
+    #endif
 
     private func render() {
         status = nil

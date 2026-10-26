@@ -36,6 +36,8 @@ final class ClockinAppDelegate: NSObject, UIApplicationDelegate {
         sync.start()
         if sync.isEnabled { application.registerForRemoteNotifications() }
         #if DEBUG
+        // Review fixture: `--level-share-render DIR` writes the shared level-up pictures.
+        LevelShareRenderFixture.runIfRequested()
         // Review fixture: `--clear-sync-inbox` clears the recovery inbox once sync is up.
         if ProcessInfo.processInfo.arguments.contains("--clear-sync-inbox") {
             Task { @MainActor in

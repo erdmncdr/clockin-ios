@@ -15,6 +15,10 @@
          yuklemede sifreleme sorusu sorulmasin. -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <!-- Seviye atlama karti Fotograflar'a eklenir; yalnizca ekleme izni,
+         kutuphane okunmaz. -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Clockin saves the level-up picture you share to your photo library.</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>

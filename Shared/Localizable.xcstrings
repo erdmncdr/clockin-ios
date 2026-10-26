@@ -16108,6 +16108,56 @@
           }
         }
       }
+    },
+    "Save to Photos": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar’a kaydet"
+          }
+        }
+      }
+    },
+    "Saved to Photos.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar’a kaydedildi."
+          }
+        }
+      }
+    },
+    "Could not save to Photos. Please try again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar’a kaydedilemedi. Lütfen tekrar deneyin."
+          }
+        }
+      }
+    },
+    "Clockin can’t add to Photos. Allow it in Settings > Privacy & Security > Photos.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clockin Fotoğraflar’a ekleyemiyor. Ayarlar > Gizlilik ve Güvenlik > Fotoğraflar’dan izin verin."
+          }
+        }
+      }
+    },
+    "Photos access is restricted on this iPhone, so the picture can’t be saved. Share or copy it instead.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone’da Fotoğraflar erişimi kısıtlı; resim kaydedilemiyor. Bunun yerine paylaşın ya da kopyalayın."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
