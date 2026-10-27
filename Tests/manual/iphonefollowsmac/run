@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
-sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/ClockStore.swift
+sources=(Shared/Core/AppLanguage.swift Shared/Core/Models.swift Shared/Core/TimerStartLog.swift Shared/Core/ClockStore.swift
  Shared/Core/WardrobeBackup.swift Shared/Core/ImportComparison.swift Shared/Core/PastedTextImporter.swift
  Shared/Core/CSVImporter.swift Shared/Core/SessionOverlap.swift
  Clockin/Notifications/RemoteClockInNotification.swift

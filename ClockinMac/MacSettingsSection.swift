@@ -75,7 +75,10 @@ struct MacSettingsSection: View {
                 Button("Open Desk Mode") { DeskModeWindowController.shared.show() }
                 Toggle("Show home in desk mode", isOn: $showHome)
             }
-            Section("Global shortcuts") {
+            Section {
+                Toggle("Global shortcuts", isOn: Binding(
+                    get: { shortcuts.isEnabled }, set: { shortcuts.setEnabled($0) }
+                ))
                 LabeledContent("Clock in or resume", value: "⌥⌘I")
                 LabeledContent("Pause or resume", value: "⌥⌘P")
                 LabeledContent("Clock out", value: "⌥⌘O")
@@ -84,7 +87,12 @@ struct MacSettingsSection: View {
                     Text("A global shortcut could not be registered. Check for conflicts with other apps.")
                         .foregroundStyle(.secondary)
                 }
+            } header: {
+                Text("Global shortcuts")
+            } footer: {
+                Text("⌥⌘I is also Show Inspector in Finder and Web Inspector in Safari and Chrome. Turn the shortcuts off if the timer starts when you press it there.")
             }
+            TimerLogSection()
             Section {
                 Text("Clockin can start and stop by itself when you press your work site’s Clock in and Clock out buttons in Chrome.")
                 Button(ChromeExtensionInstaller.isInstalled || chromePrepared ? "Prepare the extension again" : "Prepare the Chrome extension") {

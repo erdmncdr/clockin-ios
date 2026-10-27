@@ -23,30 +23,38 @@ struct ClockInIntent: ClockinActionIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
+        .result(dialog: await run(origin: .widget))
+    }
+
+    @MainActor
+    func run(origin: TimerOrigin) async -> IntentDialog {
         #if WIDGET_EXTENSION
-        return .result(dialog: "Open Clockin to continue.")
+        return "Open Clockin to continue."
         #else
+        guard ExternalTimerStarts.isEnabled else {
+            return "Starting from widgets, Control Center and Siri is off in Clockin settings."
+        }
         let store = SharedStore.clock
         // Mac'teki Option-Command-I gibi: duraklatilmis oturum devam eder.
         if let running = store.running {
             guard running.isPaused else {
-                return .result(dialog: "A session is already running.")
+                return "A session is already running."
             }
-            store.resume()
+            store.resume(origin: origin)
             guard store.running?.isPaused == false else {
-                return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+                return "Could not save the timer change. Open Clockin and try again."
             }
             SessionMirror.shared.refresh()
             await SessionMirror.shared.finishPendingUpdates()
-            return .result(dialog: "Resumed.")
+            return "Resumed."
         }
-        store.clockIn()
+        store.clockIn(origin: origin)
         guard store.running != nil else {
-            return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
+            return "Could not save the timer change. Open Clockin and try again."
         }
         SessionMirror.shared.refresh()
         await SessionMirror.shared.finishPendingUpdates()
-        return .result(dialog: "Clocked in.")
+        return "Clocked in."
         #endif
     }
 }
@@ -62,19 +70,24 @@ struct ClockOutIntent: ClockinActionIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
+        .result(dialog: await run(origin: .widget))
+    }
+
+    @MainActor
+    func run(origin: TimerOrigin) async -> IntentDialog {
         #if WIDGET_EXTENSION
-        return .result(dialog: "Open Clockin to continue.")
+        return "Open Clockin to continue."
         #else
         let store = SharedStore.clock
-        guard store.running != nil else { return .result(dialog: "No session is running.") }
-        guard let session = store.clockOut() else {
-            return .result(dialog: "Could not save the session. Your timer has not been stopped. Open Clockin and try again.")
+        guard store.running != nil else { return "No session is running." }
+        guard let session = store.clockOut(origin: origin) else {
+            return "Could not save the session. Your timer has not been stopped. Open Clockin and try again."
         }
         SessionMirror.shared.refresh()
         await SessionMirror.shared.finishPendingUpdates()
         let duration = DurationText.compact(session.duration)
         let earned = store.earnings(for: session).money(code: store.currencyCode)
-        return .result(dialog: "Clocked out after \(duration), earned \(earned).")
+        return "Clocked out after \(duration), earned \(earned)."
         #endif
     }
 }
@@ -98,7 +111,10 @@ struct TogglePauseIntent: ClockinActionIntent {
             return .result(dialog: "No session is running.")
         }
         if running.isPaused {
-            store.resume()
+            guard ExternalTimerStarts.isEnabled else {
+                return .result(dialog: "Starting from widgets, Control Center and Siri is off in Clockin settings.")
+            }
+            store.resume(origin: .widget)
             guard store.running?.isPaused == false else {
                 return .result(dialog: "Could not save the timer change. Open Clockin and try again.")
             }

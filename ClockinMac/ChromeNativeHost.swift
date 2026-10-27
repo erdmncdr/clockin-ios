@@ -30,9 +30,12 @@ enum ChromeNativeHost {
     }
 
     static func perform(_ action: String) -> [String: Any] {
-        guard let url = URL(string: "clockin://" + action), let command = ExternalClockCommand(url: url) else {
+        guard let plain = URL(string: "clockin://" + action), let command = ExternalClockCommand(url: plain) else {
             return ["ok": false, "error": "unknown action"]
         }
+        // With the pass, the app acts without asking even if Launch Services
+        // names another process as the sender.
+        let url = ExternalClockPass.issue().flatMap { URL(string: "clockin://\(action)?pass=\($0)") } ?? plain
         // To this very app bundle, so another copy on the Mac never gets it.
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
