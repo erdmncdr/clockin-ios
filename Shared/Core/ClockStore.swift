@@ -26,6 +26,7 @@ final class ClockStore: ObservableObject {
     let didApplySyncedRunning = PassthroughSubject<(previous: RunningSession?, current: RunningSession?, provenance: RunningApplyProvenance), Never>()
     var archiveURL: URL { fileURL }
 
+    private let timerStartLog: TimerStartLog
     private let fileURL: URL
     private let calendar: Calendar
     private let now: () -> Date
@@ -71,7 +72,9 @@ final class ClockStore: ObservableObject {
 
     init(fileURL: URL? = nil, calendar: Calendar = .autoupdatingCurrent,
          now: @escaping () -> Date = { .now },
+         timerStartLog: TimerStartLog = .shared,
          writeQuarantine: (Data, URL) throws -> Void = { try $0.write(to: $1, options: .withoutOverwriting) }) {
+        self.timerStartLog = timerStartLog
         self.calendar = calendar
         self.now = now
         self.fileURL = fileURL ?? Self.defaultFileURL
@@ -245,7 +248,7 @@ final class ClockStore: ObservableObject {
         session.duration / 3600 * effectiveRate(at: session.start, fallback: session.hourlyRate)
     }
 
-    func clockIn(elapsed: TimeInterval = 0, note: String = "", at date: Date = .now) {
+    func clockIn(elapsed: TimeInterval = 0, note: String = "", at date: Date = .now, origin: TimerOrigin = .app) {
         guard data.running == nil else { return }
         guard let safeElapsed = SessionDuration.clockInElapsed(elapsed),
               SessionDuration.isValidDate(date) else {
@@ -265,6 +268,7 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.running = running
         guard persistTimerChange(previous: previous) else { return }
+        timerStartLog.record(.clockIn, origin: origin, at: now())
         didClockInLocally.send(running.start)
     }
 
@@ -289,7 +293,7 @@ final class ClockStore: ObservableObject {
         guard persistTimerChange(previous: previous) else { return }
     }
 
-    func resume(at date: Date = .now) {
+    func resume(at date: Date = .now, origin: TimerOrigin = .app) {
         guard var running = data.running, running.resumedAt == nil else { return }
         running.resumedAt = date
         guard running.hasValidDuration(at: date) else {
@@ -299,10 +303,11 @@ final class ClockStore: ObservableObject {
         let previous = data
         data.running = running
         guard persistTimerChange(previous: previous) else { return }
+        timerStartLog.record(.resume, origin: origin, at: now())
     }
 
     @discardableResult
-    func clockOut(at date: Date = .now) -> WorkSession? {
+    func clockOut(at date: Date = .now, origin: TimerOrigin = .app) -> WorkSession? {
         guard let running = data.running else { return nil }
         guard running.hasValidDuration(at: date), date >= running.start else {
             statusMessage = String(localized: "Invalid elapsed time or date.", bundle: .app)
@@ -316,6 +321,7 @@ final class ClockStore: ObservableObject {
         data.sessions.append(session)
         data.running = nil
         guard persistTimerChange(previous: previous) else { return nil }
+        timerStartLog.record(.clockOut, origin: origin, at: now())
         return session
     }
 
@@ -1085,6 +1091,18 @@ final class ClockStore: ObservableObject {
         candidate.pinVisible = data.pinVisible
         guard save(candidate, notify: false) else { return false }
         timerPersistenceError = nil
+        let action: TimerStartLog.Action?
+        if let current = data.running {
+            if previousRunning?.start != current.start { action = .clockIn }
+            else if previousRunning?.isPaused == true, !current.isPaused { action = .resume }
+            else { action = nil }
+        } else {
+            action = previousRunning == nil ? nil : .clockOut
+        }
+        if let action {
+            timerStartLog.record(action, origin: .sync, at: now(), wasRunning: previousRunning != nil,
+                                 provenance: provenance == .remoteChange ? .remoteChange : .initialImport)
+        }
         didApplySyncedRunning.send((previous: previousRunning, current: data.running, provenance: provenance))
         return true
     }

@@ -6,6 +6,8 @@ import Combine
 @MainActor
 final class KeyboardShortcutController: ObservableObject {
     static let shared = KeyboardShortcutController()
+    static let enabledKey = "Clockin.GlobalShortcutsEnabled"
+    @Published private(set) var isEnabled = UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
     @Published private(set) var registrationFailed = false
     private var handler: EventHandlerRef?
     private var hotKeys: [EventHotKeyRef] = []
@@ -13,8 +15,8 @@ final class KeyboardShortcutController: ObservableObject {
     private static let signature: OSType = 0x434C4B4E // CLKN
 
     func start(store: ClockStore) {
-        guard handler == nil else { return }
         self.store = store
+        guard isEnabled, handler == nil else { return }
         registrationFailed = false
         var event = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         let result = InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
@@ -39,23 +41,38 @@ final class KeyboardShortcutController: ObservableObject {
         }
     }
 
+    func setEnabled(_ enabled: Bool) {
+        isEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: Self.enabledKey)
+        if enabled {
+            if let store { start(store: store) }
+        } else {
+            unregister()
+        }
+    }
+
     func stop() {
+        unregister()
+        store = nil
+    }
+
+    private func unregister() {
         hotKeys.forEach { UnregisterEventHotKey($0) }
         hotKeys.removeAll()
         if let handler { RemoveEventHandler(handler) }
         handler = nil
-        store = nil
+        registrationFailed = false
     }
 
     private func perform(_ id: UInt32) {
-        guard let store else { return }
+        guard isEnabled, let store else { return }
         switch id {
         case 1:
-            if store.running == nil { store.clockIn() }
-            else if store.running?.isPaused == true { store.resume() }
+            if store.running == nil { store.clockIn(origin: .shortcut) }
+            else if store.running?.isPaused == true { store.resume(origin: .shortcut) }
         case 2:
-            if store.running?.isPaused == true { store.resume() } else { store.pause() }
-        case 3: _ = store.clockOut()
+            if store.running?.isPaused == true { store.resume(origin: .shortcut) } else { store.pause() }
+        case 3: _ = store.clockOut(origin: .shortcut)
         case 4: MacNavigation.shared.open()
         default: break
         }

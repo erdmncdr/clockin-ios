@@ -16158,6 +16158,374 @@
           }
         }
       }
+    },
+    "Timer log": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer log"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayaç günlüğü"
+          }
+        }
+      }
+    },
+    "Another device (iCloud)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another device (iCloud)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir aygıt (iCloud)"
+          }
+        }
+      }
+    },
+    "Widget, Siri or Shortcuts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget, Siri or Shortcuts"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget, Siri veya Kısayollar"
+          }
+        }
+      }
+    },
+    "Control Center": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control Center"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetim Merkezi"
+          }
+        }
+      }
+    },
+    "Keyboard shortcut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard shortcut"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye kısayolu"
+          }
+        }
+      }
+    },
+    "Link from another app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link from another app"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulamadan bağlantı"
+          }
+        }
+      }
+    },
+    "Pulse (Chrome)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulse (Chrome)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulse (Chrome)"
+          }
+        }
+      }
+    },
+    "In the app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the app"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamada"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temizle"
+          }
+        }
+      }
+    },
+    "Nothing yet. Every start, resume and clock-out is listed here with where it came from.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing yet. Every start, resume and clock-out is listed here with where it came from."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz kayıt yok. Her mesai başlangıcı, devam ettirme ve mesai bitişi nereden geldiğiyle birlikte burada listelenir."
+          }
+        }
+      }
+    },
+    "Remote change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote change"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzaktan gelen değişiklik"
+          }
+        }
+      }
+    },
+    "Initial import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial import"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk aktarım"
+          }
+        }
+      }
+    },
+    "Session already present": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session already present"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceden oturum vardı"
+          }
+        }
+      }
+    },
+    "No previous session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No previous session"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceden oturum yoktu"
+          }
+        }
+      }
+    },
+    "Clock in from a link?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clock in from a link?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıdan mesaiye başlansın mı?"
+          }
+        }
+      }
+    },
+    "Clock out from a link?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clock out from a link?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıdan mesai bitirilsin mi?"
+          }
+        }
+      }
+    },
+    "Another app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another app"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulama"
+          }
+        }
+      }
+    },
+    "%@ wants to start the Clockin timer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start the Clockin timer."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, Clockin sayacını başlatmak istiyor."
+          }
+        }
+      }
+    },
+    "%@ wants to stop the Clockin timer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to stop the Clockin timer."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, Clockin sayacını durdurmak istiyor."
+          }
+        }
+      }
+    },
+    "⌥⌘I is also Show Inspector in Finder and Web Inspector in Safari and Chrome. Turn the shortcuts off if the timer starts when you press it there.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥⌘I is also Show Inspector in Finder and Web Inspector in Safari and Chrome. Turn the shortcuts off if the timer starts when you press it there."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥⌘I, Finder’da Denetçiyi Göster komutunu, Safari ve Chrome’da ise Web Denetçisi’ni de çalıştırır. Bu uygulamalarda bu tuşlara bastığınızda sayaç başlıyorsa kısayolları kapatın."
+          }
+        }
+      }
+    },
+    "Start from widgets, Control Center and Siri": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start from widgets, Control Center and Siri"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget, Denetim Merkezi ve Siri ile mesaiye başla"
+          }
+        }
+      }
+    },
+    "Turn this off if the timer starts when you did not mean it to. You can still clock out from everywhere.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn this off if the timer starts when you did not mean it to. You can still clock out from everywhere."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayaç istemeden başlıyorsa bunu kapatın. Mesaiyi her yerden bitirmeye devam edebilirsiniz."
+          }
+        }
+      }
+    },
+    "Starting from widgets, Control Center and Siri is off in Clockin settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting from widgets, Control Center and Siri is off in Clockin settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget, Denetim Merkezi ve Siri ile mesaiye başlama Clockin ayarlarında kapalı."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

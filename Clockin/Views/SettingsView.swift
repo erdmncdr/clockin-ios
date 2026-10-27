@@ -25,6 +25,7 @@ struct SettingsView: View {
     @AppStorage("Clockin.MascotDefault") private var mascotDefault = "Auto"
     @AppStorage(WardrobeState.deskKey) private var showHome = true
     #if os(iOS)
+    @AppStorage(ExternalTimerStarts.key, store: .standard) private var externalStartsEnabled = true
     @AppStorage(DeskMode.enabledKey) private var deskModeEnabled = true
     #endif
     @AppStorage(HapticPolicy.enabledKey) private var hapticsEnabled = true
@@ -228,7 +229,7 @@ struct SettingsView: View {
     }
 
     private var todaySection: some View {
-        Section("Today") {
+        Section {
             NavigationLink {
                 DashboardPinOptions()
             } label: {
@@ -238,6 +239,15 @@ struct SettingsView: View {
                     Image(systemName: "pin").foregroundStyle(palette.accent)
                 }
             }
+            #if os(iOS)
+            Toggle("Start from widgets, Control Center and Siri", isOn: $externalStartsEnabled.hapticSelection($selectionFeedback))
+            #endif
+        } header: {
+            Text("Today")
+        } footer: {
+            #if os(iOS)
+            Text("Turn this off if the timer starts when you did not mean it to. You can still clock out from everywhere.")
+            #endif
         }
     }
 
@@ -525,6 +535,15 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         Section {
+            #if os(iOS)
+            NavigationLink {
+                TimerLogView()
+            } label: {
+                Label { Text("Timer log") } icon: {
+                    Image(systemName: "clock.arrow.circlepath").foregroundStyle(palette.accent)
+                }
+            }
+            #endif
             navigationRow(String(localized: "Import timecards", bundle: .app), systemImage: "doc.text.magnifyingglass") {
                 rateIsFocused = false
                 sheet = .importTimecards

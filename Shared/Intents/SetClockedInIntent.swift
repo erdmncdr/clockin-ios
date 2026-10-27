@@ -14,18 +14,19 @@ struct SetClockedInIntent: SetValueIntent, ClockinActionIntent {
     var value: Bool
 
     @MainActor
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> some IntentResult & ProvidesDialog {
         #if WIDGET_EXTENSION
-        return .result()
+        return .result(dialog: "Open Clockin to continue.")
         #else
         // Kontrol yeniden okunmadan once ozet diske yazilmis olmali.
         defer { SessionMirror.shared.refresh() }
+        let dialog: IntentDialog
         if value {
-            _ = try await ClockInIntent().perform()
+            dialog = await ClockInIntent().run(origin: .controlCenter)
         } else {
-            _ = try await ClockOutIntent().perform()
+            dialog = await ClockOutIntent().run(origin: .controlCenter)
         }
-        return .result()
+        return .result(dialog: dialog)
         #endif
     }
 }

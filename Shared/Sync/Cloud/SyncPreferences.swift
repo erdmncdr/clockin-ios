@@ -53,6 +53,9 @@ enum SyncPreferences {
         "SUEnableAutomaticChecks": "bool",
     ]
     static let deviceKeys: [String] = [
+        "Clockin.TimerStartLog.v1",
+        "Clockin.GlobalShortcutsEnabled",
+        "Clockin.ExternalStartsEnabled",
         // App language is per device, as on Apple platforms: a Turkish Mac and
         // an English iPhone must not switch each other.
         "Clockin.Language",
