@@ -155,7 +155,7 @@ final class MenuBarController: NSObject {
             "item: exists=\(statusItem != nil) visible=\(statusItem?.isVisible ?? false) autosave=\(statusItem?.autosaveName ?? "-")",
             "item window: frame=\(window.map { NSStringFromRect($0.frame) } ?? "none") onScreen=\(MenuBarVisibility.isOnScreen(window))",
             "screen: frame=\(screen.map { NSStringFromRect($0.frame) } ?? "none") notchInset=\(screen?.safeAreaInsets.top ?? 0) screens=\(NSScreen.screens.count)",
-            "menu bar visible=\(NSMenu.menuBarVisible()) title=\(statusItem?.button?.title ?? "")",
+            "menu bar visible=\(NSMenu.menuBarVisible()) title length=\(statusItem?.button?.title.count ?? 0)",
             "app: \(Self.locationSummary())",
             "saved: " + (saved.isEmpty ? "none" : saved.joined(separator: "; ")),
             "plain item=\(Self.usesPlainItem) bar thickness=\(NSStatusBar.system.thickness)",
@@ -170,7 +170,7 @@ final class MenuBarController: NSObject {
     /// from a new place each launch, and macOS may not keep its menu bar item.
     private static func locationSummary() -> String {
         let location = ApplicationMover.locate(Bundle.main.bundleURL)
-        return "\(location.kind) \(location.originalURL.path(percentEncoded: false))"
+        return "\(location.kind) \(location.originalURL.lastPathComponent)"
     }
 
     // MARK: Label

@@ -583,13 +583,15 @@ final class ClockStore: ObservableObject {
         }
     }
 
-    func exportBackup(to url: URL) {
+    /// The backup as data, handed to the exporter without a file on disk.
+    func exportBackup() -> Data? {
         do {
             let encoded = try WardrobeBackupSection(defaults: .standard).adding(to: JSONEncoder().encode(data))
-            try encoded.write(to: url, options: .atomic)
             statusMessage = String(localized: "Backup exported.", bundle: .app)
+            return encoded
         } catch {
             statusMessage = String(localized: "Could not export backup: \(error.localizedDescription)", bundle: .app)
+            return nil
         }
     }
 

@@ -308,7 +308,7 @@ final class ClockinCloudAdapter: CKSyncEngineDelegate, SyncTransport {
                 let record = try ClockinCloudRecord.encode(value, systemFields: adapter.bridge.state.systemFields[key])
                 return (record, (record["payload"] as? Data)?.count ?? 0)
             } catch {
-                syncLog.error("encode failed for \(key, privacy: .public): \(String(describing: error), privacy: .public)")
+                syncLog.error("encode failed for \(key, privacy: .private): \(String(describing: error), privacy: .public)")
                 adapter.pass.deferRecord(key)
                 adapter.passFailed = true
                 adapter.report(.paused(.invalidData))

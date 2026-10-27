@@ -204,3 +204,18 @@ No SwiftData/Core Data store was found; persistence is JSON, preferences and sys
 - Relay registration body contains only environment, expiry and protocol version; the token goes in the Authorization header, not the URL (`LiveActivityPrivacy.swift:14–18`; `LiveActivityPush.swift:247–253`). No bearer value was found in exports or logging.
 - iOS Photos add-only description, audio background mode, remote notifications, CloudKit and App Group entitlements correspond to implemented features (`Config/Clockin-Info.plist:20–25`; `Config/Clockin.entitlements:5–17`). No unused broad usage description was found. Signed release entitlements were not inspected.
 
+
+---
+
+## Owner follow-up (2026-10-28)
+
+Applied, reviewed by a second read-only pass, and released as Mac 2.0.27 (38), iOS 0.2 (55) and a website deploy:
+
+- `picker.js`: untrusted click/key/cancel events ignored; the ten-minute limit also checked at the click.
+- `background.js`: a command is forwarded only while a setup exists, from the picked origin's top frame, and only with the id of the current setup (new on every save), so watchers left in open tabs after Remove or a repick are refused. `watch.js` sends that id. Extension 1.4.
+- `website/dist/_headers`: CSP (same-origin scripts/styles, `data:` images for the AVIF probe, the hash of the privacy page's one inline style), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`. HSTS already comes from Netlify.
+- `CloudKitAdapter.swift:311`: record key `.private`.
+- `MenuBarController` / `MenuBarProbe`: Copy details reports the title length and the bundle name, not the title text or full paths.
+- `ClockStore.exportBackup() -> Data?`: the iOS backup goes straight to the exporter; no temporary file.
+
+Accepted as is: the relay token in `UserDefaults` (an eight-hour ActivityKit token inside the sandbox); same-user process impersonation of the native host (inside the macOS trust boundary); the deploy race (single operator); default iOS file protection (widgets need it); public error descriptions in sync logs (needed for diagnosis, no record contents).

@@ -130,7 +130,7 @@ enum MenuBarProbe {
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             .filter { $0.processIdentifier != me }
         guard !others.isEmpty else { return "none" }
-        return others.map { "\($0.processIdentifier) \($0.bundleURL?.path(percentEncoded: false) ?? "?")" }.joined(separator: "; ")
+        return others.map { "\($0.processIdentifier) \($0.bundleURL?.lastPathComponent ?? "?")" }.joined(separator: "; ")
     }
 
     /// The copies of this app that LaunchServices knows, grouped by where they are.

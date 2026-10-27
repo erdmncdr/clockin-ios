@@ -109,7 +109,7 @@
     // Also announced on the page, which lets the extension's checks see it.
     document.dispatchEvent(new CustomEvent('pulse:command', { detail: action }));
     const label = action === 'clock-in' ? 'Clock in' : 'Clock out';
-    chrome.runtime.sendMessage({ type: 'command', action }).then((result) => {
+    chrome.runtime.sendMessage({ type: 'command', action, id: setup.id }).then((result) => {
       if (result?.ok && result.confirmed) toast(`Pulse ✓ ${label}`, true);
       else if (result?.ok) toast(tr ? `Pulse: ${label} gönderildi, onay gelmedi` : `Pulse: ${label} sent, not confirmed`, false);
       else if (result?.native === false) openLink(action);

@@ -26,7 +26,15 @@ function badge(text, color) {
   setTimeout(() => chrome.action.setBadgeText({ text: '' }), 4000);
 }
 
-async function command({ action }) {
+async function command({ action, id }, sender) {
+  // A watcher left in an open tab after Remove, or on a site picked earlier,
+  // still runs: Chrome does not pull injected scripts. Check here, each time.
+  const { setup } = await chrome.storage.local.get('setup');
+  const origin = sender?.origin || (sender?.url ? new URL(sender.url).origin : null);
+  if (!setup || !origin || origin !== setup.origin || sender?.frameId !== 0 || id !== setup.id) {
+    return { ok: false, error: 'not set up for this site' };
+  }
+  if (action !== 'clock-in' && action !== 'clock-out') return { ok: false, error: 'unknown action' };
   let result;
   try {
     result = await chrome.runtime.sendNativeMessage(HOST, { action });
@@ -53,6 +61,9 @@ const handlers = {
     await registerFor(PICKER, origin, 'picker.js');
   },
   async save({ setup }) {
+    // A new id each time: watchers from an earlier pick, still running in
+    // open tabs, no longer match.
+    setup = { ...setup, id: crypto.randomUUID() };
     await chrome.storage.local.set({ setup });
     await chrome.storage.local.remove('lastMiss');
     await chrome.storage.local.remove(['picking', 'pending']);
@@ -73,7 +84,7 @@ const handlers = {
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   const handler = handlers[message?.type];
   if (!handler) return false;
-  handler(message).then((value) => reply(value ?? { ok: true }), (error) => reply({ ok: false, error: String(error) }));
+  handler(message, sender).then((value) => reply(value ?? { ok: true }), (error) => reply({ ok: false, error: String(error) }));
   return true;
 });
 

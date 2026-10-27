@@ -549,12 +549,9 @@ struct SettingsView: View {
                 sheet = .importTimecards
             }
             Button {
-                let url = FileManager.default.temporaryDirectory.appendingPathComponent("clockin-export-\(UUID().uuidString).json")
-                store.exportBackup(to: url)
-                if let data = try? Data(contentsOf: url) {
+                if let data = store.exportBackup() {
                     exportDocument = WardrobeBackupDocument(data: data)
                     showExporter = true
-                    try? FileManager.default.removeItem(at: url)
                 } else { restoreMessage = store.statusMessage; Haptics.play(.validationFailed) }
             } label: {
                 Label("Export backup", systemImage: "square.and.arrow.up")

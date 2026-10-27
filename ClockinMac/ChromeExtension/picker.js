@@ -115,6 +115,9 @@
   // Read before the site handles the click (it may relabel or replace the
   // button, or reload the page); the click itself is left alone.
   function click(event) {
+    // A page script could pick the buttons itself with synthetic clicks.
+    if (!event.isTrusted) return;
+    if (Date.now() - picking.at > 10 * 60 * 1000) { cancel(); return; }
     const el = target(event);
     if (!el) return;
     if (!start) {
@@ -140,13 +143,14 @@
     outline.remove();
   }
 
-  function cancel() {
+  function cancel(event) {
+    if (event && !event.isTrusted) return;
     stop();
     bar.remove();
     chrome.runtime.sendMessage({ type: 'cancel-pick' });
   }
 
-  function key(event) { if (event.key === 'Escape') cancel(); }
+  function key(event) { if (event.key === 'Escape') cancel(event); }
 
   cancelButton.addEventListener('click', cancel);
   document.addEventListener('mousemove', move, true);
