@@ -79,7 +79,11 @@ struct ClockOutIntent: ClockinActionIntent {
         return "Open Clockin to continue."
         #else
         let store = SharedStore.clock
-        guard store.running != nil else { return "No session is running." }
+        guard store.running != nil else {
+            // The widget may still show a session that is gone; redraw it.
+            SessionMirror.shared.refresh()
+            return "No session is running."
+        }
         guard let session = store.clockOut(origin: origin) else {
             return "Could not save the session. Your timer has not been stopped. Open Clockin and try again."
         }

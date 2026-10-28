@@ -311,8 +311,9 @@ final class ClockStore: ObservableObject {
         guard let running = data.running else { return nil }
         // A start ahead of this clock (a session begun on a device whose clock
         // runs ahead, or a clock set back) must not trap the timer: the session
-        // ends at its start with no duration instead of refusing to end.
-        let end = max(date, running.start)
+        // ends at its start, keeping only the time already accumulated, instead
+        // of refusing to end.
+        let end = SessionDuration.isValidDate(date) ? max(date, running.start) : date
         guard running.hasValidDuration(at: end) else {
             statusMessage = String(localized: "Invalid elapsed time or date.", bundle: .app)
             timerPersistenceError = statusMessage
