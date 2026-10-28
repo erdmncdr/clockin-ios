@@ -219,3 +219,8 @@ Applied, reviewed by a second read-only pass, and released as Mac 2.0.27 (38), i
 - `ClockStore.exportBackup() -> Data?`: the iOS backup goes straight to the exporter; no temporary file.
 
 Accepted as is: the relay token in `UserDefaults` (an eight-hour ActivityKit token inside the sandbox); same-user process impersonation of the native host (inside the macOS trust boundary); the deploy race (single operator); default iOS file protection (widgets need it); public error descriptions in sync logs (needed for diagnosis, no record contents).
+
+Website deployed 2026-10-28 (owner ran `website/tools/deploy`): live headers verified
+(CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy; HSTS from
+Netlify); the home page and `/privacy/` render with no console errors under the policy;
+relay health unchanged (`protocol 2, pushConfigured true`).
