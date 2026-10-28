@@ -120,5 +120,16 @@ MainActor.assumeIsolated {
     check(store.clockOut(at: date.addingTimeInterval(30)) == nil && store.running != nil && log.entries.isEmpty,
           "failed clock-out preserves session and does not log")
     allowWrites()
+    // A start ahead of this clock (another device's clock, or a clock set
+    // back) ends at its start with no duration instead of trapping the timer.
+    _ = store.clockOut(at: date.addingTimeInterval(40))
+    store.clockIn(at: date)
+    log.clear()
+    let early = store.clockOut(at: date.addingTimeInterval(-3600), origin: .widget)
+    check(early != nil && early?.duration == 0 && early?.end == date && store.running == nil,
+          "clock-out before the start ends the session at its start with no duration")
+    check(log.entries.first?.action == .clockOut && log.entries.first?.origin == .widget,
+          "the clamped clock-out is logged with its origin")
+    check(store.timerPersistenceError == nil, "a clamped clock-out is not an error")
     print("All timer log checks passed.")
 }

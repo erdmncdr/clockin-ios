@@ -309,12 +309,17 @@ final class ClockStore: ObservableObject {
     @discardableResult
     func clockOut(at date: Date = .now, origin: TimerOrigin = .app) -> WorkSession? {
         guard let running = data.running else { return nil }
-        guard running.hasValidDuration(at: date), date >= running.start else {
+        // A start ahead of this clock (a session begun on a device whose clock
+        // runs ahead, or a clock set back) must not trap the timer: the session
+        // ends at its start with no duration instead of refusing to end.
+        let end = max(date, running.start)
+        guard running.hasValidDuration(at: end) else {
             statusMessage = String(localized: "Invalid elapsed time or date.", bundle: .app)
+            timerPersistenceError = statusMessage
             return nil
         }
         let session = WorkSession(
-            id: UUID(), start: running.start, end: date, duration: running.elapsed(at: date),
+            id: UUID(), start: running.start, end: end, duration: running.elapsed(at: end),
             note: running.note, hourlyRate: hourlyRate, source: "Clockin"
         )
         let previous = data
