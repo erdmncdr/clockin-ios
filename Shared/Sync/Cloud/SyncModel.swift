@@ -241,7 +241,7 @@ struct SyncRecovery: Codable, Equatable, Sendable {
         switch reason {
         case "Displaced timer": message = String(localized: "Another timer state won. The previous timer is in recovery.", bundle: .app)
         case "Replaced value": message = String(localized: "A replaced value is available in recovery.", bundle: .app)
-        case "Import-key duplicate": message = String(localized: "Duplicate entries were collapsed. Your previous entry is in recovery.", bundle: .app)
+        case "Import-key duplicate", "Same timer": message = String(localized: "Duplicate entries were collapsed. Your previous entry is in recovery.", bundle: .app)
         default: message = String(localized: "Concurrent changes were resolved. Your previous value is in recovery.", bundle: .app)
         }
         return .init(id: id, message: message)
