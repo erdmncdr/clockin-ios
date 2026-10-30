@@ -118,9 +118,9 @@ import Foundation
         wardrobe = WardrobeStore(defaults: defaults)
         store = ClockStore(fileURL: directory.appendingPathComponent("clockin.json"))
     }
-    func begin(approved: Bool = true) async throws {
+    func begin(approved: Bool = true, deviceID: String = "this-device") async throws {
         if approved {
-            var state = SyncSidecar(deviceID: "this-device"); state.firstMergeCompleted = true
+            var state = SyncSidecar(deviceID: deviceID); state.firstMergeCompleted = true
             try await SyncSidecarStore(archiveURL: store.archiveURL).save(state)
         }
         await coordinator.start()?.value
@@ -144,6 +144,60 @@ import Foundation
         try? FileHandle.standardOutput.write(contentsOf: Data(("ok: " + name + "\n").utf8))
     }
     @MainActor static func main() async throws {
+        do {
+            let mac = try Fixture(), phone = try Fixture()
+            try await mac.begin(deviceID: "race-mac")
+            try await phone.begin(deviceID: "race-phone")
+            let start = Date.now.addingTimeInterval(-7200)
+            mac.store.clockIn(at: start)
+            await mac.coordinator.start()?.value
+            phone.transport!.nextFetchRecords = Array(mac.transport!.bridge.state.records.values)
+            let foregroundFetch = TestSignal()
+            phone.transport!.afterSend = foregroundFetch
+            let sendsBeforeActive = phone.transport!.sends
+            phone.coordinator.sceneDidBecomeActive()
+            await foregroundFetch.wait()
+            phone.transport!.afterSend = nil
+            check(phone.store.running?.start == start && phone.transport!.sends > sendsBeforeActive,
+                  "foreground activation fetches the Mac clock-in immediately without waiting for polling")
+
+            let earlyEnd = start.addingTimeInterval(3600)
+            let early = mac.store.clockOut(at: earlyEnd)!
+            await mac.coordinator.start()?.value
+            check(phone.store.running?.start == start, "phone still has the timer before it fetches Mac clock-out")
+            let late = phone.store.clockOut(at: earlyEnd.addingTimeInterval(40))!
+            await phone.coordinator.start()?.value
+            check(mac.store.sessions == [early] && phone.store.sessions == [late] && early.id != late.id,
+                  "real stores author separate UUIDs for the first and stale clock-outs")
+
+            let macRecords = Array(mac.transport!.bridge.state.records.values)
+            let phoneRecords = Array(phone.transport!.bridge.state.records.values)
+            phone.transport!.nextFetchRecords = macRecords
+            await phone.coordinator.pollIfNeeded()?.value
+            mac.transport!.nextFetchRecords = phoneRecords
+            await mac.coordinator.pollIfNeeded()?.value
+            for fixture in [mac, phone] {
+                check(fixture.store.sessions == [early] && fixture.store.running == nil,
+                      "real store/coordinator race converges to one session at the earliest end")
+                check(fixture.store.sessions.reduce(0) { $0 + $1.duration } == 3600
+                      && fixture.store.sessions.reduce(0) { $0 + fixture.store.earnings(for: $1) } == early.earnings,
+                      "real store race counts one hour and its earnings once")
+                check(fixture.transport!.bridge.state.records["Session:" + late.id.uuidString]?.winner?.deleted == false,
+                      "real coordinator retains the hidden late alias")
+                let archive = try JSONDecoder().decode(ClockinData.self, from: Data(contentsOf: fixture.store.archiveURL))
+                check(archive.sessions == [early] && archive.running == nil,
+                      "applySynced persists the collapsed session and stopped timer")
+            }
+            check(phone.transport!.bridge.state.recoveryInbox.contains {
+                $0.recordKey == "Session:" + late.id.uuidString && $0.reason == "Same timer"
+                    && (try? SyncCoding.decode(WorkSession.self, $0.version.payload)) == late
+            }, "phone recovery keeps its complete later clock-out with Same timer reason")
+            phone.transport!.nextFetchRecords = phoneRecords + macRecords
+            await phone.coordinator.handleRemoteNotification()
+            check(phone.store.sessions == [early], "push redelivery cannot double the real store totals again")
+            await mac.cleanup(); await phone.cleanup()
+        }
+
         for restore in [false, true] {
             let baseline = try Fixture()
             try await baseline.begin()

@@ -171,6 +171,95 @@ var deletedAlias = preview.merge.snapshot; deletedAlias.data.sessions.removeAll 
 let aliasDeletes = try SyncCore.diff(previous: preview.merge.snapshot, current: deletedAlias, known: preview.merge.records, stamp: stamp("local", 1001))
 check(aliasDeletes.filter { $0.kind == .session && $0.winner?.deleted == true }.count == 2, "deleting collapsed session tombstones all known UUID aliases")
 
+// Two devices finish the same timer before either sees the other's clock-out.
+do {
+    let early = session(352, start: 900.125, note: "first clock-out")
+    var late = early
+    late.id = uuid(351); late.end += 40; late.duration += 40; late.note = "stale phone clock-out"
+    let earlyRecord = try record(.session, early.id.uuidString, early, device: "mac", time: 1000)
+    let lateRecord = try record(.session, late.id.uuidString, late, device: "phone", time: 1040)
+    var phone = blank(); phone.data.sessions = [late]
+    let joined = try SyncCore.merge(local: [lateRecord.key: lateRecord], incoming: [earlyRecord], onto: phone)
+    check(joined.snapshot.data.sessions == [early], "same timer keeps earliest end even when its UUID is higher")
+    check(joined.records.count == 2 && joined.records[lateRecord.key]?.winner?.deleted == false,
+          "same-timer alias is hidden, with its original register retained")
+    check(joined.recoveries.count == 1 && joined.recoveries[0].recordKey == lateRecord.key
+          && joined.recoveries[0].reason == "Same timer" && joined.recoveries[0].version == lateRecord.winner,
+          "hidden local same-timer alias is captured intact with Same timer reason")
+    check(joined.snapshot.data.sessions.reduce(0) { $0 + $1.duration } == early.duration
+          && joined.snapshot.data.sessions.reduce(0) { $0 + $1.earnings } == early.earnings,
+          "same-timer hours and earnings are counted once")
+    try check(merge([earlyRecord, lateRecord]).snapshot == merge([lateRecord, earlyRecord]).snapshot,
+              "same-timer projection is independent of delivery order")
+    let replay = try SyncCore.merge(local: joined.records, incoming: [lateRecord, earlyRecord, lateRecord], onto: joined.snapshot)
+    check(replay.snapshot == joined.snapshot && replay.recoveries.isEmpty,
+          "later alias redelivery neither inflates totals nor repeats recovery")
+    try check(merge([earlyRecord], onto: phone).snapshot.data.sessions == [early],
+              "uncaptured local clock-out participates in the same projection")
+
+    let preview = try SyncCore.firstPreview(local: [lateRecord.key: lateRecord], incoming: [earlyRecord],
+                                           snapshot: phone, revision: 35)
+    check(preview.localCount == 1 && preview.remoteCount == 1 && preview.duplicates == 1 && preview.mergedCount == 1
+          && preview.localCount + preview.remoteCount - preview.duplicates == preview.mergedCount,
+          "same-timer first preview reports local 1 + remote 1 - duplicates 1 = merged 1")
+    check(preview.merge.snapshot.data.sessions == [early]
+          && SyncSidecar.worthKeeping(preview.merge.recoveries, merged: preview.merge.snapshot).first?.reason == "Same timer",
+          "first-merge approval retains same-timer recovery")
+
+    var tied = early; tied.id = uuid(350); tied.duration -= 1
+    let tiedRecord = try record(.session, tied.id.uuidString, tied, device: "third")
+    try check(merge([earlyRecord, tiedRecord, lateRecord]).snapshot.data.sessions == [tied],
+              "equal same-timer ends break ties by lowest UUID, not duration")
+    var imported = late; imported.id = uuid(353); imported.source = "Timecard"; imported.end += 60; imported.duration += 60
+    let importRecord = try record(.session, imported.id.uuidString, imported)
+    var otherImport = imported; otherImport.id = uuid(354); otherImport.end += 20; otherImport.duration += 20
+    let otherImportRecord = try record(.session, otherImport.id.uuidString, otherImport)
+    let mixed = try merge([earlyRecord, lateRecord, importRecord, otherImportRecord])
+    check(Set(mixed.snapshot.data.sessions.map(\.id)) == [early.id, imported.id, otherImport.id],
+          "timecard sessions sharing a start with Clockin and each other remain separate")
+    var different = late; different.id = uuid(355); different.start += 0.25
+    let differentRecord = try record(.session, different.id.uuidString, different)
+    try check(merge([earlyRecord, differentRecord]).snapshot.data.sessions.count == 2,
+              "distinct exact starts within the same second do not identify one timer")
+
+    var deleted = joined.snapshot; deleted.data.sessions = []
+    let tombstones = try SyncCore.diff(previous: joined.snapshot, current: deleted, known: joined.records, stamp: stamp("mac", 1100))
+    check(Set(tombstones.map(\.key)) == [earlyRecord.key, lateRecord.key]
+          && tombstones.allSatisfy { $0.winner?.deleted == true && $0.sessionFact?.clockinStart == early.start },
+          "deleting visible same-timer session tombstones both aliases and keeps completion facts")
+    let staleRun = try record(.running, "Running", SyncRunning(session: run(900.125, paused: true)), device: "stale", time: 9999)
+    for alias in [earlyRecord, lateRecord] {
+        try check(merge([alias, staleRun]).snapshot.data.running == nil,
+                  "completion from \(alias.name) alone prevents timer resurrection")
+    }
+    let afterDelete = try SyncCore.merge(local: joined.records, incoming: tombstones + [staleRun, lateRecord], onto: joined.snapshot)
+    check(afterDelete.snapshot.data.sessions.isEmpty && afterDelete.snapshot.data.running == nil,
+          "deleted same-timer aliases and stale redelivery cannot resurrect history or timer")
+
+    // Editing the displayed start does not change the immutable timer identity.
+    var corrected = early; corrected.start += 1
+    var correctedRecord = try record(.session, corrected.id.uuidString, corrected, device: "mac", time: 1200)
+    correctedRecord.sessionFact = earlyRecord.sessionFact
+    try check(merge([correctedRecord, lateRecord, staleRun]).snapshot.data.sessions == [corrected]
+              && merge([correctedRecord, lateRecord, staleRun]).snapshot.data.running == nil,
+              "same-timer collapse and completion use immutable clockinStart after a start correction")
+
+    // The two duplicate relations can overlap; preserve the existing import-key rule too.
+    var importedAlias = late; importedAlias.id = uuid(356); importedAlias.source = "Timecard"
+    let importedAliasRecord = try record(.session, importedAlias.id.uuidString, importedAlias)
+    let chained = try merge([earlyRecord, lateRecord, importedAliasRecord])
+    check(chained.snapshot.data.sessions == [early], "import alias of a hidden later clock-out stays collapsed")
+    var empty = chained.snapshot; empty.data.sessions = []
+    let chainDeletes = try SyncCore.diff(previous: chained.snapshot, current: empty, known: chained.records, stamp: stamp("mac", 1300))
+    check(chainDeletes.count == 3 && chainDeletes.allSatisfy { $0.winner?.deleted == true },
+          "deletion fans out through both overlapping alias relations")
+    var importLow = imported; importLow.id = uuid(357); importLow.end += 0.5
+    var importHigh = imported; importHigh.id = uuid(358)
+    try check(merge([record(.session, importLow.id.uuidString, importLow),
+                     record(.session, importHigh.id.uuidString, importHigh)]).snapshot.data.sessions == [importLow],
+              "import-only duplicates retain the existing lowest-UUID representative")
+}
+
 var invalidSession = session(99); invalidSession.duration = -1
 let invalid = try record(.session, uuid(99).uuidString, invalidSession, device: "bad")
 let invalidPref = try record(.preference, "Clockin.RemoteActivityConsent.v2", SyncPreference.bool(true), device: "bad")

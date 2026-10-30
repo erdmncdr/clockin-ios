@@ -5,6 +5,73 @@ enum SyncCore {
         "\(Int(clampingFinite: session.start.timeIntervalSince1970))|\(Int(clampingFinite: session.end.timeIntervalSince1970))|\(Int(clampingFinite: session.duration))"
     }
 
+    private static func clockinStart(_ session: WorkSession, records: [String: SyncRecord]) -> Date? {
+        guard session.source == "Clockin" else { return nil }
+        if let fact = records[SyncKind.session.rawValue + ":" + session.id.uuidString]?.sessionFact {
+            return fact.clockinStart
+        }
+        return session.start // A local session may not have been captured yet.
+    }
+
+    private struct SessionAliases {
+        var visible: [WorkSession]
+        var representative: [UUID: UUID]
+        var sameTimer: Set<UUID>
+    }
+
+    // Join both alias relations before choosing representatives: an import alias of a
+    // later clock-out must not escape collapse (or deletion) through the other relation.
+    private static func sessionAliases(_ sessions: [WorkSession], records: [String: SyncRecord]) -> SessionAliases {
+        var parents = Array(sessions.indices)
+        func root(_ index: Int) -> Int {
+            var index = index
+            while parents[index] != index {
+                parents[index] = parents[parents[index]]
+                index = parents[index]
+            }
+            return index
+        }
+        var imports: [String: Int] = [:]
+        var timers: [Date: Int] = [:]
+        var sameTimer = Set<UUID>()
+        for (index, session) in sessions.enumerated() {
+            let key = importKey(session)
+            if let other = imports[key] { parents[root(index)] = root(other) }
+            else { imports[key] = index }
+            if let start = clockinStart(session, records: records) {
+                if let other = timers[start] {
+                    parents[root(index)] = root(other)
+                    sameTimer.formUnion([session.id, sessions[other].id])
+                } else { timers[start] = index }
+            }
+        }
+        var groups: [Int: [WorkSession]] = [:]
+        for index in sessions.indices { groups[root(index), default: []].append(sessions[index]) }
+        var visible: [WorkSession] = []
+        var representative: [UUID: UUID] = [:]
+        for group in groups.values {
+            let endedTwice = group.contains { sameTimer.contains($0.id) }
+            let selected = group.min {
+                if endedTwice && $0.end != $1.end { return $0.end < $1.end }
+                return $0.id.uuidString < $1.id.uuidString
+            }!
+            visible.append(selected)
+            for session in group { representative[session.id] = selected.id }
+        }
+        return .init(visible: visible.sorted { $0.id.uuidString < $1.id.uuidString },
+                     representative: representative, sameTimer: sameTimer)
+    }
+
+    private static func liveSessions(_ records: [String: SyncRecord], onto local: SyncSnapshot) throws -> [WorkSession] {
+        var sessions = local.data.sessions.filter { records[SyncKind.session.rawValue + ":" + $0.id.uuidString] == nil }
+        for record in records.values where record.kind == .session {
+            if let winner = record.winner, !winner.deleted {
+                sessions.append(try SyncCoding.decode(WorkSession.self, winner.payload))
+            }
+        }
+        return sessions
+    }
+
     static func purchaseName(_ itemID: String) -> String {
         Data(itemID.utf8).base64EncodedString().replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "=", with: "")
@@ -67,14 +134,15 @@ enum SyncCore {
                 changes.append(record)
             } catch { invalid.insert(key) }
         }
-        // Delete known import aliases using the old visible value (tombstones contain no payload).
-        for change in changes where change.kind == .session && change.winner?.deleted == true {
-            guard let payload = old[change.key]?.winner?.payload,
-                  let session = try? SyncCoding.decode(WorkSession.self, payload) else { continue }
-            for alias in known.values where alias.kind == .session && alias.key != change.key {
+        // Use the previous projection: tombstones themselves contain no session payload.
+        let deletedIDs = Set(changes.filter { $0.kind == .session && $0.winner?.deleted == true }.map(\.name))
+        if !deletedIDs.isEmpty, let previous {
+            let aliases = sessionAliases(try liveSessions(known, onto: previous), records: known)
+            let deletedGroups = Set(aliases.representative.compactMap { deletedIDs.contains($0.key.uuidString) ? $0.value : nil })
+            for alias in known.values where alias.kind == .session {
                 guard let value = alias.winner, !value.deleted,
-                      let other = try? SyncCoding.decode(WorkSession.self, value.payload),
-                      importKey(other) == importKey(session), !changes.contains(where: { $0.key == alias.key }) else { continue }
+                      let id = UUID(uuidString: alias.name), let group = aliases.representative[id],
+                      deletedGroups.contains(group), !changes.contains(where: { $0.key == alias.key }) else { continue }
                 let version = SyncVersion(stamp: stamp, deleted: true, payload: Data(),
                                           parents: alias.versions.map(\.id).sorted(), observed: alias.maximumStamp)
                 var deletion = SyncRecord(kind: .session, name: alias.name, versions: [version])
@@ -221,6 +289,7 @@ enum SyncCore {
         let beforeIDs = Set(before.data.sessions.map { $0.id.uuidString })
         let afterIDs = Set(after.data.sessions.map { $0.id.uuidString })
         let completed = Set(merged.values.compactMap { $0.sessionFact?.clockinStart })
+        var aliases: SessionAliases?
         for old in local.values.sorted(by: { $0.key < $1.key }) {
             guard let prior = old.winner, !prior.deleted, let record = merged[old.key], let winner = record.winner else { continue }
             if old.kind == .running {
@@ -231,7 +300,10 @@ enum SyncCore {
             } else if old.kind == .session,
                       beforeIDs.contains(old.name), !afterIDs.contains(old.name), !winner.deleted,
                       prior.id == winner.id {
-                result.append(.init(recordKey: old.key, version: prior, reason: "Import-key duplicate"))
+                if aliases == nil { aliases = sessionAliases(try liveSessions(merged, onto: before), records: merged) }
+                let session = try SyncCoding.decode(WorkSession.self, prior.payload)
+                let reason = aliases?.sameTimer.contains(session.id) == true ? "Same timer" : "Import-key duplicate"
+                result.append(.init(recordKey: old.key, version: prior, reason: reason))
             } else if includeReplacements && prior.id != winner.id && prior.payload != winner.payload,
                       try prior.stamp.modifiedBy == deviceID || wasApplied(prior, record: old, snapshot: before) {
                 // A causal floor can mask actual concurrency. Recovery must not depend on
@@ -264,17 +336,16 @@ enum SyncCore {
     -> (snapshot: SyncSnapshot, recoveries: [SyncRecovery], notices: [SyncNotice]) {
         var result = local
         result.preferences = SyncPreferences.filtered(local.preferences)
-        var sessions = local.data.sessions.filter { records[SyncKind.session.rawValue + ":" + $0.id.uuidString] == nil }
+        let sessions = try liveSessions(records, onto: local)
         var rules = (local.data.rateRules ?? []).filter { records[SyncKind.rateRule.rawValue + ":" + $0.id.uuidString] == nil }
         var ledger = local.ledger.filter { records[SyncKind.purchase.rawValue + ":" + purchaseName($0.itemID)] == nil }
-        var completed = Set(sessions.filter { $0.source == "Clockin" }.map(\.start))
+        var completed = Set(sessions.compactMap { clockinStart($0, records: records) })
         var runningRecord: SyncRecord?
         for record in records.values.sorted(by: { $0.key < $1.key }) {
             guard let winner = record.winner else { continue }
             switch record.kind {
             case .session:
                 if let start = record.sessionFact?.clockinStart { completed.insert(start) }
-                if !winner.deleted { sessions.append(try SyncCoding.decode(WorkSession.self, winner.payload)) }
             case .rateRule:
                 if !winner.deleted { rules.append(try SyncCoding.decode(RateRule.self, winner.payload)) }
             case .profile:
@@ -293,11 +364,7 @@ enum SyncCore {
                 result.wardrobe = wardrobe.applying(to: local.wardrobe)
             }
         }
-        var byKey: [String: WorkSession] = [:]
-        for session in sessions.sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
-            if byKey[importKey(session)] == nil { byKey[importKey(session)] = session }
-        }
-        result.data.sessions = byKey.values.sorted { $0.id.uuidString < $1.id.uuidString }
+        result.data.sessions = sessionAliases(sessions, records: records).visible
         result.data.rateRules = rules.sorted { $0.id.uuidString < $1.id.uuidString }
         result.ledger = ledger.sorted { $0.itemID < $1.itemID }
         result.wardrobe.owned.formUnion(ledger.map(\.itemID))
@@ -314,7 +381,7 @@ enum SyncCore {
                              revision: UInt64, deviceID: String? = nil) throws -> SyncFirstPreview {
         let merge = try merge(local: local, incoming: incoming, onto: snapshot, deviceID: deviceID)
         let count = merge.snapshot.data.sessions.count
-        // Remote count includes shared UUIDs; duplicates includes both shared UUIDs and import-key aliases.
+        // The projection counts shared UUIDs, import-key aliases and same-timer aliases once.
         let localDevices = Set(local.values.flatMap(\.versions).map(\.stamp.modifiedBy))
         let remoteIDs = Set(incoming.filter {
             $0.kind == .session && $0.winner?.deleted == false && (try? validate($0)) != nil
