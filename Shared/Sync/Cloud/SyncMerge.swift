@@ -6,7 +6,7 @@ enum SyncCore {
     }
 
     private static func clockinStart(_ session: WorkSession, records: [String: SyncRecord]) -> Date? {
-        guard session.source == "Clockin" else { return nil }
+        guard session.source == "Clockin", session.origin != .manual else { return nil }
         if let fact = records[SyncKind.session.rawValue + ":" + session.id.uuidString]?.sessionFact {
             return fact.clockinStart
         }

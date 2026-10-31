@@ -12,6 +12,17 @@ var session = WorkSession(id: UUID(), start: start, end: start.addingTimeInterva
                           duration: 3600, note: "", hourlyRate: 25, source: "Clockin")
 check(SessionDisplay.subtitle(session) == "Clockin", "own entry without a note uses Clockin")
 check(SessionDisplay.isClockin(session), "own entry keeps its timer icon")
+session.origin = .timer
+check(SessionDisplay.subtitle(session) == "Clockin", "explicit timer keeps the Clockin label")
+session.origin = .manual
+check(SessionDisplay.subtitle(session) == "Manual entry", "manual entry uses its own label")
+check(SessionDisplay.isClockin(session), "manual label does not change its existing icon")
+session.note = "Manual task"
+check(SessionDisplay.subtitle(session) == "Manual task", "manual note keeps precedence over the fallback label")
+session.matchedExternalSource = "Synthetic import A"
+check(SessionDisplay.subtitle(session) == "Matched timecard", "manual correction keeps the matched label")
+session.origin = nil
+session.matchedExternalSource = nil
 session.note = "Synthetic task"
 check(SessionDisplay.subtitle(session) == "Synthetic task", "own note is preserved")
 for source in ["Synthetic import A", "Synthetic import B", "", "  ", "clockin"] {

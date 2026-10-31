@@ -260,6 +260,116 @@ do {
               "import-only duplicates retain the existing lowest-UUID representative")
 }
 
+// Only timer/legacy Clockin payloads participate in the same-start relation.
+do {
+    let cases: [(SessionOrigin?, SessionOrigin?, Bool)] = [
+        (.manual, .timer, false), (.manual, nil, false), (.manual, .manual, false),
+        (.timer, .timer, true), (.timer, nil, true), (nil, nil, true)
+    ]
+    for (firstOrigin, secondOrigin, collapses) in cases {
+        var early = session(362, start: 905.125)
+        early.origin = firstOrigin
+        var late = early
+        late.id = uuid(361); late.end += 40; late.duration += 40; late.origin = secondOrigin
+        let label = "\(firstOrigin?.rawValue ?? "legacy") + \(secondOrigin?.rawValue ?? "legacy")"
+        let earlyRecord = try record(.session, early.id.uuidString, early, device: "mac", time: 1000)
+        let lateRecord = try record(.session, late.id.uuidString, late, device: "phone", time: 1040)
+        let expected = collapses ? [early] : [late, early]
+        let joined = try merge([earlyRecord, lateRecord])
+        check(joined.snapshot.data.sessions == expected && joined.quarantine.isEmpty,
+              "\(label): same exact start uses payload origin")
+        check(earlyRecord.sessionFact?.clockinStart == early.start
+              && lateRecord.sessionFact?.clockinStart == late.start,
+              "\(label): immutable session facts keep the shipped format")
+        try check(merge([lateRecord, earlyRecord]).snapshot == joined.snapshot,
+                  "\(label): delivery order preserves origins and visible entries")
+        var uncaptured = blank(); uncaptured.data.sessions = [late, early]
+        try check(merge([], onto: uncaptured).snapshot.data.sessions == expected,
+                  "\(label): uncaptured local sessions use the same origin rule")
+        var phone = blank(); phone.data.sessions = [late]
+        try check(merge([earlyRecord], onto: phone).snapshot.data.sessions == expected,
+                  "\(label): captured and uncaptured sessions use the same origin rule")
+        let preview = try SyncCore.firstPreview(local: [lateRecord.key: lateRecord], incoming: [earlyRecord],
+                                               snapshot: phone, revision: 36)
+        check(preview.mergedCount == expected.count && preview.duplicates == (collapses ? 1 : 0),
+              "\(label): first preview counts only actual aliases")
+        var deleted = joined.snapshot; deleted.data.sessions.removeAll { $0.id == early.id }
+        let tombstones = try SyncCore.diff(previous: joined.snapshot, current: deleted, known: joined.records,
+                                          stamp: stamp("mac", 1100))
+        check(Set(tombstones.map(\.key)) == (collapses ? [earlyRecord.key, lateRecord.key] : [earlyRecord.key]),
+              "\(label): deletion only fans out to actual aliases")
+    }
+
+    var manual = session(363, start: 906.125); manual.origin = .manual
+    var duplicate = manual; duplicate.id = uuid(364)
+    let first = try record(.session, manual.id.uuidString, manual, device: "mac")
+    let second = try record(.session, duplicate.id.uuidString, duplicate, device: "phone")
+    var phone = blank(); phone.data.sessions = [duplicate]
+    let joined = try SyncCore.merge(local: [second.key: second], incoming: [first], onto: phone)
+    check(joined.snapshot.data.sessions == [manual] && joined.records.count == 2,
+          "manual entries with identical start, end and duration still collapse by import key")
+    check(joined.recoveries.count == 1 && joined.recoveries.first?.reason == "Import-key duplicate",
+          "identical manual entries are import aliases, not same-timer aliases")
+}
+
+do {
+    // Frozen stored properties from the shipped WorkSession, using synthesized Codable.
+    struct LegacyWorkSession: Codable, Equatable {
+        var id: UUID
+        var start: Date
+        var end: Date
+        var duration: TimeInterval
+        var note: String
+        var hourlyRate: Double
+        var source: String
+        var matchedExternalSource: String? = nil
+
+        init(_ value: WorkSession) {
+            id = value.id; start = value.start; end = value.end; duration = value.duration
+            note = value.note; hourlyRate = value.hourlyRate; source = value.source
+            matchedExternalSource = value.matchedExternalSource
+        }
+    }
+    var legacy = session(365, start: 907.125, note: "Work / break • kayıt")
+    // Sort keys solely to make byte comparison independent of JSON object key order.
+    let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+    for matchedSource in [nil, "Timecard"] as [String?] {
+        legacy.matchedExternalSource = matchedSource
+        let old = LegacyWorkSession(legacy)
+        let encoded = try encoder.encode(legacy)
+        try check(encoded == encoder.encode(old), "nil origin has byte-identical legacy JSON encoding")
+        let object = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        check(object["origin"] == nil, "nil origin omits the key instead of encoding null")
+        try check(SyncCoding.encode(legacy) == SyncCoding.encode(old),
+                  "nil origin has byte-identical legacy sync payload encoding")
+        let decoded = try JSONDecoder().decode(WorkSession.self, from: encoder.encode(old))
+        check(decoded == legacy && decoded.origin == nil, "payload without origin decodes as legacy unknown")
+    }
+    for origin in [SessionOrigin.timer, .manual] {
+        var tagged = legacy; tagged.origin = origin
+        let encoded = try SyncCoding.encode(tagged)
+        try check(SyncCoding.decode(WorkSession.self, encoded) == tagged, "\(origin): origin survives Codable round trip")
+        try check(SyncCoding.decode(LegacyWorkSession.self, encoded) == LegacyWorkSession(tagged),
+                  "\(origin): shipped decoder ignores the added key")
+    }
+
+    var manual = legacy; manual.origin = .manual
+    let current = try record(.session, manual.id.uuidString, manual, device: "new", time: 1000)
+    var oldEdit = try SyncCoding.decode(LegacyWorkSession.self, current.winner!.payload)
+    oldEdit.note = "Edited by old build"
+    let recreated = try record(.session, manual.id.uuidString, oldEdit, device: "old", time: 1100)
+    let joined = try current.joined(with: recreated)
+    try SyncCore.validate(joined)
+    let downgraded = try SyncCoding.decode(WorkSession.self, joined.winner!.payload)
+    check(joined.sessionFact == current.sessionFact && downgraded.origin == nil && downgraded.note == oldEdit.note,
+          "old build edit drops origin but still joins the unchanged immutable clockinStart")
+    var timer = manual; timer.id = uuid(366); timer.end += 40; timer.duration += 40; timer.origin = .timer
+    let timerRecord = try record(.session, timer.id.uuidString, timer, time: 1200)
+    try check(merge([current, timerRecord]).snapshot.data.sessions.count == 2
+              && merge([joined, timerRecord]).snapshot.data.sessions == [downgraded],
+              "old build edit makes a new manual entry legacy and collapsible again")
+}
+
 var invalidSession = session(99); invalidSession.duration = -1
 let invalid = try record(.session, uuid(99).uuidString, invalidSession, device: "bad")
 let invalidPref = try record(.preference, "Clockin.RemoteActivityConsent.v2", SyncPreference.bool(true), device: "bad")

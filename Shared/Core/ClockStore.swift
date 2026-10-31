@@ -321,7 +321,7 @@ final class ClockStore: ObservableObject {
         }
         let session = WorkSession(
             id: UUID(), start: running.start, end: end, duration: running.elapsed(at: end),
-            note: running.note, hourlyRate: hourlyRate, source: "Clockin"
+            note: running.note, hourlyRate: hourlyRate, source: "Clockin", origin: .timer
         )
         let previous = data
         data.sessions.append(session)
@@ -344,7 +344,7 @@ final class ClockStore: ObservableObject {
         }
         let session = WorkSession(
             id: UUID(), start: start, end: end, duration: end.timeIntervalSince(start),
-            note: note, hourlyRate: hourlyRate, source: "Clockin"
+            note: note, hourlyRate: hourlyRate, source: "Clockin", origin: .manual
         )
         guard session.hasValidDuration else {
             statusMessage = String(localized: "Invalid session duration or dates.", bundle: .app)

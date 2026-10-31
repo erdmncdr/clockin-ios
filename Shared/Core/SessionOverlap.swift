@@ -68,7 +68,8 @@ enum SessionOverlap {
         let edited = id.flatMap { id in sessions.first { $0.id == id } }
         var candidate = WorkSession(id: id ?? UUID(), start: start, end: end,
                                     duration: end.timeIntervalSince(start), note: "", hourlyRate: 0,
-                                    source: edited?.source ?? "Clockin")
+                                    source: edited?.source ?? "Clockin",
+                                    origin: edited == nil ? .manual : edited?.origin)
         candidate.matchedExternalSource = edited?.matchedExternalSource
         return sessions.filter { $0.id != id && conflicts(candidate, $0) }
     }

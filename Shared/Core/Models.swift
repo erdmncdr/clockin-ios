@@ -1,5 +1,9 @@
 import Foundation
 
+enum SessionOrigin: String, Codable, Sendable {
+    case timer, manual
+}
+
 struct WorkSession: Codable, Identifiable, Hashable, Sendable {
     var id: UUID
     var start: Date
@@ -9,6 +13,7 @@ struct WorkSession: Codable, Identifiable, Hashable, Sendable {
     var hourlyRate: Double
     var source: String
     var matchedExternalSource: String? = nil
+    var origin: SessionOrigin? = nil
 
     var earnings: Double { duration / 3600 * hourlyRate }
 
@@ -50,6 +55,7 @@ enum SessionDisplay {
         if isMatched(session) { return String(localized: "Matched timecard", bundle: .app) }
         let note = note(session)
         if !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return note }
+        if session.origin == .manual { return String(localized: "Manual entry", bundle: .app) }
         return isClockin(session) ? "Clockin" : String(localized: "Imported timecard", bundle: .app)
     }
 }

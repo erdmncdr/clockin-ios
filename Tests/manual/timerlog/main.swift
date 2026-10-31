@@ -60,7 +60,9 @@ MainActor.assumeIsolated {
     check(log.entries.count == 1, "pause does not add a log entry")
     store.resume(at: date.addingTimeInterval(20), origin: .shortcut)
     check(log.entries.first?.action == .resume && log.entries.first?.origin == .shortcut, "resume records its origin")
-    _ = store.clockOut(at: date.addingTimeInterval(30), origin: .controlCenter)
+    let completed = store.clockOut(at: date.addingTimeInterval(30), origin: .controlCenter)
+    check(completed?.origin == .timer && store.sessions.first?.origin == .timer,
+          "clock-out marks both returned and stored sessions as timer origin")
     check(log.entries.first?.action == .clockOut && log.entries.first?.origin == .controlCenter,
           "clock-out records its origin")
     check(log.entries.first?.date == recordedAt, "record receipt time even when the session end was backdated")
@@ -131,5 +133,40 @@ MainActor.assumeIsolated {
     check(log.entries.first?.action == .clockOut && log.entries.first?.origin == .widget,
           "the clamped clock-out is logged with its origin")
     check(store.timerPersistenceError == nil, "a clamped clock-out is not an error")
+    check(early?.origin == .timer, "clamped clock-out also sets timer session origin")
+
+    let originFile = directory.appendingPathComponent("origins.json")
+    let originsStore = ClockStore(fileURL: originFile, now: { recordedAt }, timerStartLog: log)
+    check(originsStore.addManualSession(start: date, end: date.addingTimeInterval(60)), "manual entry saves")
+    let manual = originsStore.sessions[0]
+    check(manual.origin == .manual, "addManualSession marks the session as manual")
+    check(originsStore.updateSession(id: manual.id, start: date, end: date.addingTimeInterval(120), note: "edited")
+          && originsStore.sessions.first?.origin == .manual, "manual edit retains its origin")
+    originsStore.clockIn(at: date.addingTimeInterval(3600))
+    let timer = originsStore.clockOut(at: date.addingTimeInterval(3660))!
+    check(originsStore.updateSession(id: timer.id, start: timer.start, end: timer.end, note: "edited timer")
+          && originsStore.sessions.first { $0.id == timer.id }?.origin == .timer, "timer edit retains its origin")
+
+    let csvHeader = "Start Time,End Time,Time Sheet Source"
+    let oldCSV = csvHeader + "\n2026-09-14T09:00:00Z,2026-09-14T10:00:00Z,Clockin\n"
+    let legacyImport = try! CSVImporter.parse(data: Data(oldCSV.utf8), hourlyRate: 25).sessions
+    check(legacyImport.count == 1 && legacyImport[0].origin == nil,
+          "Clockin CSV without origin remains legacy unknown")
+    check(originsStore.importSessions(legacyImport), "Clockin CSV sessions import successfully")
+    check(originsStore.sessions.first { $0.id == legacyImport[0].id }?.origin == nil,
+          "import application leaves the origin unknown")
+    let legacy = legacyImport[0]
+    check(originsStore.updateSession(id: legacy.id, start: legacy.start, end: legacy.end, note: "edited legacy")
+          && originsStore.sessions.first { $0.id == legacy.id }?.origin == nil, "legacy edit retains unknown origin")
+    let reload = ClockStore(fileURL: originFile, now: { recordedAt }, timerStartLog: log)
+    check(reload.data.sessions == originsStore.data.sessions, "disk reload retains all session origins")
+    let exported = try! JSONDecoder().decode(ClockinData.self, from: originsStore.exportBackup()!)
+    check(exported.sessions == originsStore.data.sessions, "backup export retains all session origins")
+    let backupFile = directory.appendingPathComponent("origin-backup.json")
+    try! JSONEncoder().encode(exported).write(to: backupFile)
+    let restored = ClockStore(fileURL: directory.appendingPathComponent("restored.json"),
+                              now: { recordedAt }, timerStartLog: log)
+    check(restored.restoreBackup(from: backupFile) && restored.data.sessions == exported.sessions,
+          "backup restore preserves manual, timer and legacy origins")
     print("All timer log checks passed.")
 }

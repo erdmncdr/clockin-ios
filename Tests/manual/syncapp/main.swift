@@ -198,6 +198,43 @@ import Foundation
             await mac.cleanup(); await phone.cleanup()
         }
 
+        do {
+            let mac = try Fixture(), phone = try Fixture()
+            try await mac.begin(deviceID: "origin-mac")
+            try await phone.begin(deviceID: "origin-phone")
+            let start = Date.now.addingTimeInterval(-7200)
+            check(mac.store.addManualSession(start: start, end: start.addingTimeInterval(1800)),
+                  "Mac saves a manual entry with the phone timer's exact start")
+            let manual = mac.store.sessions[0]
+            phone.store.clockIn(at: start)
+            let timer = phone.store.clockOut(at: start.addingTimeInterval(3600))!
+            check(manual.origin == .manual && timer.origin == .timer,
+                  "real stores distinguish manual creation from timer clock-out")
+            await mac.coordinator.start()?.value
+            await phone.coordinator.start()?.value
+            let macRecords = Array(mac.transport!.bridge.state.records.values)
+            let phoneRecords = Array(phone.transport!.bridge.state.records.values)
+            phone.transport!.nextFetchRecords = macRecords
+            await phone.coordinator.pollIfNeeded()?.value
+            mac.transport!.nextFetchRecords = phoneRecords
+            await mac.coordinator.pollIfNeeded()?.value
+            for fixture in [mac, phone] {
+                check(Set(fixture.store.sessions) == [manual, timer] && fixture.store.running == nil,
+                      "manual and timer with the same exact start remain two entries on both devices")
+                check(fixture.store.sessions.reduce(0) { $0 + $1.duration } == 5400,
+                      "manual and timer durations are both counted")
+                let archive = try JSONDecoder().decode(ClockinData.self, from: Data(contentsOf: fixture.store.archiveURL))
+                check(Set(archive.sessions) == [manual, timer],
+                      "both origins and entries survive coordinator projection and archive persistence")
+                fixture.transport!.nextFetchRecords = macRecords + phoneRecords
+                await fixture.coordinator.handleRemoteNotification()
+                check(Set(fixture.store.sessions) == [manual, timer]
+                      && fixture.transport!.bridge.state.recoveryInbox.isEmpty,
+                      "redelivery keeps both entries without a duplicate recovery")
+            }
+            await mac.cleanup(); await phone.cleanup()
+        }
+
         for restore in [false, true] {
             let baseline = try Fixture()
             try await baseline.begin()
