@@ -52,7 +52,7 @@ for zone in ["America/New_York", "Europe/Berlin", "Pacific/Apia"] {
         let early = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: start)!
         let end = EntryTimes.end(start: start, end: early, calendar: calendar)
         check(end > start, "overnight session advances a calendar day: \(zone)")
-        let week = MonthWeek.interval(containing: start, calendar: calendar)
+        let week = CalendarWeek.interval(containing: start, calendar: calendar)
         check(week.end >= week.start && week.contains(start), "week bounds survive DST: \(zone)")
         let period = EarningsPeriod(range: .month, anchor: start, now: start, calendar: calendar)
         let empty = EarningsSnapshot(sessions: [], running: nil, range: .month, now: start, calendar: calendar,

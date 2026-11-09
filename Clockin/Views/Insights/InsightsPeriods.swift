@@ -47,7 +47,7 @@ enum InsightsPeriods {
                         grouping: InsightsGrouping, now: Date, calendar: Calendar) -> [InsightsPeriod] {
         let component: Calendar.Component = grouping == .month ? .month : (grouping == .week ? .weekOfYear : .day)
         func start(_ date: Date) -> Date {
-            if grouping == .week { return MonthWeek.interval(containing: date, calendar: calendar).start }
+            if grouping == .week { return CalendarWeek.interval(containing: date, calendar: calendar).start }
             return calendar.dateInterval(of: component, for: date)?.start ?? calendar.startOfDay(for: date)
         }
         let today = calendar.startOfDay(for: now)
@@ -55,7 +55,7 @@ enum InsightsPeriods {
         let first = start(min(keys.filter(SessionDuration.isValidDate).min() ?? today, today))
         var dates: [Date] = []
         var cursor = start(today)
-        // Ayin son parcasi yedi gunden kisa olabilir; siniri sondan kur.
+        // Haftalar Pazartesi baslar ve ay sinirini asar; onceki donem bir onceki gunden bulunur.
         while cursor >= first && dates.count < maximumBuckets {
             dates.append(cursor)
             let previous = grouping == .week ? start(cursor.addingTimeInterval(-1))
@@ -67,7 +67,7 @@ enum InsightsPeriods {
         var totals: [Date: InsightsPeriod] = [:]
         for date in dates {
             totals[date] = InsightsPeriod(start: date,
-                end: grouping == .week ? MonthWeek.interval(containing: date, calendar: calendar).end
+                end: grouping == .week ? CalendarWeek.interval(containing: date, calendar: calendar).end
                     : calendar.date(byAdding: component, value: 1, to: date) ?? date)
         }
         for day in keys where SessionDuration.isValidDate(day) {

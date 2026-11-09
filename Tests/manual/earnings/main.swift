@@ -24,13 +24,13 @@ let now = date(2026, 9, 17, 12)
     check(value.interval.start == start && value.interval.end == end, name)
 }
 let week = period(.week)
-bounds(week, date(2026, 9, 15), date(2026, 9, 22), "month week bounds")
-bounds(period(.week, date(2026, 9, 1)), date(2026, 9, 1), date(2026, 9, 8), "week stays in month")
-bounds(period(.week, date(2026, 1, 1)), date(2026, 1, 1), date(2026, 1, 8), "week stays in year")
+bounds(week, date(2026, 9, 14), date(2026, 9, 21), "calendar week bounds")
+bounds(period(.week, date(2026, 9, 1)), date(2026, 8, 31), date(2026, 9, 7), "week crosses into the previous month")
+bounds(period(.week, date(2026, 1, 1)), date(2025, 12, 29), date(2026, 1, 5), "week crosses into the previous year")
 var sunday = calendar
 sunday.firstWeekday = 1
 bounds(EarningsPeriod(range: .week, anchor: now, now: now, calendar: sunday),
-       date(2026, 9, 15), date(2026, 9, 22), "month week is independent of first weekday")
+       date(2026, 9, 14), date(2026, 9, 21), "week start is independent of first weekday")
 for (year, month, days) in [(2025, 2, 28), (2024, 2, 29), (2026, 4, 30), (2026, 1, 31)] {
     let value = period(.month, date(year, month, 12))
     check(value.interval.start == date(year, month, 1), "month starts on first: \(year)/\(month)")
@@ -78,7 +78,7 @@ check(EarningsPeriod.PageID(range: .month, interval: sameInterval)
 check(period(.all).paged(by: -1, now: now, calendar: calendar) == period(.all), "All never pages")
 let boundaryWeek = period(.week, date(2026, 9, 1))
 bounds(boundaryWeek.switching(to: .month, now: now, calendar: calendar), date(2026, 9, 1), date(2026, 10, 1), "cross-month week retains September anchor")
-bounds(period(.month, date(2026, 8, 17)).switching(to: .week, now: now, calendar: calendar), date(2026, 8, 15), date(2026, 8, 22), "month to week retains date")
+bounds(period(.month, date(2026, 8, 17)).switching(to: .week, now: now, calendar: calendar), date(2026, 8, 17), date(2026, 8, 24), "month to week retains date")
 check(period(.month, date(2026, 8, 31)).paged(by: 1, now: now, calendar: calendar).anchor == now, "forward anchor clamps to now")
 check(period(.month, date(2026, 3, 31)).paged(by: -1, now: now, calendar: calendar).anchor == date(2026, 2, 28), "paging clamps shorter month")
 check(period(.week, date(2027, 1, 1)).interval == week.interval, "future anchor clamps to current period")
@@ -132,7 +132,7 @@ let previous = snapshot(period(.month, date(2026, 8, 17)))
 check(previous.duration == 13 * 3600 && previous.earned == 520 && previous.sessions.count == 3, "previous page totals and list")
 check(previous.calendarDays == 31, "past month uses full calendar days")
 let weekSnapshot = snapshot(week)
-check(weekSnapshot.duration == 4 * 3600 && weekSnapshot.calendarDays == 3, "week only includes visible elapsed days")
+check(weekSnapshot.duration == 4 * 3600 && weekSnapshot.calendarDays == 4, "week only includes visible elapsed days")
 let previousWeek = snapshot(week.paged(by: -1, now: now, calendar: calendar))
 check(previousWeek.duration == 7 * 3600 && previousWeek.calendarDays == 7, "previous week excludes neighboring pages")
 let six = snapshot(period(.sixMonths))
@@ -256,30 +256,47 @@ check(EarningsChartAxis.earningsUpperBound(.nan) == 1 && EarningsChartAxis.earni
 
 print("\(checks) earnings checks passed")
 
-// Every day belongs to exactly one month-bounded week; paging crosses partial weeks.
-for year in 2024...2028 {
-    for month in 1...12 {
-        let first = date(year, month, 1)
-        let end = calendar.date(byAdding: .month, value: 1, to: first)!
-        var cursor = first
-        var covered = 0
-        while cursor < end {
-            let interval = MonthWeek.interval(containing: cursor, calendar: calendar)
-            precondition(interval.start == cursor && interval.end <= end)
-            let count = calendar.dateComponents([.day], from: cursor, to: interval.end).day!
-            precondition((1...7).contains(count))
-            for offset in 0..<count {
-                let day = calendar.date(byAdding: .day, value: offset, to: cursor)!
-                precondition(MonthWeek.interval(containing: day, calendar: calendar) == interval)
-            }
-            covered += count
-            let page = EarningsPeriod(range: .week, anchor: cursor, now: date(2030, 1, 1), calendar: calendar)
-            let previous = page.paged(by: -1, now: date(2030, 1, 1), calendar: calendar)
-            precondition(previous.interval.end == interval.start)
-            precondition(previous.paged(by: 1, now: date(2030, 1, 1), calendar: calendar).interval == interval)
-            cursor = interval.end
+// Every day belongs to exactly one Monday-to-Sunday week; paging walks whole weeks.
+do {
+    var cursor = date(2024, 1, 1)  // a Monday
+    let end = date(2029, 1, 1)
+    var covered = 0
+    while cursor < end {
+        let interval = CalendarWeek.interval(containing: cursor, calendar: calendar)
+        precondition(interval.start == cursor && calendar.component(.weekday, from: interval.start) == 2)
+        let count = calendar.dateComponents([.day], from: cursor, to: interval.end).day!
+        precondition(count == 7)
+        for offset in 0..<count {
+            let day = calendar.date(byAdding: .day, value: offset, to: cursor)!
+            precondition(CalendarWeek.interval(containing: day, calendar: calendar) == interval)
+            let lastSecond = calendar.date(byAdding: .day, value: 1, to: day)!.addingTimeInterval(-1)
+            precondition(CalendarWeek.interval(containing: lastSecond, calendar: calendar) == interval)
         }
-        check(covered == calendar.dateComponents([.day], from: first, to: end).day!, "all days covered once: \(year)/\(month)")
+        covered += count
+        let page = EarningsPeriod(range: .week, anchor: cursor, now: date(2030, 1, 1), calendar: calendar)
+        let previous = page.paged(by: -1, now: date(2030, 1, 1), calendar: calendar)
+        precondition(previous.interval.end == interval.start)
+        precondition(previous.paged(by: 1, now: date(2030, 1, 1), calendar: calendar).interval == interval)
+        cursor = interval.end
     }
+    check(covered == calendar.dateComponents([.day], from: date(2024, 1, 1), to: end).day!, "all days 2024-2028 covered once by Monday weeks")
+    let sunday = CalendarWeek.interval(containing: date(2026, 9, 13, 23), calendar: calendar)
+    check(sunday.start == date(2026, 9, 7) && sunday.end == date(2026, 9, 14), "a Sunday night belongs to the week that began on Monday")
+    let crossing = CalendarWeek.interval(containing: date(2026, 9, 1), calendar: calendar)
+    check(crossing.start == date(2026, 8, 31) && crossing.end == date(2026, 9, 7), "weeks cross month boundaries")
 }
-print("\(checks) total earnings and month-week checks passed")
+var santiago = calendar
+santiago.timeZone = TimeZone(identifier: "America/Santiago")!
+for day in 1...30 {
+    let noon = santiago.date(from: DateComponents(year: 2026, month: 9, day: day, hour: 12))!
+    let week = CalendarWeek.interval(containing: noon, calendar: santiago)
+    check(week.contains(noon) && week.start == santiago.startOfDay(for: week.start)
+          && week.end == santiago.startOfDay(for: week.end)
+          && santiago.component(.weekday, from: week.start) == 2
+          && santiago.dateComponents([.day], from: week.start, to: week.end).day == 7,
+          "midnight DST zone keeps Monday boundaries at the start of day: 2026-09-\(day)")
+    let page = EarningsPeriod(range: .week, anchor: noon, now: noon, calendar: santiago)
+    check(page.paged(by: -1, now: noon, calendar: santiago).paged(by: 1, now: noon, calendar: santiago).interval == page.interval
+          && page.isCurrent, "midnight DST week survives a paging round trip: 2026-09-\(day)")
+}
+print("\(checks) total earnings and calendar-week checks passed")

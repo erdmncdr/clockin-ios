@@ -15,7 +15,7 @@ struct InsightsAggregateHeatmapView: View {
     var body: some View {
         let selected = periods.first { $0.start == selectedStart } ?? periods.last
         VStack(alignment: .leading, spacing: 12) {
-            Text("Each cell shows \(grouping == .week ? String(localized: "days 1–7, 8–14, 15–21, 22–28 or the remaining days of a month", bundle: .app) : String(localized: "a calendar month", bundle: .app)). Color shows relative earnings across your archive.")
+            Text("Each cell shows \(grouping == .week ? String(localized: "a week from Monday to Sunday", bundle: .app) : String(localized: "a calendar month", bundle: .app)). Color shows relative earnings across your archive.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollViewReader { proxy in
                 VStack(spacing: 8) {

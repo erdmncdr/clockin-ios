@@ -32,7 +32,7 @@ struct EarningsPeriod: Equatable {
         func bounds(_ date: Date) -> DateInterval {
             switch range {
             case .week:
-                return MonthWeek.interval(containing: date, calendar: calendar)
+                return CalendarWeek.interval(containing: date, calendar: calendar)
             case .month:
                 return (calendar.dateInterval(of: .month, for: date) ?? DateInterval(start: date, duration: 0))
             case .sixMonths:
